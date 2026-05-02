@@ -1,0 +1,14 @@
+# Go build artefacts
+*.exe
+*.test
+*.out
+/bin/
+/dist/
+
+# Editor
+.vscode/
+.idea/
+
+# Coverage
+coverage.out
+coverage.html
