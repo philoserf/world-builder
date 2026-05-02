@@ -81,3 +81,56 @@ func RollSubtype(r roller.Roller, letter SpectralLetter, lc LuminosityClass) (in
 	}
 	return sub, nil
 }
+
+// ApplyClassIVLetterConstraint maps a spectral letter for Class IV
+// limits (WBH p. 16). M -> K (subtype shift handled in RollSubtype),
+// O -> B (for Hot rolls). Other letters pass through.
+func ApplyClassIVLetterConstraint(letter SpectralLetter) SpectralLetter {
+	switch letter {
+	case 'M':
+		return 'K'
+	case 'O':
+		return 'B'
+	default:
+		return letter
+	}
+}
+
+// ApplyClassVILetterConstraint maps a spectral letter for Class VI
+// (WBH p. 16): F -> G, A -> B. Other letters pass through.
+func ApplyClassVILetterConstraint(letter SpectralLetter) SpectralLetter {
+	switch letter {
+	case 'F':
+		return 'G'
+	case 'A':
+		return 'B'
+	default:
+		return letter
+	}
+}
+
+// RollGiantClass rolls the Giants column with DM+1 to determine the
+// final luminosity class for a Class III+ result (WBH p. 16).
+func RollGiantClass(r roller.Roller) (LuminosityClass, error) {
+	natural := r.Roll("2D")
+	row := natural + 1
+	if row > 12 {
+		row = 12
+	}
+	rowData, ok := StarTypeDetermination[row]
+	if !ok {
+		return "", fmt.Errorf("stars: 2D out of range: %d", row)
+	}
+	switch rowData.Giants {
+	case "Class III":
+		return III, nil
+	case "Class II":
+		return II, nil
+	case "Class Ib":
+		return Ib, nil
+	case "Class Ia":
+		return Ia, nil
+	default:
+		return "", fmt.Errorf("stars: unexpected Giants cell: %q", rowData.Giants)
+	}
+}

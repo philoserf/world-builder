@@ -48,6 +48,47 @@ func TestRollPrimaryTypeAndClass_SpecialNotImplemented(t *testing.T) {
 	}
 }
 
+func TestApplyClassIVLetterConstraint(t *testing.T) {
+	cases := []struct{ in, want SpectralLetter }{
+		{'M', 'K'},
+		{'O', 'B'},
+		{'G', 'G'},
+		{'A', 'A'},
+	}
+	for _, c := range cases {
+		if got := ApplyClassIVLetterConstraint(c.in); got != c.want {
+			t.Fatalf("Class IV(%c) = %c, want %c", c.in, got, c.want)
+		}
+	}
+}
+
+func TestApplyClassVILetterConstraint(t *testing.T) {
+	cases := []struct{ in, want SpectralLetter }{
+		{'F', 'G'},
+		{'A', 'B'},
+		{'G', 'G'},
+		{'M', 'M'},
+	}
+	for _, c := range cases {
+		if got := ApplyClassVILetterConstraint(c.in); got != c.want {
+			t.Fatalf("Class VI(%c) = %c, want %c", c.in, got, c.want)
+		}
+	}
+}
+
+func TestRollGiantClass(t *testing.T) {
+	// WBH p. 16: Class III+ requires a roll in the Giants column with DM+1.
+	// 2D = 7 + DM+1 = row 8. Giants column at row 8 = "Class III".
+	r := roller.NewScripted(7)
+	got, err := RollGiantClass(r)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if got != III {
+		t.Fatalf("got %s, want %s", got, III)
+	}
+}
+
 func TestRollSubtype_Zed(t *testing.T) {
 	// WBH p. 16: a 2D roll of 6 on the Numeric column -> subtype 7 (G7).
 	r := roller.NewScripted(6)
