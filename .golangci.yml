@@ -1,11 +1,12 @@
 version: "2"
 
+# Note: gofumpt is enforced by the `just check` recipe via the gofumpt CLI,
+# not by golangci-lint's bundled gofumpt. The two disagreed on import
+# grouping (CLI is more recent), so we use the CLI as the single source
+# of truth and keep golangci-lint focused on lint checks.
+
 run:
   timeout: 5m
-
-formatters:
-  enable:
-    - gofumpt
 
 linters:
   enable:

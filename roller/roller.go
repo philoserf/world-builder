@@ -7,6 +7,7 @@ package roller
 import (
 	"fmt"
 	"math/rand"
+
 	"wbh/dice"
 )
 
