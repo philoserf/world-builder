@@ -175,3 +175,96 @@ func TestStarLuminosity_KnownCells(t *testing.T) {
 		}
 	}
 }
+
+func TestMultipleStarsPresenceThreshold(t *testing.T) {
+	// WBH p.23: each orbit class is "10+" on 2D + DMs.
+	if MultipleStarsPresenceThreshold != 10 {
+		t.Fatalf("threshold = %d, want 10", MultipleStarsPresenceThreshold)
+	}
+}
+
+func TestExistingStarLocationsBinary_Complete(t *testing.T) {
+	for r := 1; r <= 6; r++ {
+		if _, ok := ExistingStarLocationsBinary[r]; !ok {
+			t.Fatalf("binary: missing row %d", r)
+		}
+	}
+}
+
+func TestExistingStarLocationsTrinaryPlus_Complete(t *testing.T) {
+	for r := 1; r <= 6; r++ {
+		if _, ok := ExistingStarLocationsTrinaryPlus[r]; !ok {
+			t.Fatalf("trinary+: missing row %d", r)
+		}
+	}
+}
+
+func TestNonPrimaryStarDetermination_Complete(t *testing.T) {
+	for r := 2; r <= 12; r++ {
+		row := NonPrimaryStarDetermination[r]
+		if row.Secondary == "" || row.Companion == "" || row.PostStellar == "" || row.Other == "" {
+			t.Fatalf("row %d has empty cell: %+v", r, row)
+		}
+	}
+}
+
+func TestNonPrimaryStarDetermination_KnownCells(t *testing.T) {
+	// WBH p.29 spot checks.
+	if got := NonPrimaryStarDetermination[8].Companion; got != "Sibling" {
+		t.Fatalf("[8].Companion = %q want Sibling", got)
+	}
+	if got := NonPrimaryStarDetermination[8].Secondary; got != "Lesser" {
+		t.Fatalf("[8].Secondary = %q want Lesser", got)
+	}
+	if got := NonPrimaryStarDetermination[11].Other; got != "BD" {
+		t.Fatalf("[11].Other = %q want BD", got)
+	}
+}
+
+func TestEccentricityValues_Complete(t *testing.T) {
+	for r := 5; r <= 12; r++ {
+		row, ok := EccentricityValues[r]
+		if !ok {
+			t.Fatalf("missing row %d", r)
+		}
+		if row.SecondRoll == "" || row.Divisor == 0 {
+			t.Fatalf("row %d incomplete: %+v", r, row)
+		}
+	}
+}
+
+func TestEccentricityValues_KnownCells(t *testing.T) {
+	// WBH p.27 spot checks.
+	if got := EccentricityValues[5].Base; got != -0.001 {
+		t.Fatalf("[5].Base = %v want -0.001", got)
+	}
+	if got := EccentricityValues[12].Base; got != 0.30 {
+		t.Fatalf("[12].Base = %v want 0.30", got)
+	}
+	if got := EccentricityValues[10].Divisor; got != 20 {
+		t.Fatalf("[10].Divisor = %v want 20", got)
+	}
+}
+
+// ----- P2-8: OrbitNumberTable -----
+
+func TestOrbitNumberTable_Complete(t *testing.T) {
+	for n := 0; n <= 20; n++ {
+		if _, ok := OrbitNumberTable[n]; !ok {
+			t.Fatalf("missing row %d", n)
+		}
+	}
+}
+
+func TestOrbitNumberTable_KnownCells(t *testing.T) {
+	// WBH p.26 spot checks.
+	if got := OrbitNumberTable[3].DistanceAU; got != 1.0 {
+		t.Fatalf("[3].DistanceAU = %v want 1.0 (Terra)", got)
+	}
+	if got := OrbitNumberTable[6].DistanceAU; got != 5.2 {
+		t.Fatalf("[6].DistanceAU = %v want 5.2 (Jupiter)", got)
+	}
+	if got := OrbitNumberTable[3].Example; got != "Terra" {
+		t.Fatalf("[3].Example = %q want Terra", got)
+	}
+}

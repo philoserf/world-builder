@@ -101,3 +101,59 @@ func TestFinalAgeProgenitor_UnitMass(t *testing.T) {
 		t.Fatalf("got %v want 13.0", got)
 	}
 }
+
+func TestAgeSpecialObject_BrownDwarf(t *testing.T) {
+	// BD: small-star age (1D=3, D3=2 -> 3*2 + 2 - 1 = 7 Gyr).
+	r := roller.NewScripted(3, 2)
+	got, err := AgeSpecialObject(r, KindBrownDwarf, 0)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if math.Abs(got-7.0) > 1e-9 {
+		t.Fatalf("got %v want 7.0", got)
+	}
+}
+
+func TestAgeSpecialObject_WhiteDwarf_Zed(t *testing.T) {
+	// Zed Cb walkthrough p.30: dead star mass 0.490, D3=1 -> progenitor 1.47.
+	// FinalAgeProgenitor(1.47) ≈ 4.635 Gyr.
+	// Plus small-star age: 1D=2, D3=2 -> 2*2 + 2 - 1 = 5 Gyr.
+	// Total: 5 + 4.635 ≈ 9.635 Gyr.
+	r := roller.NewScripted(2, 2, 1) // 1D=2, D3=2 for small_star; D3=1 for progenitor multiplier
+	got, err := AgeSpecialObject(r, KindWhiteDwarf, 0.490)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	want := 9.635
+	if math.Abs(got-want) > 1e-2 {
+		t.Fatalf("got %v want %v (within 1e-2)", got, want)
+	}
+}
+
+func TestAgeSpecialObject_Pulsar(t *testing.T) {
+	// Pulsar: 100 Myr / 2d10. d10=5, d10=5 -> 100/10 = 10 Myr = 0.01 Gyr.
+	// Plus progenitor: D3=1, dead mass 1.4 -> progenitor 4.2.
+	// FinalAgeProgenitor(4.2) ≈ very small.
+	r := roller.NewScripted(5, 5, 1)
+	got, err := AgeSpecialObject(r, KindPulsar, 1.4)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	// Just sanity-check positivity and that we got a finite value.
+	if got <= 0 || math.IsInf(got, 0) || math.IsNaN(got) {
+		t.Fatalf("got %v; want positive finite", got)
+	}
+}
+
+func TestAgeSpecialObject_Protostar(t *testing.T) {
+	// Protostar: 10 Myr / 2d10, no progenitor. d10=5, d10=5 -> 10/10 = 1 Myr = 0.001 Gyr.
+	r := roller.NewScripted(5, 5)
+	got, err := AgeSpecialObject(r, KindProtostar, 0)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	want := 0.001
+	if math.Abs(got-want) > 1e-9 {
+		t.Fatalf("got %v want %v", got, want)
+	}
+}
