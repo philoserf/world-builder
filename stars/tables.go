@@ -23,3 +23,13 @@ var StarTypeDetermination = map[int]StarTypeRow{
 	11: {Type: "F", Hot: "B", Special: "Giants", Unusual: "Class III", Giants: "Class Ib", Peculiar: "Anomaly"},
 	12: {Type: "Hot", Hot: "O", Special: "Giants", Unusual: "Giants", Giants: "Class Ia", Peculiar: "Anomaly"},
 }
+
+// StarSubtypeNumeric is the WBH p. 16 Star Subtype table — Numeric column.
+var StarSubtypeNumeric = map[int]int{
+	2: 0, 3: 1, 4: 3, 5: 5, 6: 7, 7: 9, 8: 8, 9: 6, 10: 4, 11: 2, 12: 0,
+}
+
+// StarSubtypeMType is the WBH p. 16 Star Subtype table — M-type column (primary only).
+var StarSubtypeMType = map[int]int{
+	2: 8, 3: 6, 4: 5, 5: 4, 6: 0, 7: 2, 8: 1, 9: 3, 10: 5, 11: 7, 12: 9,
+}
