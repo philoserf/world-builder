@@ -175,3 +175,10 @@ func TestStarLuminosity_KnownCells(t *testing.T) {
 		}
 	}
 }
+
+func TestMultipleStarsPresenceThreshold(t *testing.T) {
+	// WBH p.23: each orbit class is "10+" on 2D + DMs.
+	if MultipleStarsPresenceThreshold != 10 {
+		t.Fatalf("threshold = %d, want 10", MultipleStarsPresenceThreshold)
+	}
+}

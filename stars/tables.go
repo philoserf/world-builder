@@ -139,3 +139,7 @@ var StarLuminosity = map[string]ClassRow{
 	"M5": {Ia: f(100_000), Ib: f(26_000), II: f(8800), III: f(720), V: f(0.0029), VI: f(0.00072)},
 	"M9": {Ia: f(90_000), Ib: f(19_000), II: f(7300), III: f(1200), V: f(0.00029), VI: f(0.00019)},
 }
+
+// MultipleStarsPresenceThreshold is the WBH p.23 2D threshold (after
+// DMs) for a star to be present in a given orbit class.
+const MultipleStarsPresenceThreshold = 10
