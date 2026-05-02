@@ -91,3 +91,79 @@ func TestZedPrimaryOnly_p17_p21(t *testing.T) {
 		}
 	}
 }
+
+func TestSolTerra_SurveyForm_p35(t *testing.T) {
+	// WBH p.35 — Terra/Sol IISS Class 0/I Survey form. Sol is fully
+	// specified; we Compose it directly and run BuildSurveyForm.
+	sol := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+		LuminosityClass: stars.V,
+		Mass:            1.000,
+		Diameter:        1.000,
+		Temperature:     5772,
+		AgeGyr:          4.568,
+	})
+	sys := stars.System{
+		Primary:            sol,
+		PrimaryDesignation: "A",
+		AgeGyr:             4.568,
+	}
+	form := stars.BuildSurveyForm(sys, stars.SurveyMetadata{
+		Sector:        "Solomani Rim",
+		Location:      "1827",
+		Designation:   "Terra",
+		InitialSurvey: "001-(-2500)",
+		LastUpdated:   "001-(-2498)",
+	})
+
+	// Header fields.
+	if form.Sector != "Solomani Rim" {
+		t.Errorf("Sector = %q want %q", form.Sector, "Solomani Rim")
+	}
+	if form.Location != "1827" {
+		t.Errorf("Location = %q want %q", form.Location, "1827")
+	}
+	if form.IISSDesig != "Terra" {
+		t.Errorf("IISSDesig = %q want %q", form.IISSDesig, "Terra")
+	}
+	if form.InitialSurvey != "001-(-2500)" {
+		t.Errorf("InitialSurvey = %q", form.InitialSurvey)
+	}
+	if form.LastUpdated != "001-(-2498)" {
+		t.Errorf("LastUpdated = %q", form.LastUpdated)
+	}
+	if math.Abs(form.SystemAgeGyr-4.568) > 1e-9 {
+		t.Errorf("SystemAgeGyr = %v want 4.568", form.SystemAgeGyr)
+	}
+	if form.StellarCount != 1 {
+		t.Errorf("StellarCount = %d want 1", form.StellarCount)
+	}
+
+	// Stars table: should have exactly one row.
+	if len(form.Stars) != 1 {
+		t.Fatalf("Stars rows = %d want 1", len(form.Stars))
+	}
+	row := form.Stars[0]
+	if row.Component != "A" {
+		t.Errorf("Component = %q want A", row.Component)
+	}
+	if row.Class != "G2 V" {
+		t.Errorf("Class = %q want G2 V", row.Class)
+	}
+	checks := []struct {
+		name string
+		got  float64
+		want float64
+	}{
+		{"Mass", row.Mass, 1.000},
+		{"Temperature", row.Temperature, 5772},
+		{"Diameter", row.Diameter, 1.000},
+		{"Luminosity", row.Luminosity, 1.000},
+	}
+	for _, c := range checks {
+		if math.Abs(c.got-c.want) > 1e-9 {
+			t.Errorf("%s = %v want %v", c.name, c.got, c.want)
+		}
+	}
+}
