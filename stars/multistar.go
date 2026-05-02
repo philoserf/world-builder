@@ -277,3 +277,53 @@ func generateBrownDwarfStub(parent Star) Star {
 		AgeGyr:          parent.AgeGyr,
 	}
 }
+
+// AssignDesignations populates the Designation fields on a System
+// according to WBH p.25.
+//
+// Primary is "A" (single) or "Aa" (with OrbitCompanion child).
+// Close, Near, Far orbit classes are lettered B, C, D in presence order
+// (absent classes are skipped — see Zed example p.34 where Close is
+// absent and Near becomes "B"). Any star with its own OrbitCompanion
+// child gets "+a" suffix; its companion gets "+b".
+func AssignDesignations(sys *System) {
+	// Primary first.
+	primaryCompanionIdx := findCompanionByParent(sys, -1, OrbitCompanion)
+	if primaryCompanionIdx >= 0 {
+		sys.PrimaryDesignation = "Aa"
+		sys.Companions[primaryCompanionIdx].Designation = "Ab"
+	} else {
+		sys.PrimaryDesignation = "A"
+	}
+
+	// Walk orbit classes in book order: Close, Near, Far.
+	letters := []string{"B", "C", "D"}
+	li := 0
+	for _, oc := range []OrbitClass{OrbitClose, OrbitNear, OrbitFar} {
+		idx := findCompanionByParent(sys, -1, oc)
+		if idx < 0 {
+			continue
+		}
+		letter := letters[li]
+		li++
+		// Does this star have its own OrbitCompanion child?
+		childIdx := findCompanionByParent(sys, idx, OrbitCompanion)
+		if childIdx >= 0 {
+			sys.Companions[idx].Designation = letter + "a"
+			sys.Companions[childIdx].Designation = letter + "b"
+		} else {
+			sys.Companions[idx].Designation = letter
+		}
+	}
+}
+
+// findCompanionByParent returns the index of the first companion whose
+// ParentIndex matches and whose OrbitClass matches, or -1 if none.
+func findCompanionByParent(sys *System, parentIdx int, oc OrbitClass) int {
+	for i, c := range sys.Companions {
+		if c.ParentIndex == parentIdx && c.OrbitClass == oc {
+			return i
+		}
+	}
+	return -1
+}

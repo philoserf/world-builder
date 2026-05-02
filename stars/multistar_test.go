@@ -274,3 +274,117 @@ func TestGenerateCompanionStar_OtherErrors(t *testing.T) {
 		t.Fatal("expected error for Other descriptor")
 	}
 }
+
+func TestAssignDesignations_PrimaryAlone(t *testing.T) {
+	sys := &System{Primary: Star{Kind: KindMainSequence}}
+	AssignDesignations(sys)
+	if sys.PrimaryDesignation != "A" {
+		t.Fatalf("got %q want A", sys.PrimaryDesignation)
+	}
+}
+
+func TestAssignDesignations_PrimaryWithCompanion(t *testing.T) {
+	sys := &System{
+		Primary: Star{Kind: KindMainSequence},
+		Companions: []CompanionStar{
+			{OrbitClass: OrbitCompanion, ParentIndex: -1},
+		},
+	}
+	AssignDesignations(sys)
+	if sys.PrimaryDesignation != "Aa" {
+		t.Fatalf("primary: got %q want Aa", sys.PrimaryDesignation)
+	}
+	if sys.Companions[0].Designation != "Ab" {
+		t.Fatalf("companion: got %q want Ab", sys.Companions[0].Designation)
+	}
+}
+
+func TestAssignDesignations_PrimaryPlusClose(t *testing.T) {
+	sys := &System{
+		Primary: Star{Kind: KindMainSequence},
+		Companions: []CompanionStar{
+			{OrbitClass: OrbitClose, ParentIndex: -1},
+		},
+	}
+	AssignDesignations(sys)
+	if sys.PrimaryDesignation != "A" {
+		t.Fatalf("primary: got %q want A", sys.PrimaryDesignation)
+	}
+	if sys.Companions[0].Designation != "B" {
+		t.Fatalf("close: got %q want B", sys.Companions[0].Designation)
+	}
+}
+
+func TestAssignDesignations_Zed(t *testing.T) {
+	// Zed quintuple system (WBH p.34):
+	//   primary Aa (G7 V) with companion Ab (G8 V)
+	//   no Close
+	//   Near alone (K8 V) -> "B"
+	//   Far (M0 V) with companion (D) -> "Ca", "Cb"
+	sys := &System{
+		Primary: Star{Kind: KindMainSequence, SpectralType: SpectralType{Letter: 'G', Subtype: 7}, LuminosityClass: V},
+		Companions: []CompanionStar{
+			{OrbitClass: OrbitCompanion, ParentIndex: -1}, // 0: Ab
+			{OrbitClass: OrbitNear, ParentIndex: -1},      // 1: Near (B)
+			{OrbitClass: OrbitFar, ParentIndex: -1},       // 2: Far (Ca)
+			{OrbitClass: OrbitCompanion, ParentIndex: 2},  // 3: Far's companion (Cb)
+		},
+	}
+	AssignDesignations(sys)
+	want := []string{"Aa", "Ab", "B", "Ca", "Cb"}
+	got := []string{sys.PrimaryDesignation}
+	for _, c := range sys.Companions {
+		got = append(got, c.Designation)
+	}
+	if len(got) != len(want) {
+		t.Fatalf("len: got %v want %v", got, want)
+	}
+	for i, w := range want {
+		if got[i] != w {
+			t.Errorf("[%d]: got %q want %q (full got: %v)", i, got[i], w, got)
+		}
+	}
+}
+
+func TestAssignDesignations_OnlyFar(t *testing.T) {
+	// With only Far present, Far gets letter B (not D).
+	sys := &System{
+		Primary: Star{Kind: KindMainSequence},
+		Companions: []CompanionStar{
+			{OrbitClass: OrbitFar, ParentIndex: -1},
+		},
+	}
+	AssignDesignations(sys)
+	if sys.Companions[0].Designation != "B" {
+		t.Fatalf("got %q want B", sys.Companions[0].Designation)
+	}
+}
+
+func TestAssignDesignations_FullSextuple(t *testing.T) {
+	// WBH p.25 illustrative full case:
+	//   Aa (primary), Ab (primary's companion)
+	//   B (Close, alone)
+	//   Ca (Near), Cb (Near's companion)
+	//   D (Far, alone)
+	sys := &System{
+		Primary: Star{Kind: KindMainSequence},
+		Companions: []CompanionStar{
+			{OrbitClass: OrbitCompanion, ParentIndex: -1}, // 0: Ab
+			{OrbitClass: OrbitClose, ParentIndex: -1},     // 1: B
+			{OrbitClass: OrbitNear, ParentIndex: -1},      // 2: Ca
+			{OrbitClass: OrbitCompanion, ParentIndex: 2},  // 3: Cb (companion of Near)
+			{OrbitClass: OrbitFar, ParentIndex: -1},       // 4: D
+		},
+	}
+	AssignDesignations(sys)
+	want := []string{"Aa", "Ab", "B", "Ca", "Cb", "D"}
+	got := []string{sys.PrimaryDesignation}
+	for _, c := range sys.Companions {
+		got = append(got, c.Designation)
+	}
+	for i, w := range want {
+		if got[i] != w {
+			t.Errorf("[%d]: got %q want %q (full got: %v)", i, got[i], w, got)
+		}
+	}
+}
