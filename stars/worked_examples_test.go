@@ -167,3 +167,140 @@ func TestSolTerra_SurveyForm_p35(t *testing.T) {
 		}
 	}
 }
+
+func TestCorella_SurveyForm_p35(t *testing.T) {
+	// WBH p.35 Corella binary: G2 V + G8 V (Companion-class).
+	// Constructed directly via Compose; the book's roll sequence isn't
+	// specified for Corella so we don't drive GenerateSystem here.
+
+	a := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+		LuminosityClass: stars.V,
+		Mass:            1.224,
+		Diameter:        0.998,
+		Temperature:     5840,
+		AgeGyr:          4.9,
+	})
+	b := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.974,
+		Diameter:        0.957,
+		Temperature:     5360,
+		AgeGyr:          4.9,
+	})
+
+	// Per WBH p.30 Kepler formula: P = sqrt(au^3 / (M+m)).
+	au := 0.120
+	totalMass := a.Mass + b.Mass
+	period := stars.OrbitPeriodYears(au, a.Mass, b.Mass)
+
+	sys := stars.System{
+		Primary: a,
+		Companions: []stars.CompanionStar{
+			{
+				Star:         b,
+				OrbitClass:   stars.OrbitCompanion,
+				ParentIndex:  -1,
+				OrbitNumber:  0.30,
+				AU:           au,
+				Eccentricity: 0.010,
+				PeriodYears:  period,
+			},
+		},
+		AgeGyr: 4.9,
+	}
+	stars.AssignDesignations(&sys)
+
+	form := stars.BuildSurveyForm(sys, stars.SurveyMetadata{
+		Sector:      "The Beyond",
+		Location:    "0314",
+		Designation: "Corella",
+	})
+
+	if form.StellarCount != 2 {
+		t.Fatalf("StellarCount = %d want 2", form.StellarCount)
+	}
+
+	// Expect 3 rows: Aa (primary), Ab (companion), Aab (A) (composite).
+	if len(form.Stars) != 3 {
+		t.Fatalf("Stars rows = %d want 3 (got: %v)", len(form.Stars), form.Stars)
+	}
+
+	// Row 0: primary Aa.
+	row0 := form.Stars[0]
+	if row0.Component != "Aa" {
+		t.Errorf("[0].Component = %q want Aa", row0.Component)
+	}
+	if row0.Class != "G2 V" {
+		t.Errorf("[0].Class = %q want G2 V", row0.Class)
+	}
+	primaryChecks := []struct {
+		name      string
+		got, want float64
+	}{
+		{"Mass", row0.Mass, 1.224},
+		{"Temperature", row0.Temperature, 5840},
+		{"Diameter", row0.Diameter, 0.998},
+		{"Luminosity", row0.Luminosity, 1.045},
+	}
+	for _, c := range primaryChecks {
+		// Luminosity is computed from the formula; allow small rel-tol.
+		tol := 1e-9
+		if c.name == "Luminosity" {
+			tol = 5e-3
+		}
+		if math.Abs(c.got-c.want) > tol {
+			t.Errorf("[0].%s = %v want %v (tol %v)", c.name, c.got, c.want, tol)
+		}
+	}
+
+	// Row 1: companion Ab.
+	row1 := form.Stars[1]
+	if row1.Component != "Ab" {
+		t.Errorf("[1].Component = %q want Ab", row1.Component)
+	}
+	if row1.Class != "G8 V" {
+		t.Errorf("[1].Class = %q want G8 V", row1.Class)
+	}
+	companionChecks := []struct {
+		name           string
+		got, want, tol float64
+	}{
+		{"Mass", row1.Mass, 0.974, 1e-9},
+		{"Temperature", row1.Temperature, 5360, 1e-9},
+		{"Diameter", row1.Diameter, 0.957, 1e-9},
+		{"Luminosity", row1.Luminosity, 0.681, 5e-3},
+		{"Orbit", row1.Orbit, 0.30, 1e-9},
+		{"AU", row1.AU, 0.120, 1e-3},
+		{"Eccentricity", row1.Eccentricity, 0.010, 1e-9},
+		{"Period", row1.PeriodYears, 0.028, 1e-3},
+	}
+	for _, c := range companionChecks {
+		if math.Abs(c.got-c.want) > c.tol {
+			t.Errorf("[1].%s = %v want %v (tol %v)", c.name, c.got, c.want, c.tol)
+		}
+	}
+
+	// Row 2: composite Aab (A).
+	row2 := form.Stars[2]
+	if row2.Component != "Aab (A)" {
+		t.Errorf("[2].Component = %q want Aab (A)", row2.Component)
+	}
+	if row2.Class != "—" {
+		t.Errorf("[2].Class = %q want —", row2.Class)
+	}
+	if math.Abs(row2.Mass-totalMass) > 1e-9 {
+		t.Errorf("[2].Mass = %v want %v", row2.Mass, totalMass)
+	}
+	// Composite luminosity = primary + companion luminosity (book reports 1.725).
+	wantLum := row0.Luminosity + row1.Luminosity
+	if math.Abs(row2.Luminosity-wantLum) > 1e-9 {
+		t.Errorf("[2].Luminosity = %v want %v (sum)", row2.Luminosity, wantLum)
+	}
+	if math.Abs(row2.PeriodYears-period) > 1e-9 {
+		t.Errorf("[2].Period = %v want %v", row2.PeriodYears, period)
+	}
+}
