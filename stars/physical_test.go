@@ -83,3 +83,58 @@ func TestInterpolateClassRow_MissingClass(t *testing.T) {
 		t.Fatal("expected error for missing class")
 	}
 }
+
+func TestComputeMass_G7V(t *testing.T) {
+	got, err := ComputeMass(SpectralType{Letter: 'G', Subtype: 7}, V)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if math.Abs(got-0.86) > 1e-9 {
+		t.Fatalf("got %v want 0.86", got)
+	}
+}
+
+func TestComputeDiameter_G7V(t *testing.T) {
+	got, err := ComputeDiameter(SpectralType{Letter: 'G', Subtype: 7}, V)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if math.Abs(got-0.93) > 1e-9 {
+		t.Fatalf("got %v want 0.93", got)
+	}
+}
+
+func TestComputeTemperature_G7V(t *testing.T) {
+	got, err := ComputeTemperature(SpectralType{Letter: 'G', Subtype: 7})
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if math.Abs(got-5440) > 1e-9 {
+		t.Fatalf("got %v want 5440", got)
+	}
+}
+
+func TestComputeLuminosityFromTable_G0V(t *testing.T) {
+	got, err := ComputeLuminosityFromTable(SpectralType{Letter: 'G', Subtype: 0}, V)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if math.Abs(got-1.4) > 1e-9 {
+		t.Fatalf("got %v want 1.4", got)
+	}
+}
+
+func TestComputeLuminosityFromFormula_Sol(t *testing.T) {
+	got := ComputeLuminosityFromFormula(1.0, 5772)
+	if math.Abs(got-1.0) > 1e-9 {
+		t.Fatalf("got %v want 1.0", got)
+	}
+}
+
+func TestComputeLuminosityFromFormula_Zed(t *testing.T) {
+	// WBH p. 20: Zed (D=0.967, T=5440) -> L = (0.967)^2 * (5440/5772)^4 = 0.7378.
+	got := ComputeLuminosityFromFormula(0.967, 5440)
+	if math.Abs(got-0.7378) > 1e-3 {
+		t.Fatalf("got %v want 0.7378", got)
+	}
+}

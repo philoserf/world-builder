@@ -107,3 +107,40 @@ func InterpolateScalar(table map[string]float64, st SpectralType) (float64, erro
 	}
 	return loVal + frac*(hiVal-loVal), nil
 }
+
+// ComputeMass returns the interpolated mass in solar units (WBH p. 17).
+func ComputeMass(st SpectralType, lc LuminosityClass) (float64, error) {
+	return InterpolateClassRow(StarMass, st, lc)
+}
+
+// ComputeDiameter returns the interpolated diameter in solar units (WBH p. 19).
+func ComputeDiameter(st SpectralType, lc LuminosityClass) (float64, error) {
+	return InterpolateClassRow(StarDiameter, st, lc)
+}
+
+// ComputeTemperature returns the interpolated surface temperature in
+// Kelvin (WBH p. 17 — Temperature column).
+func ComputeTemperature(st SpectralType) (float64, error) {
+	return InterpolateScalar(StarTemperature, st)
+}
+
+// SolTemperatureK is the WBH p. 20 reference temperature for Sol.
+const SolTemperatureK = 5772.0
+
+// ComputeLuminosityFromTable returns the interpolated luminosity in
+// solar units (WBH p. 19).
+func ComputeLuminosityFromTable(st SpectralType, lc LuminosityClass) (float64, error) {
+	return InterpolateClassRow(StarLuminosity, st, lc)
+}
+
+// ComputeLuminosityFromFormula returns the closed-form luminosity in
+// solar units (WBH p. 20):
+//
+//	L/L⊙ = (D/D⊙)^2 × (T/T⊙)^4
+//
+// The book recommends this formula when accurate diameter and
+// temperature values are available.
+func ComputeLuminosityFromFormula(diameter, temperature float64) float64 {
+	tRatio := temperature / SolTemperatureK
+	return diameter * diameter * tRatio * tRatio * tRatio * tRatio
+}
