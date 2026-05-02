@@ -33,3 +33,109 @@ var StarSubtypeNumeric = map[int]int{
 var StarSubtypeMType = map[int]int{
 	2: 8, 3: 6, 4: 5, 5: 4, 6: 0, 7: 2, 8: 1, 9: 3, 10: 5, 11: 7, 12: 9,
 }
+
+// ClassRow holds class-keyed values for tables shaped like the Mass,
+// Diameter, and Luminosity tables on WBH pp. 17, 19. A nil pointer
+// indicates the book leaves the cell blank ("—").
+type ClassRow struct {
+	Ia, Ib, II, III, IV, V, VI *float64
+}
+
+// Get returns the value for the given luminosity class, or false if
+// the cell is absent.
+func (r ClassRow) Get(lc LuminosityClass) (float64, bool) {
+	var p *float64
+	switch lc {
+	case Ia:
+		p = r.Ia
+	case Ib:
+		p = r.Ib
+	case II:
+		p = r.II
+	case III:
+		p = r.III
+	case IV:
+		p = r.IV
+	case V:
+		p = r.V
+	case VI:
+		p = r.VI
+	}
+	if p == nil {
+		return 0, false
+	}
+	return *p, true
+}
+
+func f(x float64) *float64 { return &x }
+
+// StarMass is the WBH p. 17 Star Mass and Temperature by Class table — Mass column.
+// Values are in solar masses (Sol = 1.0).
+var StarMass = map[string]ClassRow{
+	"O0": {Ia: f(200), Ib: f(150), II: f(130), III: f(110), V: f(90), VI: f(2)},
+	"O5": {Ia: f(80), Ib: f(60), II: f(40), III: f(30), V: f(60), VI: f(1.5)},
+	"B0": {Ia: f(60), Ib: f(40), II: f(30), III: f(20), IV: f(20), V: f(18), VI: f(0.5)},
+	"B5": {Ia: f(30), Ib: f(25), II: f(20), III: f(10), IV: f(10), V: f(5), VI: f(0.4)},
+	"A0": {Ia: f(20), Ib: f(15), II: f(14), III: f(8), IV: f(4), V: f(2.2)},
+	"A5": {Ia: f(15), Ib: f(13), II: f(11), III: f(6), IV: f(2.3), V: f(1.5)},
+	"F0": {Ia: f(13), Ib: f(12), II: f(10), III: f(4), IV: f(2), V: f(1.5)},
+	"F5": {Ia: f(12), Ib: f(10), II: f(8), III: f(3), IV: f(1.5), V: f(1.3)},
+	"G0": {Ia: f(12), Ib: f(10), II: f(8), III: f(2.5), IV: f(1.7), V: f(1.1), VI: f(0.8)},
+	"G5": {Ia: f(13), Ib: f(11), II: f(10), III: f(2.4), IV: f(1.2), V: f(0.9), VI: f(0.7)},
+	"K0": {Ia: f(14), Ib: f(12), II: f(10), III: f(1.1), IV: f(1.5), V: f(0.8), VI: f(0.6)},
+	"K5": {Ia: f(18), Ib: f(13), II: f(12), III: f(1.5), V: f(0.7), VI: f(0.5)},
+	"M0": {Ia: f(20), Ib: f(15), II: f(14), III: f(1.8), V: f(0.5), VI: f(0.4)},
+	"M5": {Ia: f(25), Ib: f(20), II: f(16), III: f(2.4), V: f(0.16), VI: f(0.12)},
+	"M9": {Ia: f(30), Ib: f(25), II: f(18), III: f(8), V: f(0.08), VI: f(0.075)},
+}
+
+// StarTemperature is the WBH p. 17 Star Mass and Temperature by Class table —
+// Temperature column. Values are in Kelvin.
+var StarTemperature = map[string]float64{
+	"O0": 50000, "O5": 40000, "B0": 30000, "B5": 15000,
+	"A0": 10000, "A5": 8000,
+	"F0": 7500, "F5": 6500,
+	"G0": 6000, "G5": 5600,
+	"K0": 5200, "K5": 4400,
+	"M0": 3700, "M5": 3000, "M9": 2400,
+}
+
+// StarDiameter is the WBH p. 19 Star Diameter by Class table.
+// Values are in solar diameters (Sol = 1.0).
+var StarDiameter = map[string]ClassRow{
+	"O0": {Ia: f(25), Ib: f(24), II: f(22), III: f(21), V: f(20), VI: f(0.18)},
+	"O5": {Ia: f(22), Ib: f(20), II: f(18), III: f(15), V: f(12), VI: f(0.18)},
+	"B0": {Ia: f(20), Ib: f(14), II: f(12), III: f(10), IV: f(8), V: f(7), VI: f(0.2)},
+	"B5": {Ia: f(60), Ib: f(25), II: f(14), III: f(6), IV: f(5), V: f(3.5), VI: f(0.5)},
+	"A0": {Ia: f(120), Ib: f(50), II: f(30), III: f(5), IV: f(4), V: f(2.2)},
+	"A5": {Ia: f(180), Ib: f(75), II: f(45), III: f(5), IV: f(3), V: f(2)},
+	"F0": {Ia: f(210), Ib: f(85), II: f(50), III: f(5), IV: f(3), V: f(1.7)},
+	"F5": {Ia: f(280), Ib: f(115), II: f(66), III: f(5), IV: f(2), V: f(1.5)},
+	"G0": {Ia: f(330), Ib: f(135), II: f(77), III: f(10), IV: f(3), V: f(1.1), VI: f(0.8)},
+	"G5": {Ia: f(360), Ib: f(150), II: f(90), III: f(15), IV: f(4), V: f(0.95), VI: f(0.7)},
+	"K0": {Ia: f(420), Ib: f(180), II: f(110), III: f(20), IV: f(6), V: f(0.9), VI: f(0.6)},
+	"K5": {Ia: f(600), Ib: f(260), II: f(160), III: f(40), V: f(0.8), VI: f(0.5)},
+	"M0": {Ia: f(900), Ib: f(380), II: f(230), III: f(60), V: f(0.7), VI: f(0.4)},
+	"M5": {Ia: f(1200), Ib: f(600), II: f(350), III: f(100), V: f(0.2), VI: f(0.1)},
+	"M9": {Ia: f(1800), Ib: f(800), II: f(500), III: f(200), V: f(0.1), VI: f(0.08)},
+}
+
+// StarLuminosity is the WBH p. 19 Star Luminosity by Class table.
+// Values are in solar luminosities (Sol = 1.0).
+var StarLuminosity = map[string]ClassRow{
+	"O0": {Ia: f(3_400_000), Ib: f(3_200_000), II: f(2_700_000), III: f(2_400_000), V: f(2_200_000), VI: f(180)},
+	"O5": {Ia: f(1_100_000), Ib: f(900_000), II: f(730_000), III: f(510_000), V: f(330_000), VI: f(73)},
+	"B0": {Ia: f(290_000), Ib: f(140_000), II: f(100_000), III: f(72_000), IV: f(46_000), V: f(35_000), VI: f(29)},
+	"B5": {Ia: f(160_000), Ib: f(28_000), II: f(8800), III: f(1600), IV: f(1100), V: f(550), VI: f(11)},
+	"A0": {Ia: f(130_000), Ib: f(22_000), II: f(8000), III: f(220), IV: f(140), V: f(43)},
+	"A5": {Ia: f(120_000), Ib: f(20_000), II: f(7300), III: f(90), IV: f(33), V: f(15)},
+	"F0": {Ia: f(120_000), Ib: f(20_000), II: f(7000), III: f(70), IV: f(25), V: f(8.1)},
+	"F5": {Ia: f(120_000), Ib: f(20_000), II: f(6900), III: f(39), IV: f(6), V: f(3.5)},
+	"G0": {Ia: f(120_000), Ib: f(20_000), II: f(6800), III: f(120), IV: f(10), V: f(1.4), VI: f(0.73)},
+	"G5": {Ia: f(110_000), Ib: f(20_000), II: f(7000), III: f(200), IV: f(14), V: f(0.78), VI: f(0.43)},
+	"K0": {Ia: f(110_000), Ib: f(21_000), II: f(7800), III: f(260), IV: f(23), V: f(0.52), VI: f(0.23)},
+	"K5": {Ia: f(120_000), Ib: f(22_000), II: f(8400), III: f(530), V: f(0.21), VI: f(0.083)},
+	"M0": {Ia: f(130_000), Ib: f(24_000), II: f(8800), III: f(600), V: f(0.082), VI: f(0.027)},
+	"M5": {Ia: f(100_000), Ib: f(26_000), II: f(8800), III: f(720), V: f(0.0029), VI: f(0.00072)},
+	"M9": {Ia: f(90_000), Ib: f(19_000), II: f(7300), III: f(1200), V: f(0.00029), VI: f(0.00019)},
+}

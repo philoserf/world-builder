@@ -86,3 +86,92 @@ func TestStarSubtype_KnownCells(t *testing.T) {
 		t.Fatalf("MType[12] = %d, want 9", got)
 	}
 }
+
+func TestStarMass_KnownCells(t *testing.T) {
+	// WBH p. 17 — spot checks.
+	tests := []struct {
+		spectral string
+		class    LuminosityClass
+		want     float64
+	}{
+		{"G0", V, 1.1},
+		{"G5", V, 0.9},
+		{"K0", V, 0.8},
+		{"O0", Ia, 200},
+		{"M9", VI, 0.075},
+	}
+	for _, tc := range tests {
+		row, ok := StarMass[tc.spectral]
+		if !ok {
+			t.Fatalf("missing row %s", tc.spectral)
+		}
+		got, ok := row.Get(tc.class)
+		if !ok {
+			t.Fatalf("missing %s %s cell", tc.spectral, tc.class)
+		}
+		if got != tc.want {
+			t.Fatalf("%s %s = %v, want %v", tc.spectral, tc.class, got, tc.want)
+		}
+	}
+	// Class IV not available for O0; should be absent.
+	if _, ok := StarMass["O0"].Get(IV); ok {
+		t.Fatal("O0 IV unexpectedly present")
+	}
+}
+
+func TestStarTemperature_KnownCells(t *testing.T) {
+	cases := map[string]float64{
+		"G0": 6000, "G5": 5600, "K0": 5200, "O0": 50000, "M9": 2400,
+	}
+	for s, want := range cases {
+		if got := StarTemperature[s]; got != want {
+			t.Fatalf("%s = %v, want %v", s, got, want)
+		}
+	}
+}
+
+func TestStarDiameter_KnownCells(t *testing.T) {
+	tests := []struct {
+		spectral string
+		class    LuminosityClass
+		want     float64
+	}{
+		{"G0", V, 1.1},
+		{"G5", V, 0.95},
+		{"K0", V, 0.9},
+		{"O0", Ia, 25},
+		{"M9", VI, 0.08},
+	}
+	for _, tc := range tests {
+		got, ok := StarDiameter[tc.spectral].Get(tc.class)
+		if !ok {
+			t.Fatalf("missing %s %s", tc.spectral, tc.class)
+		}
+		if got != tc.want {
+			t.Fatalf("%s %s = %v, want %v", tc.spectral, tc.class, got, tc.want)
+		}
+	}
+}
+
+func TestStarLuminosity_KnownCells(t *testing.T) {
+	tests := []struct {
+		spectral string
+		class    LuminosityClass
+		want     float64
+	}{
+		{"G0", V, 1.4},
+		{"G5", V, 0.78},
+		{"K0", V, 0.52},
+		{"O0", Ia, 3_400_000},
+		{"M9", VI, 0.00019},
+	}
+	for _, tc := range tests {
+		got, ok := StarLuminosity[tc.spectral].Get(tc.class)
+		if !ok {
+			t.Fatalf("missing %s %s", tc.spectral, tc.class)
+		}
+		if got != tc.want {
+			t.Fatalf("%s %s = %v, want %v", tc.spectral, tc.class, got, tc.want)
+		}
+	}
+}
