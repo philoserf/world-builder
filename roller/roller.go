@@ -35,7 +35,7 @@ func (s *Seeded) Roll(notation string) int {
 		panic(fmt.Errorf("roller.Seeded: %w", err))
 	}
 	total := spec.Modifier
-	for i := 0; i < spec.Count; i++ {
+	for range spec.Count {
 		total += s.rng.Intn(spec.Sides) + 1
 	}
 	return total

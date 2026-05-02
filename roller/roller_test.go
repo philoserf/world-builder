@@ -7,7 +7,7 @@ import (
 func TestSeeded_Deterministic(t *testing.T) {
 	a := NewSeeded(42)
 	b := NewSeeded(42)
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		ra, rb := a.Roll("2D"), b.Roll("2D")
 		if ra != rb {
 			t.Fatalf("seeded rollers diverged at i=%d: %d vs %d", i, ra, rb)
@@ -17,7 +17,7 @@ func TestSeeded_Deterministic(t *testing.T) {
 
 func TestSeeded_2DInRange(t *testing.T) {
 	r := NewSeeded(1)
-	for i := 0; i < 200; i++ {
+	for range 200 {
 		v := r.Roll("2D")
 		if v < 2 || v > 12 {
 			t.Fatalf("2D out of range: %d", v)
@@ -27,7 +27,7 @@ func TestSeeded_2DInRange(t *testing.T) {
 
 func TestSeeded_Modifier(t *testing.T) {
 	r := NewSeeded(1)
-	for i := 0; i < 200; i++ {
+	for range 200 {
 		v := r.Roll("2D-7")
 		if v < -5 || v > 5 {
 			t.Fatalf("2D-7 out of range: %d", v)
@@ -37,7 +37,7 @@ func TestSeeded_Modifier(t *testing.T) {
 
 func TestSeeded_D10(t *testing.T) {
 	r := NewSeeded(1)
-	for i := 0; i < 200; i++ {
+	for range 200 {
 		v := r.Roll("d10")
 		if v < 1 || v > 10 {
 			t.Fatalf("d10 out of range: %d", v)
