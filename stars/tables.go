@@ -143,3 +143,53 @@ var StarLuminosity = map[string]ClassRow{
 // MultipleStarsPresenceThreshold is the WBH p.23 2D threshold (after
 // DMs) for a star to be present in a given orbit class.
 const MultipleStarsPresenceThreshold = 10
+
+// ExistingStarLocationsBinary is the WBH p.24 Existing Star Locations table
+// for binary systems, keyed by 1D.
+// "RollAgainOrCompanion" means the Referee may either reroll or treat
+// the new star as a companion of an existing star with the same Class
+// and Type. "RollAgain" means simply reroll on this table.
+var ExistingStarLocationsBinary = map[int]string{
+	1: "Companion",
+	2: "Close",
+	3: "Near",
+	4: "Far",
+	5: "RollAgainOrCompanion",
+	6: "RollAgain",
+}
+
+// ExistingStarLocationsTrinaryPlus is the WBH p.24 Existing Star Locations
+// table for trinary and larger systems, keyed by 1D.
+var ExistingStarLocationsTrinaryPlus = map[int]string{
+	1: "Companion",
+	2: "Close",
+	3: "Near",
+	4: "Far",
+	5: "RollAgainOrCompanion",
+	6: "Far",
+}
+
+// NonPrimaryRow is one row of the WBH p.29 Non-Primary Star Determination
+// table. Cells are descriptor strings:
+//
+//	"Random", "Lesser", "Sibling", "Twin", "Other", "D", "BD".
+type NonPrimaryRow struct {
+	Secondary, Companion, PostStellar, Other string
+}
+
+// NonPrimaryStarDetermination is the WBH p.29 Non-Primary Star Determination
+// table, keyed by clamped 2D+DM in [2,12].
+// Class III/IV primaries apply DM-1 to the 2D before lookup.
+var NonPrimaryStarDetermination = map[int]NonPrimaryRow{
+	2:  {Secondary: "Other", Companion: "Other", PostStellar: "Other", Other: "D"},
+	3:  {Secondary: "Other", Companion: "Other", PostStellar: "Other", Other: "D"},
+	4:  {Secondary: "Random", Companion: "Random", PostStellar: "Random", Other: "D"},
+	5:  {Secondary: "Random", Companion: "Random", PostStellar: "Random", Other: "D"},
+	6:  {Secondary: "Random", Companion: "Lesser", PostStellar: "Random", Other: "D"},
+	7:  {Secondary: "Lesser", Companion: "Lesser", PostStellar: "Random", Other: "D"},
+	8:  {Secondary: "Lesser", Companion: "Sibling", PostStellar: "Random", Other: "BD"},
+	9:  {Secondary: "Sibling", Companion: "Sibling", PostStellar: "Lesser", Other: "BD"},
+	10: {Secondary: "Sibling", Companion: "Twin", PostStellar: "Lesser", Other: "BD"},
+	11: {Secondary: "Twin", Companion: "Twin", PostStellar: "Twin", Other: "BD"},
+	12: {Secondary: "Twin", Companion: "Twin", PostStellar: "Twin", Other: "BD"},
+}

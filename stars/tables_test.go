@@ -182,3 +182,41 @@ func TestMultipleStarsPresenceThreshold(t *testing.T) {
 		t.Fatalf("threshold = %d, want 10", MultipleStarsPresenceThreshold)
 	}
 }
+
+func TestExistingStarLocationsBinary_Complete(t *testing.T) {
+	for r := 1; r <= 6; r++ {
+		if _, ok := ExistingStarLocationsBinary[r]; !ok {
+			t.Fatalf("binary: missing row %d", r)
+		}
+	}
+}
+
+func TestExistingStarLocationsTrinaryPlus_Complete(t *testing.T) {
+	for r := 1; r <= 6; r++ {
+		if _, ok := ExistingStarLocationsTrinaryPlus[r]; !ok {
+			t.Fatalf("trinary+: missing row %d", r)
+		}
+	}
+}
+
+func TestNonPrimaryStarDetermination_Complete(t *testing.T) {
+	for r := 2; r <= 12; r++ {
+		row := NonPrimaryStarDetermination[r]
+		if row.Secondary == "" || row.Companion == "" || row.PostStellar == "" || row.Other == "" {
+			t.Fatalf("row %d has empty cell: %+v", r, row)
+		}
+	}
+}
+
+func TestNonPrimaryStarDetermination_KnownCells(t *testing.T) {
+	// WBH p.29 spot checks.
+	if got := NonPrimaryStarDetermination[8].Companion; got != "Sibling" {
+		t.Fatalf("[8].Companion = %q want Sibling", got)
+	}
+	if got := NonPrimaryStarDetermination[8].Secondary; got != "Lesser" {
+		t.Fatalf("[8].Secondary = %q want Lesser", got)
+	}
+	if got := NonPrimaryStarDetermination[11].Other; got != "BD" {
+		t.Fatalf("[11].Other = %q want BD", got)
+	}
+}
