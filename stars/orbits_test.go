@@ -227,3 +227,78 @@ func TestOrbitPeriodYears_ZedAabSubsystem(t *testing.T) {
 		t.Fatalf("got %v want ~%v", got, want)
 	}
 }
+
+// ----- P2-8: OrbitToAU and AUToOrbit -----
+
+func TestOrbitToAU_Whole(t *testing.T) {
+	cases := []struct {
+		orbit, want float64
+	}{
+		{0, 0},
+		{1, 0.4},
+		{3, 1.0},
+		{5, 2.8},
+		{7, 10},
+	}
+	for _, tc := range cases {
+		got := OrbitToAU(tc.orbit)
+		if math.Abs(got-tc.want) > 1e-9 {
+			t.Errorf("OrbitToAU(%v) = %v, want %v", tc.orbit, got, tc.want)
+		}
+	}
+}
+
+func TestOrbitToAU_Fractional(t *testing.T) {
+	// WBH p.26 example: Orbit# 4.3 = 1.6 + 1.2*0.3 = 1.96 AU.
+	got := OrbitToAU(4.3)
+	want := 1.96
+	if math.Abs(got-want) > 1e-9 {
+		t.Fatalf("got %v want %v", got, want)
+	}
+}
+
+func TestOrbitToAU_HalfOrbit(t *testing.T) {
+	// Orbit# 0.5 = 0 + 0.4*0.5 = 0.2 AU (Close-orbit special).
+	got := OrbitToAU(0.5)
+	if math.Abs(got-0.2) > 1e-9 {
+		t.Fatalf("got %v want 0.2", got)
+	}
+}
+
+func TestAUToOrbit_Whole(t *testing.T) {
+	cases := []struct {
+		au, want float64
+	}{
+		{0.4, 1},
+		{1.0, 3},
+		{2.8, 5},
+		{5.2, 6},
+	}
+	for _, tc := range cases {
+		got := AUToOrbit(tc.au)
+		if math.Abs(got-tc.want) > 1e-9 {
+			t.Errorf("AUToOrbit(%v) = %v, want %v", tc.au, got, tc.want)
+		}
+	}
+}
+
+func TestAUToOrbit_BookExample(t *testing.T) {
+	// WBH p.26 example: 3.4 AU -> 5.25 Orbit#.
+	// 3.4 - 2.8 = 0.6; 0.6 / 2.4 = 0.25; full=5; result 5.25.
+	got := AUToOrbit(3.4)
+	want := 5.25
+	if math.Abs(got-want) > 1e-9 {
+		t.Fatalf("got %v want %v", got, want)
+	}
+}
+
+func TestAUToOrbit_RoundTrip(t *testing.T) {
+	values := []float64{0.5, 1.5, 2.5, 5.0, 7.5, 12.3, 18.0}
+	for _, x := range values {
+		au := OrbitToAU(x)
+		back := AUToOrbit(au)
+		if math.Abs(x-back) > 1e-9 {
+			t.Errorf("round-trip %v -> %v -> %v", x, au, back)
+		}
+	}
+}

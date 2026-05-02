@@ -217,3 +217,40 @@ var EccentricityValues = map[int]EccentricityRow{
 	11: {Base: 0.05, SecondRoll: "2D", Divisor: 20},
 	12: {Base: 0.30, SecondRoll: "2D", Divisor: 20},
 }
+
+// ----- P2-8: Orbit# ↔ AU conversion (WBH p.26) -----
+
+// OrbitNumberRow is one row of the WBH p.26 Orbit# table.
+type OrbitNumberRow struct {
+	DistanceAU   float64
+	DifferenceAU float64 // difference to the next-higher Orbit# (0 for Orbit# 20)
+	MillionKm    float64
+	Example      string
+}
+
+// OrbitNumberTable is the WBH p.26 Orbit# table mapping integer Orbit#
+// 0..20 to AU distance, difference to the next orbit, kilometers, and
+// the book's planetary example (where given).
+var OrbitNumberTable = map[int]OrbitNumberRow{
+	0:  {DistanceAU: 0, DifferenceAU: 0.4, MillionKm: 0, Example: "Companion Orbit"},
+	1:  {DistanceAU: 0.4, DifferenceAU: 0.3, MillionKm: 60, Example: "Mercury"},
+	2:  {DistanceAU: 0.7, DifferenceAU: 0.3, MillionKm: 105, Example: "Venus"},
+	3:  {DistanceAU: 1.0, DifferenceAU: 0.6, MillionKm: 150, Example: "Terra"},
+	4:  {DistanceAU: 1.6, DifferenceAU: 1.2, MillionKm: 240, Example: "Mars"},
+	5:  {DistanceAU: 2.8, DifferenceAU: 2.4, MillionKm: 420, Example: "Asteroid Belt (Ceres)"},
+	6:  {DistanceAU: 5.2, DifferenceAU: 4.8, MillionKm: 780, Example: "Jupiter"},
+	7:  {DistanceAU: 10, DifferenceAU: 10, MillionKm: 1500, Example: "Saturn"},
+	8:  {DistanceAU: 20, DifferenceAU: 20, MillionKm: 3000, Example: "Uranus"},
+	9:  {DistanceAU: 40, DifferenceAU: 37, MillionKm: 6000, Example: "Kuiper Belt (Pluto)"},
+	10: {DistanceAU: 77, DifferenceAU: 77, MillionKm: 11550, Example: "Scattered Disk (Eris)"},
+	11: {DistanceAU: 154, DifferenceAU: 154, MillionKm: 23100},
+	12: {DistanceAU: 308, DifferenceAU: 307, MillionKm: 46200},
+	13: {DistanceAU: 615, DifferenceAU: 615, MillionKm: 92250, Example: "Outer Scattered Disk (Sedna)"},
+	14: {DistanceAU: 1230, DifferenceAU: 1270, MillionKm: 184500},
+	15: {DistanceAU: 2500, DifferenceAU: 2400, MillionKm: 375000, Example: "Inner Oort Cloud"},
+	16: {DistanceAU: 4900, DifferenceAU: 4900, MillionKm: 735000, Example: "Middle Oort Cloud"},
+	17: {DistanceAU: 9800, DifferenceAU: 9700, MillionKm: 1470000},
+	18: {DistanceAU: 19500, DifferenceAU: 20000, MillionKm: 2925000},
+	19: {DistanceAU: 39500, DifferenceAU: 39200, MillionKm: 5925000, Example: "Outer Oort Cloud"},
+	20: {DistanceAU: 78700, DifferenceAU: 0, MillionKm: 11805000, Example: "> 1 light-year"},
+}

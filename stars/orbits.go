@@ -142,3 +142,58 @@ func RollInclination(r roller.Roller) (degrees float64, severity string, err err
 func OrbitPeriodYears(auSemiMajor, primaryMass, companionMass float64) float64 {
 	return math.Sqrt(auSemiMajor * auSemiMajor * auSemiMajor / (primaryMass + companionMass))
 }
+
+// ----- P2-8: Orbit# ↔ AU conversion (WBH p.26) -----
+
+// OrbitToAU converts a fractional Orbit# to AU distance from the central
+// star (WBH p.26).
+//
+//	AU = DistanceAU(floor) + DifferenceAU(floor) × frac
+//
+// Where `floor` is the largest whole-number Orbit# whose DistanceAU is ≤
+// the input. Orbit# 0 with frac is special: AU = 0 + 0.4 × frac (e.g.
+// Orbit# 0.5 = 0.2 AU, the Companion-orbit reference).
+//
+// Negative inputs are treated as 0; inputs ≥ 20 return DistanceAU(20).
+func OrbitToAU(orbit float64) float64 {
+	if orbit < 0 {
+		orbit = 0
+	}
+	if orbit >= 20 {
+		return OrbitNumberTable[20].DistanceAU
+	}
+	floor := int(orbit)
+	frac := orbit - float64(floor)
+	row := OrbitNumberTable[floor]
+	return row.DistanceAU + row.DifferenceAU*frac
+}
+
+// AUToOrbit converts an AU distance back to a fractional Orbit# (WBH p.26).
+//
+//	Orbit# = full + (AU - DistanceAU(full)) / DifferenceAU(full)
+//
+// Where `full` is the largest whole-number Orbit# whose DistanceAU ≤ AU.
+//
+// Returns 0 for AU < 0; returns 20 for AU ≥ DistanceAU(20).
+func AUToOrbit(au float64) float64 {
+	if au <= 0 {
+		return 0
+	}
+	if au >= OrbitNumberTable[20].DistanceAU {
+		return 20
+	}
+	// Find the largest whole Orbit# whose DistanceAU ≤ au.
+	full := 0
+	for n := 0; n <= 20; n++ {
+		if OrbitNumberTable[n].DistanceAU <= au {
+			full = n
+		} else {
+			break
+		}
+	}
+	row := OrbitNumberTable[full]
+	if row.DifferenceAU == 0 {
+		return float64(full)
+	}
+	return float64(full) + (au-row.DistanceAU)/row.DifferenceAU
+}

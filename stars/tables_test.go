@@ -245,3 +245,26 @@ func TestEccentricityValues_KnownCells(t *testing.T) {
 		t.Fatalf("[10].Divisor = %v want 20", got)
 	}
 }
+
+// ----- P2-8: OrbitNumberTable -----
+
+func TestOrbitNumberTable_Complete(t *testing.T) {
+	for n := 0; n <= 20; n++ {
+		if _, ok := OrbitNumberTable[n]; !ok {
+			t.Fatalf("missing row %d", n)
+		}
+	}
+}
+
+func TestOrbitNumberTable_KnownCells(t *testing.T) {
+	// WBH p.26 spot checks.
+	if got := OrbitNumberTable[3].DistanceAU; got != 1.0 {
+		t.Fatalf("[3].DistanceAU = %v want 1.0 (Terra)", got)
+	}
+	if got := OrbitNumberTable[6].DistanceAU; got != 5.2 {
+		t.Fatalf("[6].DistanceAU = %v want 5.2 (Jupiter)", got)
+	}
+	if got := OrbitNumberTable[3].Example; got != "Terra" {
+		t.Fatalf("[3].Example = %q want Terra", got)
+	}
+}
