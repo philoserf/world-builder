@@ -193,3 +193,27 @@ var NonPrimaryStarDetermination = map[int]NonPrimaryRow{
 	11: {Secondary: "Twin", Companion: "Twin", PostStellar: "Twin", Other: "BD"},
 	12: {Secondary: "Twin", Companion: "Twin", PostStellar: "Twin", Other: "BD"},
 }
+
+// EccentricityRow is one row of the WBH p.27 Eccentricity Values table.
+//
+// The procedure: roll 2D + DMs, clamp into [5, 12], look up the row,
+// then add a second-roll term (rolling SecondRoll dice) divided by Divisor.
+type EccentricityRow struct {
+	Base       float64
+	SecondRoll string  // dice notation for the second roll, e.g. "1D" or "2D"
+	Divisor    float64 // divisor applied to the second-roll result
+}
+
+// EccentricityValues is the WBH p.27 Eccentricity Values table.
+// Rows 6-7 share an entry; rows 8-9 share an entry. Rolls below 5 clamp
+// to row 5; rolls 12+ clamp to row 12.
+var EccentricityValues = map[int]EccentricityRow{
+	5:  {Base: -0.001, SecondRoll: "1D", Divisor: 1000},
+	6:  {Base: 0.00, SecondRoll: "1D", Divisor: 200},
+	7:  {Base: 0.00, SecondRoll: "1D", Divisor: 200},
+	8:  {Base: 0.03, SecondRoll: "1D", Divisor: 100},
+	9:  {Base: 0.03, SecondRoll: "1D", Divisor: 100},
+	10: {Base: 0.05, SecondRoll: "1D", Divisor: 20},
+	11: {Base: 0.05, SecondRoll: "2D", Divisor: 20},
+	12: {Base: 0.30, SecondRoll: "2D", Divisor: 20},
+}

@@ -220,3 +220,28 @@ func TestNonPrimaryStarDetermination_KnownCells(t *testing.T) {
 		t.Fatalf("[11].Other = %q want BD", got)
 	}
 }
+
+func TestEccentricityValues_Complete(t *testing.T) {
+	for r := 5; r <= 12; r++ {
+		row, ok := EccentricityValues[r]
+		if !ok {
+			t.Fatalf("missing row %d", r)
+		}
+		if row.SecondRoll == "" || row.Divisor == 0 {
+			t.Fatalf("row %d incomplete: %+v", r, row)
+		}
+	}
+}
+
+func TestEccentricityValues_KnownCells(t *testing.T) {
+	// WBH p.27 spot checks.
+	if got := EccentricityValues[5].Base; got != -0.001 {
+		t.Fatalf("[5].Base = %v want -0.001", got)
+	}
+	if got := EccentricityValues[12].Base; got != 0.30 {
+		t.Fatalf("[12].Base = %v want 0.30", got)
+	}
+	if got := EccentricityValues[10].Divisor; got != 20 {
+		t.Fatalf("[10].Divisor = %v want 20", got)
+	}
+}
