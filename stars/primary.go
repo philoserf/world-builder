@@ -113,10 +113,7 @@ func ApplyClassVILetterConstraint(letter SpectralLetter) SpectralLetter {
 // final luminosity class for a Class III+ result (WBH p. 16).
 func RollGiantClass(r roller.Roller) (LuminosityClass, error) {
 	natural := r.Roll("2D")
-	row := natural + 1
-	if row > 12 {
-		row = 12
-	}
+	row := min(natural+1, 12)
 	rowData, ok := StarTypeDetermination[row]
 	if !ok {
 		return "", fmt.Errorf("stars: 2D out of range: %d", row)
