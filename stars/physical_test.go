@@ -3,6 +3,8 @@ package stars
 import (
 	"math"
 	"testing"
+
+	"wbh/roller"
 )
 
 func TestInterpolateClassRow_GridPoint(t *testing.T) {
@@ -136,5 +138,42 @@ func TestComputeLuminosityFromFormula_Zed(t *testing.T) {
 	got := ComputeLuminosityFromFormula(0.967, 5440)
 	if math.Abs(got-0.7378) > 1e-3 {
 		t.Fatalf("got %v want 0.7378", got)
+	}
+}
+
+func TestApplyVariance_Zero(t *testing.T) {
+	r := roller.NewScripted(0)
+	got := ApplyVariance(0.86, r, 0.20)
+	if got != 0.86 {
+		t.Fatalf("got %v want 0.86", got)
+	}
+}
+
+func TestApplyVariance_ZedMass(t *testing.T) {
+	// WBH p. 17: base 0.86, 2D-7 = +2, max 0.20 -> 0.86 * (1 + 2/5 * 0.20) = 0.9288.
+	r := roller.NewScripted(2)
+	got := ApplyVariance(0.86, r, 0.20)
+	want := 0.9288
+	if math.Abs(got-want) > 1e-9 {
+		t.Fatalf("got %v want %v", got, want)
+	}
+}
+
+func TestApplyVariance_ZedDiameter(t *testing.T) {
+	// WBH p. 18: base 0.93, 2D-7 = +1, max 0.20 -> 0.93 * (1 + 1/5 * 0.20) = 0.9672.
+	r := roller.NewScripted(1)
+	got := ApplyVariance(0.93, r, 0.20)
+	want := 0.9672
+	if math.Abs(got-want) > 1e-9 {
+		t.Fatalf("got %v want %v", got, want)
+	}
+}
+
+func TestApplyVariance_Negative(t *testing.T) {
+	r := roller.NewScripted(-2)
+	got := ApplyVariance(1.0, r, 0.20)
+	want := 0.92
+	if math.Abs(got-want) > 1e-9 {
+		t.Fatalf("got %v want %v", got, want)
 	}
 }

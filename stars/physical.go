@@ -1,6 +1,10 @@
 package stars
 
-import "fmt"
+import (
+	"fmt"
+
+	"wbh/roller"
+)
 
 // gridKeys lists the WBH-tabulated subtype grid in book order.
 var gridKeys = []string{
@@ -143,4 +147,18 @@ func ComputeLuminosityFromTable(st SpectralType, lc LuminosityClass) (float64, e
 func ComputeLuminosityFromFormula(diameter, temperature float64) float64 {
 	tRatio := temperature / SolTemperatureK
 	return diameter * diameter * tRatio * tRatio * tRatio * tRatio
+}
+
+// ApplyVariance applies the WBH optional variance roll (p. 17–19).
+//
+// The roll is 2D-7 (range -5 to +5). The result scales linearly between
+// -maxPct and +maxPct of the base value:
+//
+//	adjusted = base × (1 + (2D-7)/5 × maxPct)
+//
+// Use maxPct=0.20 for mass/diameter, 0.30 for luminosity (Class III/V).
+func ApplyVariance(base float64, r roller.Roller, maxPct float64) float64 {
+	deviation := r.Roll("2D-7")
+	factor := 1.0 + (float64(deviation)/5.0)*maxPct
+	return base * factor
 }
