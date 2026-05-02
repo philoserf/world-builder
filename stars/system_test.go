@@ -1,6 +1,7 @@
 package stars
 
 import (
+	"errors"
 	"testing"
 
 	"wbh/roller"
@@ -130,5 +131,80 @@ func TestGenerateSystem_PrimaryWithCompanion(t *testing.T) {
 	}
 	if comp.OrbitNumber != 0.3 {
 		t.Fatalf("orbit number: got %v want 0.3", comp.OrbitNumber)
+	}
+}
+
+func TestGenerateSystem_SpecialPrimary_BD(t *testing.T) {
+	// Drive: 2D type = 2 (Special) -> ErrSpecialPrimary;
+	// then 2D on Unusual column = 6 -> "BD";
+	// then small-star age (1D=3, D3=2) -> 7 Gyr (no progenitor for BD).
+	// Then four presence rolls all below threshold (no companions).
+	// Then no companion-presence sub-rolls either.
+	r := roller.NewScripted(
+		2,    // primary type 2D = 2 -> Special
+		6,    // Unusual column 2D = 6 -> "BD"
+		3, 2, // small-star age 1D=3, D3=2 -> 7 Gyr
+		// Multiple Stars Presence rolls (4 total, all below 10):
+		9, 9, 9, 9,
+	)
+	sys, err := GenerateSystem(r, GenerateSystemOpts{
+		WithVariance: true,
+		Accuracy:     1,
+	})
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if sys.Primary.Kind != KindBrownDwarf {
+		t.Fatalf("primary kind: got %v want BrownDwarf", sys.Primary.Kind)
+	}
+	if sys.Primary.LuminosityClass != BD {
+		t.Fatalf("primary class: got %v want BD", sys.Primary.LuminosityClass)
+	}
+	if len(sys.Companions) != 0 {
+		t.Fatalf("expected no companions, got %d", len(sys.Companions))
+	}
+}
+
+func TestGenerateSystem_SpecialPrimary_D(t *testing.T) {
+	// 2D=2 -> Special; Unusual 2D=8 -> "D" (white dwarf).
+	// White dwarf age = small-star + progenitor: 1D=2, D3=2 (small_star=5), D3=1 (progenitor mult 3).
+	// progenitor mass = 3 * 0.6 = 1.8; FinalAgeProgenitor(1.8) ≈ 2.86 Gyr.
+	// Total ≈ 7.86 Gyr.
+	r := roller.NewScripted(
+		2,    // Type=2 -> Special
+		8,    // Unusual=8 -> "D"
+		2, 2, // small-star: 1D=2, D3=2 -> 5
+		1, // progenitor D3=1 -> mult 3
+		// Presence rolls (4 below threshold):
+		9, 9, 9, 9,
+	)
+	sys, err := GenerateSystem(r, GenerateSystemOpts{
+		WithVariance: true,
+		Accuracy:     1,
+	})
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if sys.Primary.Kind != KindWhiteDwarf {
+		t.Fatalf("primary kind: got %v want WhiteDwarf", sys.Primary.Kind)
+	}
+	if sys.Primary.LuminosityClass != D {
+		t.Fatalf("primary class: got %v want D", sys.Primary.LuminosityClass)
+	}
+	// Age should be ~7.86 Gyr (small_star=5 + progenitor=2.86).
+	if sys.Primary.AgeGyr < 7.5 || sys.Primary.AgeGyr > 8.5 {
+		t.Fatalf("age: got %v Gyr, want roughly 7.86", sys.Primary.AgeGyr)
+	}
+}
+
+func TestGenerateSystem_SpecialPrimary_ClassRedirectErrors(t *testing.T) {
+	// 2D=2 -> Special; Unusual 2D=4 -> "Class IV" -> class redirect.
+	r := roller.NewScripted(2, 4)
+	_, err := GenerateSystem(r, GenerateSystemOpts{Accuracy: 1})
+	if err == nil {
+		t.Fatal("expected error for class redirect")
+	}
+	if !errors.Is(err, ErrSpecialPrimaryClassRedirect) {
+		t.Fatalf("expected ErrSpecialPrimaryClassRedirect, got: %v", err)
 	}
 }
