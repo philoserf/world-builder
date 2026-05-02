@@ -168,6 +168,217 @@ func TestSolTerra_SurveyForm_p35(t *testing.T) {
 	}
 }
 
+func TestZed_SurveyForm_p34(t *testing.T) {
+	// WBH p.34 — Zed quintuple system. The book gives only final survey-form
+	// values; we Compose each star directly and verify BuildSurveyForm
+	// produces the 9-row layout with correct cumulative-barycentre masses
+	// and luminosities.
+	aa := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            0.929,
+		Diameter:        0.967,
+		Temperature:     5440,
+		AgeGyr:          6.3,
+	})
+	ab := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.907,
+		Diameter:        0.957,
+		Temperature:     5360,
+		AgeGyr:          6.3,
+	})
+	bStar := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'K', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.626,
+		Diameter:        0.777,
+		Temperature:     3980,
+		AgeGyr:          6.3,
+	})
+	ca := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'M', Subtype: 0},
+		LuminosityClass: stars.V,
+		Mass:            0.510,
+		Diameter:        0.728,
+		Temperature:     3700,
+		AgeGyr:          6.3,
+	})
+	// Cb is a white dwarf. Compose still computes luminosity from D and T;
+	// the book reports 0.000525, so set D and T to match.
+	cb := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindWhiteDwarf,
+		LuminosityClass: stars.D,
+		// White dwarfs don't have a SpectralType in the conventional sense.
+		Mass:        0.490,
+		Diameter:    0.017,
+		Temperature: 6700,
+		AgeGyr:      4.635, // book p.30
+	})
+
+	sys := stars.System{
+		Primary: aa,
+		AgeGyr:  6.3,
+		Companions: []stars.CompanionStar{
+			// 0: Ab — primary's companion (orbit class Companion)
+			{
+				Star: ab, OrbitClass: stars.OrbitCompanion, ParentIndex: -1,
+				OrbitNumber: 0.09, AU: 0.036, Eccentricity: 0.11,
+				PeriodYears: stars.OrbitPeriodYears(0.036, aa.Mass, ab.Mass),
+			},
+			// 1: B — Near (alone, no companion)
+			{
+				Star: bStar, OrbitClass: stars.OrbitNear, ParentIndex: -1,
+				OrbitNumber: 6.1, AU: 5.68, Eccentricity: 0.08,
+				PeriodYears: stars.OrbitPeriodYears(5.68, aa.Mass+ab.Mass, bStar.Mass),
+			},
+			// 2: Ca — Far (with companion)
+			{
+				Star: ca, OrbitClass: stars.OrbitFar, ParentIndex: -1,
+				OrbitNumber: 12.1, AU: 338, Eccentricity: 0.47,
+				PeriodYears: stars.OrbitPeriodYears(338, aa.Mass+ab.Mass+bStar.Mass, ca.Mass),
+			},
+			// 3: Cb — Ca's companion (orbit class Companion, parent = index 2)
+			{
+				Star: cb, OrbitClass: stars.OrbitCompanion, ParentIndex: 2,
+				OrbitNumber: 0.21, AU: 0.084, Eccentricity: 0.24,
+				PeriodYears: stars.OrbitPeriodYears(0.084, ca.Mass, cb.Mass),
+			},
+		},
+	}
+	stars.AssignDesignations(&sys)
+
+	// Sanity-check designations.
+	if sys.PrimaryDesignation != "Aa" {
+		t.Errorf("primary: got %q want Aa", sys.PrimaryDesignation)
+	}
+	wantDesignations := []string{"Ab", "B", "Ca", "Cb"}
+	for i, w := range wantDesignations {
+		if sys.Companions[i].Designation != w {
+			t.Errorf("companion[%d]: got %q want %q", i, sys.Companions[i].Designation, w)
+		}
+	}
+
+	form := stars.BuildSurveyForm(sys, stars.SurveyMetadata{
+		Sector: "Storr", Location: "0602",
+		Designation:   "Zed",
+		InitialSurvey: "207-568", LastUpdated: "218-1061",
+	})
+
+	if form.StellarCount != 5 {
+		t.Errorf("StellarCount = %d want 5", form.StellarCount)
+	}
+	if math.Abs(form.SystemAgeGyr-6.3) > 1e-9 {
+		t.Errorf("SystemAgeGyr = %v want 6.3", form.SystemAgeGyr)
+	}
+
+	wantComponents := []string{"Aa", "Ab", "Aab (A)", "B", "AB", "Ca", "Cb", "Cab (C)", "ABC"}
+	if len(form.Stars) != len(wantComponents) {
+		t.Fatalf("rows = %d want %d (%v)", len(form.Stars), len(wantComponents), form.Stars)
+	}
+	for i, w := range wantComponents {
+		if form.Stars[i].Component != w {
+			t.Errorf("[%d].Component = %q want %q", i, form.Stars[i].Component, w)
+		}
+	}
+
+	// Per-row numeric assertions.
+	type rowExpect struct {
+		idx                                                int
+		mass, temp, diameter, lum, orbit, au, ecc, period  float64
+		massTol, tempTol, diamTol, lumTol, orbitTol, auTol float64
+		eccTol, periodTol                                  float64
+	}
+	expected := []rowExpect{
+		// Aa
+		{
+			idx: 0, mass: 0.929, temp: 5440, diameter: 0.967, lum: 0.738,
+			massTol: 1e-9, tempTol: 1e-9, diamTol: 1e-9, lumTol: 5e-3,
+		},
+		// Ab
+		{
+			idx: 1, mass: 0.907, temp: 5360, diameter: 0.957, lum: 0.681,
+			orbit: 0.09, au: 0.036, ecc: 0.11, period: 0.005,
+			massTol: 1e-9, tempTol: 1e-9, diamTol: 1e-9, lumTol: 5e-3,
+			orbitTol: 1e-9, auTol: 1e-9, eccTol: 1e-9, periodTol: 5e-4,
+		},
+		// Aab (A) — composite of Aa + Ab
+		{
+			idx: 2, mass: 1.836, lum: 0.738 + 0.681,
+			orbit: 0.09, au: 0.036, ecc: 0.11, period: 0.005,
+			massTol: 1e-9, lumTol: 5e-3,
+			orbitTol: 1e-9, auTol: 1e-9, eccTol: 1e-9, periodTol: 5e-4,
+		},
+		// B (K8 V Near)
+		{
+			idx: 3, mass: 0.626, temp: 3980, diameter: 0.777, lum: 0.136,
+			orbit: 6.1, au: 5.68, ecc: 0.08, period: 8.627,
+			massTol: 1e-9, tempTol: 1e-9, diamTol: 1e-9, lumTol: 5e-2,
+			orbitTol: 1e-9, auTol: 1e-9, eccTol: 1e-9, periodTol: 5e-2,
+		},
+		// AB — composite of Aa + Ab + B
+		{
+			idx: 4, mass: 2.462, lum: 0.738 + 0.681 + 0.136,
+			orbit: 6.1, au: 5.68, ecc: 0.08, period: 8.627,
+			massTol: 1e-9, lumTol: 5e-2,
+			orbitTol: 1e-9, auTol: 1e-9, eccTol: 1e-9, periodTol: 5e-2,
+		},
+		// Ca (M0 V Far)
+		{
+			idx: 5, mass: 0.510, temp: 3700, diameter: 0.728, lum: 0.0895,
+			orbit: 12.1, au: 338, ecc: 0.47, period: 3598,
+			massTol: 1e-9, tempTol: 1e-9, diamTol: 1e-9, lumTol: 5e-2,
+			orbitTol: 1e-9, auTol: 1, eccTol: 1e-9, periodTol: 50,
+		},
+		// Cb (white dwarf)
+		{
+			idx: 6, mass: 0.490, temp: 6700, diameter: 0.017, lum: 0.000525,
+			orbit: 0.21, au: 0.084, ecc: 0.24, period: 0.024,
+			massTol: 1e-9, tempTol: 1e-9, diamTol: 1e-9, lumTol: 5e-4,
+			orbitTol: 1e-9, auTol: 1e-9, eccTol: 1e-9, periodTol: 5e-3,
+		},
+		// Cab (C) — composite of Ca + Cb
+		{
+			idx: 7, mass: 0.510 + 0.490, lum: 0.0895 + 0.000525,
+			orbit: 0.21, au: 0.084, ecc: 0.24, period: 0.024,
+			massTol: 1e-9, lumTol: 5e-2,
+			orbitTol: 1e-9, auTol: 1e-9, eccTol: 1e-9, periodTol: 5e-3,
+		},
+		// ABC — outer composite of Aa + Ab + B + Ca + Cb
+		{
+			idx: 8, mass: 0.929 + 0.907 + 0.626 + 0.510 + 0.490,
+			lum:   0.738 + 0.681 + 0.136 + 0.0895 + 0.000525,
+			orbit: 12.1, au: 338, ecc: 0.47, period: 3598,
+			massTol: 1e-9, lumTol: 5e-2,
+			orbitTol: 1e-9, auTol: 1, eccTol: 1e-9, periodTol: 50,
+		},
+	}
+	for _, exp := range expected {
+		row := form.Stars[exp.idx]
+		check := func(name string, got, want, tol float64) {
+			if tol == 0 {
+				return // unset = skip
+			}
+			if math.Abs(got-want) > tol {
+				t.Errorf("[%d:%s].%s = %v, want %v (tol %v)", exp.idx, row.Component, name, got, want, tol)
+			}
+		}
+		check("Mass", row.Mass, exp.mass, exp.massTol)
+		check("Temperature", row.Temperature, exp.temp, exp.tempTol)
+		check("Diameter", row.Diameter, exp.diameter, exp.diamTol)
+		check("Luminosity", row.Luminosity, exp.lum, exp.lumTol)
+		check("Orbit", row.Orbit, exp.orbit, exp.orbitTol)
+		check("AU", row.AU, exp.au, exp.auTol)
+		check("Eccentricity", row.Eccentricity, exp.ecc, exp.eccTol)
+		check("Period", row.PeriodYears, exp.period, exp.periodTol)
+	}
+}
+
 func TestCorella_SurveyForm_p35(t *testing.T) {
 	// WBH p.35 Corella binary: G2 V + G8 V (Companion-class).
 	// Constructed directly via Compose; the book's roll sequence isn't
