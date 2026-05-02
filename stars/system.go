@@ -1,6 +1,7 @@
 package stars
 
 import (
+	"errors"
 	"fmt"
 
 	"wbh/roller"
@@ -30,7 +31,12 @@ type GenerateSystemOpts struct {
 //  5. AssignDesignations.
 func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	primary, err := GenerateMainSequenceStar(r, GenerateOpts(opts))
-	if err != nil {
+	if errors.Is(err, ErrSpecialPrimary) {
+		primary, err = generateSpecialPrimary(r)
+		if err != nil {
+			return System{}, fmt.Errorf("special primary: %w", err)
+		}
+	} else if err != nil {
 		return System{}, fmt.Errorf("primary: %w", err)
 	}
 
@@ -234,6 +240,114 @@ func isStellarKind(k StarKind) bool {
 		return true
 	}
 	return false
+}
+
+// ErrSpecialPrimaryClassRedirect is returned when a Special primary
+// dispatch lands on a class-redirect cell ("Class III" / "Class IV" /
+// "Class VI" / "Giants"). The full handling — re-rolling the regular
+// Star Type Determination Type column at the indicated class — requires
+// non-Class-V primary support that is deferred to a later plan. In the
+// meantime, callers should retry with a fresh seed or surface this to
+// the user.
+var ErrSpecialPrimaryClassRedirect = errors.New("stars: Special primary class redirect not yet implemented")
+
+// generateSpecialPrimary handles the WBH p.16 "Special" primary branch
+// (when the regular 2D Type roll yields 2). It walks the Unusual column
+// of the Star Type Determination table and produces a BD/D/NS/BH/etc.
+// primary directly. The age is computed via AgeSpecialObject (WBH p.22).
+//
+// Class-redirect cells ("Class III" / "Class IV" / "Class VI" / "Giants")
+// return ErrSpecialPrimaryClassRedirect; full support for non-Class-V
+// primaries lands in a later plan.
+func generateSpecialPrimary(r roller.Roller) (Star, error) {
+	kind, lc, err := RollSpecialPrimary(r, PeculiarPathUnusual)
+	if err != nil {
+		return Star{}, err
+	}
+	if kind == "" {
+		// Class-redirect cell (lc set to III/IV/VI or "Giants").
+		return Star{}, fmt.Errorf("%w: class %s", ErrSpecialPrimaryClassRedirect, lc)
+	}
+	// Build the special-object Star with stub physical values appropriate
+	// to the kind. The book leaves detailed physics (white-dwarf cooling,
+	// pulsar timing, etc.) to the Special Circumstances chapter (deferred).
+	star := specialObjectPrimaryStub(kind)
+
+	// Age via AgeSpecialObject. For BD and Protostar, deadStarMass is
+	// unused (their formulas don't add a progenitor age). For D/NS/BH/PSR,
+	// the dead-star mass is the new object's mass.
+	age, err := AgeSpecialObject(r, kind, star.Mass)
+	if err != nil {
+		return Star{}, err
+	}
+	star.AgeGyr = age
+	return star, nil
+}
+
+// specialObjectPrimaryStub returns a Star with placeholder physical
+// values appropriate to the kind. Detailed physics (white-dwarf cooling
+// curves, pulsar spin-down, etc.) is deferred to the Special Circumstances
+// chapter; these stubs are good-faith book-typical values.
+func specialObjectPrimaryStub(kind StarKind) Star {
+	switch kind {
+	case KindBrownDwarf:
+		return Star{
+			Kind:            KindBrownDwarf,
+			LuminosityClass: BD,
+			Mass:            0.05,
+			Diameter:        0.10,
+			Temperature:     1500,
+		}
+	case KindWhiteDwarf:
+		return Star{
+			Kind:            KindWhiteDwarf,
+			LuminosityClass: D,
+			Mass:            0.6,
+			Diameter:        0.01,
+			Temperature:     8000,
+		}
+	case KindNeutronStar:
+		return Star{
+			Kind:        KindNeutronStar,
+			Mass:        1.4,
+			Diameter:    0.00002, // ~20 km in solar diameters
+			Temperature: 600000,
+		}
+	case KindBlackHole:
+		return Star{
+			Kind:        KindBlackHole,
+			Mass:        5.0,
+			Diameter:    0.0,
+			Temperature: 0,
+		}
+	case KindPulsar:
+		return Star{
+			Kind:        KindPulsar,
+			Mass:        1.4,
+			Diameter:    0.00002,
+			Temperature: 1000000,
+		}
+	case KindNebula:
+		return Star{
+			Kind: KindNebula,
+		}
+	case KindProtostar:
+		return Star{
+			Kind:        KindProtostar,
+			Mass:        0.5,
+			Diameter:    1.5,
+			Temperature: 3000,
+		}
+	case KindStarCluster:
+		return Star{
+			Kind: KindStarCluster,
+		}
+	case KindAnomaly:
+		return Star{
+			Kind: KindAnomaly,
+		}
+	}
+	return Star{}
 }
 
 // CompanionStar is a non-primary star with its orbital placement.
