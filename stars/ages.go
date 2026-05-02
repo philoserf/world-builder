@@ -62,3 +62,62 @@ func FinalAgeProgenitor(progenitorMass float64) float64 {
 		1.0/(4.0+progenitorMass) +
 		1.0/(10.0*progenitorMass*progenitorMass*progenitorMass))
 }
+
+// AgeSpecialObject returns the total age in Gyr for a special or
+// post-stellar object per WBH p.22.
+//
+// Roll order:
+//  1. Base formula:
+//     - "small_star":    SmallStarAge(r, accuracy=1) — consumes 1D, D3
+//     - "100m_per_2d10": 100 / 2d10 (in millions of years; convert to Gyr).
+//     Consumes 2 d10 rolls.
+//     - "10m_per_2d10":  10 / 2d10 (millions of years).
+//  2. If AddProgenitorAge: roll D3, compute progenitor_mass = (2+D3) ×
+//     deadStarMass, then add FinalAgeProgenitor(progenitor_mass).
+//
+// `deadStarMass` is the remnant's current mass (used only for objects
+// where AddProgenitorAge is true). Pass 0 for BD and Protostar.
+func AgeSpecialObject(r roller.Roller, kind StarKind, deadStarMass float64) (float64, error) {
+	row, ok := SpecialObjectAgeByType[kind]
+	if !ok {
+		return 0, fmt.Errorf("stars: kind %q has no age formula", kind)
+	}
+
+	var base float64
+	switch row.BaseFormula {
+	case "small_star":
+		v, err := SmallStarAge(r, 1)
+		if err != nil {
+			return 0, err
+		}
+		base = v
+	case "100m_per_2d10":
+		// 100 million years / 2d10. 2d10 = sum of two d10 rolls.
+		d1 := r.Roll("d10")
+		d2 := r.Roll("d10")
+		sum := d1 + d2
+		if sum == 0 {
+			sum = 1
+		}
+		base = 0.1 / float64(sum) // 100 Myr = 0.1 Gyr
+	case "10m_per_2d10":
+		d1 := r.Roll("d10")
+		d2 := r.Roll("d10")
+		sum := d1 + d2
+		if sum == 0 {
+			sum = 1
+		}
+		base = 0.01 / float64(sum) // 10 Myr = 0.01 Gyr
+	default:
+		return 0, fmt.Errorf("stars: unknown base formula %q", row.BaseFormula)
+	}
+
+	if !row.AddProgenitorAge {
+		return base, nil
+	}
+
+	d3 := r.Roll("D3")
+	progenitorMass := float64(2+d3) * deadStarMass
+	progenitorAge := FinalAgeProgenitor(progenitorMass)
+	return base + progenitorAge, nil
+}

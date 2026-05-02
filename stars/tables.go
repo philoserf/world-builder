@@ -254,3 +254,20 @@ var OrbitNumberTable = map[int]OrbitNumberRow{
 	19: {DistanceAU: 39500, DifferenceAU: 39200, MillionKm: 5925000, Example: "Outer Oort Cloud"},
 	20: {DistanceAU: 78700, DifferenceAU: 0, MillionKm: 11805000, Example: "> 1 light-year"},
 }
+
+// SpecialObjectAgeRow describes how to age a special-object kind (WBH p.22).
+type SpecialObjectAgeRow struct {
+	BaseFormula      string // "small_star" | "100m_per_2d10" | "10m_per_2d10"
+	AddProgenitorAge bool   // if true, also add (2+D3) × dead-star-mass progenitor age
+}
+
+// SpecialObjectAgeByType is the WBH p.22 Special and Unusual Object Age
+// by Type table.
+var SpecialObjectAgeByType = map[StarKind]SpecialObjectAgeRow{
+	KindBrownDwarf:  {BaseFormula: "small_star", AddProgenitorAge: false},
+	KindWhiteDwarf:  {BaseFormula: "small_star", AddProgenitorAge: true},
+	KindPulsar:      {BaseFormula: "100m_per_2d10", AddProgenitorAge: true},
+	KindNeutronStar: {BaseFormula: "small_star", AddProgenitorAge: true},
+	KindBlackHole:   {BaseFormula: "small_star", AddProgenitorAge: true},
+	KindProtostar:   {BaseFormula: "10m_per_2d10", AddProgenitorAge: false},
+}
