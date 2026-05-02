@@ -220,7 +220,7 @@ func keplerParentMass(sys *System, primary Star, i int) float64 {
 	// Close/Near/Far: orbits the cumulative inner barycentre = primary
 	// plus all already-placed companions (inner-to-outer order).
 	total := primary.Mass
-	for j := 0; j < i; j++ {
+	for j := range i {
 		total += sys.Companions[j].Star.Mass
 	}
 	return total
