@@ -169,15 +169,14 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 		}
 	}
 
-	// Orbital placement for each companion in generation order.
+	// Orbital placement for each companion in the order they were generated.
+	// Companions are inner-to-outer in the slice, so when computing
+	// parentMass for Close/Near/Far stars (orbiting the inner barycentre),
+	// we accumulate the mass of all earlier entries (WBH p.30: "M is the
+	// sum of the stars indicated in the orbits around column").
 	for i := range sys.Companions {
 		c := &sys.Companions[i]
-		var parentMass float64
-		if c.ParentIndex == -1 {
-			parentMass = primary.Mass
-		} else {
-			parentMass = sys.Companions[c.ParentIndex].Star.Mass
-		}
+		parentMass := keplerParentMass(&sys, primary, i)
 
 		orbit, oerr := RollStellarOrbit(r, c.OrbitClass, primary.LuminosityClass)
 		if oerr != nil {
@@ -203,6 +202,28 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 
 	AssignDesignations(&sys)
 	return sys, nil
+}
+
+// keplerParentMass returns the M term for Kepler's third law (WBH p.30)
+// for the companion at index i. See comment in GenerateSystem.
+func keplerParentMass(sys *System, primary Star, i int) float64 {
+	c := sys.Companions[i]
+	if c.ParentIndex >= 0 {
+		// Orbiting a specific non-primary star (e.g., Cb orbits Ca alone).
+		return sys.Companions[c.ParentIndex].Star.Mass
+	}
+	// ParentIndex == -1: orbits the primary or its barycentre.
+	if c.OrbitClass == OrbitCompanion {
+		// Tight companion of the primary (e.g., Ab); orbits primary alone.
+		return primary.Mass
+	}
+	// Close/Near/Far: orbits the cumulative inner barycentre = primary
+	// plus all already-placed companions (inner-to-outer order).
+	total := primary.Mass
+	for j := 0; j < i; j++ {
+		total += sys.Companions[j].Star.Mass
+	}
+	return total
 }
 
 // isStellarKind reports whether the kind is a regular star (as opposed
