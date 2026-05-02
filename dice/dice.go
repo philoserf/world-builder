@@ -39,6 +39,9 @@ func Parse(notation string) (Spec, error) {
 		}
 		count = c
 	}
+	if count < 1 {
+		return Spec{}, fmt.Errorf("dice: invalid count (<1) in %q", notation)
+	}
 	sides := 6
 	if m[2] != "" {
 		s, err := strconv.Atoi(m[2])

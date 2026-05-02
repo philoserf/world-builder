@@ -34,7 +34,7 @@ func TestParse_Valid(t *testing.T) {
 }
 
 func TestParse_Invalid(t *testing.T) {
-	bad := []string{"", "2", "2X", "Dx", "2D-", "2D+", "D1"}
+	bad := []string{"", "2", "2X", "Dx", "2D-", "2D+", "D1", "0D"}
 	for _, n := range bad {
 		t.Run(n, func(t *testing.T) {
 			if _, err := Parse(n); err == nil {
