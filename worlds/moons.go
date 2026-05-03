@@ -89,12 +89,9 @@ func SizeMoon(r roller.Roller, parent ParentInfo) (Moon, error) {
 	case first <= 5:
 		// D3-1 → range 0 to 2
 		n := r.Roll("D3") - 1
-		if !parent.IsGasGiant && n < nForSizeCode(parent.SizeCode) {
-			// Size 1 parent: any moon less than parent → "S".
-			parentN := nForSizeCode(parent.SizeCode)
-			if parentN == 1 && n < 1 {
-				return Moon{SizeCode: "S", DiameterKm: BasicTerrestrialDiameter("S")}, nil
-			}
+		// Size 1 terrestrial parent: any moon less than parent (n < 1) → "S".
+		if !parent.IsGasGiant && nForSizeCode(parent.SizeCode) == 1 && n < 1 {
+			return Moon{SizeCode: "S", DiameterKm: BasicTerrestrialDiameter("S")}, nil
 		}
 		if n <= 0 {
 			return Moon{SizeCode: "R", DiameterKm: 0}, nil
