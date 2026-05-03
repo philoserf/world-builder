@@ -12,8 +12,8 @@ type StarAllocation struct {
 // AllocateOrbitsByStar implements WBH pp. 43–44 Step 1.
 //
 // For each Group in avail.Groups:
-//   - Total Star Orbits = floor(group.Total() + 1 if group has no companion AND
-//     group.Total() > 0 else 0).
+//   - Total Star Orbits = floor(group.Total()), plus 1 if the group has no
+//     companion AND group.Total() > 0.
 //
 // The system Total = sum of TotalStarOrbits across groups.
 //
@@ -47,11 +47,12 @@ func AllocateOrbitsByStar(avail Result, counts Counts) ([]StarAllocation, error)
 		return out, nil
 	}
 
-	// Multi-star: distribute counts.Total proportionally.
+	// Multi-star: distribute counts.Total proportionally. sysTotal cannot
+	// be zero in practice — a multi-star System produced by AvailableOrbits
+	// always has at least one group (the primary) with non-zero allowable
+	// orbits. The guard below catches the contrived edge case so the
+	// proportional formula doesn't divide by zero.
 	if sysTotal == 0 {
-		// Degenerate case — all groups have zero allowable orbits. Put
-		// everything in the last group so the caller still has somewhere
-		// to place worlds.
 		out[len(out)-1].AllocatedWorlds = counts.Total
 		return out, nil
 	}
