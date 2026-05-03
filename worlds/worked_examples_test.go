@@ -388,3 +388,124 @@ func TestZed_AddAnomalous(t *testing.T) {
 		t.Errorf("counts = %+v, want T=12 Total=18", newCounts)
 	}
 }
+
+func TestZed_FullPlacement(t *testing.T) {
+	t.Parallel()
+	sys := composeZed()
+	rolls := []int{
+		// GenerateCounts (6 rolls):
+		//   GG existence raw 9 (DMs -2 → 7 ≤9, present)
+		//   GG quantity raw 11 (DMs -2 → 9 → 4 GGs)
+		//   Belts existence raw 7 (DMs +1 → 8 ≥8, present)
+		//   Belts quantity raw 7 (DMs +3 → 10 → 2 belts)
+		//   Terrestrials 2D=12 → 12-2-1=9 (≥3) + D3-1 (D3=3 → +2) = 11
+		9, 11, 7, 7, 12, 3,
+		// RollBaselineNumber: raw 9 + DMs -4 = 5
+		9,
+		// BaselineOrbit (3a, HZCO≈3.32): 2D=5 → variance -0.2 → ≈3.12
+		5,
+		// RollEmptyOrbits: 10 → 1
+		10,
+		// PlaceOrbitSlots:
+		//   Aab: 11 slots, slot 5 (index 4) is baseline-fixed; 10 variance rolls.
+		5, 9, 7, 9, 7, 7, 7, 7, 7, 7,
+		//   B: 2 slots (1 regular + 1 extra from emptyOrbits distributed to Near); 2 variance rolls.
+		7, 7,
+		//   Cab: 5 slots; 5 variance rolls.
+		10, 5, 7, 9, 5,
+		// AddAnomalous: count 2D=10 (→1), type 2D=10 (Retrograde),
+		//   parent D3=1 (→idx 0, Aab), orbit 2D-2=5, d10=2 → orbit 5.2
+		10, 10, 1, 7, 2,
+		// PlaceWorlds: n=19 slots, prefixMax=ceil(19/6)=4.
+		//   Order: empty → GG → belt → terrestrial.
+		//   Each body: prefix roll (1D, keep ≤4) + right roll (1D, reject if idx≥19).
+		//   All rolls below use prefix 1-3 (always valid) or prefix 4 right=1 (idx=18).
+		// Empty (1):
+		1, 1, // idx 0
+		// GG (4):
+		1, 2, // idx 1
+		1, 3, // idx 2
+		1, 4, // idx 3
+		1, 5, // idx 4
+		// Belt (2):
+		1, 6, // idx 5
+		2, 1, // idx 6
+		// Terrestrial (12):
+		2, 2, 2, 3, 2, 4, 2, 5, 2, 6,
+		3, 1, 3, 2, 3, 3, 3, 4, 3, 5,
+		3, 6, 4, 1, // idx 17, 18
+		// RollPlanetEccentricities: 16 non-empty non-belt bodies (4 GG + 12 terr) × 2 rolls each.
+		//   2D=7 → row 7 (or 9 for retrograde with DM+2); second roll=1.
+		7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1,
+		7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1,
+	}
+	got, err := worlds.GenerateSystemPlacement(roller.NewScripted(rolls...), sys)
+	if err != nil {
+		t.Fatalf("GenerateSystemPlacement: %v", err)
+	}
+
+	// High-level count assertions.
+	if got.Counts.GasGiants != 4 {
+		t.Errorf("GasGiants = %d, want 4", got.Counts.GasGiants)
+	}
+	if got.Counts.PlanetoidBelts != 2 {
+		t.Errorf("PlanetoidBelts = %d, want 2", got.Counts.PlanetoidBelts)
+	}
+	if got.Counts.Terrestrials != 12 {
+		t.Errorf("Terrestrials = %d, want 12 (11 from GenerateCounts + 1 from anomalous)", got.Counts.Terrestrials)
+	}
+	if got.Counts.Total != 18 {
+		t.Errorf("Total = %d, want 18", got.Counts.Total)
+	}
+	if got.BaselineN != 5 {
+		t.Errorf("BaselineN = %d, want 5", got.BaselineN)
+	}
+	if math.Abs(got.BaselineOrbit-3.1) > 0.05 {
+		t.Errorf("BaselineOrbit = %v, want ~3.1", got.BaselineOrbit)
+	}
+	if got.EmptyOrbits != 1 {
+		t.Errorf("EmptyOrbits = %d, want 1", got.EmptyOrbits)
+	}
+	if math.Abs(got.SystemSpread-0.50) > 0.005 {
+		t.Errorf("SystemSpread = %v, want ~0.50", got.SystemSpread)
+	}
+	if len(got.Placements) != 19 {
+		t.Fatalf("Placements = %d, want 19", len(got.Placements))
+	}
+
+	// Body-type counts.
+	bodyCounts := map[worlds.BodyType]int{}
+	for _, p := range got.Placements {
+		bodyCounts[p.Body]++
+	}
+	if bodyCounts[worlds.BodyEmpty] != 1 {
+		t.Errorf("Empty bodies = %d, want 1", bodyCounts[worlds.BodyEmpty])
+	}
+	if bodyCounts[worlds.BodyGasGiant] != 4 {
+		t.Errorf("GasGiant bodies = %d, want 4", bodyCounts[worlds.BodyGasGiant])
+	}
+	if bodyCounts[worlds.BodyPlanetoidBelt] != 2 {
+		t.Errorf("Belt bodies = %d, want 2", bodyCounts[worlds.BodyPlanetoidBelt])
+	}
+	if bodyCounts[worlds.BodyTerrestrial] != 12 {
+		t.Errorf("Terrestrial bodies = %d, want 12", bodyCounts[worlds.BodyTerrestrial])
+	}
+
+	// The retrograde anomaly must land in group Aab at orbit ≈5.2.
+	var retro *worlds.Placement
+	for i := range got.Placements {
+		if got.Placements[i].Anomaly == worlds.AnomalyRetrograde {
+			retro = &got.Placements[i]
+			break
+		}
+	}
+	if retro == nil {
+		t.Fatalf("no retrograde placement found")
+	}
+	if retro.Group.Designation != "Aab" {
+		t.Errorf("retrograde group = %s, want Aab", retro.Group.Designation)
+	}
+	if math.Abs(retro.Orbit-5.2) > 0.05 {
+		t.Errorf("retrograde orbit = %v, want 5.2", retro.Orbit)
+	}
+}
