@@ -265,6 +265,24 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		groups[i].MAO = mao
 	}
 
+	// Rule 2: companion eccentricity raises pair lower bound.
+	// For pair groups, the lower bound becomes 0.50 + companion_ecc.
+	// If the larger star's MAO > 0.2, add it to the unavailable lower zone.
+	for i := range groups {
+		if len(groups[i].Members) < 2 {
+			continue
+		}
+		floor := 0.50 + groups[i].companionEcc
+		larger := groups[i].Members[0] // first member is parent; treat as larger
+		largerMAO, _ := MAO(larger)
+		if largerMAO > 0.2 {
+			floor += largerMAO
+		}
+		if floor > groups[i].MAO {
+			groups[i].MAO = floor
+		}
+	}
+
 	// Rule 3: primary group can have Orbit#s up to 20.
 	groups[0].Intervals = []Interval{{Min: groups[0].MAO, Max: 20.0}}
 

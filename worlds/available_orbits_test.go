@@ -309,6 +309,42 @@ func TestAvailableOrbits_PostStellarPrimary(t *testing.T) {
 	}
 }
 
+func TestAvailableOrbits_Rule2_CompanionEccentricity(t *testing.T) {
+	t.Parallel()
+
+	// Aab pair: primary G7 V, companion G8 V with eccentricity 0.11.
+	// Expected: pair group MAO becomes 0.50 + 0.11 = 0.61.
+	aa := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            0.929, Diameter: 0.967, Temperature: 5440,
+	})
+	ab := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.907, Diameter: 0.957, Temperature: 5360,
+	})
+	sys := stars.System{
+		Primary: aa,
+		Companions: []stars.CompanionStar{
+			{Star: ab, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.09, Eccentricity: 0.11, ParentIndex: -1},
+		},
+	}
+	got, err := AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("AvailableOrbits: %v", err)
+	}
+	g := got.Groups[0]
+	if math.Abs(g.MAO-0.61) > 1e-9 {
+		t.Errorf("Aab MAO = %v, want 0.61", g.MAO)
+	}
+	if math.Abs(g.Intervals[0].Min-0.61) > 1e-9 {
+		t.Errorf("Aab interval Min = %v, want 0.61", g.Intervals[0].Min)
+	}
+}
+
 func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	t.Parallel()
 
