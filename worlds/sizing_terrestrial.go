@@ -38,11 +38,33 @@ func BasicTerrestrialDiameter(code SizeCode) float64 {
 	return basicTerrestrialDiameterTable[code]
 }
 
-// nForSizeCode (the inverse of sizeCodeForN) is intentionally deferred
-// to T8 (SizeMoon), where it is first required. Adding it here would
-// fail golangci-lint's unused-function check.
+// nForSizeCode is the inverse of sizeCodeForN: returns 0-15 for "0"-"9"/"A"-"F",
+// and -1 for "R" / "S" / "" / unknown codes.
+//
+// Used by CountMoons (T7) to compute size-band lookup, and by SizeMoon (T8)
+// to compute "Size-1-1D" arithmetic on terrestrial parents.
+func nForSizeCode(c SizeCode) int {
+	switch c {
+	case "R", "S", "":
+		return -1
+	}
+	if len(c) != 1 {
+		return -1
+	}
+	ch := c[0]
+	switch {
+	case ch >= '0' && ch <= '9':
+		return int(ch - '0')
+	case ch >= 'A' && ch <= 'F':
+		return int(ch-'A') + 10
+	}
+	return -1
+}
 
 // sizeCodeForN converts an integer Size 0-15 to its hex code (1=1, 9=9, 10=A, ..., 15=F).
+// Note: n==0 maps to "0" (planetoid); callers responsible for whether that
+// is a valid outcome at their callsite (e.g. SizeMoon's terrestrial branch
+// treats sub-1 results as ring "R", not "0").
 // Used internally by RollTerrestrialSize and SizeMoon.
 func sizeCodeForN(n int) SizeCode {
 	if n < 0 {
