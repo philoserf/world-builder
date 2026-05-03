@@ -547,6 +547,53 @@ func TestAvailableOrbits_Rule8_SecondaryOwnRange(t *testing.T) {
 	}
 }
 
+func TestAvailableOrbits_Rules9to11_ZedB(t *testing.T) {
+	t.Parallel()
+
+	// Zed B reductions (WBH p. 40):
+	//  Rule 8: own range to 3.10.
+	//  Rule 9: Far is adjacent → -1 → 2.10.
+	//  Rule 10: Far ecc 0.47 > 0.2 → -1 → 1.10.
+	//  Rule 11: B ecc 0.08 (not > 0.5) → no reduction.
+	// Final B max = 1.10.
+	a := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            0.929, Diameter: 0.967, Temperature: 5440,
+	})
+	b := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'K', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.626, Diameter: 0.777, Temperature: 3980,
+	})
+	ca := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'M', Subtype: 0},
+		LuminosityClass: stars.V,
+		Mass:            0.510, Diameter: 0.728, Temperature: 3700,
+	})
+	sys := stars.System{
+		Primary: a,
+		Companions: []stars.CompanionStar{
+			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.10, Eccentricity: 0.08, ParentIndex: -1},
+			{Star: ca, OrbitClass: stars.OrbitFar, OrbitNumber: 12.10, Eccentricity: 0.47, ParentIndex: -1},
+		},
+	}
+	got, err := AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("AvailableOrbits: %v", err)
+	}
+	if len(got.Groups) != 3 {
+		t.Fatalf("groups = %d, want 3", len(got.Groups))
+	}
+	bg := got.Groups[1]
+	if math.Abs(bg.Intervals[0].Max-1.10) > 1e-9 {
+		t.Errorf("B Max = %v, want 1.10", bg.Intervals[0].Max)
+	}
+}
+
 func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	t.Parallel()
 

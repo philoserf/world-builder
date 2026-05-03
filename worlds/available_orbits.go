@@ -247,6 +247,63 @@ func subtract(intervals []Interval, exMin, exMax float64) []Interval {
 	return out
 }
 
+// hasOrbitClass reports whether sys has any non-companion CompanionStar
+// in the given orbit class with ParentIndex == -1.
+func hasOrbitClass(sys stars.System, oc stars.OrbitClass) bool {
+	for _, c := range sys.Companions {
+		if c.OrbitClass == oc && c.ParentIndex == -1 {
+			return true
+		}
+	}
+	return false
+}
+
+// adjacenciesFor returns the orbit classes adjacent to self per WBH p. 39:
+//   - Close adjacent to Near
+//   - Near adjacent to Close and Far
+//   - Far adjacent to Near
+//
+// Note: Close+Far without Near does NOT count (book p. 39 explicit).
+func adjacenciesFor(self stars.OrbitClass) []stars.OrbitClass {
+	switch self {
+	case stars.OrbitClose:
+		return []stars.OrbitClass{stars.OrbitNear}
+	case stars.OrbitNear:
+		return []stars.OrbitClass{stars.OrbitClose, stars.OrbitFar}
+	case stars.OrbitFar:
+		return []stars.OrbitClass{stars.OrbitNear}
+	}
+	return nil
+}
+
+// hasAdjacentZone reports whether secondary in zone `self` has a
+// populated adjacent zone, per rule 9.
+func hasAdjacentZone(sys stars.System, self stars.OrbitClass) bool {
+	for _, oc := range adjacenciesFor(self) {
+		if hasOrbitClass(sys, oc) {
+			return true
+		}
+	}
+	return false
+}
+
+// adjacentEccGT02 reports whether any star in an adjacent zone has
+// eccentricity > 0.2.
+func adjacentEccGT02(sys stars.System, self stars.OrbitClass) bool {
+	wanted := adjacenciesFor(self)
+	for _, c := range sys.Companions {
+		if c.ParentIndex != -1 {
+			continue
+		}
+		for _, oc := range wanted {
+			if c.OrbitClass == oc && c.Eccentricity > 0.2 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // nextSpectralLetter returns the next cooler spectral letter in O B A F G K M order.
 func nextSpectralLetter(l stars.SpectralLetter) stars.SpectralLetter {
 	switch l {
@@ -359,6 +416,11 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 	// (Orbit# − 3). Walk in canonical Close → Near → Far order — the
 	// same order identifyGroups produced the secondary groups — and
 	// match each non-companion primary-child entry to groups[secIdx].
+	//
+	// Rules 9-11 reduce maxOffset further:
+	//   - Rule 9: -1 if adjacent zone populated (max once per secondary).
+	//   - Rule 10: -1 if self ecc > 0.2 OR any adjacent zone star has ecc > 0.2 (max once).
+	//   - Rule 11: -1 if self ecc > 0.5 (max once).
 	secIdx := 1
 	for _, oc := range []stars.OrbitClass{stars.OrbitClose, stars.OrbitNear, stars.OrbitFar} {
 		for _, c := range sys.Companions {
@@ -368,7 +430,18 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 			if secIdx >= len(groups) {
 				break
 			}
-			maxOffset := c.OrbitNumber - 3
+			maxOffset := c.OrbitNumber - 3 // rule 8
+
+			if hasAdjacentZone(sys, c.OrbitClass) {
+				maxOffset-- // rule 9
+			}
+			if c.Eccentricity > 0.2 || adjacentEccGT02(sys, c.OrbitClass) {
+				maxOffset-- // rule 10
+			}
+			if c.Eccentricity > 0.5 {
+				maxOffset-- // rule 11
+			}
+
 			if maxOffset < 0 {
 				maxOffset = 0
 			}
