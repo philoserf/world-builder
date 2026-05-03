@@ -217,6 +217,36 @@ func bracketSpectralType(st stars.SpectralType) (lower, upper string, frac float
 	}
 }
 
+// subtract removes the exclusion range (exMin, exMax) from a sorted
+// disjoint interval list and returns the remaining intervals.
+//
+// Tolerates exclusions that fully cover or only partially overlap
+// existing intervals. Endpoints are inclusive on the kept side
+// (i.e., an interval [a, b] minus exclusion (exMin, exMax) yields
+// [a, exMin] and [exMax, b] — the exclusion is open).
+func subtract(intervals []Interval, exMin, exMax float64) []Interval {
+	if exMin >= exMax {
+		return intervals
+	}
+	out := make([]Interval, 0, len(intervals)+1)
+	for _, iv := range intervals {
+		// No overlap.
+		if exMax <= iv.Min || exMin >= iv.Max {
+			out = append(out, iv)
+			continue
+		}
+		// Left remainder.
+		if exMin > iv.Min {
+			out = append(out, Interval{Min: iv.Min, Max: exMin})
+		}
+		// Right remainder.
+		if exMax < iv.Max {
+			out = append(out, Interval{Min: exMax, Max: iv.Max})
+		}
+	}
+	return out
+}
+
 // nextSpectralLetter returns the next cooler spectral letter in O B A F G K M order.
 func nextSpectralLetter(l stars.SpectralLetter) stars.SpectralLetter {
 	switch l {
@@ -288,6 +318,26 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 
 	// Rule 3: primary group can have Orbit#s up to 20.
 	groups[0].Intervals = []Interval{{Min: groups[0].MAO, Max: 20.0}}
+
+	// Rule 5: each Close/Near/Far secondary excludes (s-1, s+1) from
+	// primary's intervals (with secondary's MAO added if MAO > 0.2).
+	// Rule 4 (companions occupy same orbit as parent) is handled by
+	// identifyGroups via group folding; from here on, OrbitCompanion
+	// entries are ignored.
+	for _, c := range sys.Companions {
+		if c.OrbitClass == stars.OrbitCompanion {
+			continue
+		}
+		s := c.OrbitNumber
+		exLow := s - 1
+		exHigh := s + 1
+		secMAO, _ := MAO(c.Star)
+		if secMAO > 0.2 {
+			exLow -= secMAO
+			exHigh += secMAO
+		}
+		groups[0].Intervals = subtract(groups[0].Intervals, exLow, exHigh)
+	}
 
 	return Result{Groups: groups}, nil
 }
