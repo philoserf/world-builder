@@ -14,3 +14,20 @@ import "math"
 func (s Star) HZCO() float64 {
 	return AUToOrbit(math.Sqrt(s.Luminosity))
 }
+
+// CompositeHZCO returns the HZCO# for a circumbinary group of stars
+// orbiting a shared barycentre. Per WBH p. 42, the luminosities of all
+// stars interior to the planet's orbit are summed, then the formula
+// applies to the combined luminosity.
+//
+// Empty input returns 0.
+func CompositeHZCO(starsInterior ...Star) float64 {
+	var totalL float64
+	for _, s := range starsInterior {
+		totalL += s.Luminosity
+	}
+	if totalL <= 0 {
+		return 0
+	}
+	return AUToOrbit(math.Sqrt(totalL))
+}
