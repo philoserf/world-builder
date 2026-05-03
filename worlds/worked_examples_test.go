@@ -232,6 +232,21 @@ func TestZed_BaselineOrbit(t *testing.T) {
 	}
 }
 
+func TestZed_Spread(t *testing.T) {
+	t.Parallel()
+	sys := composeZed()
+	avail, err := worlds.AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	// Zed: primary Aab MAO 0.61, baselineOrbit 3.1, baselineN 5, totalStars 3.
+	// (3.1 - 0.61) / 5 = 0.498
+	got := worlds.Spread(avail.Groups[0], 11, 3.1, 5, 3)
+	if math.Abs(got-0.498) > 0.005 {
+		t.Errorf("Spread = %v, want 0.498", got)
+	}
+}
+
 func TestZed_GenerateCounts(t *testing.T) {
 	t.Parallel()
 	// WBH p. 38 Zed walkthrough — encoded against the Existence/Quantity DM split:
