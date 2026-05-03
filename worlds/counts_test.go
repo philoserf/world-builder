@@ -203,3 +203,73 @@ func TestGenerateCounts_Belts_DM_Protostar(t *testing.T) {
 		t.Errorf("PlanetoidBelts = %d, want 2", got.PlanetoidBelts)
 	}
 }
+
+func TestGenerateCounts_Terrestrials_LowReroll(t *testing.T) {
+	t.Parallel()
+	// Sol single G2 V. No DMs on terrestrials.
+	// 2D = 4 → 4-2 = 2 (< 3) → reroll D3+2; D3=2 → result 4.
+	r := roller.NewScripted(10 /*GG existence none*/, 7 /*belts existence none*/, 4 /*terrestrials raw*/, 2 /*D3 reroll*/)
+	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.Terrestrials != 4 {
+		t.Errorf("Terrestrials = %d, want 4", got.Terrestrials)
+	}
+}
+
+func TestGenerateCounts_Terrestrials_HighAdd(t *testing.T) {
+	t.Parallel()
+	// 2D = 8 → 8-2 = 6 (≥3) → add D3-1 with D3=3 → +2 → 8.
+	r := roller.NewScripted(10, 7, 8, 3)
+	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.Terrestrials != 8 {
+		t.Errorf("Terrestrials = %d, want 8", got.Terrestrials)
+	}
+}
+
+func TestGenerateCounts_Terrestrials_PostStellarDM(t *testing.T) {
+	t.Parallel()
+	// Brown-dwarf primary: terrestrials DM-1 (post-stellar count = 1, the primary).
+	// 2D = 8 → 8-2-1 = 5 (≥3) → add D3-1 with D3=3 → +2 → 7.
+	bd := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindBrownDwarf, LuminosityClass: stars.BD, Mass: 0.05, Diameter: 0.1, Temperature: 1500,
+	})
+	// GG existence: raw 14 + DMs(-2 BD, -2 post-stellar primary, -1 per post-stellar count) = -5 → 9 → present.
+	// GG quantity: raw 14 + DMs -5 = 9 → 4 GGs.
+	// Belts existence: raw 0 + DMs(+1 post-stellar primary, +1 per-count) = +2 → 2 < 8 → not present.
+	// Terrestrials: 2D=8, D3=3.
+	r := roller.NewScripted(14, 14, 0, 8, 3)
+	got, err := GenerateCounts(r, stars.System{Primary: bd}, CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.Terrestrials != 7 {
+		t.Errorf("Terrestrials = %d, want 7", got.Terrestrials)
+	}
+}
+
+func TestGenerateCounts_Total(t *testing.T) {
+	t.Parallel()
+	// Sol single G2 V.
+	// GG existence raw 5 (no existence DMs) = 5 ≤ 9 → present.
+	// GG quantity raw 7 + DM+1 (single-Class-V) = 8 → row 7-8 → 3 GGs.
+	// Belts existence raw 8 (no existence DMs) = 8 → present.
+	// Belts quantity raw 5 + DM+1 (GGs present) = 6 → row 6- → 1 belt.
+	// Terrestrials 2D=8 → 6 (≥3) + D3-1 (D3=2 → +1) → 7.
+	// Total = 3+1+7 = 11.
+	r := roller.NewScripted(5, 7, 8, 5, 8, 2)
+	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.Total != got.GasGiants+got.PlanetoidBelts+got.Terrestrials {
+		t.Errorf("Total = %d, sum = %d", got.Total, got.GasGiants+got.PlanetoidBelts+got.Terrestrials)
+	}
+	if got.Total != 11 {
+		t.Errorf("Total = %d, want 11", got.Total)
+	}
+}

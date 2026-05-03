@@ -4,9 +4,43 @@ import (
 	"math"
 	"testing"
 
+	"wbh/roller"
 	"wbh/stars"
 	"wbh/worlds"
 )
+
+// composeZed builds the WBH p. 35/40 Zed quintuple system using
+// stars.Compose so tests can construct it deterministically (no rolls).
+func composeZed() stars.System {
+	aa := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindMainSequence, SpectralType: stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V, Mass: 0.929, Diameter: 0.967, Temperature: 5440,
+	})
+	ab := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindMainSequence, SpectralType: stars.SpectralType{Letter: 'G', Subtype: 8},
+		LuminosityClass: stars.V, Mass: 0.907, Diameter: 0.957, Temperature: 5360,
+	})
+	b := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindMainSequence, SpectralType: stars.SpectralType{Letter: 'K', Subtype: 8},
+		LuminosityClass: stars.V, Mass: 0.626, Diameter: 0.777, Temperature: 3980,
+	})
+	ca := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindMainSequence, SpectralType: stars.SpectralType{Letter: 'M', Subtype: 0},
+		LuminosityClass: stars.V, Mass: 0.510, Diameter: 0.728, Temperature: 3700,
+	})
+	cb := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindWhiteDwarf, Mass: 0.490, Diameter: 0.017, Temperature: 6700,
+	})
+	return stars.System{
+		Primary: aa,
+		Companions: []stars.CompanionStar{
+			{Star: ab, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.09, Eccentricity: 0.11, ParentIndex: -1},
+			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.10, Eccentricity: 0.08, ParentIndex: -1},
+			{Star: ca, OrbitClass: stars.OrbitFar, OrbitNumber: 12.10, Eccentricity: 0.47, ParentIndex: -1},
+			{Star: cb, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.21, Eccentricity: 0.24, ParentIndex: 2},
+		},
+	}
+}
 
 func TestZed_AvailableOrbits(t *testing.T) {
 	t.Parallel()
@@ -16,47 +50,7 @@ func TestZed_AvailableOrbits(t *testing.T) {
 	//   B (K8 V):                MAO 0.02, [[0.02, 1.10]], Total 1.08
 	//   Cab pair (M0 V + D):     MAO 0.74, [[0.74, 7.10]], Total 6.36
 
-	aa := stars.Compose(stars.ComposeOpts{
-		Kind:            stars.KindMainSequence,
-		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
-		LuminosityClass: stars.V,
-		Mass:            0.929, Diameter: 0.967, Temperature: 5440,
-	})
-	ab := stars.Compose(stars.ComposeOpts{
-		Kind:            stars.KindMainSequence,
-		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 8},
-		LuminosityClass: stars.V,
-		Mass:            0.907, Diameter: 0.957, Temperature: 5360,
-	})
-	b := stars.Compose(stars.ComposeOpts{
-		Kind:            stars.KindMainSequence,
-		SpectralType:    stars.SpectralType{Letter: 'K', Subtype: 8},
-		LuminosityClass: stars.V,
-		Mass:            0.626, Diameter: 0.777, Temperature: 3980,
-	})
-	ca := stars.Compose(stars.ComposeOpts{
-		Kind:            stars.KindMainSequence,
-		SpectralType:    stars.SpectralType{Letter: 'M', Subtype: 0},
-		LuminosityClass: stars.V,
-		Mass:            0.510, Diameter: 0.728, Temperature: 3700,
-	})
-	cb := stars.Compose(stars.ComposeOpts{
-		Kind: stars.KindWhiteDwarf,
-		Mass: 0.490, Diameter: 0.017, Temperature: 6700,
-	})
-	sys := stars.System{
-		Primary: aa,
-		Companions: []stars.CompanionStar{
-			// Index 0: Ab is companion of primary.
-			{Star: ab, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.09, Eccentricity: 0.11, ParentIndex: -1},
-			// Index 1: B is Near secondary.
-			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.10, Eccentricity: 0.08, ParentIndex: -1},
-			// Index 2: Ca is Far secondary.
-			{Star: ca, OrbitClass: stars.OrbitFar, OrbitNumber: 12.10, Eccentricity: 0.47, ParentIndex: -1},
-			// Index 3: Cb is companion of Ca (parent index 2).
-			{Star: cb, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.21, Eccentricity: 0.24, ParentIndex: 2},
-		},
-	}
+	sys := composeZed()
 
 	got, err := worlds.AvailableOrbits(sys)
 	if err != nil {
@@ -166,5 +160,44 @@ func TestSol_AvailableOrbits(t *testing.T) {
 	// Sanity: full Total ≈ 19.97.
 	if math.Abs(g.Total()-19.97) > 0.01 {
 		t.Errorf("Total = %v, want ~19.97", g.Total())
+	}
+}
+
+func TestZed_GenerateCounts(t *testing.T) {
+	t.Parallel()
+	// WBH p. 38 Zed walkthrough — encoded against the Existence/Quantity DM split:
+	//
+	//   GG existence DMs (Special Circumstances only): per-post-stellar (Cb=1) = -1; 4+ stars = -1. Total -2.
+	//     raw 9 + (-2) = 7 ≤9 → present.
+	//   GG quantity DMs (full table): existence DMs -2 + single-Class-V (no, multi-star) = -2.
+	//     raw 11 + (-2) = 9 → row 9-11 → 4 GGs. ✓
+	//   Belts existence DMs (Special Circumstances only): per-post-stellar (Cb=1) = +1. Total +1.
+	//     raw 7 + 1 = 8 → present.
+	//   Belts quantity DMs (full table): existence DMs +1 + GGs present +1 + 2+ stars +1 = +3.
+	//     raw 7 + 3 = 10 → row 7-11 → 2 belts. ✓
+	//   Terrestrials DMs: -1 per post-stellar (Cb=1).
+	//     raw 12 → 12 - 2 - 1 = 9 (≥3); + D3-1 (D3=3 → +2) → 11. ✓
+	//   Total = 4 + 2 + 11 = 17.
+	sys := composeZed()
+	r := roller.NewScripted(
+		9, 11, // GG existence + quantity
+		7, 7, // belts existence + quantity
+		12, 3, // terrestrials 2D + D3
+	)
+	got, err := worlds.GenerateCounts(r, sys, worlds.CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.GasGiants != 4 {
+		t.Errorf("GasGiants = %d, want 4", got.GasGiants)
+	}
+	if got.PlanetoidBelts != 2 {
+		t.Errorf("PlanetoidBelts = %d, want 2", got.PlanetoidBelts)
+	}
+	if got.Terrestrials != 11 {
+		t.Errorf("Terrestrials = %d, want 11", got.Terrestrials)
+	}
+	if got.Total != 17 {
+		t.Errorf("Total = %d, want 17", got.Total)
 	}
 }

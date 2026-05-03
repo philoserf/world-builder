@@ -45,8 +45,16 @@ func GenerateCounts(r roller.Roller, sys stars.System, _ CountsOpts) (Counts, er
 		c.PlanetoidBelts = beltQuantity(beltQty)
 	}
 
-	// Terrestrials are filled in by later tasks.
-	c.Terrestrials = 0
+	// Terrestrials: WBH p. 38. 2D - 2 + DM-1 per post-stellar object.
+	// If result < 3, reroll as D3+2. If result ≥ 3, add D3-1.
+	terrDM := -postStellarCount(sys)
+	raw := r.Roll("2D") - 2 + terrDM
+	switch {
+	case raw < 3:
+		c.Terrestrials = r.Roll("D3") + 2
+	default:
+		c.Terrestrials = raw + r.Roll("D3") - 1
+	}
 	c.Total = c.GasGiants + c.PlanetoidBelts + c.Terrestrials
 	return c, nil
 }
