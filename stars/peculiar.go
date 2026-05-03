@@ -172,6 +172,10 @@ const (
 // Class redirects beyond the simple cases (e.g., the recursive "Peculiar"
 // or "Unusual" cell on a re-roll) are handled by recursive calls; recursion
 // depth is bounded at 5 to prevent runaway loops on malformed dice.
+//
+// Note: an earlier 2A spec proposed changing this to return `(Star, error)`;
+// during plan execution this lower-level shape was kept and Star resolution
+// moved to generateSpecialPrimary, so this remains a pure table walker.
 func RollSpecialPrimary(r roller.Roller, path PeculiarPath) (StarKind, LuminosityClass, error) {
 	return rollSpecialPrimaryImpl(r, path, 0)
 }

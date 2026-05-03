@@ -594,6 +594,93 @@ func TestAvailableOrbits_Rules9to11_ZedB(t *testing.T) {
 	}
 }
 
+func TestSubtract(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name  string
+		input []Interval
+		exMin float64
+		exMax float64
+		want  []Interval
+	}{
+		{
+			name:  "exclusion fully contained",
+			input: []Interval{{Min: 0, Max: 10}},
+			exMin: 3, exMax: 7,
+			want: []Interval{{Min: 0, Max: 3}, {Min: 7, Max: 10}},
+		},
+		{
+			name:  "exclusion straddles left edge",
+			input: []Interval{{Min: 0, Max: 10}},
+			exMin: -1, exMax: 5,
+			want: []Interval{{Min: 5, Max: 10}},
+		},
+		{
+			name:  "exclusion straddles right edge",
+			input: []Interval{{Min: 0, Max: 10}},
+			exMin: 5, exMax: 15,
+			want: []Interval{{Min: 0, Max: 5}},
+		},
+		{
+			name:  "exclusion fully covers interval",
+			input: []Interval{{Min: 2, Max: 8}},
+			exMin: 0, exMax: 10,
+			want: []Interval{},
+		},
+		{
+			name:  "zero-width exclusion is no-op",
+			input: []Interval{{Min: 0, Max: 10}},
+			exMin: 5, exMax: 5,
+			want: []Interval{{Min: 0, Max: 10}},
+		},
+		{
+			name:  "inverted exclusion is no-op",
+			input: []Interval{{Min: 0, Max: 10}},
+			exMin: 7, exMax: 3,
+			want: []Interval{{Min: 0, Max: 10}},
+		},
+		{
+			name:  "no overlap (before)",
+			input: []Interval{{Min: 5, Max: 10}},
+			exMin: 0, exMax: 3,
+			want: []Interval{{Min: 5, Max: 10}},
+		},
+		{
+			name:  "no overlap (after)",
+			input: []Interval{{Min: 0, Max: 5}},
+			exMin: 7, exMax: 10,
+			want: []Interval{{Min: 0, Max: 5}},
+		},
+		{
+			name:  "exclusion spans multiple intervals",
+			input: []Interval{{Min: 0, Max: 5}, {Min: 8, Max: 15}, {Min: 20, Max: 25}},
+			exMin: 3, exMax: 22,
+			want: []Interval{{Min: 0, Max: 3}, {Min: 22, Max: 25}},
+		},
+		{
+			name:  "empty input",
+			input: nil,
+			exMin: 0, exMax: 10,
+			want: []Interval{},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := subtract(tc.input, tc.exMin, tc.exMax)
+			if len(got) != len(tc.want) {
+				t.Fatalf("got %d intervals %+v, want %d %+v", len(got), got, len(tc.want), tc.want)
+			}
+			for i := range got {
+				if math.Abs(got[i].Min-tc.want[i].Min) > 1e-9 || math.Abs(got[i].Max-tc.want[i].Max) > 1e-9 {
+					t.Errorf("interval[%d] = %+v, want %+v", i, got[i], tc.want[i])
+				}
+			}
+		})
+	}
+}
+
 func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	t.Parallel()
 
