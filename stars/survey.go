@@ -21,6 +21,7 @@ type SurveyComponent struct {
 	Eccentricity float64
 	PeriodYears  float64
 	HZCO         float64 // populated only on rows that act as a single HZCO source: solo primary, solo orbit-class star, or pair-barycentre composite (per WBH p.34 Zed survey form)
+	MAO          float64 // 0 in Class 0/I forms; populated by worlds.RenderIISSClass23 for Class II/III.
 }
 
 // SurveyMetadata holds the form-header fields not derivable from the System.

@@ -1,7 +1,5 @@
 package worlds
 
-import "wbh/stars"
-
 // DetailedPlacement extends 2B's Placement with the WBH pp. 53-67
 // per-body data (Size, moons, period, HZ flag, designation).
 //
@@ -46,15 +44,4 @@ type SystemDetail struct {
 	ShortProfile string          // "G-P-T-N-S" form per WBH p.58
 	LongProfile  string          // "St-N-W-W-S:..." form per WBH p.58
 	Survey       IISSClass23Form // IISS Class II/III survey form (Task 13)
-}
-
-// IISSClass23Form is forward-declared here so SystemDetail.Survey can
-// reference it; the full type lands in Task 13 (worlds/survey_form.go).
-//
-// Until Task 13 lands, this is a thin embedding of stars.SurveyForm.
-// T13 will REPLACE this declaration with the full Class II/III form
-// type (the new type definition will live in survey_form.go and this
-// placeholder will be removed).
-type IISSClass23Form struct {
-	stars.SurveyForm // embedded for header + Stars table; see Task 13
 }
