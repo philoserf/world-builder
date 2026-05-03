@@ -48,25 +48,35 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 
 	prefixDie, prefixMax := prefixSpec(n)
 
+	// rollSlot does rejection sampling on both prefix and right per WBH
+	// p. 51 ("rolls above the top prefix number ... are rerolled"):
+	// keep rerolling prefix until ≤ prefixMax; keep rerolling right until
+	// the resulting (prefix, right) pair maps to a valid in-range slot.
+	rollSlot := func() (int, int) {
+		for {
+			p := r.Roll(prefixDie)
+			if p > prefixMax {
+				continue
+			}
+			right := r.Roll("1D")
+			idx := (p-1)*6 + (right - 1)
+			if idx >= 0 && idx < n {
+				return p, right
+			}
+		}
+	}
+
 	placeOne := func(body BodyType) error {
-		prefix := r.Roll(prefixDie)
-		right := r.Roll("1D")
-		idx := slotIndex(prefix, right, n)
-		// Collision-handling: +1 to right die; if right > 6, advance prefix
-		// and wrap; if every prefix is exhausted, fall back to first
-		// unassigned slot.
+		prefix, right := rollSlot()
+		idx := (prefix-1)*6 + (right - 1)
+		// Collision: +1 to right; if right > 6 advance prefix and wrap to 1
+		// (skipping prefixes whose minimum-right slot is already past n).
+		// Bail to a fallback scan if every (prefix, right) pair is taken.
 		attempts := 0
 		for assigned[idx] {
 			attempts++
-			if attempts > n*6 {
-				// Defensive fallback: scan for first unassigned slot.
-				idx = -1
-				for j, a := range assigned {
-					if !a {
-						idx = j
-						break
-					}
-				}
+			if attempts > prefixMax*6 {
+				idx = firstUnassigned(assigned)
 				if idx == -1 {
 					return fmt.Errorf("worlds: no unassigned slots")
 				}
@@ -80,10 +90,11 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 					prefix = 1
 				}
 			}
-			idx = slotIndex(prefix, right, n)
-		}
-		if idx >= n || idx < 0 {
-			return fmt.Errorf("worlds: rolled slot index %d out of range (n=%d)", idx, n)
+			candidate := (prefix-1)*6 + (right - 1)
+			if candidate >= n {
+				continue // skip out-of-range advance steps
+			}
+			idx = candidate
 		}
 		out[idx].Body = body
 		out[idx].PrefixRoll = fmt.Sprintf("%d:%d", prefix, right)
@@ -134,15 +145,13 @@ func prefixSpec(n int) (notation string, maxValid int) {
 	}
 }
 
-// slotIndex maps a (prefix, right) pair to a flat slot index, clamped to
-// [0, n-1].
-func slotIndex(prefix, right, n int) int {
-	idx := (prefix-1)*6 + (right - 1)
-	if idx >= n {
-		idx = n - 1
+// firstUnassigned returns the index of the first false entry in assigned,
+// or -1 if all are true.
+func firstUnassigned(assigned []bool) int {
+	for j, a := range assigned {
+		if !a {
+			return j
+		}
 	}
-	if idx < 0 {
-		idx = 0
-	}
-	return idx
+	return -1
 }
