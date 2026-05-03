@@ -344,3 +344,47 @@ func TestZed_GenerateCounts(t *testing.T) {
 		t.Errorf("Total = %d, want 17", got.Total)
 	}
 }
+
+func TestZed_AddAnomalous(t *testing.T) {
+	t.Parallel()
+	sys := composeZed()
+	avail, err := worlds.AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	counts := worlds.Counts{GasGiants: 4, PlanetoidBelts: 2, Terrestrials: 11, Total: 17}
+	allocs, err := worlds.AllocateOrbitsByStar(avail, counts)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	// After Step 4 empty distribution, B's allocation grows from 1 to 2.
+	// Simulate that here for the isolated test.
+	allocs[1].AllocatedWorlds = 2
+	allocs[2].AllocatedWorlds = 5
+
+	var slots []worlds.Slot
+	aab := allocs[0].Group
+	for _, o := range []float64{1.0, 1.6, 2.1, 2.7, 3.1, 3.5, 4.1, 4.6, 7.2, 7.8, 8.3} {
+		slots = append(slots, worlds.Slot{Group: aab, Orbit: o})
+	}
+	// Book: anomalous=10 (1), type=10 (Retrograde), parent group D3=1 (Aab),
+	// orbit raw 2D-2=5, d10=2 → 5.2.
+	rolls := []int{10, 10, 1, 7, 2}
+	out, newCounts, err := worlds.AddAnomalous(roller.NewScripted(rolls...), slots, allocs, counts)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	last := out[len(out)-1]
+	if last.Anomaly != worlds.AnomalyRetrograde {
+		t.Errorf("Anomaly = %v, want Retrograde", last.Anomaly)
+	}
+	if math.Abs(last.Orbit-5.2) > 0.01 {
+		t.Errorf("Orbit = %v, want 5.2", last.Orbit)
+	}
+	if last.Group.Designation != "Aab" {
+		t.Errorf("Group = %v, want Aab", last.Group.Designation)
+	}
+	if newCounts.Terrestrials != 12 || newCounts.Total != 18 {
+		t.Errorf("counts = %+v, want T=12 Total=18", newCounts)
+	}
+}
