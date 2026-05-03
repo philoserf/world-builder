@@ -97,3 +97,81 @@ func TestGenerateCounts_GasGiants_DM_BrownDwarfPrimary(t *testing.T) {
 		t.Errorf("GasGiants = %d, want 4", got.GasGiants)
 	}
 }
+
+func TestGenerateCounts_Belts_QuantityTable(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		roll int
+		want int
+	}{
+		{3, 1}, // 6-: 1
+		{6, 1},
+		{7, 2}, // 7-11: 2
+		{11, 2},
+		{12, 3}, // 12+: 3
+		{15, 3},
+	}
+	sys := solSystem() // single G2 V, no companions, no belt DMs
+	for _, tc := range cases {
+		// GG existence = 10 (>9 → no GG → no GG-present DM on belts).
+		// Belts existence raw = 8 (≥8, no DMs apply).
+		// Belt quantity raw = tc.roll, no DMs.
+		// Terrestrials: trailing rolls forward-compatible.
+		r := roller.NewScripted(10, 8, tc.roll, 7, 1)
+		got, err := GenerateCounts(r, sys, CountsOpts{})
+		if err != nil {
+			t.Fatalf("roll %d: %v", tc.roll, err)
+		}
+		if got.PlanetoidBelts != tc.want {
+			t.Errorf("roll %d: PlanetoidBelts = %d, want %d", tc.roll, got.PlanetoidBelts, tc.want)
+		}
+	}
+}
+
+func TestGenerateCounts_Belts_DM_GasGiantsPresent(t *testing.T) {
+	t.Parallel()
+	// Sol single G2 V system. GG existence raw=5 (≤9 → present). GG quantity raw=7 + DM+1
+	// (single-Class-V) = 8 → row 7-8 → 3 GGs.
+	//
+	// Belts existence: Sol primary is NOT Special Circumstances, so existence DMs = 0.
+	// Raw must be ≥8 to be present. Use raw 8.
+	//
+	// Belt quantity: DMs = +1 (GGs present, 3 of them).
+	// Raw 5 + 1 = 6 → row 6- → 1 belt.
+	//
+	// Terrestrials: trailing rolls forward-compatible.
+	r := roller.NewScripted(5, 7, 8, 5, 7, 1)
+	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.PlanetoidBelts != 1 {
+		t.Errorf("PlanetoidBelts = %d, want 1", got.PlanetoidBelts)
+	}
+}
+
+func TestGenerateCounts_Belts_DM_Protostar(t *testing.T) {
+	t.Parallel()
+	proto := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindProtostar, LuminosityClass: stars.V, Mass: 1.0, Diameter: 1.0, Temperature: 4000, AgeGyr: 0.001,
+	})
+	sys := stars.System{Primary: proto}
+	// Protostar primary IS Special Circumstances. DMs apply to both rolls.
+	// GG existence raw 10 + DMs (protostar primary = 0 GG DM since GG DMs are unrelated;
+	// single-Class-V doesn't apply since this is Protostar; no other GG DMs apply) = 10 > 9 → no GGs.
+	//
+	// Belts existence: Special Circumstances DMs = +3 (protostar) + +2 (primordial age 0.001) = +5.
+	// Raw 5 + 5 = 10 ≥8 → present.
+	//
+	// Belt quantity: same DMs +5. Raw 5 + 5 = 10 → row 7-11 → 2 belts.
+	//
+	// Terrestrials: trailing.
+	r := roller.NewScripted(10, 5, 5, 7, 1)
+	got, err := GenerateCounts(r, sys, CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.PlanetoidBelts != 2 {
+		t.Errorf("PlanetoidBelts = %d, want 2", got.PlanetoidBelts)
+	}
+}

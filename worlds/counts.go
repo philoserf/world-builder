@@ -35,10 +35,17 @@ func GenerateCounts(r roller.Roller, sys stars.System, _ CountsOpts) (Counts, er
 		c.GasGiants = gasGiantQuantity(qty)
 	}
 
-	// Belts and terrestrials are filled in by later tasks. For now,
-	// delegate to placeholders so the test can reach the gas-giant
-	// assertions. They will be implemented in tasks 4 and 5.
-	c.PlanetoidBelts = 0
+	// Existence: "Planetoid Belt Exists on 8+: roll 2D" (WBH p. 37).
+	// Per p. 37 sidebar: existence has no DMs unless Special Circumstances.
+	beltExistDM := beltExistenceDMs(sys)
+	if r.Roll("2D")+beltExistDM >= 8 {
+		// Present: roll 2D + all DMs for quantity.
+		beltQtyDM := beltQuantityDMs(sys, c.GasGiants)
+		beltQty := r.Roll("2D") + beltQtyDM
+		c.PlanetoidBelts = beltQuantity(beltQty)
+	}
+
+	// Terrestrials are filled in by later tasks.
 	c.Terrestrials = 0
 	c.Total = c.GasGiants + c.PlanetoidBelts + c.Terrestrials
 	return c, nil
@@ -131,4 +138,62 @@ func postStellarCount(sys stars.System) int {
 // companions of every orbit class). Companions count.
 func totalStarCount(sys stars.System) int {
 	return 1 + len(sys.Companions)
+}
+
+// beltExistenceDMs computes the WBH p. 37 DM stack for the planetoid-
+// belt existence roll only. Per WBH p. 37 sidebar: "There are no DMs to
+// the planetoid belt existence roll unless the primary star is subject
+// to rules covered in the Special Circumstances chapter." Only the
+// Special-Circumstances DMs apply here; the GG-present and 2+-stars DMs
+// apply to quantity only.
+func beltExistenceDMs(sys stars.System) int {
+	dm := 0
+	if sys.Primary.Kind == stars.KindProtostar {
+		dm += 3
+	}
+	if isPrimordial(sys.Primary) {
+		dm += 2
+	}
+	if isPostStellar(sys.Primary.Kind) {
+		dm++
+	}
+	dm += postStellarCount(sys)
+	return dm
+}
+
+// beltQuantityDMs computes the WBH p. 37 DM stack for the planetoid-belt
+// quantity roll (all DMs).
+//
+// gasGiantsPresent is the freshly-computed count from the same call to
+// GenerateCounts, used for the "system has ≥1 gas giants" DM.
+func beltQuantityDMs(sys stars.System, gasGiantsPresent int) int {
+	dm := beltExistenceDMs(sys)
+	if gasGiantsPresent >= 1 {
+		dm++
+	}
+	if totalStarCount(sys) >= 2 {
+		dm++
+	}
+	return dm
+}
+
+// beltQuantity maps a 2D+DMs result to the WBH p. 37 belt quantity table.
+func beltQuantity(roll int) int {
+	switch {
+	case roll <= 6:
+		return 1
+	case roll <= 11:
+		return 2
+	default:
+		return 3
+	}
+}
+
+// isPrimordial reports whether a star is "primordial" per WBH p. 14:
+// any star with age below 0.1 Gyr. The AgeGyr > 0 guard avoids treating
+// a default-zero Star{} (e.g., constructed without AgeGyr in tests) as
+// primordial — the book defines primordial as a generation-time property,
+// not "age unknown."
+func isPrimordial(s stars.Star) bool {
+	return s.AgeGyr > 0 && s.AgeGyr < 0.1
 }
