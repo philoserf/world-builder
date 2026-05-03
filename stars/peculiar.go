@@ -6,6 +6,71 @@ import (
 	"wbh/roller"
 )
 
+// generatePrimaryAtClass rolls a complete primary star at a specified
+// luminosity class (used for Special-column class redirects and giant
+// primary generation).
+//
+// The Type column roll is consumed but the class is overridden to
+// targetClass, since the caller already chose the class.
+//
+// Roll order:
+//  1. 2D for Type column (class returned by RollPrimaryTypeAndClass is discarded)
+//  2. 2D for Star Subtype (Class IV / VI restrictions applied by RollSubtype)
+//  3. (if WithVariance) 2D-7 for mass variance
+//  4. (if WithVariance) 2D-7 for diameter variance
+//  5. age rolls per Accuracy (SmallStarAge; giant-aware age modelling deferred)
+//
+// NOTE: WBH p.21 has separate age formulas for subgiants and giants. Using
+// SmallStarAge for all luminosity classes is a known gap; giant-age modelling
+// is deferred until a later plan.
+func generatePrimaryAtClass(r roller.Roller, targetClass LuminosityClass, opts GenerateOpts) (Star, error) {
+	letter, _, err := RollPrimaryTypeAndClass(r)
+	if err != nil {
+		return Star{}, err
+	}
+	subtype, err := RollSubtype(r, letter, targetClass)
+	if err != nil {
+		return Star{}, err
+	}
+	st := SpectralType{Letter: letter, Subtype: subtype}
+
+	mass, err := ComputeMass(st, targetClass)
+	if err != nil {
+		return Star{}, err
+	}
+	diameter, err := ComputeDiameter(st, targetClass)
+	if err != nil {
+		return Star{}, err
+	}
+	temperature, err := ComputeTemperature(st)
+	if err != nil {
+		return Star{}, err
+	}
+
+	if opts.WithVariance {
+		mass = ApplyVariance(mass, r, 0.20)
+		diameter = ApplyVariance(diameter, r, 0.20)
+	}
+
+	luminosity := ComputeLuminosityFromFormula(diameter, temperature)
+
+	age, err := SmallStarAge(r, opts.Accuracy)
+	if err != nil {
+		return Star{}, err
+	}
+
+	return Star{
+		Kind:            KindMainSequence,
+		SpectralType:    st,
+		LuminosityClass: targetClass,
+		Mass:            mass,
+		Diameter:        diameter,
+		Temperature:     temperature,
+		Luminosity:      luminosity,
+		AgeGyr:          age,
+	}, nil
+}
+
 // KindFromUnusualCell maps an Unusual-column cell from the Star Type
 // Determination table (WBH p. 15) to a StarKind.
 func KindFromUnusualCell(cell string) (StarKind, error) {

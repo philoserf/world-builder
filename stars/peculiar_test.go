@@ -139,3 +139,37 @@ func TestRollSpecialPrimary_PeculiarRecursion(t *testing.T) {
 		t.Fatalf("got %v want Anomaly", kind)
 	}
 }
+
+func TestGeneratePrimaryAtClass_III(t *testing.T) {
+	t.Parallel()
+
+	// Roll sequence:
+	//  1. 2D=7 → RollPrimaryTypeAndClass → Type column row 7 = "K"
+	//  2. 2D=7 → RollSubtype('K', III) → StarSubtypeNumeric[7] = 9, no IV clamp → K9
+	//  3. 1D=1 → SmallStarAge accuracy=1 (oneD)
+	//  4. D3=2 → SmallStarAge accuracy=1 (d3) → age = 1×2 + 2 − 1 = 3 Gyr
+	rolls := []int{7, 7, 1, 2}
+	r := roller.NewScripted(rolls...)
+	got, err := generatePrimaryAtClass(r, III, GenerateOpts{Accuracy: 1})
+	if err != nil {
+		t.Fatalf("generatePrimaryAtClass: %v", err)
+	}
+	if got.LuminosityClass != III {
+		t.Errorf("LuminosityClass = %s, want III", got.LuminosityClass)
+	}
+	if got.SpectralType.Letter != 'K' {
+		t.Errorf("Letter = %c, want K", got.SpectralType.Letter)
+	}
+	if got.Mass <= 0 {
+		t.Errorf("Mass = %v, want > 0", got.Mass)
+	}
+	if got.Diameter <= 0 {
+		t.Errorf("Diameter = %v, want > 0", got.Diameter)
+	}
+	if got.Temperature <= 0 {
+		t.Errorf("Temperature = %v, want > 0", got.Temperature)
+	}
+	if got.Luminosity <= 0 {
+		t.Errorf("Luminosity = %v, want > 0", got.Luminosity)
+	}
+}
