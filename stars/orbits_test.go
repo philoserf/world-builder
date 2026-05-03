@@ -139,19 +139,23 @@ func TestRollEccentricity_NestingDM(t *testing.T) {
 
 func TestRollEccentricity_ExtraDM(t *testing.T) {
 	t.Parallel()
-	// Same scripted rolls; ExtraDM should produce a different result.
-	// 2D=7, 1D=1 with no DM -> row 7 -> lookup table value.
-	// 2D=7, 1D=1 with ExtraDM=5 -> row 12 -> different table value.
+	// 2D=7, 1D=1 with no DM -> row 7 -> Base 0.00 + 1/200 = 0.005.
+	// 2D=7, 1D=1 with ExtraDM=5 -> row 12 -> Base 0.30 + 1D(=1)/20 = 0.35.
+	// (Row 12 SecondRoll is "2D" in notation but the scripted roller yields the
+	// next scripted value regardless of the dice expression.)
 	base, err := RollEccentricity(roller.NewScripted(7, 1), EccentricityOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
+	}
+	if want := 0.005; math.Abs(base-want) > 1e-9 {
+		t.Errorf("base = %v, want %v (row 7: 0.00 + 1/200)", base, want)
 	}
 	bumped, err := RollEccentricity(roller.NewScripted(7, 1), EccentricityOpts{ExtraDM: 5})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	if base == bumped {
-		t.Errorf("base = bumped = %v; ExtraDM had no effect", base)
+	if want := 0.35; math.Abs(bumped-want) > 1e-9 {
+		t.Errorf("bumped = %v, want %v (row 12: 0.30 + 1/20)", bumped, want)
 	}
 }
 

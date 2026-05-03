@@ -83,7 +83,7 @@ func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: place-worlds: %w", err)
 	}
-	placements, err = RollPlanetEccentricities(r, placements)
+	placements, err = RollPlanetEccentricities(r, placements, sys.AgeGyr)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: planet-eccentricity: %w", err)
 	}
