@@ -335,10 +335,14 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 			continue
 		}
 		s := c.OrbitNumber
-		// Rules 5+6: base ±1, widened by ±1 more if ecc > 0.2.
+		// Rules 5+6+7: base ±1, widened by ±1 more if ecc > 0.2,
+		// widened by another ±1 if ecc > 0.5 AND Close or Near (not Far).
 		width := 1.0
 		if c.Eccentricity > 0.2 {
 			width += 1.0 // rule 6
+		}
+		if c.Eccentricity > 0.5 && (c.OrbitClass == stars.OrbitClose || c.OrbitClass == stars.OrbitNear) {
+			width += 1.0 // rule 7 (Close/Near only, not Far)
 		}
 		exLow := s - width
 		exHigh := s + width
