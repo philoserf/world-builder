@@ -201,3 +201,132 @@ func TestMAO_CrossLetterInterpolation(t *testing.T) {
 		t.Errorf("MAO(O7 V) = %v, want %v", got, want)
 	}
 }
+
+func TestIdentifyGroups_SinglePrimary(t *testing.T) {
+	t.Parallel()
+
+	sys := stars.System{
+		Primary: stars.Compose(stars.ComposeOpts{
+			Kind:            stars.KindMainSequence,
+			SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+			LuminosityClass: stars.V,
+			Mass:            1.0, Diameter: 1.0, Temperature: 5772,
+		}),
+		Companions: nil,
+	}
+	groups := identifyGroups(sys)
+	if len(groups) != 1 {
+		t.Fatalf("groups = %d, want 1", len(groups))
+	}
+	if groups[0].Designation != "A" {
+		t.Errorf("Designation = %q, want \"A\"", groups[0].Designation)
+	}
+	if len(groups[0].Members) != 1 {
+		t.Errorf("Members = %d, want 1", len(groups[0].Members))
+	}
+}
+
+func TestIdentifyGroups_PrimaryWithCompanion(t *testing.T) {
+	t.Parallel()
+
+	primary := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            0.929, Diameter: 0.967, Temperature: 5440,
+	})
+	ab := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.907, Diameter: 0.957, Temperature: 5360,
+	})
+	sys := stars.System{
+		Primary: primary,
+		Companions: []stars.CompanionStar{
+			{Star: ab, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.09, Eccentricity: 0.11, ParentIndex: -1},
+		},
+	}
+	groups := identifyGroups(sys)
+	if len(groups) != 1 {
+		t.Fatalf("groups = %d, want 1 (companion folds into primary)", len(groups))
+	}
+	if groups[0].Designation != "Aab" {
+		t.Errorf("Designation = %q, want \"Aab\"", groups[0].Designation)
+	}
+	if len(groups[0].Members) != 2 {
+		t.Errorf("Members = %d, want 2", len(groups[0].Members))
+	}
+}
+
+func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
+	t.Parallel()
+
+	// Construct the Zed quintuple in pieces and verify three groups.
+	// Aa + Ab → Aab; B alone → B; Ca + Cb → Cab.
+	aa := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            0.929, Diameter: 0.967, Temperature: 5440,
+	})
+	ab := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.907, Diameter: 0.957, Temperature: 5360,
+	})
+	b := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'K', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.626, Diameter: 0.777, Temperature: 3980,
+	})
+	ca := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'M', Subtype: 0},
+		LuminosityClass: stars.V,
+		Mass:            0.510, Diameter: 0.728, Temperature: 3700,
+	})
+	cb := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindWhiteDwarf,
+		Mass: 0.490, Diameter: 0.017, Temperature: 6700,
+	})
+	sys := stars.System{
+		Primary: aa,
+		Companions: []stars.CompanionStar{
+			// Index 0: Ab is companion of primary.
+			{Star: ab, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.09, Eccentricity: 0.11, ParentIndex: -1},
+			// Index 1: B is Near secondary.
+			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.10, Eccentricity: 0.08, ParentIndex: -1},
+			// Index 2: Ca is Far secondary.
+			{Star: ca, OrbitClass: stars.OrbitFar, OrbitNumber: 12.10, Eccentricity: 0.47, ParentIndex: -1},
+			// Index 3: Cb is companion of Ca (parent index 2).
+			{Star: cb, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.21, Eccentricity: 0.24, ParentIndex: 2},
+		},
+	}
+	// Zed: Close is absent. Designations: primary group "Aab",
+	// Near (only Close-relative slot left) becomes "B",
+	// Far becomes "Cab" (with its own companion folded in).
+	groups := identifyGroups(sys)
+	if len(groups) != 3 {
+		t.Fatalf("groups = %d, want 3", len(groups))
+	}
+	wantDesig := []string{"Aab", "B", "Cab"}
+	for i, g := range groups {
+		if g.Designation != wantDesig[i] {
+			t.Errorf("groups[%d].Designation = %q, want %q", i, g.Designation, wantDesig[i])
+		}
+	}
+	// Verify pair groups have companionEcc set.
+	if math.Abs(groups[0].companionEcc-0.11) > 1e-9 {
+		t.Errorf("Aab companionEcc = %v, want 0.11", groups[0].companionEcc)
+	}
+	if math.Abs(groups[2].companionEcc-0.24) > 1e-9 {
+		t.Errorf("Cab companionEcc = %v, want 0.24", groups[2].companionEcc)
+	}
+	// Solo groups have companionEcc = 0.
+	if groups[1].companionEcc != 0 {
+		t.Errorf("B companionEcc = %v, want 0", groups[1].companionEcc)
+	}
+}

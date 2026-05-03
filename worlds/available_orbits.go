@@ -32,6 +32,12 @@ type Group struct {
 	Members     []stars.Star
 	MAO         float64    // p. 39 table; for pairs, raised by rule 2 if applicable
 	Intervals   []Interval // disjoint, sorted ascending
+
+	// companionEcc records the companion's eccentricity for pair
+	// groups. Set by identifyGroups; read by AvailableOrbits's rule 2
+	// pass. Unexported because it's an implementation detail of the
+	// rule pipeline, not part of the public API.
+	companionEcc float64
 }
 
 // Total returns the sum of (Max - Min) over all intervals — the value
@@ -229,4 +235,63 @@ func nextSpectralLetter(l stars.SpectralLetter) stars.SpectralLetter {
 	default:
 		return l
 	}
+}
+
+// identifyGroups partitions a System into its barycentric orbit groups.
+// See package doc comment for the rules.
+//
+// Pairing uses CompanionStar.ParentIndex: -1 means "child of the
+// primary"; otherwise it is an index into sys.Companions.
+func identifyGroups(sys stars.System) []Group {
+	groups := []Group{}
+
+	// findCompanionOf returns the Star and its eccentricity for a
+	// Companion-class entry whose ParentIndex matches parentIdx, or
+	// (Star{}, 0, false) if none.
+	findCompanionOf := func(parentIdx int) (stars.Star, float64, bool) {
+		for _, c := range sys.Companions {
+			if c.ParentIndex == parentIdx && c.OrbitClass == stars.OrbitCompanion {
+				return c.Star, c.Eccentricity, true
+			}
+		}
+		return stars.Star{}, 0, false
+	}
+
+	// Primary group: primary plus its companion (parent index -1, class
+	// Companion), if any.
+	primaryGroup := Group{Members: []stars.Star{sys.Primary}}
+	if companion, ecc, ok := findCompanionOf(-1); ok {
+		primaryGroup.Members = append(primaryGroup.Members, companion)
+		primaryGroup.companionEcc = ecc
+		primaryGroup.Designation = "Aab"
+	} else {
+		primaryGroup.Designation = "A"
+	}
+	groups = append(groups, primaryGroup)
+
+	// Secondary groups: each Close/Near/Far companion of the primary
+	// becomes its own group (with its own companion folded in if any).
+	// Walk Close, then Near, then Far in canonical order so designations
+	// are assigned positionally (B, C, D) skipping absent slots.
+	letters := []string{"A", "B", "C", "D"}
+	letterIdx := 1
+	for _, oc := range []stars.OrbitClass{stars.OrbitClose, stars.OrbitNear, stars.OrbitFar} {
+		for i, c := range sys.Companions {
+			if c.OrbitClass != oc || c.ParentIndex != -1 {
+				continue
+			}
+			group := Group{Members: []stars.Star{c.Star}}
+			if companion, ecc, ok := findCompanionOf(i); ok {
+				group.Members = append(group.Members, companion)
+				group.companionEcc = ecc
+				group.Designation = letters[letterIdx] + "ab"
+			} else {
+				group.Designation = letters[letterIdx]
+			}
+			letterIdx++
+			groups = append(groups, group)
+		}
+	}
+
+	return groups
 }
