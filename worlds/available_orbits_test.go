@@ -60,22 +60,26 @@ func TestGroup_Contains(t *testing.T) {
 	}
 
 	tests := []struct {
+		name  string
 		orbit float64
 		want  bool
 	}{
-		{0.5, false},
-		{0.61, true},
-		{3.0, true},
-		{5.10, true},
-		{6.0, false},
-		{7.0, false},
-		{7.10, true},
-		{10.10, true},
-		{15.0, false},
+		{"below first interval", 0.5, false},
+		{"first interval lower endpoint", 0.61, true},
+		{"first interval middle", 3.0, true},
+		{"first interval upper endpoint", 5.10, true},
+		{"between intervals (lower)", 6.0, false},
+		{"between intervals (upper)", 7.0, false},
+		{"second interval lower endpoint", 7.10, true},
+		{"second interval upper endpoint", 10.10, true},
+		{"above all intervals", 15.0, false},
 	}
 	for _, tc := range tests {
-		if got := g.Contains(tc.orbit); got != tc.want {
-			t.Errorf("Contains(%v) = %v, want %v", tc.orbit, got, tc.want)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := g.Contains(tc.orbit); got != tc.want {
+				t.Errorf("Contains(%v) = %v, want %v", tc.orbit, got, tc.want)
+			}
+		})
 	}
 }
