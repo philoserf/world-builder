@@ -38,6 +38,14 @@ type Group struct {
 	// pass. Unexported because it's an implementation detail of the
 	// rule pipeline, not part of the public API.
 	companionEcc float64
+
+	// sourceCompanion is the CompanionStar that gave rise to this
+	// secondary group (nil for the primary group). Set by identifyGroups
+	// so rules 9–11 can look up the secondary's orbit class and
+	// eccentricity directly instead of walking a parallel index. Also
+	// used by sub-project 2B steps that need the secondary's
+	// orbit-around-primary.
+	sourceCompanion *stars.CompanionStar
 }
 
 // Total returns the sum of (Max - Min) over all intervals — the value
@@ -413,44 +421,32 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 
 	// Rule 8: each secondary (Close/Near/Far) has its own orbit range.
 	// Lower bound is the secondary's MAO (Rule 1); upper bound is
-	// (Orbit# − 3). Walk in canonical Close → Near → Far order — the
-	// same order identifyGroups produced the secondary groups — and
-	// match each non-companion primary-child entry to groups[secIdx].
-	//
-	// Rules 9-11 reduce maxOffset further:
+	// (Orbit# − 3). Rules 9–11 reduce maxOffset further:
 	//   - Rule 9: -1 if adjacent zone populated (max once per secondary).
 	//   - Rule 10: -1 if self ecc > 0.2 OR any adjacent zone star has ecc > 0.2 (max once).
 	//   - Rule 11: -1 if self ecc > 0.5 (max once).
-	secIdx := 1
-	for _, oc := range []stars.OrbitClass{stars.OrbitClose, stars.OrbitNear, stars.OrbitFar} {
-		for _, c := range sys.Companions {
-			if c.OrbitClass != oc || c.ParentIndex != -1 {
-				continue
-			}
-			if secIdx >= len(groups) {
-				break
-			}
-			maxOffset := c.OrbitNumber - 3 // rule 8
-
-			if hasAdjacentZone(sys, c.OrbitClass) {
-				maxOffset-- // rule 9
-			}
-			if c.Eccentricity > 0.2 || adjacentEccGT02(sys, c.OrbitClass) {
-				maxOffset-- // rule 10
-			}
-			if c.Eccentricity > 0.5 {
-				maxOffset-- // rule 11
-			}
-
-			if maxOffset < 0 {
-				maxOffset = 0
-			}
-			if maxOffset < groups[secIdx].MAO {
-				groups[secIdx].Intervals = nil
-			} else {
-				groups[secIdx].Intervals = []Interval{{Min: groups[secIdx].MAO, Max: maxOffset}}
-			}
-			secIdx++
+	for i := range groups {
+		if groups[i].sourceCompanion == nil {
+			continue // primary group
+		}
+		c := groups[i].sourceCompanion
+		maxOffset := c.OrbitNumber - 3 // rule 8
+		if hasAdjacentZone(sys, c.OrbitClass) {
+			maxOffset-- // rule 9
+		}
+		if c.Eccentricity > 0.2 || adjacentEccGT02(sys, c.OrbitClass) {
+			maxOffset-- // rule 10
+		}
+		if c.Eccentricity > 0.5 {
+			maxOffset-- // rule 11
+		}
+		if maxOffset < 0 {
+			maxOffset = 0
+		}
+		if maxOffset < groups[i].MAO {
+			groups[i].Intervals = nil
+		} else {
+			groups[i].Intervals = []Interval{{Min: groups[i].MAO, Max: maxOffset}}
 		}
 	}
 
@@ -496,7 +492,8 @@ func identifyGroups(sys stars.System) []Group {
 	letters := []string{"A", "B", "C", "D"}
 	letterIdx := 1
 	for _, oc := range []stars.OrbitClass{stars.OrbitClose, stars.OrbitNear, stars.OrbitFar} {
-		for i, c := range sys.Companions {
+		for i := range sys.Companions {
+			c := sys.Companions[i]
 			if c.OrbitClass != oc || c.ParentIndex != -1 {
 				continue
 			}
@@ -507,7 +504,10 @@ func identifyGroups(sys stars.System) []Group {
 				// a hand-constructed System outside the WBH generator's output.
 				break
 			}
-			group := Group{Members: []stars.Star{c.Star}}
+			group := Group{
+				Members:         []stars.Star{c.Star},
+				sourceCompanion: &sys.Companions[i],
+			}
 			if companion, ecc, ok := findCompanionOf(i); ok {
 				group.Members = append(group.Members, companion)
 				group.companionEcc = ecc
