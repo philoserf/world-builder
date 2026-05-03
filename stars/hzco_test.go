@@ -75,13 +75,13 @@ func TestCompositeHZCO_Empty(t *testing.T) {
 	}
 }
 
-// hzcoTablePage42 is the WBH p. 42 HZCO# table, used as a verification
+// hzcoTableP42 is the WBH p. 42 HZCO# table, used as a verification
 // fixture for the formula-based Star.HZCO(). Cells with no value (the
 // book's "—") are omitted from the map.
 //
 // Outer key: spectral type ("O0", "B5", "G2", ...). Inner map: luminosity
 // class to expected HZCO# value.
-var hzcoTablePage42 = map[string]map[LuminosityClass]float64{
+var hzcoTableP42 = map[string]map[LuminosityClass]float64{
 	"O0": {Ia: 14.5, Ib: 14.4, II: 14.3, III: 14.3, V: 14.2, VI: 7.3},
 	"O5": {Ia: 13.7, Ib: 13.5, II: 13.4, III: 13.2, V: 12.9, VI: 6.7},
 	"B0": {Ia: 12.8, Ib: 12.2, II: 12.0, III: 11.7, IV: 11.4, V: 11.2, VI: 6.0},
@@ -125,7 +125,7 @@ func TestStar_HZCO_TableFidelity(t *testing.T) {
 
 	const tolerance = 0.05 // ±5%
 
-	for typeStr, row := range hzcoTablePage42 {
+	for typeStr, row := range hzcoTableP42 {
 		st, err := ParseSpectralType(typeStr)
 		if err != nil {
 			t.Fatalf("ParseSpectralType(%q): %v", typeStr, err)
