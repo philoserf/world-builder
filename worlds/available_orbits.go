@@ -272,9 +272,12 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		if len(groups[i].Members) < 2 {
 			continue
 		}
+		// Rule 1 already populated groups[i].MAO from MAO(Members[0]).
+		// Reuse that value as the larger-star MAO (parent is always the
+		// first member per identifyGroups; WBH treats the parent as the
+		// more massive/luminous star).
+		largerMAO := groups[i].MAO
 		floor := 0.50 + groups[i].companionEcc
-		larger := groups[i].Members[0] // first member is parent; treat as larger
-		largerMAO, _ := MAO(larger)
 		if largerMAO > 0.2 {
 			floor += largerMAO
 		}
