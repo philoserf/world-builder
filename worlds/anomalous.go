@@ -40,12 +40,16 @@ type AnomalousSlot struct {
 // AnomalousSlot per rolled anomaly. Updates counts (each anomaly adds
 // one terrestrial and one total).
 //
-// In multi-star systems the parent group is picked by D3 (3-group max
-// per WBH structural cap). In single-star systems no group roll is
-// consumed; the only group is used.
+// In multi-star systems the parent group is picked by D3. With three
+// groups the distribution is uniform; with two groups the modulo skews
+// 2/3 toward the primary (acceptable simplification for 2B).
 //
-// Anomalous orbits clamp to [group.MAO, 20.0] with retry. Trojan picks
-// the immediately-inward slot in the parent group as the target.
+// Anomalous orbits clamp to [group.MAO, 20.0] with retry. Trojan slots
+// shadow an existing slot in the parent group (2B approximates the
+// book's inward-precedence rule by picking the outermost existing slot
+// in that group); per WBH p. 51 a Trojan inherits the shadowed slot's
+// orbit, eccentricity, and inclination, so its EccentricityDM is 0
+// (Step 9 will copy the parent's eccentricity instead of rolling).
 func AddAnomalous(
 	r roller.Roller,
 	slots []Slot,
@@ -77,7 +81,7 @@ func AddAnomalous(
 		var inclination float64
 		switch atype {
 		case AnomalyTrojan:
-			target := pickInwardSlot(slots, parent.Designation)
+			target := pickTrojanTarget(slots, parent.Designation)
 			trojanOf = target.StarSlot
 			orbit = target.Orbit
 		default:
@@ -133,11 +137,16 @@ func anomalousType(roll int) AnomalyType {
 	}
 }
 
+// eccentricityDMFor returns the per-anomaly DM applied by Step 9 when
+// rolling planet eccentricity. Trojan returns 0: per WBH p. 51 a Trojan
+// inherits the orbital characteristics (orbit#, eccentricity, inclination)
+// of the slot it shadows, so Step 9 will copy the parent's eccentricity
+// rather than rolling with a DM.
 func eccentricityDMFor(t AnomalyType) int {
 	switch t {
 	case AnomalyEccentric:
 		return 5
-	case AnomalyRandom, AnomalyInclined, AnomalyRetrograde, AnomalyTrojan:
+	case AnomalyRandom, AnomalyInclined, AnomalyRetrograde:
 		return 2
 	}
 	return 0
@@ -157,11 +166,15 @@ func rollAnomalousOrbit(r roller.Roller, mao float64) float64 {
 	return mao
 }
 
-// pickInwardSlot returns the highest-Orbit slot in the parent group.
-// For 2B we approximate the book's "immediately-inward" rule by picking
-// the outermost slot in the parent group (since the trojan inherits its
-// orbit, not derives a new one).
-func pickInwardSlot(slots []Slot, parentDesignation string) Slot {
+// pickTrojanTarget returns the outermost slot in the parent group as
+// the orbit a Trojan should shadow. The book's "immediately-inward"
+// rule (p. 51) requires knowing the Trojan's intended orbit#, which the
+// 2B procedure doesn't roll separately (the Trojan inherits its orbit
+// from the slot it shadows). Picking the outermost existing slot is a
+// 2B-scope simplification — sufficient because 2B doesn't compute
+// Trojan-relative world placement, only that a Trojan exists co-orbital
+// with some slot.
+func pickTrojanTarget(slots []Slot, parentDesignation string) Slot {
 	var best Slot
 	bestOrbit := -1.0
 	for _, s := range slots {
