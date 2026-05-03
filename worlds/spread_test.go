@@ -20,8 +20,10 @@ func TestSpread_BaseFormula(t *testing.T) {
 func TestSpread_BaselineNLessThan1_TreatedAs1(t *testing.T) {
 	t.Parallel()
 	primary := Group{MAO: 0.5, Intervals: []Interval{{Min: 0.5, Max: 20.0}}}
-	// baselineN = 0 → treat as 1. (10.0 - 0.5)/1 = 9.5
-	got := Spread(primary, 5, 10.0, 0, 1)
+	// baselineN = 0 → treat as 1. (10.0 - 0.5)/1 = 9.5.
+	// primaryAllocated=2 keeps outermost (0.5 + 2×9.5 = 19.5) under the cap
+	// so we isolate the "treat as 1" rule from the Maximum Spread cap.
+	got := Spread(primary, 2, 10.0, 0, 1)
 	if math.Abs(got-9.5) > 0.05 {
 		t.Errorf("Spread = %v, want 9.5", got)
 	}
