@@ -198,6 +198,21 @@ func TestZed_AllocateOrbitsByStar(t *testing.T) {
 	}
 }
 
+func TestZed_RollBaselineNumber(t *testing.T) {
+	t.Parallel()
+	sys := composeZed()
+	// Zed: companion (Ab) → DM-2; secondaries B + Ca → DM-2; total 17 → no
+	// band DM (16-17 unlisted in book → 0). Primary G7 V → no class DM.
+	// Net DM = -4. Book rolls 9. Result: 9 - 4 = 5.
+	got, err := worlds.RollBaselineNumber(roller.NewScripted(9), sys, worlds.Counts{Total: 17})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got != 5 {
+		t.Errorf("baseline = %d, want 5", got)
+	}
+}
+
 func TestZed_GenerateCounts(t *testing.T) {
 	t.Parallel()
 	// WBH p. 38 Zed walkthrough — encoded against the Existence/Quantity DM split:
