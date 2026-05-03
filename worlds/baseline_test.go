@@ -81,9 +81,19 @@ func TestRollBaselineNumber_DMTable(t *testing.T) {
 			tot:  7, roll: 9, want: 9 - 3,
 		},
 		{
+			name: "total worlds 10-12",
+			sys:  stars.System{Primary: stars.Compose(stars.ComposeOpts{LuminosityClass: stars.V})},
+			tot:  11, roll: 9, want: 9 - 2,
+		},
+		{
 			name: "total worlds 13-15",
 			sys:  stars.System{Primary: stars.Compose(stars.ComposeOpts{LuminosityClass: stars.V})},
 			tot:  14, roll: 9, want: 9 - 1,
+		},
+		{
+			name: "total worlds 18-20",
+			sys:  stars.System{Primary: stars.Compose(stars.ComposeOpts{LuminosityClass: stars.V})},
+			tot:  19, roll: 9, want: 9 + 1,
 		},
 		{
 			name: "total worlds > 20",
