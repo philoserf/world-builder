@@ -1,9 +1,11 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 
 	"wbh/roller"
+	"wbh/stars"
 )
 
 func TestRollPlanetEccentricities_AppliesAnomalyDM(t *testing.T) {
@@ -30,5 +32,44 @@ func TestRollPlanetEccentricities_AppliesAnomalyDM(t *testing.T) {
 	// Empty and belt placements: eccentricity remains 0 (no roll consumed for them).
 	if out[2].Eccentricity != 0 || out[3].Eccentricity != 0 {
 		t.Errorf("Empty/Belt eccentricities = %v, %v; want 0,0", out[2].Eccentricity, out[3].Eccentricity)
+	}
+}
+
+func TestRollPlanetEccentricities_TrojanInheritsParent(t *testing.T) {
+	t.Parallel()
+	placements := []Placement{
+		// Parent slot at A1 with some rolled eccentricity.
+		{AnomalousSlot: AnomalousSlot{Slot: Slot{StarSlot: "A1", Orbit: 3.0}}, Body: BodyTerrestrial},
+		// Trojan shadowing A1.
+		{AnomalousSlot: AnomalousSlot{Slot: Slot{StarSlot: "A+", Orbit: 3.0}, Anomaly: AnomalyTrojan, TrojanOf: "A1"}, Body: BodyTerrestrial},
+	}
+	// Only one RollEccentricity call (for A1). 2 rolls (2D for row + value).
+	out, err := RollPlanetEccentricities(roller.NewScripted(7, 1), placements)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(out[0].Eccentricity-out[1].Eccentricity) > 1e-9 {
+		t.Errorf("Trojan eccentricity %v should equal parent %v", out[1].Eccentricity, out[0].Eccentricity)
+	}
+}
+
+func TestRollPlanetEccentricities_NestingDepthForSecondary(t *testing.T) {
+	t.Parallel()
+	primary := Group{Designation: "A", Members: []stars.Star{{}}}
+	nearCompanion := stars.CompanionStar{OrbitClass: stars.OrbitNear}
+	secondary := Group{Designation: "B", Members: []stars.Star{{}}}
+	secondary.sourceCompanion = &nearCompanion
+
+	placements := []Placement{
+		{AnomalousSlot: AnomalousSlot{Slot: Slot{StarSlot: "A1", Group: primary, Orbit: 3.0}}, Body: BodyTerrestrial},
+		{AnomalousSlot: AnomalousSlot{Slot: Slot{StarSlot: "B1", Group: secondary, Orbit: 1.0}}, Body: BodyTerrestrial},
+	}
+	// Same scripted rolls for both. NestingDepth differs (0 vs 1) → results should differ.
+	out, err := RollPlanetEccentricities(roller.NewScripted(7, 1, 7, 1), placements)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if out[0].Eccentricity == out[1].Eccentricity {
+		t.Errorf("primary (depth 0) and secondary (depth 1) eccentricities both = %v; NestingDepth had no effect", out[0].Eccentricity)
 	}
 }

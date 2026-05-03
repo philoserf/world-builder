@@ -14,28 +14,52 @@ import (
 //
 // Belts and empty slots are skipped (no roll consumed).
 //
-// Trojan slots have EccentricityDM == 0 by Task 12 design and inherit
-// their eccentricity from the slot they shadow; for 2B we still call
-// the eccentricity roll (since the 2B procedure does not actually look
-// up the parent slot's eccentricity here). 2C should special-case
-// Trojan to copy the parent's eccentricity instead.
+// Trojan slots (Anomaly == AnomalyTrojan) are handled specially per
+// WBH p. 51: they inherit the orbit, eccentricity, and inclination of
+// the slot they shadow. We do not roll a fresh eccentricity for them;
+// we copy from the slot whose StarSlot matches TrojanOf in a second pass.
 func RollPlanetEccentricities(r roller.Roller, ps []Placement) ([]Placement, error) {
 	out := make([]Placement, len(ps))
 	copy(out, ps)
+	// First pass: roll for non-Trojan, non-empty, non-belt placements.
 	for i := range out {
 		if out[i].Body == BodyEmpty || out[i].Body == BodyPlanetoidBelt {
 			continue
 		}
+		if out[i].Anomaly == AnomalyTrojan {
+			continue // handled in pass 2
+		}
 		ecc, err := stars.RollEccentricity(r, stars.EccentricityOpts{
-			ExtraDM: out[i].EccentricityDM,
-			// We don't have the system age plumbed through to this layer
-			// in 2B; the sub-1.0/age>1Gyr DM is therefore not applied
-			// here. 2C should plumb sys.Primary.AgeGyr through.
+			ExtraDM:      out[i].EccentricityDM,
+			NestingDepth: nestingDepthFor(out[i]),
 		})
 		if err != nil {
 			return nil, err
 		}
 		out[i].Eccentricity = ecc
 	}
+	// Second pass: Trojans inherit from their TrojanOf parent.
+	for i := range out {
+		if out[i].Anomaly != AnomalyTrojan {
+			continue
+		}
+		for j := range out {
+			if out[j].StarSlot == out[i].TrojanOf {
+				out[i].Eccentricity = out[j].Eccentricity
+				break
+			}
+		}
+	}
 	return out, nil
+}
+
+// nestingDepthFor returns the WBH p. 27 NestingDepth for a placement.
+// Planets in the primary group orbit at depth 0; planets in a Close,
+// Near, or Far secondary group orbit the secondary which orbits the
+// primary, so depth 1.
+func nestingDepthFor(p Placement) int {
+	if p.Group.sourceCompanion == nil {
+		return 0 // primary group
+	}
+	return 1 // secondary group
 }
