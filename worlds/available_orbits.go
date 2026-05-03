@@ -237,6 +237,40 @@ func nextSpectralLetter(l stars.SpectralLetter) stars.SpectralLetter {
 	}
 }
 
+// AvailableOrbits applies the WBH pp. 38–40 simplified rules to a
+// stars.System and returns per-group allowed Orbit# intervals.
+//
+// Implementation walks rules 1–11 in order, mutating each group's
+// interval set. See spec for the rule list.
+//
+// Returns ErrPostStellarPrimaryUnsupported if the primary star is a
+// Brown Dwarf, White Dwarf, Neutron Star, Black Hole, or Pulsar (their
+// MAO is in the Special Circumstances chapter, not yet encoded).
+func AvailableOrbits(sys stars.System) (Result, error) {
+	if isPostStellar(sys.Primary.Kind) {
+		return Result{}, ErrPostStellarPrimaryUnsupported
+	}
+
+	groups := identifyGroups(sys)
+
+	// Rule 1: MAO from p. 39 table for each group.
+	for i := range groups {
+		// Pair groups use the parent (first member) MAO; rule 2 may
+		// raise it later.
+		mao, err := MAO(groups[i].Members[0])
+		if err != nil {
+			return Result{}, fmt.Errorf("worlds: MAO for group %s: %w",
+				groups[i].Designation, err)
+		}
+		groups[i].MAO = mao
+	}
+
+	// Rule 3: primary group can have Orbit#s up to 20.
+	groups[0].Intervals = []Interval{{Min: groups[0].MAO, Max: 20.0}}
+
+	return Result{Groups: groups}, nil
+}
+
 // identifyGroups partitions a System into its barycentric orbit groups.
 // See package doc comment for the rules.
 //

@@ -259,6 +259,56 @@ func TestIdentifyGroups_PrimaryWithCompanion(t *testing.T) {
 	}
 }
 
+func TestAvailableOrbits_SoleMainSequence(t *testing.T) {
+	t.Parallel()
+
+	// Single G2 V primary, no companions. Expected: one group "A" with
+	// MAO ~0.03 (interpolated G0→G5) and intervals [[MAO, 20.0]].
+	sol := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+		LuminosityClass: stars.V,
+		Mass:            1.0, Diameter: 1.0, Temperature: 5772,
+	})
+	sys := stars.System{Primary: sol}
+	got, err := AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("AvailableOrbits: %v", err)
+	}
+	if len(got.Groups) != 1 {
+		t.Fatalf("groups = %d, want 1", len(got.Groups))
+	}
+	g := got.Groups[0]
+	if g.Designation != "A" {
+		t.Errorf("Designation = %q, want \"A\"", g.Designation)
+	}
+	if math.Abs(g.MAO-0.03) > 0.005 {
+		t.Errorf("MAO = %v, want ~0.03", g.MAO)
+	}
+	if len(g.Intervals) != 1 {
+		t.Fatalf("intervals = %d, want 1", len(g.Intervals))
+	}
+	iv := g.Intervals[0]
+	if math.Abs(iv.Min-g.MAO) > 1e-9 {
+		t.Errorf("Min = %v, want MAO %v", iv.Min, g.MAO)
+	}
+	if math.Abs(iv.Max-20.0) > 1e-9 {
+		t.Errorf("Max = %v, want 20.0", iv.Max)
+	}
+}
+
+func TestAvailableOrbits_PostStellarPrimary(t *testing.T) {
+	t.Parallel()
+
+	sys := stars.System{
+		Primary: stars.Star{Kind: stars.KindWhiteDwarf, Mass: 0.5},
+	}
+	_, err := AvailableOrbits(sys)
+	if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
+		t.Errorf("err = %v, want ErrPostStellarPrimaryUnsupported", err)
+	}
+}
+
 func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	t.Parallel()
 
