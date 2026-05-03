@@ -319,8 +319,14 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 	// Rule 3: primary group can have Orbit#s up to 20.
 	groups[0].Intervals = []Interval{{Min: groups[0].MAO, Max: 20.0}}
 
-	// Rule 5: each Close/Near/Far secondary excludes (s-1, s+1) from
-	// primary's intervals (with secondary's MAO added if MAO > 0.2).
+	// Rules 5+6: each Close/Near/Far secondary excludes a range centred
+	// on its Orbit# from the primary's intervals.
+	//
+	// Rule 5 (WBH p. 38): base exclusion width ±1.
+	// Rule 6 (WBH p. 38): if companion eccentricity > 0.2, widen by ±1.
+	// Secondary MAO > 0.2: additionally subtract the secondary's MAO on
+	// each side.
+	//
 	// Rule 4 (companions occupy same orbit as parent) is handled by
 	// identifyGroups via group folding; from here on, OrbitCompanion
 	// entries are ignored.
@@ -329,8 +335,13 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 			continue
 		}
 		s := c.OrbitNumber
-		exLow := s - 1
-		exHigh := s + 1
+		// Rules 5+6: base ±1, widened by ±1 more if ecc > 0.2.
+		width := 1.0
+		if c.Eccentricity > 0.2 {
+			width += 1.0 // rule 6
+		}
+		exLow := s - width
+		exHigh := s + width
 		secMAO, _ := MAO(c.Star)
 		if secMAO > 0.2 {
 			exLow -= secMAO

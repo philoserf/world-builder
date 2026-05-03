@@ -387,6 +387,49 @@ func TestAvailableOrbits_Rule5_SecondaryExclusion(t *testing.T) {
 	}
 }
 
+func TestAvailableOrbits_Rule6_EccentricSecondary(t *testing.T) {
+	t.Parallel()
+
+	// Zed Cab pair (Far) at Orbit# 12.10 with eccentricity 0.47 (> 0.2).
+	// Rule 5: ±1 (10.10, 14.10).
+	// Rule 6: widen by ±1 → (9.10, 15.10).
+	// Wait — the book example: Cab at 12.10 with ecc 0.47 blocks 10.10–14.10.
+	// That's ±2, which is rule 5 (±1) + rule 6 (±1) = ±2. Correct.
+	// Final exclusion (10.10, 14.10): primary intervals = [[MAO, 10.10], [14.10, 20.0]].
+	a := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            0.929, Diameter: 0.967, Temperature: 5440,
+	})
+	ca := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'M', Subtype: 0},
+		LuminosityClass: stars.V,
+		Mass:            0.510, Diameter: 0.728, Temperature: 3700,
+	})
+	sys := stars.System{
+		Primary: a,
+		Companions: []stars.CompanionStar{
+			{Star: ca, OrbitClass: stars.OrbitFar, OrbitNumber: 12.10, Eccentricity: 0.47, ParentIndex: -1},
+		},
+	}
+	got, err := AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("AvailableOrbits: %v", err)
+	}
+	primary := got.Groups[0]
+	if len(primary.Intervals) != 2 {
+		t.Fatalf("primary intervals = %d, want 2: %+v", len(primary.Intervals), primary.Intervals)
+	}
+	if math.Abs(primary.Intervals[0].Max-10.10) > 1e-9 {
+		t.Errorf("first interval Max = %v, want 10.10", primary.Intervals[0].Max)
+	}
+	if math.Abs(primary.Intervals[1].Min-14.10) > 1e-9 {
+		t.Errorf("second interval Min = %v, want 14.10", primary.Intervals[1].Min)
+	}
+}
+
 func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	t.Parallel()
 
