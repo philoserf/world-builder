@@ -163,6 +163,41 @@ func TestSol_AvailableOrbits(t *testing.T) {
 	}
 }
 
+func TestZed_AllocateOrbitsByStar(t *testing.T) {
+	t.Parallel()
+	sys := composeZed()
+	avail, err := worlds.AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("AvailableOrbits: %v", err)
+	}
+	counts := worlds.Counts{GasGiants: 4, PlanetoidBelts: 2, Terrestrials: 11, Total: 17}
+	got, err := worlds.AllocateOrbitsByStar(avail, counts)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("allocations = %d, want 3", len(got))
+	}
+	// Per the book p. 44 narration:
+	//   Aab: floor(13.39) = 13 (pair, no +1)
+	//   B:   floor(1.08 + 1) = 2 (single, has prior allowable, no companion → +1)
+	//   Cab: floor(6.36) = 6 (pair, no +1)
+	//   Sum: 21
+	//   Aab worlds: ceil(17×13/21) = ceil(10.52) = 11 → ROUND UP for primary
+	//   B worlds:   floor(17×2/21) = floor(1.62) = 1 → round down for middle
+	//   Cab worlds: 17 - 11 - 1 = 5 (remainder for last)
+	wantOrbits := []int{13, 2, 6}
+	wantWorlds := []int{11, 1, 5}
+	for i := range got {
+		if got[i].TotalStarOrbits != wantOrbits[i] {
+			t.Errorf("group %d (%s) TotalStarOrbits = %d, want %d", i, got[i].Group.Designation, got[i].TotalStarOrbits, wantOrbits[i])
+		}
+		if got[i].AllocatedWorlds != wantWorlds[i] {
+			t.Errorf("group %d (%s) AllocatedWorlds = %d, want %d", i, got[i].Group.Designation, got[i].AllocatedWorlds, wantWorlds[i])
+		}
+	}
+}
+
 func TestZed_GenerateCounts(t *testing.T) {
 	t.Parallel()
 	// WBH p. 38 Zed walkthrough — encoded against the Existence/Quantity DM split:
