@@ -8,9 +8,13 @@ import (
 // RollPlanetEccentricities implements WBH Step 9 (p. 52).
 //
 // For each non-empty non-belt placement, calls stars.RollEccentricity
-// with the placement's anomaly DM (AnomalousSlot.EccentricityDM) passed
-// through stars.EccentricityOpts.ExtraDM. Stores the result on
+// with the placement's Orbit and the system's ageGyr passed through
+// stars.EccentricityOpts so the WBH p.27 sub-1.0/age>1Gyr DM-1 applies.
+// The placement's anomaly DM (AnomalousSlot.EccentricityDM) is also
+// forwarded via stars.EccentricityOpts.ExtraDM. Stores the result on
 // Placement.Eccentricity.
+//
+// Pass ageGyr=0 (or any value ≤1) to suppress the age DM.
 //
 // Belts and empty slots are skipped (no roll consumed).
 //
@@ -18,7 +22,7 @@ import (
 // WBH p. 51: they inherit the orbit, eccentricity, and inclination of
 // the slot they shadow. We do not roll a fresh eccentricity for them;
 // we copy from the slot whose StarSlot matches TrojanOf in a second pass.
-func RollPlanetEccentricities(r roller.Roller, ps []Placement) ([]Placement, error) {
+func RollPlanetEccentricities(r roller.Roller, ps []Placement, ageGyr float64) ([]Placement, error) {
 	out := make([]Placement, len(ps))
 	copy(out, ps)
 	// First pass: roll for non-Trojan, non-empty, non-belt placements.
@@ -32,6 +36,8 @@ func RollPlanetEccentricities(r roller.Roller, ps []Placement) ([]Placement, err
 		ecc, err := stars.RollEccentricity(r, stars.EccentricityOpts{
 			ExtraDM:      out[i].EccentricityDM,
 			NestingDepth: nestingDepthFor(out[i]),
+			Orbit:        out[i].Orbit,
+			SystemAgeGyr: ageGyr,
 		})
 		if err != nil {
 			return nil, err
