@@ -6,6 +6,87 @@ import (
 	"wbh/roller"
 )
 
+// generatePrimaryAtClass rolls a complete primary star at a specified
+// luminosity class (used for Special-column class redirects and giant
+// primary generation).
+//
+// The Type column roll is consumed but the class is overridden to
+// targetClass, since the caller already chose the class.
+//
+// Roll order:
+//  1. 2D for Type column (class returned by RollPrimaryTypeAndClass is discarded)
+//  2. 2D for Star Subtype (Class IV / VI restrictions applied by RollSubtype)
+//  3. (if WithVariance) 2D-7 for mass variance
+//  4. (if WithVariance) 2D-7 for diameter variance
+//  5. age rolls per Accuracy (SmallStarAge; giant-aware age modelling deferred)
+//
+// NOTE: WBH p.21 has separate age formulas for subgiants and giants. Using
+// SmallStarAge for all luminosity classes is a known gap; giant-age modelling
+// is deferred until a later plan.
+func generatePrimaryAtClass(r roller.Roller, targetClass LuminosityClass, opts GenerateOpts) (Star, error) {
+	letter, _, err := RollPrimaryTypeAndClass(r)
+	if err != nil {
+		return Star{}, err
+	}
+	subtype, err := RollSubtype(r, letter, targetClass)
+	if err != nil {
+		return Star{}, err
+	}
+	st := SpectralType{Letter: letter, Subtype: subtype}
+
+	mass, err := ComputeMass(st, targetClass)
+	if err != nil {
+		return Star{}, err
+	}
+	diameter, err := ComputeDiameter(st, targetClass)
+	if err != nil {
+		return Star{}, err
+	}
+	temperature, err := ComputeTemperature(st)
+	if err != nil {
+		return Star{}, err
+	}
+
+	if opts.WithVariance {
+		mass = ApplyVariance(mass, r, 0.20)
+		diameter = ApplyVariance(diameter, r, 0.20)
+	}
+
+	luminosity := ComputeLuminosityFromFormula(diameter, temperature)
+
+	age, err := SmallStarAge(r, opts.Accuracy)
+	if err != nil {
+		return Star{}, err
+	}
+
+	return Star{
+		Kind:            kindForClass(targetClass),
+		SpectralType:    st,
+		LuminosityClass: targetClass,
+		Mass:            mass,
+		Diameter:        diameter,
+		Temperature:     temperature,
+		Luminosity:      luminosity,
+		AgeGyr:          age,
+	}, nil
+}
+
+// kindForClass maps a LuminosityClass to the corresponding StarKind.
+func kindForClass(lc LuminosityClass) StarKind {
+	switch lc {
+	case Ia, Ib:
+		return KindSupergiant
+	case II, III:
+		return KindGiant
+	case IV:
+		return KindSubgiant
+	case VI:
+		return KindSubdwarf
+	default:
+		return KindMainSequence
+	}
+}
+
 // KindFromUnusualCell maps an Unusual-column cell from the Star Type
 // Determination table (WBH p. 15) to a StarKind.
 func KindFromUnusualCell(cell string) (StarKind, error) {
@@ -91,6 +172,10 @@ const (
 // Class redirects beyond the simple cases (e.g., the recursive "Peculiar"
 // or "Unusual" cell on a re-roll) are handled by recursive calls; recursion
 // depth is bounded at 5 to prevent runaway loops on malformed dice.
+//
+// Note: an earlier 2A spec proposed changing this to return `(Star, error)`;
+// during plan execution this lower-level shape was kept and Star resolution
+// moved to generateSpecialPrimary, so this remains a pure table walker.
 func RollSpecialPrimary(r roller.Roller, path PeculiarPath) (StarKind, LuminosityClass, error) {
 	return rollSpecialPrimaryImpl(r, path, 0)
 }
