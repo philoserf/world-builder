@@ -55,6 +55,7 @@ type EccentricityOpts struct {
 	Orbit        float64 // for the sub-1.0 / age>1Gyr DM-1 rule
 	SystemAgeGyr float64
 	IsBeltMember bool // adds DM+1
+	ExtraDM      int  // additional DM applied externally (e.g., 2B Step 7 anomaly DMs)
 }
 
 // RollEccentricity rolls 2D + DMs into the EccentricityValues table,
@@ -79,6 +80,7 @@ func RollEccentricity(r roller.Roller, opts EccentricityOpts) (float64, error) {
 	if opts.IsBeltMember {
 		dm++
 	}
+	dm += opts.ExtraDM
 	natural := r.Roll("2D")
 	row := max(5, min(12, natural+dm))
 	rowData, ok := EccentricityValues[row]

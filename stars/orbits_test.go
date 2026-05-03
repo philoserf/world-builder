@@ -137,6 +137,24 @@ func TestRollEccentricity_NestingDM(t *testing.T) {
 	}
 }
 
+func TestRollEccentricity_ExtraDM(t *testing.T) {
+	t.Parallel()
+	// Same scripted rolls; ExtraDM should produce a different result.
+	// 2D=7, 1D=1 with no DM -> row 7 -> lookup table value.
+	// 2D=7, 1D=1 with ExtraDM=5 -> row 12 -> different table value.
+	base, err := RollEccentricity(roller.NewScripted(7, 1), EccentricityOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	bumped, err := RollEccentricity(roller.NewScripted(7, 1), EccentricityOpts{ExtraDM: 5})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if base == bumped {
+		t.Errorf("base = bumped = %v; ExtraDM had no effect", base)
+	}
+}
+
 // ----- P2-6: RollInclination -----
 
 func TestRollInclination_VeryLow(t *testing.T) {
