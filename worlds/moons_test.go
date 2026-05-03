@@ -129,3 +129,210 @@ func TestCountMoons_ZedAabIV(t *testing.T) {
 		t.Errorf("CountMoons = %d, want 5", got)
 	}
 }
+
+// TestSizeMoon_FirstRollBranches covers the three top-level branches
+// of WBH p.57 Significant Moon Sizing.
+func TestSizeMoon_FirstRollBranches(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		parent   ParentInfo
+		dice     []int
+		wantSize SizeCode
+	}{
+		// 1-3 → S (no second roll)
+		{"first 1 → S", ParentInfo{SizeCode: "8"}, []int{1}, "S"},
+		{"first 3 → S", ParentInfo{SizeCode: "8"}, []int{3}, "S"},
+		// 4-5 → D3-1 (range 0(R) to 2)
+		// First 1D=4, D3=1 → 0 → "R"
+		{"first 4 D3=1 → R (0)", ParentInfo{SizeCode: "8"}, []int{4, 1}, "R"},
+		// First 1D=4, D3=2 → 1 → "1"
+		{"first 4 D3=2 → 1", ParentInfo{SizeCode: "8"}, []int{4, 2}, "1"},
+		// First 1D=5, D3=3 → 2 → "2"
+		{"first 5 D3=3 → 2", ParentInfo{SizeCode: "8"}, []int{5, 3}, "2"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			r := roller.NewScripted(tc.dice...)
+			got, err := SizeMoon(r, tc.parent)
+			if err != nil {
+				t.Fatalf("err: %v", err)
+			}
+			if got.SizeCode != tc.wantSize {
+				t.Errorf("SizeCode = %q, want %q", got.SizeCode, tc.wantSize)
+			}
+		})
+	}
+}
+
+// TestSizeMoon_TerrestrialFirst6 covers the "first roll 6 → Size-1-1D"
+// branch for terrestrial parents.
+func TestSizeMoon_TerrestrialFirst6(t *testing.T) {
+	t.Parallel()
+
+	// Parent Size 8, first 6, 1D=3 → result Size = 8-1-3 = 4.
+	r := roller.NewScripted(6, 3)
+	got, err := SizeMoon(r, ParentInfo{SizeCode: "8"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "4" {
+		t.Errorf("SizeCode = %q, want \"4\" (8-1-3)", got.SizeCode)
+	}
+
+	// Parent Size 8, first 6, 1D=6 → 8-1-6 = 1 → Size 1.
+	r = roller.NewScripted(6, 6)
+	got, err = SizeMoon(r, ParentInfo{SizeCode: "8"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "1" {
+		t.Errorf("SizeCode = %q, want \"1\"", got.SizeCode)
+	}
+
+	// Parent Size 3, first 6, 1D=6 → 3-1-6 = -4 → ring "R" (Size <= 0).
+	r = roller.NewScripted(6, 6)
+	got, err = SizeMoon(r, ParentInfo{SizeCode: "3"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "R" {
+		t.Errorf("SizeCode for negative result = %q, want \"R\"", got.SizeCode)
+	}
+}
+
+// TestSizeMoon_TerrestrialSize1Parent: any moon < parent's Size becomes
+// Size S per WBH p.57.
+func TestSizeMoon_TerrestrialSize1Parent(t *testing.T) {
+	t.Parallel()
+
+	// Parent Size 1, first 4, D3=2 → Size 1 (= parent, not <) stays Size 1.
+	r := roller.NewScripted(4, 2)
+	got, err := SizeMoon(r, ParentInfo{SizeCode: "1"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "1" {
+		t.Errorf("SizeCode = %q, want \"1\" (= parent, not <)", got.SizeCode)
+	}
+
+	// Parent Size 1, first 4, D3=1 → would-be Size 0 → less than 1 → "S".
+	r = roller.NewScripted(4, 1)
+	got, err = SizeMoon(r, ParentInfo{SizeCode: "1"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "S" {
+		t.Errorf("SizeCode = %q, want \"S\" (Size 0 < parent Size 1)", got.SizeCode)
+	}
+}
+
+// TestSizeMoon_Exactly2Less2DAdjust: when terrestrial moon initial Size
+// is exactly 2 less than parent, roll 2D for adjustment.
+func TestSizeMoon_Exactly2Less2DAdjust(t *testing.T) {
+	t.Parallel()
+
+	// Parent Size 8, first 6, 1D=1 → result 8-1-1=6 → exactly 2 less than 8.
+	// 2D=2 → upgrade by 1 → Size 7.
+	r := roller.NewScripted(6, 1, 2)
+	got, err := SizeMoon(r, ParentInfo{SizeCode: "8"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "7" {
+		t.Errorf("SizeCode after 2D=2 = %q, want \"7\" (parent-1)", got.SizeCode)
+	}
+
+	// 2D=12 → twin world → Size 8.
+	r = roller.NewScripted(6, 1, 12)
+	got, err = SizeMoon(r, ParentInfo{SizeCode: "8"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "8" {
+		t.Errorf("SizeCode after 2D=12 = %q, want \"8\" (twin world)", got.SizeCode)
+	}
+
+	// 2D=7 → keep at 6.
+	r = roller.NewScripted(6, 1, 7)
+	got, err = SizeMoon(r, ParentInfo{SizeCode: "8"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "6" {
+		t.Errorf("SizeCode after 2D=7 = %q, want \"6\" (kept at 2-less)", got.SizeCode)
+	}
+}
+
+// TestSizeMoon_GGSpecial: gas-giant parent on first 6 → GG Special Moon Sizing.
+func TestSizeMoon_GGSpecial(t *testing.T) {
+	t.Parallel()
+
+	// First 6 → Special. Sub 1D=2 (1-3 branch) → 1D=4 → Size 4.
+	r := roller.NewScripted(6, 2, 4)
+	got, err := SizeMoon(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "4" {
+		t.Errorf("SizeCode (1-3 branch) = %q, want \"4\"", got.SizeCode)
+	}
+
+	// First 6 → Special. Sub 1D=4 (4-5 branch) → 2D=8 → 2D-2=6 → Size 6.
+	r = roller.NewScripted(6, 4, 8)
+	got, err = SizeMoon(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "6" {
+		t.Errorf("SizeCode (4-5 branch) = %q, want \"6\"", got.SizeCode)
+	}
+
+	// First 6 → Special. Sub 1D=4 → 2D=2 → 2D-2=0 → "R".
+	r = roller.NewScripted(6, 4, 2)
+	got, err = SizeMoon(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "R" {
+		t.Errorf("SizeCode (4-5 → 0) = %q, want \"R\"", got.SizeCode)
+	}
+
+	// First 6 → Special. Sub 1D=6 (6 branch) → 2D=6 → 2D+4=10 → Size A.
+	r = roller.NewScripted(6, 6, 6)
+	got, err = SizeMoon(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "A" {
+		t.Errorf("SizeCode (6 → 10) = %q, want \"A\"", got.SizeCode)
+	}
+}
+
+// TestSizeMoon_GGSpecial_GiantMoonCascade covers the WBH p.57 footnote:
+// when GG Special second roll yields Size G (16) the moon is itself a
+// Small gas giant (or Medium if the cascade 2D rolls 12).
+func TestSizeMoon_GGSpecial_GiantMoonCascade(t *testing.T) {
+	t.Parallel()
+
+	// First 6 → Special. Sub 1D=6 → 2D=12 → 2D+4=16 → Size G → cascade to Small GG.
+	// Small GG diameter = D3+D3: D3=1, D3=2 → 3.
+	// Small GG mass = 5×(1D+1): 1D=4 → 5×5=25.
+	// Cascade footnote 2D check: 2D=7 (not 12) → stays Small GG.
+	r := roller.NewScripted(6, 6, 12, 1, 2, 4, 7)
+	got, err := SizeMoon(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.GGClass != GasGiantSmall {
+		t.Errorf("GGClass = %v, want GasGiantSmall", got.GGClass)
+	}
+	if got.GGDiameterCode != "3" {
+		t.Errorf("GGDiameterCode = %q, want \"3\"", got.GGDiameterCode)
+	}
+	if got.MassEarth != 25 {
+		t.Errorf("MassEarth = %v, want 25", got.MassEarth)
+	}
+}
