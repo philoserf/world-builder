@@ -87,8 +87,11 @@ func TestGenerateCounts_GasGiants_DM_BrownDwarfPrimary(t *testing.T) {
 		Kind: stars.KindBrownDwarf, LuminosityClass: stars.BD, Mass: 0.05, Diameter: 0.1, Temperature: 1500,
 	})
 	sys := stars.System{Primary: bd}
-	// Belts existence = 0, terrestrials 2D=2 (force reroll path): D3+2 with D3=5? D3 max is 3 — implementation will be added in Task 5; this test only asserts GG count, so the trailing rolls just need to not panic. Provide enough.
-	r := roller.NewScripted(14, 14, 0, 2, 5)
+	// Trailing rolls: belts existence = 0 (no belts), terrestrials 2D=2
+	// (forces reroll path), D3=3. This test asserts only GasGiants; the
+	// trailing values just satisfy the scripted roller for the rest of
+	// the GenerateCounts pipeline.
+	r := roller.NewScripted(14, 14, 0, 2, 3)
 	got, err := GenerateCounts(r, sys, CountsOpts{})
 	if err != nil {
 		t.Fatalf("GenerateCounts: %v", err)
