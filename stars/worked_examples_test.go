@@ -166,6 +166,10 @@ func TestSolTerra_SurveyForm_p35(t *testing.T) {
 			t.Errorf("%s = %v want %v", c.name, c.got, c.want)
 		}
 	}
+	// HZCO on solo primary row (WBH p.35 — Sol/Terra survey form).
+	if math.Abs(row.HZCO-3.0) > 0.05 {
+		t.Errorf("HZCO = %v want 3.0±0.05", row.HZCO)
+	}
 }
 
 func TestZed_SurveyForm_p34(t *testing.T) {
@@ -377,6 +381,35 @@ func TestZed_SurveyForm_p34(t *testing.T) {
 		check("Eccentricity", row.Eccentricity, exp.ecc, exp.eccTol)
 		check("Period", row.PeriodYears, exp.period, exp.periodTol)
 	}
+
+	// HZCO assertions per WBH p.34 Zed survey form. Per the book, HZCO
+	// is published only on rows that act as a single HZCO source:
+	//   Aab (A) → 3.3 (Aa+Ab combined luminosity)
+	//   B       → 0.92 (K8 V solo)
+	//   Cab (C) → 0.75 (Ca+Cb combined luminosity)
+	// Pair-member rows (Aa, Ab, Ca, Cb) and outer running composites
+	// (AB, ABC) leave HZCO=0 in the book.
+	hzcoChecks := []struct {
+		idx  int
+		want float64
+		tol  float64
+	}{
+		{idx: 0, want: 0, tol: 1e-9},    // Aa
+		{idx: 1, want: 0, tol: 1e-9},    // Ab
+		{idx: 2, want: 3.3, tol: 0.05},  // Aab (A)
+		{idx: 3, want: 0.92, tol: 0.05}, // B
+		{idx: 4, want: 0, tol: 1e-9},    // AB
+		{idx: 5, want: 0, tol: 1e-9},    // Ca
+		{idx: 6, want: 0, tol: 1e-9},    // Cb
+		{idx: 7, want: 0.75, tol: 0.05}, // Cab (C)
+		{idx: 8, want: 0, tol: 1e-9},    // ABC
+	}
+	for _, c := range hzcoChecks {
+		row := form.Stars[c.idx]
+		if math.Abs(row.HZCO-c.want) > c.tol {
+			t.Errorf("[%d:%s].HZCO = %v, want %v (tol %v)", c.idx, row.Component, row.HZCO, c.want, c.tol)
+		}
+	}
 }
 
 func TestCorella_SurveyForm_p35(t *testing.T) {
@@ -513,5 +546,9 @@ func TestCorella_SurveyForm_p35(t *testing.T) {
 	}
 	if math.Abs(row2.PeriodYears-period) > 1e-9 {
 		t.Errorf("[2].Period = %v want %v", row2.PeriodYears, period)
+	}
+	// HZCO on the Aab composite row (WBH p.62 Corella — combined L 1.725 → 3.5).
+	if math.Abs(row2.HZCO-3.5) > 0.05 {
+		t.Errorf("[2].HZCO = %v want 3.5±0.05", row2.HZCO)
 	}
 }

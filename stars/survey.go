@@ -20,7 +20,7 @@ type SurveyComponent struct {
 	AU           float64
 	Eccentricity float64
 	PeriodYears  float64
-	HZCO         float64 // deferred to Plan 3 (orbits chapter); always 0 in Plan 2
+	HZCO         float64 // populated only on rows that act as a single HZCO source: solo primary, solo orbit-class star, or pair-barycentre composite (per WBH p.34 Zed survey form)
 }
 
 // SurveyMetadata holds the form-header fields not derivable from the System.
@@ -82,8 +82,14 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 		}
 	}
 
-	// Emit the primary row.
-	form.Stars = append(form.Stars, componentFromStar(primaryDesig, sys.Primary))
+	// Emit the primary row. If primary has no companion, the primary row
+	// is itself the HZCO source ("A" alone). Otherwise the Aab composite
+	// row carries the HZCO and the primary row leaves HZCO=0.
+	primaryRow := componentFromStar(primaryDesig, sys.Primary)
+	if primaryCompanionIdx < 0 {
+		primaryRow.HZCO = sys.Primary.HZCO()
+	}
+	form.Stars = append(form.Stars, primaryRow)
 
 	if primaryCompanionIdx >= 0 {
 		comp := sys.Companions[primaryCompanionIdx]
@@ -100,6 +106,7 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 		)
 		// "Aab (A)" parenthetical: simplified outer designation = "A".
 		bary.Component = bary.Component + " (A)"
+		bary.HZCO = CompositeHZCO(sys.Primary, comp.Star)
 		form.Stars = append(form.Stars, bary)
 	}
 
@@ -130,7 +137,6 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 			continue
 		}
 		main := sys.Companions[mainIdx]
-		form.Stars = append(form.Stars, componentFromCompanion(main))
 
 		// Companion of this orbit-class star?
 		innerIdx := -1
@@ -140,6 +146,14 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 				break
 			}
 		}
+
+		// Solo orbit-class star carries HZCO on its own row; if paired,
+		// HZCO moves to the pair-barycentre row below.
+		mainRow := componentFromCompanion(main)
+		if innerIdx < 0 {
+			mainRow.HZCO = main.Star.HZCO()
+		}
+		form.Stars = append(form.Stars, mainRow)
 
 		var addedMass, addedLum float64
 		if innerIdx >= 0 {
@@ -157,6 +171,7 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 			)
 			// Append simplified parenthetical: e.g. "Cab (C)".
 			pair.Component = pair.Component + " (" + outerLetter(main.Designation) + ")"
+			pair.HZCO = CompositeHZCO(main.Star, inner.Star)
 			form.Stars = append(form.Stars, pair)
 
 			addedMass = main.Star.Mass + inner.Star.Mass
