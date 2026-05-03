@@ -2,6 +2,9 @@ package worlds
 
 import (
 	"testing"
+
+	"wbh/roller"
+	"wbh/stars"
 )
 
 // TestDetailedPlacement_EmbedsPlacement verifies that DetailedPlacement
@@ -65,5 +68,61 @@ func TestSystemDetail_EmbedsSystemPlacement(t *testing.T) {
 	}
 	if sd.ShortProfile != "4-2-12-5-0.5" {
 		t.Errorf("ShortProfile = %q, want \"4-2-12-5-0.5\"", sd.ShortProfile)
+	}
+}
+
+// TestDetailSystem_PipelineComposition is a smoke test that asserts
+// DetailSystem runs end-to-end without error on a single-G2-V system
+// and that each pipeline output is non-empty.
+func TestDetailSystem_PipelineComposition(t *testing.T) {
+	t.Parallel()
+
+	sys := stars.System{
+		Primary: stars.Compose(stars.ComposeOpts{
+			Kind:            stars.KindMainSequence,
+			SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+			LuminosityClass: stars.V,
+			Mass:            1.0,
+			Diameter:        1.0,
+			Temperature:     5800,
+			AgeGyr:          4.6,
+		}),
+		PrimaryDesignation: "A",
+		AgeGyr:             4.6,
+	}
+
+	r := roller.NewSeeded(1)
+	sp, err := GenerateSystemPlacement(r, sys)
+	if err != nil {
+		t.Fatalf("GenerateSystemPlacement err: %v", err)
+	}
+
+	header := IISSClass23Header{
+		SectorLocation:  "Sol Sector | 0801",
+		IISSDesignation: "Sol (system)",
+	}
+	sd, err := DetailSystem(r, sys, sp, header)
+	if err != nil {
+		t.Fatalf("DetailSystem err: %v", err)
+	}
+
+	if len(sd.Detailed) != len(sp.Placements) {
+		t.Errorf("len(Detailed) = %d, len(sp.Placements) = %d, want equal",
+			len(sd.Detailed), len(sp.Placements))
+	}
+	if sd.ShortProfile == "" {
+		t.Error("ShortProfile is empty, want non-empty")
+	}
+	if sd.LongProfile == "" {
+		t.Error("LongProfile is empty, want non-empty")
+	}
+	if sd.Survey.IISSDesig != "Sol (system)" {
+		t.Errorf("Survey.IISSDesig = %q, want \"Sol (system)\"", sd.Survey.IISSDesig)
+	}
+
+	for i, dp := range sd.Detailed {
+		if dp.Body != BodyEmpty && dp.Designation == "" {
+			t.Errorf("dp[%d] (body %v, orbit %v) Designation is empty", i, dp.Body, dp.Orbit)
+		}
 	}
 }
