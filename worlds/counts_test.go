@@ -150,6 +150,34 @@ func TestGenerateCounts_Belts_DM_GasGiantsPresent(t *testing.T) {
 	}
 }
 
+func TestGenerateCounts_Belts_DM_PostStellarPrimary(t *testing.T) {
+	t.Parallel()
+	// White-dwarf primary, solo system. Belt existence DMs:
+	//   - post-stellar primary (flat): +1
+	//   - per-post-stellar-object (count includes primary): +1
+	//   = +2 total.
+	// Existence raw 6 + 2 = 8 → present.
+	// Belt quantity DMs: same +2 (no GGs present, single-star → no 2+-stars DM).
+	// Quantity raw 4 + 2 = 6 → row 6- → 1 belt.
+	//
+	// GG: existence raw 14 + DMs (BD=0, post-stellar primary=-2, per-post-stellar=-1)
+	//   = 14 - 3 = 11 > 9 → no GGs.
+	//
+	// Terrestrials: trailing rolls forward-compatible.
+	wd := stars.Compose(stars.ComposeOpts{
+		Kind: stars.KindWhiteDwarf, LuminosityClass: stars.D, Mass: 0.6, Diameter: 0.013, Temperature: 8000,
+	})
+	sys := stars.System{Primary: wd}
+	r := roller.NewScripted(14, 6, 4, 7, 1)
+	got, err := GenerateCounts(r, sys, CountsOpts{})
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if got.PlanetoidBelts != 1 {
+		t.Errorf("PlanetoidBelts = %d, want 1 (post-stellar primary +2 DM)", got.PlanetoidBelts)
+	}
+}
+
 func TestGenerateCounts_Belts_DM_Protostar(t *testing.T) {
 	t.Parallel()
 	proto := stars.Compose(stars.ComposeOpts{

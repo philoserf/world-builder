@@ -157,6 +157,9 @@ func beltExistenceDMs(sys stars.System) int {
 	if isPostStellar(sys.Primary.Kind) {
 		dm++
 	}
+	// postStellarCount includes the primary; the spec lists a flat
+	// post-stellar primary DM+1 AND a per-post-stellar-object DM+1, so a
+	// lone post-stellar primary intentionally contributes +2 here.
 	dm += postStellarCount(sys)
 	return dm
 }
