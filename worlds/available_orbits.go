@@ -280,6 +280,13 @@ func identifyGroups(sys stars.System) []Group {
 			if c.OrbitClass != oc || c.ParentIndex != -1 {
 				continue
 			}
+			if letterIdx >= len(letters) {
+				// WBH structurally caps secondaries at three (Close/Near/Far);
+				// any additional secondaries are silently dropped rather than
+				// panicking on letter assignment. Reaching this branch indicates
+				// a hand-constructed System outside the WBH generator's output.
+				break
+			}
 			group := Group{Members: []stars.Star{c.Star}}
 			if companion, ecc, ok := findCompanionOf(i); ok {
 				group.Members = append(group.Members, companion)
