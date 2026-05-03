@@ -160,6 +160,12 @@ func TestGeneratePrimaryAtClass_III(t *testing.T) {
 	if got.SpectralType.Letter != 'K' {
 		t.Errorf("Letter = %c, want K", got.SpectralType.Letter)
 	}
+	if got.SpectralType.Subtype != 9 {
+		t.Errorf("Subtype = %d, want 9 (StarSubtypeNumeric[7] = 9, no IV clamp at Class III)", got.SpectralType.Subtype)
+	}
+	if got.Kind != KindGiant {
+		t.Errorf("Kind = %s, want %s", got.Kind, KindGiant)
+	}
 	if got.Mass <= 0 {
 		t.Errorf("Mass = %v, want > 0", got.Mass)
 	}

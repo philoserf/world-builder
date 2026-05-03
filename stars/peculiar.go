@@ -60,7 +60,7 @@ func generatePrimaryAtClass(r roller.Roller, targetClass LuminosityClass, opts G
 	}
 
 	return Star{
-		Kind:            KindMainSequence,
+		Kind:            kindForClass(targetClass),
 		SpectralType:    st,
 		LuminosityClass: targetClass,
 		Mass:            mass,
@@ -69,6 +69,22 @@ func generatePrimaryAtClass(r roller.Roller, targetClass LuminosityClass, opts G
 		Luminosity:      luminosity,
 		AgeGyr:          age,
 	}, nil
+}
+
+// kindForClass maps a LuminosityClass to the corresponding StarKind.
+func kindForClass(lc LuminosityClass) StarKind {
+	switch lc {
+	case Ia, Ib:
+		return KindSupergiant
+	case II, III:
+		return KindGiant
+	case IV:
+		return KindSubgiant
+	case VI:
+		return KindSubdwarf
+	default:
+		return KindMainSequence
+	}
 }
 
 // KindFromUnusualCell maps an Unusual-column cell from the Star Type
