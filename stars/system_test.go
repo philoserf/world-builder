@@ -1,7 +1,6 @@
 package stars
 
 import (
-	"errors"
 	"testing"
 
 	"wbh/roller"
@@ -197,14 +196,56 @@ func TestGenerateSystem_SpecialPrimary_D(t *testing.T) {
 	}
 }
 
-func TestGenerateSystem_SpecialPrimary_ClassRedirectErrors(t *testing.T) {
-	// 2D=2 -> Special; Unusual 2D=4 -> "Class IV" -> class redirect.
-	r := roller.NewScripted(2, 4)
-	_, err := GenerateSystem(r, GenerateSystemOpts{Accuracy: 1})
-	if err == nil {
-		t.Fatal("expected error for class redirect")
+// TestGenerateSystem_SpecialPrimaryClassRedirect verifies that a Special
+// primary roll which redirects to Class III resolves correctly — producing
+// a Class III giant primary without error — rather than returning
+// ErrSpecialPrimaryClassRedirect.
+//
+// Roll sequence (WithVariance=false, Accuracy=1):
+//  1. 2D=2  → Type = "Special" → ErrSpecialPrimary in GenerateMainSequenceStar
+//  2. 2D=11 → Unusual col row 11 = "Class III" → class redirect
+//
+// generatePrimaryAtClass(r, III, opts):
+//  3. 2D=7  → RollPrimaryTypeAndClass → Type col row 7 = "K"; letter='K'
+//  4. 2D=7  → RollSubtype('K', III) → StarSubtypeNumeric[7]=9 → K9
+//
+// SmallStarAge(r, 1):
+//  5. 1D=3, 6. D3=2 → age = 3×2 + 2 - 1 = 7 Gyr
+//
+// Multi-star presence (PresenceDM=+1 for Class III):
+//
+//	Close: blocked for Class III, no roll consumed.
+//	7. 2D=2 → Near: 2+1=3 < 10 → absent
+//	8. 2D=2 → Far: 2+1=3 < 10 → absent
+//	9. 2D=2 → Primary companion: 2+1=3 < 10 → absent
+func TestGenerateSystem_SpecialPrimaryClassRedirect(t *testing.T) {
+	t.Parallel()
+
+	r := roller.NewScripted(
+		2,  // 2D type → Special
+		11, // 2D Unusual → Class III (row 11)
+		7,  // 2D RollPrimaryTypeAndClass → letter 'K'
+		7,  // 2D RollSubtype → subtype 9 → K9 III
+		3,  // 1D SmallStarAge component
+		2,  // D3 SmallStarAge component → age = 7 Gyr
+		2,  // 2D Near presence: 2+1=3 < 10 → absent
+		2,  // 2D Far presence: 2+1=3 < 10 → absent
+		2,  // 2D Primary companion: 2+1=3 < 10 → absent
+	)
+	sys, err := GenerateSystem(r, GenerateSystemOpts{Accuracy: 1})
+	if err != nil {
+		t.Fatalf("GenerateSystem: %v", err)
 	}
-	if !errors.Is(err, ErrSpecialPrimaryClassRedirect) {
-		t.Fatalf("expected ErrSpecialPrimaryClassRedirect, got: %v", err)
+	if sys.Primary.LuminosityClass != III {
+		t.Errorf("primary class = %s, want III", sys.Primary.LuminosityClass)
+	}
+	if sys.Primary.Kind != KindGiant {
+		t.Errorf("primary kind = %s, want %s", sys.Primary.Kind, KindGiant)
+	}
+	if sys.Primary.SpectralType != (SpectralType{Letter: 'K', Subtype: 9}) {
+		t.Errorf("primary spectral type = %v, want K9", sys.Primary.SpectralType)
+	}
+	if len(sys.Companions) != 0 {
+		t.Errorf("expected 0 companions, got %d", len(sys.Companions))
 	}
 }

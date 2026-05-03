@@ -32,7 +32,7 @@ type GenerateSystemOpts struct {
 func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	primary, err := GenerateMainSequenceStar(r, GenerateOpts(opts))
 	if errors.Is(err, ErrSpecialPrimary) {
-		primary, err = generateSpecialPrimary(r)
+		primary, err = generateSpecialPrimary(r, opts)
 		if err != nil {
 			return System{}, fmt.Errorf("special primary: %w", err)
 		}
@@ -242,31 +242,24 @@ func isStellarKind(k StarKind) bool {
 	return false
 }
 
-// ErrSpecialPrimaryClassRedirect is returned when a Special primary
-// dispatch lands on a class-redirect cell ("Class III" / "Class IV" /
-// "Class VI" / "Giants"). The full handling — re-rolling the regular
-// Star Type Determination Type column at the indicated class — requires
-// non-Class-V primary support that is deferred to a later plan. In the
-// meantime, callers should retry with a fresh seed or surface this to
-// the user.
-var ErrSpecialPrimaryClassRedirect = errors.New("stars: Special primary class redirect not yet implemented")
-
 // generateSpecialPrimary handles the WBH p.16 "Special" primary branch
 // (when the regular 2D Type roll yields 2). It walks the Unusual column
-// of the Star Type Determination table and produces a BD/D/NS/BH/etc.
-// primary directly. The age is computed via AgeSpecialObject (WBH p.22).
-//
-// Class-redirect cells ("Class III" / "Class IV" / "Class VI" / "Giants")
-// return ErrSpecialPrimaryClassRedirect; full support for non-Class-V
-// primaries lands in a later plan.
-func generateSpecialPrimary(r roller.Roller) (Star, error) {
+// of the Star Type Determination table and produces either a
+// BD/D/NS/BH/etc. primary directly, or — for class-redirect cells
+// ("Class III" / "Class IV" / "Class VI") — delegates to
+// generatePrimaryAtClass to roll a giant/subgiant/subdwarf primary at
+// the indicated class. The age is computed via AgeSpecialObject (WBH p.22)
+// for special objects, or SmallStarAge (via generatePrimaryAtClass) for
+// class redirects.
+func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, error) {
 	kind, lc, err := RollSpecialPrimary(r, PeculiarPathUnusual)
 	if err != nil {
 		return Star{}, err
 	}
-	if kind == "" {
-		// Class-redirect cell (lc set to III/IV/VI or "Giants").
-		return Star{}, fmt.Errorf("%w: class %s", ErrSpecialPrimaryClassRedirect, lc)
+	if lc != "" {
+		// Class redirect: re-roll on the regular Star Type Determination
+		// flow at the indicated class.
+		return generatePrimaryAtClass(r, lc, GenerateOpts(opts))
 	}
 	// Build the special-object Star with stub physical values appropriate
 	// to the kind. The book leaves detailed physics (white-dwarf cooling,
