@@ -391,11 +391,10 @@ func TestAvailableOrbits_Rule6_EccentricSecondary(t *testing.T) {
 	t.Parallel()
 
 	// Zed Cab pair (Far) at Orbit# 12.10 with eccentricity 0.47 (> 0.2).
-	// Rule 5: ±1 (10.10, 14.10).
-	// Rule 6: widen by ±1 → (9.10, 15.10).
-	// Wait — the book example: Cab at 12.10 with ecc 0.47 blocks 10.10–14.10.
-	// That's ±2, which is rule 5 (±1) + rule 6 (±1) = ±2. Correct.
-	// Final exclusion (10.10, 14.10): primary intervals = [[MAO, 10.10], [14.10, 20.0]].
+	// Rule 5 base width = ±1: exclusion is (11.10, 13.10).
+	// Rule 6 widens by ±1 because ecc > 0.2: exclusion is (10.10, 14.10).
+	// M0 V MAO < 0.2, so no MAO expansion. Final primary intervals:
+	// [[MAO, 10.10], [14.10, 20.0]] — matches WBH p. 40.
 	a := stars.Compose(stars.ComposeOpts{
 		Kind:            stars.KindMainSequence,
 		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
