@@ -45,8 +45,10 @@ func GenerateCounts(r roller.Roller, sys stars.System, _ CountsOpts) (Counts, er
 }
 
 // gasGiantExistenceDMs computes the WBH p. 37 DM stack for the
-// gas-giant existence roll only. The single-Class-V DM+1 does not
-// apply to existence (it applies to quantity only).
+// gas-giant existence roll only. Per WBH p. 37 sidebar: "There are no
+// DMs to the gas giant existence roll unless the primary star is subject
+// to rules covered in the Special Circumstances chapter." The single-
+// Class-V DM+1 therefore applies to quantity only.
 func gasGiantExistenceDMs(sys stars.System) int {
 	dm := 0
 	if sys.Primary.Kind == stars.KindBrownDwarf {
