@@ -9,6 +9,25 @@ import (
 	"wbh/worlds"
 )
 
+// composeSol builds a single-star Sol-like system (G2 V) using
+// stars.Compose so tests can construct it deterministically (no rolls).
+func composeSol() stars.System {
+	sol := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+		LuminosityClass: stars.V,
+		Mass:            1.000,
+		Diameter:        1.000,
+		Temperature:     5772,
+		AgeGyr:          4.6,
+	})
+	return stars.System{
+		Primary:            sol,
+		PrimaryDesignation: "A",
+		AgeGyr:             4.6,
+	}
+}
+
 // composeZed builds the WBH p. 35/40 Zed quintuple system using
 // stars.Compose so tests can construct it deterministically (no rolls).
 func composeZed() stars.System {
@@ -507,5 +526,41 @@ func TestZed_FullPlacement(t *testing.T) {
 	}
 	if math.Abs(retro.Orbit-5.2) > 0.05 {
 		t.Errorf("retrograde orbit = %v, want 5.2", retro.Orbit)
+	}
+}
+
+// TestSol_GenerateSystemPlacement is a single-star smoke test: assert
+// the GenerateSystemPlacement pipeline runs without error on a
+// single-G2-V system, produces exactly one StarAllocation, and yields
+// a non-empty Placements slice. This complements TestZed_FullPlacement
+// (multi-star) to cover the single-star path that 2B left untested.
+//
+// No book-narrated dice trail is required; this is a smoke test, not
+// a worked-example regression.
+func TestSol_GenerateSystemPlacement(t *testing.T) {
+	t.Parallel()
+
+	sys := composeSol()
+
+	// Use a seeded roller; the specific values don't matter for a smoke
+	// test, only that the pipeline completes without error.
+	r := roller.NewSeeded(42)
+
+	sp, err := worlds.GenerateSystemPlacement(r, sys)
+	if err != nil {
+		t.Fatalf("GenerateSystemPlacement returned error: %v", err)
+	}
+
+	if len(sp.Allocations) != 1 {
+		t.Errorf("len(Allocations) = %d, want 1 (single-star system)", len(sp.Allocations))
+	}
+	if sp.Allocations[0].Group.Designation != "A" {
+		t.Errorf("Allocations[0].Group.Designation = %q, want \"A\"", sp.Allocations[0].Group.Designation)
+	}
+	if len(sp.Placements) == 0 {
+		t.Error("Placements is empty, want at least one body")
+	}
+	if sp.Counts.Total <= 0 {
+		t.Errorf("Counts.Total = %d, want > 0", sp.Counts.Total)
 	}
 }
