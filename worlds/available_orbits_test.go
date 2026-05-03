@@ -180,3 +180,24 @@ func TestMAO_PostStellar(t *testing.T) {
 		t.Errorf("MAO(BD) error = %v, want ErrPostStellarPrimaryUnsupported", err)
 	}
 }
+
+func TestMAO_CrossLetterInterpolation(t *testing.T) {
+	t.Parallel()
+
+	// O7 V brackets O5 V (0.30) → B0 V (0.18); frac = (7-5)/5 = 0.4.
+	// Expected = 0.30 + (0.18 - 0.30) × 0.4 = 0.252.
+	o7v := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'O', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            30.0, Diameter: 6.6, Temperature: 36000,
+	})
+	got, err := MAO(o7v)
+	if err != nil {
+		t.Fatalf("MAO: %v", err)
+	}
+	want := 0.252
+	if math.Abs(got-want) > 1e-9 {
+		t.Errorf("MAO(O7 V) = %v, want %v", got, want)
+	}
+}

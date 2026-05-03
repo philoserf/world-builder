@@ -179,8 +179,12 @@ func MAO(s stars.Star) (float64, error) {
 }
 
 // bracketSpectralType returns the two p. 39 grid keys bracketing st
-// within st's letter, and the fractional position from lower to upper.
-// For exact grid hits (O0, O5, ...) lower == upper and frac is 0.
+// within st's letter, and the fractional position from lower to upper
+// (0.0 at lower, 1.0 at upper).
+//
+// At exact grid points (O0, O5, ..., K5, M0, M5, M9) the function
+// returns frac=0, so the upper key is unused in interpolation. Only
+// M5 and M9 (the table's terminal rows) return lower == upper.
 func bracketSpectralType(st stars.SpectralType) (lower, upper string, frac float64) {
 	letter := string(st.Letter)
 	switch {
