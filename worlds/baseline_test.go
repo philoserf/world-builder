@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 
 	"wbh/roller"
@@ -122,5 +123,102 @@ func TestRollBaselineNumber_DMTable(t *testing.T) {
 				t.Errorf("baseline = %d, want %d", got, c.want)
 			}
 		})
+	}
+}
+
+func TestBaselineOrbit_3a_HZCOGTE1(t *testing.T) {
+	t.Parallel()
+	primary := Group{
+		Designation: "A",
+		Members:     []stars.Star{{Luminosity: 1.0}}, // HZCO = 3.0
+		MAO:         0.03,
+		Intervals:   []Interval{{Min: 0.03, Max: 20.0}},
+	}
+	// 2D = 5 → (5-7)/10 = -0.2. HZCO 3.0 + (-0.2) = 2.8.
+	got, err := BaselineOrbit(roller.NewScripted(5), primary, primary.HZCO(), 5, 17)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(got-2.8) > 0.01 {
+		t.Errorf("BaselineOrbit = %v, want 2.8", got)
+	}
+}
+
+func TestBaselineOrbit_3a_HZCOLT1(t *testing.T) {
+	t.Parallel()
+	primary := Group{
+		Designation: "A",
+		Members:     []stars.Star{{Luminosity: 0.04}},
+		MAO:         0.01,
+		Intervals:   []Interval{{Min: 0.01, Max: 20.0}},
+	}
+	hzco := primary.HZCO()
+	// 2D = 9 → (9-7)/100 = 0.02 → hzco + 0.02
+	got, err := BaselineOrbit(roller.NewScripted(9), primary, hzco, 5, 17)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(got-(hzco+0.02)) > 0.005 {
+		t.Errorf("BaselineOrbit = %v, want %v", got, hzco+0.02)
+	}
+}
+
+func TestBaselineOrbit_3b_ColdSystem_MinGTE1(t *testing.T) {
+	t.Parallel()
+	// baselineN = -2 (< 1), HZCO = 3.0, totalWorlds = 5, MAO = 1.5
+	primary := Group{
+		Members:   []stars.Star{{Luminosity: 1.0}},
+		MAO:       1.5,
+		Intervals: []Interval{{Min: 1.5, Max: 20.0}},
+	}
+	// BaselineOrbit = 3.0 - (-2) + 5 + (2D-2)/10 = 10.0 + (7-2)/10 = 10.5
+	got, err := BaselineOrbit(roller.NewScripted(7), primary, primary.HZCO(), -2, 5)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(got-10.5) > 0.01 {
+		t.Errorf("BaselineOrbit = %v, want 10.5", got)
+	}
+}
+
+func TestBaselineOrbit_3c_HotSystem(t *testing.T) {
+	t.Parallel()
+	// baselineN = 8 > totalWorlds = 5, HZCO = 3.0
+	// 3.0 - 8 + 5 = 0 (< 1.0 path):
+	//   = 3.0 - (8 + 5 + (2D-7)/5)/10 = 3.0 - (13 + (10-7)/5)/10 = 3.0 - (13 + 0.6)/10 = 3.0 - 1.36 = 1.64
+	primary := Group{
+		Members:   []stars.Star{{Luminosity: 1.0}},
+		MAO:       0.03,
+		Intervals: []Interval{{Min: 0.03, Max: 20.0}},
+	}
+	got, err := BaselineOrbit(roller.NewScripted(10), primary, primary.HZCO(), 8, 5)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(got-1.64) > 0.05 {
+		t.Errorf("BaselineOrbit = %v, want ~1.64", got)
+	}
+}
+
+func TestBaselineOrbit_SnapToAvailable(t *testing.T) {
+	t.Parallel()
+	// primary with hole around 3.0, roll formula into hole, assert snapping.
+	primary := Group{
+		Members:   []stars.Star{{Luminosity: 1.0}},
+		MAO:       0.03,
+		Intervals: []Interval{{Min: 0.03, Max: 2.5}, {Min: 3.5, Max: 20.0}},
+	}
+	// 3a path with roll 7 → variance 0 → BaselineOrbit = 3.0 (in hole 2.5-3.5).
+	// Snap roll: 2D=5 → variance (-2)/10 = -0.2 → snap LOWER (toward 2.5).
+	// Result: clamp to 2.5 then add variance: 2.5 - 0.2 = 2.3.
+	got, err := BaselineOrbit(roller.NewScripted(7, 5), primary, primary.HZCO(), 3, 17)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	// The exact snap behavior depends on whether the variance is applied after
+	// snapping or whether the snap value is taken as-is. The test expects ~2.3
+	// (snap to 2.5, then -0.2 variance) — within tolerance of 2.5.
+	if math.Abs(got-2.3) > 0.05 {
+		t.Errorf("BaselineOrbit = %v, want ~2.3 (snap 2.5 then -0.2)", got)
 	}
 }

@@ -213,6 +213,25 @@ func TestZed_RollBaselineNumber(t *testing.T) {
 	}
 }
 
+func TestZed_BaselineOrbit(t *testing.T) {
+	t.Parallel()
+	sys := composeZed()
+	avail, err := worlds.AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	primary := avail.Groups[0]
+	// Book: baselineN=5, totalWorlds=17, HZCO Aab = 3.3, roll 5 → variance (5-7)/10 = -0.2.
+	// BaselineOrbit = 3.3 + (-0.2) = 3.1.
+	got, err := worlds.BaselineOrbit(roller.NewScripted(5), primary, primary.HZCO(), 5, 17)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(got-3.1) > 0.05 {
+		t.Errorf("BaselineOrbit = %v, want 3.1", got)
+	}
+}
+
 func TestZed_GenerateCounts(t *testing.T) {
 	t.Parallel()
 	// WBH p. 38 Zed walkthrough — encoded against the Existence/Quantity DM split:

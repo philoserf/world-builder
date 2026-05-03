@@ -1,6 +1,8 @@
 package worlds
 
 import (
+	"math"
+
 	"wbh/roller"
 	"wbh/stars"
 )
@@ -76,4 +78,90 @@ func secondaryStarCount(sys stars.System) int {
 		}
 	}
 	return n
+}
+
+// BaselineOrbit implements WBH Step 3 (pp. 45-46). Selects the right
+// formula by comparing baselineN to totalWorlds. Snaps the result to the
+// nearest available orbit (with (2D-7)/10 direction variance) when the
+// formula lands inside a primary-group exclusion zone.
+//
+// hzco is the primary group's HZCO (use primary.HZCO()).
+// Continuation Method (sub-case 3d) is out of scope.
+func BaselineOrbit(
+	r roller.Roller,
+	primary Group,
+	hzco float64,
+	baselineN, totalWorlds int,
+) (float64, error) {
+	var orbit float64
+	switch {
+	case baselineN >= 1 && baselineN <= totalWorlds:
+		// Sub-case 3a.
+		v := r.Roll("2D")
+		if hzco >= 1.0 {
+			orbit = hzco + float64(v-7)/10.0
+		} else {
+			orbit = hzco + float64(v-7)/100.0
+		}
+	case baselineN < 1:
+		// Sub-case 3b. minOrbit = max(MAO, HZCO).
+		minOrbit := primary.MAO
+		if hzco > minOrbit {
+			minOrbit = hzco
+		}
+		v := r.Roll("2D")
+		if minOrbit >= 1.0 {
+			orbit = hzco - float64(baselineN) + float64(totalWorlds) + float64(v-2)/10.0
+		} else {
+			orbit = minOrbit - float64(baselineN)/10.0 + float64(v-2)/100.0
+		}
+	default:
+		// Sub-case 3c (baselineN > totalWorlds).
+		v := r.Roll("2D")
+		firstForm := hzco - float64(baselineN) + float64(totalWorlds)
+		if firstForm >= 1.0 {
+			orbit = firstForm + float64(v-7)/5.0
+		} else {
+			orbit = hzco - (float64(baselineN)+float64(totalWorlds)+float64(v-7)/5.0)/10.0
+			if orbit < 0 {
+				lower := primary.MAO + float64(totalWorlds)*0.01
+				if hzco-0.1 > lower {
+					orbit = hzco - 0.1
+				} else {
+					orbit = lower
+				}
+			}
+		}
+	}
+	if !primary.Contains(orbit) {
+		orbit = snapToAvailable(r, primary, orbit)
+	}
+	return orbit, nil
+}
+
+// snapToAvailable returns the nearest in-interval orbit to want, with
+// (2D-7)/10 direction variance applied per the book p. 45 narrative.
+func snapToAvailable(r roller.Roller, primary Group, want float64) float64 {
+	if len(primary.Intervals) == 0 {
+		return want
+	}
+	bestDist := math.Inf(1)
+	var best float64
+	for _, iv := range primary.Intervals {
+		var snap float64
+		switch {
+		case want < iv.Min:
+			snap = iv.Min
+		case want > iv.Max:
+			snap = iv.Max
+		default:
+			snap = want
+		}
+		if d := math.Abs(snap - want); d < bestDist {
+			bestDist = d
+			best = snap
+		}
+	}
+	v := r.Roll("2D")
+	return best + float64(v-7)/10.0
 }
