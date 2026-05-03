@@ -44,8 +44,5 @@ func MaximumSecondarySpread(secondary Group, secondaryAllocated int) float64 {
 			outer = iv.Max
 		}
 	}
-	if secondaryAllocated+1 == 0 {
-		return 0
-	}
 	return (outer - secondary.MAO) / float64(secondaryAllocated+1)
 }

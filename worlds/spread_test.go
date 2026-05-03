@@ -3,8 +3,6 @@ package worlds
 import (
 	"math"
 	"testing"
-
-	"wbh/stars"
 )
 
 func TestSpread_BaseFormula(t *testing.T) {
@@ -51,5 +49,4 @@ func TestMaximumSecondarySpread(t *testing.T) {
 	if math.Abs(got-1.06) > 0.01 {
 		t.Errorf("MaximumSecondarySpread = %v, want 1.06", got)
 	}
-	_ = stars.V // silence unused-import if Compose isn't called
 }
