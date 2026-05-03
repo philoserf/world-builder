@@ -44,7 +44,9 @@ type Group struct {
 	// so rules 9–11 can look up the secondary's orbit class and
 	// eccentricity directly instead of walking a parallel index. Also
 	// used by sub-project 2B steps that need the secondary's
-	// orbit-around-primary.
+	// orbit-around-primary. The pointer is valid only for the lifetime of
+	// the stars.System passed to AvailableOrbits; callers must not append
+	// to System.Companions while a Result is in scope.
 	sourceCompanion *stars.CompanionStar
 }
 
@@ -429,15 +431,15 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		if groups[i].sourceCompanion == nil {
 			continue // primary group
 		}
-		c := groups[i].sourceCompanion
-		maxOffset := c.OrbitNumber - 3 // rule 8
-		if hasAdjacentZone(sys, c.OrbitClass) {
+		sc := groups[i].sourceCompanion
+		maxOffset := sc.OrbitNumber - 3 // rule 8
+		if hasAdjacentZone(sys, sc.OrbitClass) {
 			maxOffset-- // rule 9
 		}
-		if c.Eccentricity > 0.2 || adjacentEccGT02(sys, c.OrbitClass) {
+		if sc.Eccentricity > 0.2 || adjacentEccGT02(sys, sc.OrbitClass) {
 			maxOffset-- // rule 10
 		}
-		if c.Eccentricity > 0.5 {
+		if sc.Eccentricity > 0.5 {
 			maxOffset-- // rule 11
 		}
 		if maxOffset < 0 {

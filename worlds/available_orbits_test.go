@@ -792,4 +792,30 @@ func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	if groups[1].companionEcc != 0 {
 		t.Errorf("B companionEcc = %v, want 0", groups[1].companionEcc)
 	}
+
+	// Verify sourceCompanion pointer identity for all three groups.
+	// groups[0] is the primary (Aab) — must be nil.
+	if groups[0].sourceCompanion != nil {
+		t.Errorf("Aab sourceCompanion = %+v, want nil", groups[0].sourceCompanion)
+	}
+	// groups[1] is B (Near, Companions index 1).
+	if groups[1].sourceCompanion == nil {
+		t.Fatalf("B sourceCompanion = nil, want non-nil")
+	}
+	if groups[1].sourceCompanion.OrbitClass != stars.OrbitNear {
+		t.Errorf("B sourceCompanion.OrbitClass = %v, want OrbitNear", groups[1].sourceCompanion.OrbitClass)
+	}
+	if math.Abs(groups[1].sourceCompanion.OrbitNumber-6.10) > 1e-9 {
+		t.Errorf("B sourceCompanion.OrbitNumber = %v, want 6.10", groups[1].sourceCompanion.OrbitNumber)
+	}
+	// groups[2] is Cab (Far, Companions index 2).
+	if groups[2].sourceCompanion == nil {
+		t.Fatalf("Cab sourceCompanion = nil, want non-nil")
+	}
+	if groups[2].sourceCompanion.OrbitClass != stars.OrbitFar {
+		t.Errorf("Cab sourceCompanion.OrbitClass = %v, want OrbitFar", groups[2].sourceCompanion.OrbitClass)
+	}
+	if math.Abs(groups[2].sourceCompanion.OrbitNumber-12.10) > 1e-9 {
+		t.Errorf("Cab sourceCompanion.OrbitNumber = %v, want 12.10", groups[2].sourceCompanion.OrbitNumber)
+	}
 }
