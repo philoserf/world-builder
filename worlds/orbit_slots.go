@@ -79,6 +79,19 @@ func PlaceOrbitSlots(
 		if slotCount == 0 {
 			continue
 		}
+
+		// Determine which spread to use for this group's slots.
+		groupSpread := spread
+		if i > 0 {
+			// Secondary group: cap the spread so the outermost slot doesn't
+			// exceed the secondary's outer allowable bound.
+			outermost := alloc.Group.MAO + float64(slotCount)*spread
+			secOuter := outermostAllowable(alloc.Group)
+			if outermost > secOuter {
+				groupSpread = MaximumSecondarySpread(alloc.Group, slotCount)
+			}
+		}
+
 		cur := alloc.Group.MAO
 		for j := 0; j < slotCount; j++ {
 			label := slotLabel(alloc.Group.Designation, j, alloc.AllocatedWorlds)
@@ -89,7 +102,7 @@ func PlaceOrbitSlots(
 				orbit = baselineOrbit
 			} else {
 				v := r.Roll("2D")
-				proposed := cur + spread + float64(v-7)*spread/10.0
+				proposed := cur + groupSpread + float64(v-7)*groupSpread/10.0
 				// Exclusion-zone widening applies only to the primary
 				// group. Includes the j == 0 inner slot so a primary whose
 				// MAO sits adjacent to a companion exclusion zone doesn't
@@ -110,6 +123,21 @@ func PlaceOrbitSlots(
 		}
 	}
 	return out, nil
+}
+
+// outermostAllowable returns the maximum endpoint across g.Intervals,
+// or g.MAO if g has no intervals.
+func outermostAllowable(g Group) float64 {
+	var outer float64
+	for _, iv := range g.Intervals {
+		if iv.Max > outer {
+			outer = iv.Max
+		}
+	}
+	if outer < g.MAO {
+		outer = g.MAO
+	}
+	return outer
 }
 
 // slotLabel returns the StarSlot id for a regular or bumped slot.

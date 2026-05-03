@@ -173,3 +173,45 @@ func TestPlaceOrbitSlots_EmptyDistribution(t *testing.T) {
 		t.Errorf("expected a B+ slot, got %v", got)
 	}
 }
+
+func TestPlaceOrbitSlots_SecondaryCapApplied(t *testing.T) {
+	t.Parallel()
+	primary := Group{Designation: "A", Members: []stars.Star{{}}, MAO: 0.5, Intervals: []Interval{{Min: 0.5, Max: 20.0}}}
+	nearCompanion := stars.CompanionStar{OrbitClass: stars.OrbitNear, OrbitNumber: 6.0, ParentIndex: -1}
+	// Secondary with a tiny allowable interval [0.1, 1.5] and 4 allocated worlds.
+	// System spread = 1.0 → outermost would be 0.1 + 4*1.0 = 4.1, well past the
+	// secondary's outer bound of 1.5. The cap should fire:
+	//   cap = (1.5 - 0.1) / (4 + 1) = 0.28
+	nearSec := Group{
+		Designation: "B",
+		Members:     []stars.Star{{}},
+		MAO:         0.1,
+		Intervals:   []Interval{{Min: 0.1, Max: 1.5}},
+	}
+	nearSec.sourceCompanion = &nearCompanion
+	allocs := []StarAllocation{
+		{Group: primary, AllocatedWorlds: 1},
+		{Group: nearSec, AllocatedWorlds: 4},
+	}
+	// Variance rolls all 7 (no variance):
+	//   primary: 1 slot, baselineN=1 → baseline-fixed, no variance roll
+	//   nearSec: 4 slots, no baseline → 4 variance rolls
+	// With cap groupSpread=0.28:
+	//   slot 1: 0.1 + 0.28 = 0.38
+	//   slot 2: 0.38 + 0.28 = 0.66
+	//   slot 3: 0.66 + 0.28 = 0.94
+	//   slot 4: 0.94 + 0.28 = 1.22
+	// All within [0.1, 1.5].
+	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7, 7), allocs, 1, 0.5, 1.0, 0)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	// Find B slots; verify all are within [0.1, 1.5].
+	for _, s := range got {
+		if s.Group.Designation == "B" {
+			if s.Orbit < 0.1 || s.Orbit > 1.5 {
+				t.Errorf("B slot Orbit = %v, want within [0.1, 1.5] (cap should have applied)", s.Orbit)
+			}
+		}
+	}
+}
