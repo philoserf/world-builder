@@ -140,28 +140,41 @@ func BaselineOrbit(
 }
 
 // snapToAvailable returns the nearest in-interval orbit to want, with
-// (2D-7)/10 direction variance applied per the book p. 45 narrative.
+// (2D-7)/10 magnitude variance always moving the orbit "into" the
+// snapped allowable zone (per WBH p. 45: "always moving the orbit
+// 'into' the allowable zone regardless of the sign of the result").
+//
+// The variance magnitude is |2D-7|/10. Direction is determined by which
+// boundary was snapped to: snapping up to a Min endpoint moves further
+// up into the interval; snapping down to a Max endpoint moves further
+// down. If want already lies inside an interval, no snap or variance
+// applies.
 func snapToAvailable(r roller.Roller, primary Group, want float64) float64 {
-	if len(primary.Intervals) == 0 {
+	if len(primary.Intervals) == 0 || primary.Contains(want) {
 		return want
 	}
 	bestDist := math.Inf(1)
-	var best float64
+	var best, direction float64
 	for _, iv := range primary.Intervals {
-		var snap float64
+		var snap, dir float64
 		switch {
 		case want < iv.Min:
 			snap = iv.Min
+			dir = +1 // move further into the interval (up)
 		case want > iv.Max:
 			snap = iv.Max
+			dir = -1 // move further into the interval (down)
 		default:
 			snap = want
+			dir = 0
 		}
 		if d := math.Abs(snap - want); d < bestDist {
 			bestDist = d
 			best = snap
+			direction = dir
 		}
 	}
 	v := r.Roll("2D")
-	return best + float64(v-7)/10.0
+	magnitude := math.Abs(float64(v-7)) / 10.0
+	return best + direction*magnitude
 }

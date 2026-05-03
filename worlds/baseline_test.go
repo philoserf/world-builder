@@ -209,16 +209,35 @@ func TestBaselineOrbit_SnapToAvailable(t *testing.T) {
 		Intervals: []Interval{{Min: 0.03, Max: 2.5}, {Min: 3.5, Max: 20.0}},
 	}
 	// 3a path with roll 7 → variance 0 → BaselineOrbit = 3.0 (in hole 2.5-3.5).
-	// Snap roll: 2D=5 → variance (-2)/10 = -0.2 → snap LOWER (toward 2.5).
-	// Result: clamp to 2.5 then add variance: 2.5 - 0.2 = 2.3.
+	// Snap: nearest endpoint is 2.5 (snapped DOWN from 3.0), so snap direction
+	// moves further DOWN into the lower interval. Snap roll: 2D=5 → magnitude
+	// |5-7|/10 = 0.2 → 2.5 + (-1)*0.2 = 2.3.
 	got, err := BaselineOrbit(roller.NewScripted(7, 5), primary, primary.HZCO(), 3, 17)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	// The exact snap behavior depends on whether the variance is applied after
-	// snapping or whether the snap value is taken as-is. The test expects ~2.3
-	// (snap to 2.5, then -0.2 variance) — within tolerance of 2.5.
 	if math.Abs(got-2.3) > 0.05 {
-		t.Errorf("BaselineOrbit = %v, want ~2.3 (snap 2.5 then -0.2)", got)
+		t.Errorf("BaselineOrbit = %v, want ~2.3 (snap to 2.5, variance 0.2 into lower interval)", got)
+	}
+}
+
+func TestBaselineOrbit_SnapToAvailable_HighRollStaysInZone(t *testing.T) {
+	t.Parallel()
+	// Same hole as above. With a 2D=10 snap roll under a naive signed-variance
+	// implementation, 2.5 + (10-7)/10 = 2.8 would land BACK INSIDE the hole.
+	// Per WBH p. 45 the variance must "always move the orbit into the
+	// allowable zone" — magnitude |10-7|/10 = 0.3 in the snap direction (down).
+	// Expected: 2.5 - 0.3 = 2.2.
+	primary := Group{
+		Members:   []stars.Star{{Luminosity: 1.0}},
+		MAO:       0.03,
+		Intervals: []Interval{{Min: 0.03, Max: 2.5}, {Min: 3.5, Max: 20.0}},
+	}
+	got, err := BaselineOrbit(roller.NewScripted(7, 10), primary, primary.HZCO(), 3, 17)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(got-2.2) > 0.05 {
+		t.Errorf("BaselineOrbit = %v, want ~2.2 (high snap roll must still move into zone)", got)
 	}
 }
