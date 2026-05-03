@@ -503,6 +503,50 @@ func TestAvailableOrbits_Rule7_FarDoesNotTrigger(t *testing.T) {
 	}
 }
 
+func TestAvailableOrbits_Rule8_SecondaryOwnRange(t *testing.T) {
+	t.Parallel()
+
+	// Zed B at Orbit# 6.10: own range = [B's MAO, 6.10 - 3] = [0.02, 3.10].
+	a := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+		LuminosityClass: stars.V,
+		Mass:            1.0, Diameter: 1.0, Temperature: 5772,
+	})
+	b := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'K', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.626, Diameter: 0.777, Temperature: 3980,
+	})
+	sys := stars.System{
+		Primary: a,
+		Companions: []stars.CompanionStar{
+			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.10, Eccentricity: 0.08, ParentIndex: -1},
+		},
+	}
+	got, err := AvailableOrbits(sys)
+	if err != nil {
+		t.Fatalf("AvailableOrbits: %v", err)
+	}
+	if len(got.Groups) != 2 {
+		t.Fatalf("groups = %d, want 2", len(got.Groups))
+	}
+	bg := got.Groups[1]
+	if bg.Designation != "B" {
+		t.Errorf("Designation = %q, want \"B\"", bg.Designation)
+	}
+	if len(bg.Intervals) != 1 {
+		t.Fatalf("intervals = %d, want 1", len(bg.Intervals))
+	}
+	if math.Abs(bg.Intervals[0].Min-bg.MAO) > 1e-9 {
+		t.Errorf("Min = %v, want MAO %v", bg.Intervals[0].Min, bg.MAO)
+	}
+	if math.Abs(bg.Intervals[0].Max-3.10) > 1e-9 {
+		t.Errorf("Max = %v, want 3.10", bg.Intervals[0].Max)
+	}
+}
+
 func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	t.Parallel()
 

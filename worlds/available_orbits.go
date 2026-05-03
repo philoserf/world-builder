@@ -354,6 +354,33 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		groups[0].Intervals = subtract(groups[0].Intervals, exLow, exHigh)
 	}
 
+	// Rule 8: each secondary (Close/Near/Far) has its own orbit range.
+	// Lower bound is the secondary's MAO (Rule 1); upper bound is
+	// (Orbit# − 3). Walk in canonical Close → Near → Far order — the
+	// same order identifyGroups produced the secondary groups — and
+	// match each non-companion primary-child entry to groups[secIdx].
+	secIdx := 1
+	for _, oc := range []stars.OrbitClass{stars.OrbitClose, stars.OrbitNear, stars.OrbitFar} {
+		for _, c := range sys.Companions {
+			if c.OrbitClass != oc || c.ParentIndex != -1 {
+				continue
+			}
+			if secIdx >= len(groups) {
+				break
+			}
+			maxOffset := c.OrbitNumber - 3
+			if maxOffset < 0 {
+				maxOffset = 0
+			}
+			if maxOffset < groups[secIdx].MAO {
+				groups[secIdx].Intervals = nil
+			} else {
+				groups[secIdx].Intervals = []Interval{{Min: groups[secIdx].MAO, Max: maxOffset}}
+			}
+			secIdx++
+		}
+	}
+
 	return Result{Groups: groups}, nil
 }
 
