@@ -1,8 +1,11 @@
 package worlds
 
 import (
+	"errors"
 	"math"
 	"testing"
+
+	"wbh/stars"
 )
 
 func TestGroup_Total_SingleInterval(t *testing.T) {
@@ -81,5 +84,99 @@ func TestGroup_Contains(t *testing.T) {
 				t.Errorf("Contains(%v) = %v, want %v", tc.orbit, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestMAO_ZedAa(t *testing.T) {
+	t.Parallel()
+
+	// G7 V should interpolate between G5 V (0.02) and K0 V (0.02);
+	// expected MAO 0.02 (book uses 0.03 for Sol G2 V — different cell).
+	zedAa := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 7},
+		LuminosityClass: stars.V,
+		Mass:            0.929,
+		Diameter:        0.967,
+		Temperature:     5440,
+	})
+	got, err := MAO(zedAa)
+	if err != nil {
+		t.Fatalf("MAO: %v", err)
+	}
+	if math.Abs(got-0.02) > 1e-9 {
+		t.Errorf("MAO(G7 V) = %v, want 0.02", got)
+	}
+}
+
+func TestMAO_ZedB(t *testing.T) {
+	t.Parallel()
+
+	// K8 V interpolates K5 V (0.02) → M0 V (0.02); expected 0.02.
+	zedB := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'K', Subtype: 8},
+		LuminosityClass: stars.V,
+		Mass:            0.626,
+		Diameter:        0.777,
+		Temperature:     3980,
+	})
+	got, err := MAO(zedB)
+	if err != nil {
+		t.Fatalf("MAO: %v", err)
+	}
+	if math.Abs(got-0.02) > 1e-9 {
+		t.Errorf("MAO(K8 V) = %v, want 0.02", got)
+	}
+}
+
+func TestMAO_Sol(t *testing.T) {
+	t.Parallel()
+
+	// G2 V: G0 V (0.03) → G5 V (0.02); 2/5 between → 0.03 - (0.01 × 2/5) = 0.026.
+	// Book reports 0.03 for Sol on the worked example survey form.
+	// Allow small interpolation variance.
+	sol := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+		LuminosityClass: stars.V,
+		Mass:            1.000,
+		Diameter:        1.000,
+		Temperature:     5772,
+	})
+	got, err := MAO(sol)
+	if err != nil {
+		t.Fatalf("MAO: %v", err)
+	}
+	if math.Abs(got-0.03) > 0.005 {
+		t.Errorf("MAO(G2 V) = %v, want ~0.03", got)
+	}
+}
+
+func TestMAO_NoEntry(t *testing.T) {
+	t.Parallel()
+
+	// A0 VI is "—" in the book — no entry.
+	a0vi := stars.Compose(stars.ComposeOpts{
+		Kind:            stars.KindMainSequence,
+		SpectralType:    stars.SpectralType{Letter: 'A', Subtype: 0},
+		LuminosityClass: stars.VI,
+		Mass:            0.5,
+		Diameter:        0.5,
+		Temperature:     9000,
+	})
+	_, err := MAO(a0vi)
+	if !errors.Is(err, ErrNoMAOForStar) {
+		t.Errorf("MAO(A0 VI) error = %v, want ErrNoMAOForStar", err)
+	}
+}
+
+func TestMAO_PostStellar(t *testing.T) {
+	t.Parallel()
+
+	bd := stars.Star{Kind: stars.KindBrownDwarf}
+	_, err := MAO(bd)
+	if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
+		t.Errorf("MAO(BD) error = %v, want ErrPostStellarPrimaryUnsupported", err)
 	}
 }

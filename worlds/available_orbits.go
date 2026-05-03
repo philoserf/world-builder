@@ -11,6 +11,7 @@ package worlds
 
 import (
 	"errors"
+	"fmt"
 
 	"wbh/stars"
 )
@@ -67,3 +68,161 @@ type Result struct {
 var ErrPostStellarPrimaryUnsupported = errors.New(
 	"worlds: post-stellar primary MAO requires Special Circumstances chapter",
 )
+
+// fp returns a pointer to the float64 — used for nil-able cells in tables.
+func fp(x float64) *float64 { return &x }
+
+// maoRow is one row of the WBH p. 39 Minimum Allowable Orbit# table,
+// keyed by luminosity class.
+type maoRow struct {
+	Ia, Ib, II, III, IV, V, VI *float64
+}
+
+// maoTablePage39 is the WBH p. 39 MAO table, keyed by spectral-type
+// short code ("O0", "B5", "G7", ...).
+//
+// nil pointer means the book leaves the cell as "—" (combination does
+// not exist as a star).
+var maoTablePage39 = map[string]maoRow{
+	"O0": {Ia: fp(0.63), Ib: fp(0.60), II: fp(0.55), III: fp(0.53), V: fp(0.5), VI: fp(0.01)},
+	"O5": {Ia: fp(0.55), Ib: fp(0.50), II: fp(0.45), III: fp(0.38), V: fp(0.3), VI: fp(0.01)},
+	"B0": {Ia: fp(0.50), Ib: fp(0.35), II: fp(0.30), III: fp(0.25), IV: fp(0.20), V: fp(0.18), VI: fp(0.01)},
+	"B5": {Ia: fp(1.67), Ib: fp(0.63), II: fp(0.35), III: fp(0.15), IV: fp(0.13), V: fp(0.09), VI: fp(0.01)},
+	"A0": {Ia: fp(3.34), Ib: fp(1.40), II: fp(0.75), III: fp(0.13), IV: fp(0.10), V: fp(0.06)},
+	"A5": {Ia: fp(4.17), Ib: fp(2.17), II: fp(1.17), III: fp(0.13), IV: fp(0.07), V: fp(0.05)},
+	"F0": {Ia: fp(4.42), Ib: fp(2.50), II: fp(1.33), III: fp(0.13), IV: fp(0.07), V: fp(0.04)},
+	"F5": {Ia: fp(5.00), Ib: fp(3.25), II: fp(1.87), III: fp(0.13), IV: fp(0.06), V: fp(0.03)},
+	"G0": {Ia: fp(5.21), Ib: fp(3.59), II: fp(2.24), III: fp(0.25), IV: fp(0.07), V: fp(0.03), VI: fp(0.02)},
+	"G5": {Ia: fp(5.34), Ib: fp(3.84), II: fp(2.67), III: fp(0.38), IV: fp(0.10), V: fp(0.02), VI: fp(0.02)},
+	"K0": {Ia: fp(5.59), Ib: fp(4.17), II: fp(3.17), III: fp(0.50), IV: fp(0.15), V: fp(0.02), VI: fp(0.02)},
+	"K5": {Ia: fp(6.17), Ib: fp(4.84), II: fp(4.00), III: fp(1.00), V: fp(0.02), VI: fp(0.01)},
+	"M0": {Ia: fp(6.80), Ib: fp(5.42), II: fp(4.59), III: fp(1.68), V: fp(0.02), VI: fp(0.01)},
+	"M5": {Ia: fp(7.20), Ib: fp(6.17), II: fp(5.30), III: fp(3.00), V: fp(0.01), VI: fp(0.01)},
+	"M9": {Ia: fp(7.80), Ib: fp(6.59), II: fp(5.92), III: fp(4.34), V: fp(0.01), VI: fp(0.01)},
+}
+
+// ErrNoMAOForStar reports a "—" cell in the p. 39 MAO table — the
+// spectral type / class combination does not exist as a star.
+var ErrNoMAOForStar = errors.New("worlds: spectral type / class combination has no MAO entry")
+
+// isPostStellar reports whether a StarKind is post-stellar (BD, D, NS,
+// BH, Pulsar) — these have MAO defined in the Special Circumstances
+// chapter, not yet encoded.
+func isPostStellar(k stars.StarKind) bool {
+	switch k {
+	case stars.KindBrownDwarf, stars.KindWhiteDwarf,
+		stars.KindNeutronStar, stars.KindBlackHole, stars.KindPulsar:
+		return true
+	}
+	return false
+}
+
+// maoCell reads the MAO cell for an exact spectral type key (e.g. "G5")
+// at a given luminosity class. Returns ErrNoMAOForStar if the cell is
+// the book's "—".
+func maoCell(typeKey string, lc stars.LuminosityClass) (float64, error) {
+	row, ok := maoTablePage39[typeKey]
+	if !ok {
+		return 0, fmt.Errorf("worlds: no MAO row for %q", typeKey)
+	}
+	var ptr *float64
+	switch lc {
+	case stars.Ia:
+		ptr = row.Ia
+	case stars.Ib:
+		ptr = row.Ib
+	case stars.II:
+		ptr = row.II
+	case stars.III:
+		ptr = row.III
+	case stars.IV:
+		ptr = row.IV
+	case stars.V:
+		ptr = row.V
+	case stars.VI:
+		ptr = row.VI
+	default:
+		return 0, fmt.Errorf("worlds: unknown luminosity class %q", lc)
+	}
+	if ptr == nil {
+		return 0, ErrNoMAOForStar
+	}
+	return *ptr, nil
+}
+
+// MAO returns the Minimum Allowable Orbit# for a star, interpolated by
+// spectral type within its luminosity-class column per the WBH p. 39
+// table.
+//
+// Post-stellar kinds return ErrPostStellarPrimaryUnsupported.
+// Combinations the book lists as "—" return ErrNoMAOForStar.
+func MAO(s stars.Star) (float64, error) {
+	if isPostStellar(s.Kind) {
+		return 0, ErrPostStellarPrimaryUnsupported
+	}
+	lower, upper, frac := bracketSpectralType(s.SpectralType)
+	lo, errLo := maoCell(lower, s.LuminosityClass)
+	hi, errHi := maoCell(upper, s.LuminosityClass)
+	switch {
+	case errors.Is(errLo, ErrNoMAOForStar) && errors.Is(errHi, ErrNoMAOForStar):
+		return 0, ErrNoMAOForStar
+	case errors.Is(errLo, ErrNoMAOForStar):
+		return hi, nil
+	case errors.Is(errHi, ErrNoMAOForStar):
+		return lo, nil
+	case errLo != nil:
+		return 0, errLo
+	case errHi != nil:
+		return 0, errHi
+	}
+	return lo + (hi-lo)*frac, nil
+}
+
+// bracketSpectralType returns the two p. 39 grid keys bracketing st
+// within st's letter, and the fractional position from lower to upper.
+// For exact grid hits (O0, O5, ...) lower == upper and frac is 0.
+func bracketSpectralType(st stars.SpectralType) (lower, upper string, frac float64) {
+	letter := string(st.Letter)
+	switch {
+	case st.Letter == 'M' && st.Subtype >= 5:
+		// Bracket M5 → M9; subtypes 5..9.
+		if st.Subtype <= 5 {
+			return "M5", "M5", 0
+		}
+		if st.Subtype >= 9 {
+			return "M9", "M9", 0
+		}
+		return "M5", "M9", float64(st.Subtype-5) / 4.0
+	case st.Subtype < 5:
+		lower = letter + "0"
+		upper = letter + "5"
+		return lower, upper, float64(st.Subtype) / 5.0
+	default:
+		// st.Subtype in [5, 9] but letter != M (handled above).
+		// Bracket Letter5 → NextLetter0.
+		next := nextSpectralLetter(st.Letter)
+		lower = letter + "5"
+		upper = string(next) + "0"
+		return lower, upper, float64(st.Subtype-5) / 5.0
+	}
+}
+
+// nextSpectralLetter returns the next cooler spectral letter in O B A F G K M order.
+func nextSpectralLetter(l stars.SpectralLetter) stars.SpectralLetter {
+	switch l {
+	case 'O':
+		return 'B'
+	case 'B':
+		return 'A'
+	case 'A':
+		return 'F'
+	case 'F':
+		return 'G'
+	case 'G':
+		return 'K'
+	case 'K':
+		return 'M'
+	default:
+		return l
+	}
+}
