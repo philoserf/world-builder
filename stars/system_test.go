@@ -1,6 +1,7 @@
 package stars
 
 import (
+	"strings"
 	"testing"
 
 	"wbh/roller"
@@ -247,5 +248,33 @@ func TestGenerateSystem_SpecialPrimaryClassRedirect(t *testing.T) {
 	}
 	if len(sys.Companions) != 0 {
 		t.Errorf("expected 0 companions, got %d", len(sys.Companions))
+	}
+}
+
+// TestGenerateSystem_SpecialPrimary_GiantsCellNotImplemented verifies that a
+// Special-primary roll landing on the "Giants" cell (Unusual column, 2D=12)
+// returns an explicit error rather than silently misrouting through
+// generatePrimaryAtClass with an invalid LuminosityClass.
+//
+// Roll sequence:
+//  1. 2D=2  → Type = "Special" → ErrSpecialPrimary in GenerateMainSequenceStar
+//  2. 2D=12 → Unusual col row 12 = "Giants"
+//
+// generateSpecialPrimary should return an error containing
+// "Giants dispatch not yet implemented".
+func TestGenerateSystem_SpecialPrimary_GiantsCellNotImplemented(t *testing.T) {
+	t.Parallel()
+
+	r := roller.NewScripted(
+		2,  // 2D type → Special
+		12, // 2D Unusual col row 12 = "Giants"
+	)
+	_, err := GenerateSystem(r, GenerateSystemOpts{Accuracy: 1})
+	if err == nil {
+		t.Fatal("expected an error for Giants cell, got nil")
+	}
+	const want = "Giants dispatch not yet implemented"
+	if !strings.Contains(err.Error(), want) {
+		t.Fatalf("error %q does not contain %q", err.Error(), want)
 	}
 }

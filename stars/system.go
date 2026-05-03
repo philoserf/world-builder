@@ -256,6 +256,14 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 	if err != nil {
 		return Star{}, err
 	}
+	if lc == "Giants" {
+		// The "Giants" cell (Unusual column, 2D=12) requires dispatching via
+		// RollGiantClass and a fresh Type-column roll (WBH p.16). That dispatch
+		// is not yet implemented; return an explicit error rather than silently
+		// misrouting through generatePrimaryAtClass with an invalid
+		// LuminosityClass.
+		return Star{}, fmt.Errorf("stars: Special-primary Giants dispatch not yet implemented")
+	}
 	if lc != "" {
 		// Class redirect: re-roll on the regular Star Type Determination
 		// flow at the indicated class.
