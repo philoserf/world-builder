@@ -23,8 +23,9 @@ const (
 // Placement is one fully-resolved orbit slot after Step 8.
 type Placement struct {
 	AnomalousSlot
-	Body       BodyType
-	PrefixRoll string // "1:6", "2:3" — audit trail
+	Body         BodyType
+	PrefixRoll   string  // "1:6", "2:3" — audit trail
+	Eccentricity float64 // populated by Step 9 (RollPlanetEccentricities)
 }
 
 // PlaceWorlds implements WBH Step 8 (pp. 51-52). Order: empty → gas
