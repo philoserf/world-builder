@@ -30,11 +30,12 @@ type Slot struct {
 // first, then Near, then Far, then the primary; each receiving star gets
 // one extra slot named with a "+" suffix.
 //
-// baselineN is derived as round((baselineOrbit - primary.MAO) / spread) + 1,
-// clamped to [1, primary slot count].
+// baselineN is the explicit slot index (1-based) produced by Step 2's
+// RollBaselineNumber. It is clamped to [1, primary slot count].
 func PlaceOrbitSlots(
 	r roller.Roller,
 	allocs []StarAllocation,
+	baselineN int,
 	baselineOrbit, spread float64,
 	emptyOrbits int,
 ) ([]Slot, error) {
@@ -63,18 +64,13 @@ func PlaceOrbitSlots(
 	// Any leftover goes to the primary.
 	extraSlots[0] += remaining
 
-	// Derive baselineN from spread and baselineOrbit.
-	// Uses half-up rounding: int(x + 0.5) before adding 1.
-	baselineN := 1
+	// Clamp baselineN to the valid slot range for the primary group.
 	primarySlotCount := allocs[0].AllocatedWorlds + extraSlots[0]
-	if spread > 0 && primarySlotCount > 0 {
-		baselineN = int((baselineOrbit-allocs[0].Group.MAO)/spread+0.5) + 1
-		if baselineN < 1 {
-			baselineN = 1
-		}
-		if baselineN > primarySlotCount {
-			baselineN = primarySlotCount
-		}
+	if baselineN < 1 {
+		baselineN = 1
+	}
+	if primarySlotCount > 0 && baselineN > primarySlotCount {
+		baselineN = primarySlotCount
 	}
 
 	var out []Slot

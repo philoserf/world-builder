@@ -17,7 +17,7 @@ func TestPlaceOrbitSlots_SinglePrimary_NoExclusions(t *testing.T) {
 		Intervals:   []Interval{{Min: 0.5, Max: 20.0}},
 	}
 	allocs := []StarAllocation{{Group: primary, TotalStarOrbits: 5, AllocatedWorlds: 5}}
-	// baselineOrbit=1.5, spread=1.0, MAO=0.5 → derived baselineN = round((1.5-0.5)/1.0)+1 = 2.
+	// baselineN=2 (Step 2 roll): slot 2 is fixed at baselineOrbit=1.5.
 	// 5 slots: variance rolls all 7 (no variance):
 	//   slot 1 (inner): MAO 0.5 + 1.0 = 1.5
 	//   slot 2 (BASELINE): 1.5 (overrides variance)
@@ -25,7 +25,7 @@ func TestPlaceOrbitSlots_SinglePrimary_NoExclusions(t *testing.T) {
 	//   slot 4: 2.5 + 1.0 = 3.5
 	//   slot 5: 3.5 + 1.0 = 4.5
 	// Variance roll consumed: slot 1 (1), slot 3 (1), slot 4 (1), slot 5 (1) = 4 rolls.
-	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7, 7), allocs, 1.5, 1.0, 0)
+	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7, 7), allocs, 2, 1.5, 1.0, 0)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -48,15 +48,14 @@ func TestPlaceOrbitSlots_BaselineFixedSlotIsAtBaselineOrbit(t *testing.T) {
 		Intervals: []Interval{{Min: 0.5, Max: 20.0}},
 	}
 	allocs := []StarAllocation{{Group: primary, AllocatedWorlds: 5}}
-	// baselineOrbit=5.0, spread=1.0, MAO=0.5 → derived baselineN = round((5.0-0.5)/1.0)+1 = 6.
-	// 5 slots → baselineN clamped to 5. So slot 5 (the last) is fixed at 5.0.
+	// baselineN=5 (Step 2 roll): slot 5 is fixed at baselineOrbit=5.0.
 	// Slots 1-4 use variance rolls (7,7,7,7 → no variance):
 	//   slot 1: 0.5 + 1.0 = 1.5
 	//   slot 2: 1.5 + 1.0 = 2.5
 	//   slot 3: 2.5 + 1.0 = 3.5
 	//   slot 4: 3.5 + 1.0 = 4.5
 	//   slot 5: BASELINE → 5.0
-	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7, 7), allocs, 5.0, 1.0, 0)
+	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7, 7), allocs, 5, 5.0, 1.0, 0)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -79,14 +78,14 @@ func TestPlaceOrbitSlots_ExclusionZoneWidens(t *testing.T) {
 		Intervals: []Interval{{Min: 0.5, Max: 5.0}, {Min: 8.0, Max: 20.0}},
 	}
 	allocs := []StarAllocation{{Group: primary, AllocatedWorlds: 4}}
-	// Spread 2.0, baselineOrbit 2.5. Derived baselineN = round((2.5-0.5)/2.0)+1 = round(1.0)+1 = 2.
+	// baselineN=2 (Step 2 roll), spread=2.0, baselineOrbit=2.5.
 	//   slot 1 (inner): 0.5 + 2.0 + 0 (variance 7) = 2.5
 	//   slot 2 (BASELINE): 2.5 (overrides)
 	//   slot 3: 2.5 + 2.0 + 0 = 4.5 (still in lower interval, OK, no widening)
 	//   slot 4: 4.5 + 2.0 + 0 = 6.5 — inside exclusion zone (5.0, 8.0)!
 	//     Widen by zone width 3.0: slot 4 = 6.5 + 3.0 = 9.5
 	// Variance rolls: slot 1, 3, 4 = 3 rolls.
-	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7), allocs, 2.5, 2.0, 0)
+	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7), allocs, 2, 2.5, 2.0, 0)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -120,7 +119,8 @@ func TestPlaceOrbitSlots_EmptyDistribution(t *testing.T) {
 	// Close/Near/Far order. Near matches → B grows from 1 to 2 slots.
 	// Variance rolls: primary has 3 slots (one is baseline → 2 variance rolls);
 	// B has 2 slots, baseline doesn't apply (B is not primary) → 2 variance rolls.
-	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7, 7), allocs, 0.5, 0.5, 1)
+	// baselineN=1 (Step 2 roll): slot 1 is fixed at baselineOrbit=0.5.
+	got, err := PlaceOrbitSlots(roller.NewScripted(7, 7, 7, 7), allocs, 1, 0.5, 0.5, 1)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
