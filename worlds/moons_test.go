@@ -326,6 +326,9 @@ func TestSizeMoon_GGSpecial_GiantMoonCascade(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+	if got.SizeCode != "G" {
+		t.Errorf("SizeCode = %q, want \"G\" (GG cascade sentinel)", got.SizeCode)
+	}
 	if got.GGClass != GasGiantSmall {
 		t.Errorf("GGClass = %v, want GasGiantSmall", got.GGClass)
 	}
@@ -334,5 +337,40 @@ func TestSizeMoon_GGSpecial_GiantMoonCascade(t *testing.T) {
 	}
 	if got.MassEarth != 25 {
 		t.Errorf("MassEarth = %v, want 25", got.MassEarth)
+	}
+}
+
+// TestSizeMoon_GGSpecial_GiantMoonCascade_Medium covers the WBH p.57
+// footnote: when the cascade's additional 2D rolls 12, the moon
+// upgrades from Small GG to Medium GG, which re-rolls diameter
+// (1D+6) and mass (20×(3D-1)).
+func TestSizeMoon_GGSpecial_GiantMoonCascade_Medium(t *testing.T) {
+	t.Parallel()
+
+	// Dice script (one int per Roll call):
+	//   6     SizeMoon first → GG Special branch
+	//   6     gasGiantSpecialMoon first → 6 sub-branch (2D+4)
+	//   12    2D+4 = 16 → cascade
+	//   1, 2  Small GG diameter D3+D3 (consumed but discarded on Medium upgrade)
+	//   4     Small GG mass 1D=4 → 5×(4+1)=25 (discarded)
+	//   12    cascade 2D = 12 → upgrade to Medium GG
+	//   4     Medium GG diameter 1D=4 → 4+6=10 → "A"
+	//   9     Medium GG mass 3D=9 → 20×(9-1) = 160
+	r := roller.NewScripted(6, 6, 12, 1, 2, 4, 12, 4, 9)
+	got, err := SizeMoon(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.SizeCode != "G" {
+		t.Errorf("SizeCode = %q, want \"G\" (GG cascade sentinel)", got.SizeCode)
+	}
+	if got.GGClass != GasGiantMedium {
+		t.Errorf("GGClass = %v, want GasGiantMedium (cascade upgrade)", got.GGClass)
+	}
+	if got.GGDiameterCode != "A" {
+		t.Errorf("GGDiameterCode = %q, want \"A\" (1D+6=10)", got.GGDiameterCode)
+	}
+	if got.MassEarth != 160 {
+		t.Errorf("MassEarth = %v, want 160 (20×(9-1))", got.MassEarth)
 	}
 }

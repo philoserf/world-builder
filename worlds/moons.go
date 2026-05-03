@@ -186,7 +186,7 @@ func gasGiantSpecialMoon(r roller.Roller) (Moon, error) {
 			ggMass = float64(20 * (r.Roll("3D") - 1))
 		}
 		return Moon{
-			SizeCode:       sizeCodeForN(16), // "G" sentinel
+			SizeCode:       "G", // GG cascade — moon is itself a gas giant (Size 16)
 			GGClass:        ggClass,
 			GGDiameterCode: ggCode,
 			DiameterEarth:  float64(ggDiameter),
