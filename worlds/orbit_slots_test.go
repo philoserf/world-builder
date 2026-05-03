@@ -100,6 +100,29 @@ func TestPlaceOrbitSlots_ExclusionZoneWidens(t *testing.T) {
 	}
 }
 
+func TestPlaceOrbitSlots_FirstSlotInExclusionZoneIsWidened(t *testing.T) {
+	t.Parallel()
+	// Primary with MAO 0.5 and a gap (3.0, 6.0). Spread 3.0, baselineN=2
+	// (so the first slot is NOT the baseline and goes through the variance
+	// path). Without the j==0 exclusion check, the first slot would land at
+	// 0.5 + 3.0 + 0 (variance 7) = 3.5, INSIDE the gap. With the fix,
+	// widening adds gap width 3.0 → first slot = 6.5.
+	primary := Group{
+		Members:   []stars.Star{{}},
+		MAO:       0.5,
+		Intervals: []Interval{{Min: 0.5, Max: 3.0}, {Min: 6.0, Max: 20.0}},
+	}
+	allocs := []StarAllocation{{Group: primary, AllocatedWorlds: 2}}
+	// Variance rolls: slot 1 (j=0): 7. Slot 2 is baseline (no roll).
+	got, err := PlaceOrbitSlots(roller.NewScripted(7), allocs, 2, 7.0, 3.0, 0)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if math.Abs(got[0].Orbit-6.5) > 0.05 {
+		t.Errorf("first slot Orbit = %v, want 6.5 (widened past 3.0-6.0 gap)", got[0].Orbit)
+	}
+}
+
 func TestPlaceOrbitSlots_EmptyDistribution(t *testing.T) {
 	t.Parallel()
 	primary := Group{Designation: "A", Members: []stars.Star{{}}, MAO: 0.5, Intervals: []Interval{{Min: 0.5, Max: 20.0}}}

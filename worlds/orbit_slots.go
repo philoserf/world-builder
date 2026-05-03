@@ -81,20 +81,19 @@ func PlaceOrbitSlots(
 		}
 		cur := alloc.Group.MAO
 		for j := 0; j < slotCount; j++ {
-			label := slotLabel(alloc.Group.Designation, j, alloc.AllocatedWorlds, extraSlots[i])
+			label := slotLabel(alloc.Group.Designation, j, alloc.AllocatedWorlds)
 			isBaselineSlot := i == 0 && j == baselineN-1
 
 			var orbit float64
-			switch {
-			case isBaselineSlot:
+			if isBaselineSlot {
 				orbit = baselineOrbit
-			case j == 0:
-				v := r.Roll("2D")
-				orbit = cur + spread + float64(v-7)*spread/10.0
-			default:
+			} else {
 				v := r.Roll("2D")
 				proposed := cur + spread + float64(v-7)*spread/10.0
-				// Exclusion-zone widening applies only to the primary group.
+				// Exclusion-zone widening applies only to the primary
+				// group. Includes the j == 0 inner slot so a primary whose
+				// MAO sits adjacent to a companion exclusion zone doesn't
+				// silently drop a world inside the gap.
 				if i == 0 {
 					if zone := excludedZoneAt(alloc.Group, proposed); zone != 0 {
 						proposed += zone
@@ -119,7 +118,7 @@ func PlaceOrbitSlots(
 // numbered 1..regularCount). extraCount is the count of bumped slots
 // from Step 4 (each named with "+" suffix). The bumped slot is placed
 // last in the sequence.
-func slotLabel(designation string, indexInGroup, regularCount, _ int) string {
+func slotLabel(designation string, indexInGroup, regularCount int) string {
 	prefix := "?"
 	if len(designation) > 0 {
 		prefix = string(designation[0])
