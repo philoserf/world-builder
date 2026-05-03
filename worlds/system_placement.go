@@ -40,6 +40,9 @@ var ErrContinuationMethodUnsupported = errors.New(
 //  8. PlaceWorlds (pp. 51-52)
 //  9. RollPlanetEccentricities (p. 52)
 func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement, error) {
+	// TODO(continuation-method): when stars.System gains a pre-existing
+	// mainworld field, return ErrContinuationMethodUnsupported here before
+	// running the clean-slate pipeline.
 	counts, err := GenerateCounts(r, sys, CountsOpts{})
 	if err != nil {
 		return SystemPlacement{}, err
