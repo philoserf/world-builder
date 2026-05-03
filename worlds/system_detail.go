@@ -36,7 +36,11 @@ type SystemDetail struct {
 	SystemPlacement // 2B: Counts, Allocations, BaselineN, BaselineOrbit, EmptyOrbits, SystemSpread, Placements
 
 	// Detailed mirrors SystemPlacement.Placements 1:1, with 2C per-body
-	// detail attached.
+	// detail attached. Ordered by ascending orbit within each group,
+	// matching SystemPlacement.Placements (which itself follows
+	// PlaceOrbitSlots' ascending-orbit walk). LongProfile and
+	// AssignPlanetDesignations both rely on this ordering — the T14
+	// DetailSystem façade must preserve it when building Detailed.
 	Detailed []DetailedPlacement
 
 	ShortProfile string          // "G-P-T-N-S" form per WBH p.58
