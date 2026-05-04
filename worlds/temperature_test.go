@@ -570,3 +570,149 @@ func TestGenerateTemperature_NoAtmosphere(t *testing.T) {
 		t.Errorf("nil atmosphere should have ScaleHeight=0, got %v", temp.ScaleHeight)
 	}
 }
+
+func TestGenerateTemperature_ZedPrime_HighLow(t *testing.T) {
+	// Zed Prime: high=346K, low=250K per WBH p.114.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.03}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.04, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 6}
+	body.Eccentricity = 0.25
+	body.AxialTilt = &AxialTilt{Degrees: 73.65}
+	body.DayLength = &DayLength{SiderealHours: 42.37, SolarHours: 85.77}
+	body.Period = Period{Hours: 26 * 24} // moon's local year for short-year halving
+
+	parent := &DetailedPlacement{}
+	parent.Body = BodyGasGiant
+	parent.Orbit = stars.AUToOrbit(1.06)
+	parent.Eccentricity = 0.10
+
+	sys := stars.System{Primary: stars.Star{Mass: 0.918, AgeGyr: 6.3, Luminosity: 1.419}}
+
+	r := roller.NewScripted(8, 8, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if math.Abs(temp.HighK-346) > 5 {
+		t.Errorf("HighK: got %v, want 346 ±5K", temp.HighK)
+	}
+	if math.Abs(temp.LowK-250) > 5 {
+		t.Errorf("LowK: got %v, want 250 ±5K", temp.LowK)
+	}
+	// Variance components per spec.
+	if math.Abs(temp.AxialTiltFactor-0.48) > 0.02 {
+		t.Errorf("AxialTiltFactor: got %v, want 0.48 (halved from 0.96 by short year)", temp.AxialTiltFactor)
+	}
+	if math.Abs(temp.RotationFactor-0.185) > 0.01 {
+		t.Errorf("RotationFactor: got %v, want 0.185", temp.RotationFactor)
+	}
+	if math.Abs(temp.GeographicFactor-0.20) > 0.01 {
+		t.Errorf("GeographicFactor: got %v, want 0.20", temp.GeographicFactor)
+	}
+	if math.Abs(temp.AtmosphericFactor-2.04) > 0.01 {
+		t.Errorf("AtmosphericFactor: got %v, want 2.04", temp.AtmosphericFactor)
+	}
+	if math.Abs(temp.LuminosityModifier-0.424) > 0.01 {
+		t.Errorf("LuminosityModifier: got %v, want 0.424", temp.LuminosityModifier)
+	}
+	// Near AU = 1.06 × (1-0.10) = 0.954; Far AU = 1.06 × (1+0.10) = 1.166. Uses parent's ecc.
+	if math.Abs(temp.NearAU-0.954) > 0.005 {
+		t.Errorf("NearAU: got %v, want 0.954 (parent's ecc 0.10)", temp.NearAU)
+	}
+	if math.Abs(temp.FarAU-1.166) > 0.005 {
+		t.Errorf("FarAU: got %v, want 1.166", temp.FarAU)
+	}
+}
+
+func TestGenerateTemperature_ZedPrime_WorstCase(t *testing.T) {
+	// Per WBH p.115 sidebar: WorstHigh=359K (book), WorstLow=219K (consistent
+	// computation; book stated 230K is an inconsistency we surface in Task 13).
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.03}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.04, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 6}
+	body.Eccentricity = 0.25
+	body.AxialTilt = &AxialTilt{Degrees: 73.65}
+	body.DayLength = &DayLength{SiderealHours: 42.37, SolarHours: 85.77}
+	body.Period = Period{Hours: 26 * 24}
+
+	parent := &DetailedPlacement{}
+	parent.Body = BodyGasGiant
+	parent.Orbit = stars.AUToOrbit(1.06)
+	parent.Eccentricity = 0.10
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.419}}
+
+	r := roller.NewScripted(8, 8, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if math.Abs(temp.WorstHighK-359) > 5 {
+		t.Errorf("WorstHighK: got %v, want 359 ±5K", temp.WorstHighK)
+	}
+	// Implementation uses Near/Far AU consistently → 219K. Book p.115 sidebar
+	// stated 230K, which appears to use base AU instead of Far AU. Pin the
+	// consistent computation; document divergence.
+	if math.Abs(temp.WorstLowK-219) > 5 {
+		t.Errorf("WorstLowK: got %v, want 219 ±5K (book stated 230K — see WBH p.115 inconsistency)", temp.WorstLowK)
+	}
+}
+
+func TestGenerateTemperature_AxialTiltLongYearBoost(t *testing.T) {
+	// Year > 2 std years → axial tilt factor +0.01 per std year (max +0.25, cap 1.0).
+	// Body with 5-year period: boost = 0.05.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.AxialTilt = &AxialTilt{Degrees: 23.45}
+	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
+	body.Period = Period{Years: 5.0, Hours: 5.0 * 8766}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 6, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// sin(23.45°) = 0.398. Long-year boost +0.05. Expected ≈ 0.448.
+	want := math.Sin(23.45*math.Pi/180.0) + 0.05
+	if math.Abs(temp.AxialTiltFactor-want) > 0.01 {
+		t.Errorf("AxialTiltFactor: got %v, want %v (long-year boost)", temp.AxialTiltFactor, want)
+	}
+}
+
+func TestGenerateTemperature_RotationFactorLongDay(t *testing.T) {
+	// Solar day > 2500h → rotation factor = 1.0.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+	body.DayLength = &DayLength{SiderealHours: 3000, SolarHours: 3000}
+	body.Period = Period{Years: 1.0, Hours: 8766}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 6, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp.RotationFactor != 1.0 {
+		t.Errorf("RotationFactor: got %v, want 1.0 (solar day > 2500h)", temp.RotationFactor)
+	}
+}

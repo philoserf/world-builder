@@ -141,6 +141,55 @@ func GenerateTemperature(
 	// Basic table roll (sanity-check companion).
 	_, t.BasicK = BasicTemperatureRoll(r, body, sys)
 
+	// Variance components per WBH p.112-114.
+	t.AxialTiltFactor = computeAxialTiltFactor(body)
+	t.RotationFactor = computeRotationFactor(body)
+	t.GeographicFactor = computeGeographicFactor(body)
+	t.AtmosphericFactor = 1.0
+	if body.Atmosphere != nil {
+		t.AtmosphericFactor = 1 + body.Atmosphere.Pressure
+	}
+
+	variance := t.AxialTiltFactor + t.RotationFactor + t.GeographicFactor
+	if variance < 0 {
+		variance = 0
+	}
+	if variance > 1 {
+		variance = 1
+	}
+	t.LuminosityModifier = variance / t.AtmosphericFactor
+	if t.LuminosityModifier > 1 {
+		t.LuminosityModifier = 1
+	}
+
+	// Eccentricity: moons use parent's ecc per spec.
+	ecc := body.Eccentricity
+	if parent != nil {
+		ecc = parent.Eccentricity
+	}
+	t.NearAU = t.AU * (1 - ecc)
+	t.FarAU = t.AU * (1 + ecc)
+
+	// High/Low temperatures (step 9 p.114).
+	highL := t.Luminosity * (1 + t.LuminosityModifier)
+	lowL := t.Luminosity * (1 - t.LuminosityModifier)
+	t.HighK = MeanTemperatureK(highL, t.Albedo, t.GreenhouseFactor, t.NearAU)
+	t.LowK = MeanTemperatureK(lowL, t.Albedo, t.GreenhouseFactor, t.FarAU)
+
+	// Worst case (p.115 sidebar): WorstCaseLumModifier = 1 / (1 + bar/2).
+	bar := 0.0
+	if body.Atmosphere != nil {
+		bar = body.Atmosphere.Pressure
+	}
+	worstMod := 1.0 / (1.0 + bar/2.0)
+	if worstMod > 1 {
+		worstMod = 1
+	}
+	worstHighL := t.Luminosity * (1 + worstMod)
+	worstLowL := t.Luminosity * (1 - worstMod)
+	t.WorstHighK = MeanTemperatureK(worstHighL, t.Albedo, t.GreenhouseFactor, t.NearAU)
+	t.WorstLowK = MeanTemperatureK(worstLowL, t.Albedo, t.GreenhouseFactor, t.FarAU)
+
 	return t, nil
 }
 
@@ -209,4 +258,96 @@ func BasicTemperatureRoll(r roller.Roller, body *DetailedPlacement, sys stars.Sy
 	}
 
 	return mod, kelvin
+}
+
+// computeAxialTiltFactor per WBH p.112-113.
+//
+// Base: sin(axial_tilt). Tilt clamped to [0°, 90°] (negative → abs; > 90 → 180-tilt).
+// Short-year halving: if local year < 0.1 std year, halve (per WBH p.113 — for moons
+// "local year" means the moon's orbit period around its planet, NOT the parent's stellar year).
+// Long-year boost: if year > 2 std years, +0.01 per std year (max +0.25, cap factor at 1.0).
+func computeAxialTiltFactor(body *DetailedPlacement) float64 {
+	tilt := 0.0
+	if body.AxialTilt != nil {
+		tilt = body.AxialTilt.Degrees
+		if tilt < 0 {
+			tilt = -tilt
+		}
+		if tilt > 90 {
+			tilt = 180 - tilt
+		}
+	}
+	factor := math.Sin(tilt * math.Pi / 180.0)
+
+	// Local year for halving: prefer body.Period.Years; fall back to body.Period.Hours / 8766.
+	yrs := body.Period.Years
+	if yrs == 0 && body.Period.Hours > 0 {
+		yrs = body.Period.Hours / 8766.0
+	}
+	if yrs > 0 && yrs < 0.1 {
+		factor /= 2
+	}
+	if yrs > 2 {
+		boost := 0.01 * yrs
+		if boost > 0.25 {
+			boost = 0.25
+		}
+		factor += boost
+		if factor > 1.0 {
+			factor = 1.0
+		}
+	}
+	return factor
+}
+
+// computeRotationFactor per WBH p.113.
+//
+//	Rotation Factor = √|solar_day_hours| / 50
+//
+// Exceptions: solar_day > 2500h → 1.0; 1:1 star-locked → 1.0.
+func computeRotationFactor(body *DetailedPlacement) float64 {
+	if body.DayLength == nil {
+		return 0
+	}
+	if body.TidalLock != nil &&
+		body.TidalLock.LockRatio == "1:1" &&
+		body.TidalLock.Case == TidalLockCasePlanetToStar {
+		return 1.0
+	}
+	solarH := body.DayLength.SolarHours
+	if solarH < 0 {
+		solarH = -solarH
+	}
+	if solarH > 2500 {
+		return 1.0
+	}
+	if solarH == 0 {
+		return 0
+	}
+	return math.Sqrt(solarH) / 50.0
+}
+
+// computeGeographicFactor per WBH p.113.
+//
+//	Geographic Factor = (10 - Hyd) / 20 + modifier
+//
+// Modifier: ±0.1 if Hyd ∈ [2,8] AND SurfaceDistribution.Description matches
+// "Very Concentrated" (+0.1) or "Very Dispersed" (-0.1).
+// Note: the p.100 table uses "Very Dispersed" (code 1) as the low extreme;
+// the plan draft said "Very Distributed" — corrected here to match actual table values.
+func computeGeographicFactor(body *DetailedPlacement) float64 {
+	if body.Hydrographics == nil {
+		return 0.5 // (10-0)/20 = 0.5 default for missing hydrographics
+	}
+	hyd := body.Hydrographics.Code
+	factor := float64(10-hyd) / 20.0
+	if body.SurfaceDistribution != nil && hyd >= 2 && hyd <= 8 {
+		switch body.SurfaceDistribution.Description {
+		case "Very Concentrated":
+			factor += 0.1
+		case "Very Dispersed":
+			factor -= 0.1
+		}
+	}
+	return factor
 }
