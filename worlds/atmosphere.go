@@ -108,6 +108,91 @@ func SizeAsInt(s SizeCode) int {
 	return 0
 }
 
+// AtmospherePressureRange returns (minBar, spanBar) for the given atmosphere code per WBH p.79.
+// Codes with "Varies" pressure (A/B/C/F/G/H = 10/11/12/15/16/17) return (0, 0).
+func AtmospherePressureRange(code int) (minBar, spanBar float64) {
+	switch code {
+	case 0:
+		return 0, 0.0009
+	case 1:
+		return 0.001, 0.089
+	case 2, 3:
+		return 0.1, 0.32
+	case 4, 5:
+		return 0.43, 0.27
+	case 6, 7:
+		return 0.7, 0.79
+	case 8, 9:
+		return 1.5, 0.99
+	case 13:
+		return 2.5, 7.5
+	case 14:
+		return 0.10, 0.32
+	}
+	return 0, 0
+}
+
+// RollTotalPressure computes total atmospheric pressure per WBH p.80:
+//
+//	bar = MinPressureRange + Span × ((1D-1)×5 + (1D-1)) / 30
+//
+// Returns minBar with no rolls consumed when span = 0.
+func RollTotalPressure(r roller.Roller, atmoCode int) (float64, error) {
+	minBar, span := AtmospherePressureRange(atmoCode)
+	if span == 0 {
+		return minBar, nil
+	}
+	a := r.Roll("1D")
+	b := r.Roll("1D")
+	scale := float64((a-1)*5+(b-1)) / 30.0
+	return minBar + span*scale, nil
+}
+
+// RollOxygenFraction computes O2 fraction per WBH p.81:
+//
+//	OxyFraction = (1D + ageDM)/20 + (2D-7)/100 + (1D-1)/20
+//
+// Floored at 0.
+func RollOxygenFraction(r roller.Roller, ageGyr float64) (float64, error) {
+	dm := ageDMForOxygen(ageGyr)
+	a := r.Roll("1D")
+	b := r.Roll("2D")
+	c := r.Roll("1D")
+	frac := float64(a+dm)/20 + float64(b-7)/100 + float64(c-1)/20
+	if frac < 0 {
+		frac = 0
+	}
+	return frac, nil
+}
+
+// ageDMForOxygen returns the DM applied to the 1D oxygen fraction roll per WBH p.82.
+// Ranges: >4 Gyr → +1; 3.0–3.5 Gyr → -1; 2.0–3.0 Gyr → -2; <2 Gyr → -4.
+// Ages in the 3.5–4.0 band return 0 (gap in the book's optional DMs table).
+func ageDMForOxygen(ageGyr float64) int {
+	switch {
+	case ageGyr > 4:
+		return 1
+	case ageGyr >= 3.5:
+		return 0
+	case ageGyr >= 3:
+		return -1
+	case ageGyr >= 2:
+		return -2
+	default:
+		return -4
+	}
+}
+
+// DeriveScaleHeight returns the atmospheric scale height in km per WBH p.81
+// approximation: H ≈ 8.5 × (T/288) / g.
+// Returns 0 if g ≤ 0.
+func DeriveScaleHeight(meanTempK, gravityG float64) float64 {
+	if gravityG <= 0 {
+		return 0
+	}
+	return 8.5 * (meanTempK / 288) / gravityG
+}
+
 // RollAtmoCode rolls the unified WBH atmosphere digit formula: 2D-7+Size.
 //
 // Sizes 0, 1, and S return automatic atmo code 0 without consuming a roll.

@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 
 	"wbh/roller"
@@ -109,5 +110,76 @@ func TestSizeAsInt(t *testing.T) {
 		if got != c.want {
 			t.Errorf("%q: got %d, want %d", c.s, got, c.want)
 		}
+	}
+}
+
+func TestAtmospherePressureRange(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		code         int
+		minBar, span float64
+	}{
+		{0, 0, 0.0009},
+		{1, 0.001, 0.089},
+		{2, 0.1, 0.32},
+		{6, 0.7, 0.79},
+		{9, 1.5, 0.99},
+		{13, 2.5, 7.5},
+		{14, 0.10, 0.32},
+		{10, 0, 0}, // "Varies"
+	}
+	for _, c := range cases {
+		gotMin, gotSpan := AtmospherePressureRange(c.code)
+		if math.Abs(gotMin-c.minBar) > 0.001 || math.Abs(gotSpan-c.span) > 0.01 {
+			t.Errorf("code %d: got (%v, %v), want (%v, %v)", c.code, gotMin, gotSpan, c.minBar, c.span)
+		}
+	}
+}
+
+func TestRollTotalPressure_ZedPrime(t *testing.T) {
+	t.Parallel()
+	// Atmo 6: min 0.7, span 0.79
+	// Book p.80: 1D-1=2 → ×5=10; 1D-1=3 → +3 = 13. Pressure = 0.7 + 0.79 × 13/30 = 1.0423.
+	// Scripted: first 1D=3 (1D-1=2), second 1D=4 (1D-1=3).
+	r := roller.NewScripted(3, 4)
+	got, err := RollTotalPressure(r, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if math.Abs(got-1.0423) > 0.01 {
+		t.Errorf("got %v, want 1.0423", got)
+	}
+}
+
+func TestRollOxygenFraction_AgeDMs(t *testing.T) {
+	t.Parallel()
+	// Verify each age band produces correct DM. 1D=5, 2D=7, 1D=1 → without DMs: 5/20 + 0 + 0 = 0.25.
+	// Age > 4 → DM+1 → (5+1)/20 + 0 + 0 = 0.30.
+	r := roller.NewScripted(5, 7, 1)
+	got, err := RollOxygenFraction(r, 6.336) // > 4 Gyr → DM+1
+	if err != nil {
+		t.Fatal(err)
+	}
+	if math.Abs(got-0.30) > 0.001 {
+		t.Errorf("age>4 Gyr: got %v, want 0.30", got)
+	}
+}
+
+func TestScaleHeight_Terra(t *testing.T) {
+	t.Parallel()
+	// g=1.0, T=288K → H ≈ 8.5 km
+	if got := DeriveScaleHeight(288, 1.0); math.Abs(got-8.5) > 0.1 {
+		t.Errorf("Terra scale height: got %v, want 8.5", got)
+	}
+	// g=0.66, T=288K → H ≈ 8.5/0.66 ≈ 12.88 km (book p.82 worked example)
+	if got := DeriveScaleHeight(288, 0.66); math.Abs(got-12.88) > 0.1 {
+		t.Errorf("Zed scale height: got %v, want 12.88", got)
+	}
+}
+
+func TestScaleHeight_Edge(t *testing.T) {
+	t.Parallel()
+	if got := DeriveScaleHeight(288, 0); got != 0 {
+		t.Errorf("g=0: got %v, want 0", got)
 	}
 }
