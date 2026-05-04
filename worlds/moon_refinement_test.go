@@ -3,6 +3,8 @@ package worlds
 import (
 	"math"
 	"testing"
+
+	"wbh/roller"
 )
 
 func TestHillSphere_AabIV(t *testing.T) {
@@ -70,5 +72,101 @@ func TestMoonRemovalCheck_Drop(t *testing.T) {
 	removeAll, addRing = MoonRemovalCheck(0)
 	if !removeAll || !addRing {
 		t.Errorf("expected (true, true), got (%v, %v)", removeAll, addRing)
+	}
+}
+
+func TestMoonOrbitRange(t *testing.T) {
+	t.Parallel()
+	// WBH p.77: MOR = floor(hillSphereMoonLimit) - 2
+	// Aab IV: HSML=34.685 → floor=34 → MOR=32
+	if got := MoonOrbitRange(34.685, 5); got != 32 {
+		t.Errorf("got %d, want 32", got)
+	}
+	// > 200 case: clamp to 200 + nMoons
+	if got := MoonOrbitRange(500, 3); got != 203 {
+		t.Errorf("got %d, want 203", got)
+	}
+	// Negative result → floor at 0
+	if got := MoonOrbitRange(1.5, 0); got != 0 {
+		t.Errorf("got %d, want 0", got)
+	}
+}
+
+func TestZedPrime_OrbitalPeriod(t *testing.T) {
+	t.Parallel()
+	// WBH p.78 worked example: Zed Prime = Aab IV-d at PD=22.
+	// Parent Aab IV is a Size-8 GG with diameter multiplier 14,
+	// so effectiveSize = 14 × 8 = 112. Parent mass = 1,200⊕.
+	// Book result: 0.17693 × √((22×14×8)³ ÷ 1200) ≈ 624.69 hours = 26.03 days.
+	period := MoonPeriodHours(22, 112, 1200)
+	if math.Abs(period-624.69) > 0.5 {
+		t.Errorf("Zed Prime period: got %v, want ≈624.69 hours", period)
+	}
+}
+
+func TestRollMoonOrbit_Inner(t *testing.T) {
+	t.Parallel()
+	// MOR=32, DM+1 because MOR < 60.
+	// 1D roll=2 → rng=2+1=3 → Inner. 2D roll=7 → v=7.
+	// orbit = (7-2) × 32/60 + 2 = 5 × 0.5333 + 2 = 4.667
+	r := roller.NewScripted(2, 7)
+	orbitPD, mr := RollMoonOrbit(r, 32)
+	if mr != MoonRangeInner {
+		t.Errorf("range: got %v, want Inner", mr)
+	}
+	want := 5.0*32.0/60.0 + 2.0
+	if math.Abs(orbitPD-want) > 0.01 {
+		t.Errorf("orbitPD: got %v, want %v", orbitPD, want)
+	}
+}
+
+func TestRollMoonOrbit_Middle(t *testing.T) {
+	t.Parallel()
+	// MOR=32, DM+1 because MOR < 60.
+	// 1D roll=3 → rng=3+1=4 → Middle. 2D roll=9 → v=9.
+	// orbit = (9-2) × 32/30 + 32/6 + 3 = 7×1.0667 + 5.333 + 3 = 15.8
+	r := roller.NewScripted(3, 9)
+	orbitPD, mr := RollMoonOrbit(r, 32)
+	if mr != MoonRangeMiddle {
+		t.Errorf("range: got %v, want Middle", mr)
+	}
+	want := 7.0*32.0/30.0 + float64(32)/6.0 + 3.0
+	if math.Abs(orbitPD-want) > 0.01 {
+		t.Errorf("orbitPD: got %v, want %v", orbitPD, want)
+	}
+}
+
+func TestRollMoonOrbit_Outer(t *testing.T) {
+	t.Parallel()
+	// MOR=32, DM+1 because MOR < 60.
+	// 1D roll=5 → rng=5+1=6 → Outer. 2D roll=8 → v=8.
+	// orbit = (8-2) × 32/20 + 32/2 + 4 = 6×1.6 + 16 + 4 = 29.6
+	r := roller.NewScripted(5, 8)
+	orbitPD, mr := RollMoonOrbit(r, 32)
+	if mr != MoonRangeOuter {
+		t.Errorf("range: got %v, want Outer", mr)
+	}
+	want := 6.0*32.0/20.0 + float64(32)/2.0 + 4.0
+	if math.Abs(orbitPD-want) > 0.01 {
+		t.Errorf("orbitPD: got %v, want %v", orbitPD, want)
+	}
+}
+
+func TestRollMoonRetrograde(t *testing.T) {
+	t.Parallel()
+	// Outer range DM+4. Roll=6 → 6+4=10 → retrograde.
+	r := roller.NewScripted(6)
+	if !RollMoonRetrograde(r, MoonRangeOuter, false) {
+		t.Errorf("expected retrograde")
+	}
+	// Inner range DM-1. Roll=9 → 9-1=8 → not retrograde.
+	r = roller.NewScripted(9)
+	if RollMoonRetrograde(r, MoonRangeInner, false) {
+		t.Errorf("expected prograde")
+	}
+	// exceedsMOR adds DM+6. Middle DM+1 + DM+6 = DM+7. Roll=3 → 3+7=10 → retrograde.
+	r = roller.NewScripted(3)
+	if !RollMoonRetrograde(r, MoonRangeMiddle, true) {
+		t.Errorf("expected retrograde (exceedsMOR)")
 	}
 }

@@ -1,6 +1,10 @@
 package worlds
 
-import "math"
+import (
+	"math"
+
+	"wbh/roller"
+)
 
 const auKm = 149597870.9 // km per AU
 
@@ -49,4 +53,101 @@ func MoonRemovalCheck(hillSphereMoonLimit float64) (removeAll, promoteFirstToRin
 		return true, true
 	}
 	return false, false
+}
+
+// MoonOrbitRange returns the Moon Orbit Range (MOR) per WBH p.77:
+//
+//	MOR = floor(hillSphereMoonLimit) - 2
+//
+// If MOR > 200, it is clamped to 200 + nMoons (the number of moons to be placed).
+// MOR is floored at 0.
+func MoonOrbitRange(hillSphereMoonLimit float64, nMoons int) int {
+	mor := int(math.Floor(hillSphereMoonLimit)) - 2
+	if mor > 200 {
+		mor = 200 + nMoons
+	}
+	if mor < 0 {
+		mor = 0
+	}
+	return mor
+}
+
+// MoonPeriodHours computes a moon's orbital period in hours per WBH p.78:
+//
+//	Period (hours) = 0.176927 × √((PD × effectiveSize)³ / Mp)
+//
+// effectiveSize is the parent body's diameter expressed in units of 1600 km
+// (i.e. diameterMultiplier × sizeCode for gas giants, or just sizeCode for
+// terrestrial worlds). For example, Aab IV is a Size-8 GG with diameter
+// multiplier 14, so effectiveSize = 14 × 8 = 112.
+//
+// Mp is the parent mass in Earth masses.
+// Returns 0 if Mp ≤ 0.
+func MoonPeriodHours(orbitPD float64, effectiveSize int, parentMassEarth float64) float64 {
+	if parentMassEarth <= 0 {
+		return 0
+	}
+	d := orbitPD * float64(effectiveSize)
+	cube := d * d * d
+	return 0.176927 * math.Sqrt(cube/parentMassEarth)
+}
+
+// MoonRange categorizes a moon by its orbit relative to MOR.
+type MoonRange int
+
+// Moon orbit range bands relative to the Moon Orbit Range (MOR).
+const (
+	MoonRangeInner  MoonRange = iota // inner sixth of the MOR
+	MoonRangeMiddle                  // middle third of the MOR
+	MoonRangeOuter                   // outer half of the MOR
+)
+
+// RollMoonOrbit determines a moon's orbital distance per WBH p.77
+// Moon Orbit Location table. Roll 1D (DM+1 if MOR < 60) for range,
+// then 2D for the specific orbit in Planetary Diameters (PD):
+//
+//	1–3 Inner:  (2D-2) × MOR ÷ 60 + 2
+//	4–5 Middle: (2D-2) × MOR ÷ 30 + MOR ÷ 6 + 3
+//	6+  Outer:  (2D-2) × MOR ÷ 20 + MOR ÷ 2 + 4
+//
+// Returns orbit in PD and the range classification.
+func RollMoonOrbit(r roller.Roller, mor int) (orbitPD float64, mr MoonRange) {
+	dm := 0
+	if mor < 60 {
+		dm = 1
+	}
+	rng := r.Roll("1D") + dm
+	v := r.Roll("2D")
+	switch {
+	case rng <= 3:
+		mr = MoonRangeInner
+		orbitPD = float64(v-2)*float64(mor)/60 + 2
+	case rng <= 5:
+		mr = MoonRangeMiddle
+		orbitPD = float64(v-2)*float64(mor)/30 + float64(mor)/6 + 3
+	default:
+		mr = MoonRangeOuter
+		orbitPD = float64(v-2)*float64(mor)/20 + float64(mor)/2 + 4
+	}
+	return orbitPD, mr
+}
+
+// RollMoonRetrograde determines whether a moon has a retrograde orbit per WBH p.78.
+// Roll 2D and apply DM by range: inner −1, middle +1, outer +4.
+// Add DM+6 if the moon's orbit exceeds the MOR.
+// An orbit is retrograde on a result of 10+.
+func RollMoonRetrograde(r roller.Roller, mr MoonRange, exceedsMOR bool) bool {
+	dm := 0
+	switch mr {
+	case MoonRangeInner:
+		dm = -1
+	case MoonRangeMiddle:
+		dm = 1
+	case MoonRangeOuter:
+		dm = 4
+	}
+	if exceedsMOR {
+		dm += 6
+	}
+	return r.Roll("2D")+dm >= 10
 }
