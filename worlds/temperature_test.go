@@ -976,6 +976,8 @@ func TestSunlightPortion_Pole_WinterSolstice(t *testing.T) {
 
 func TestTemperature_MeanByLatitude_Tropical(t *testing.T) {
 	// Tropical zone (lat ≤ axial tilt): higher temperature than at the pole.
+	// Verifies BOTH directions: tropical warmer than mid, arctic cooler than mid
+	// (the latter exercises the lumMod clamp's negative arm — sin(45°-80°) < 0).
 	temp := &Temperature{
 		MeanK:             288,
 		Luminosity:        1.0,
@@ -986,9 +988,17 @@ func TestTemperature_MeanByLatitude_Tropical(t *testing.T) {
 		AtmosphericFactor: 2.0,
 	}
 	tropic := temp.MeanByLatitude(10) // tropical (< 23.45°)
+	mid := temp.MeanByLatitude(45)    // middle zone
 	arctic := temp.MeanByLatitude(80) // arctic (> 90 - 23.45 = 66.55°)
-	if tropic <= arctic {
-		t.Errorf("tropic %v should exceed arctic %v", tropic, arctic)
+	if tropic <= mid {
+		t.Errorf("tropic %v should exceed mid-latitude %v", tropic, mid)
+	}
+	if arctic >= mid {
+		t.Errorf("arctic %v should be below mid-latitude %v (cooling clamp)", arctic, mid)
+	}
+	// Magnitude check: arctic cooling should be at least 5K below mid for Earth-like inputs.
+	if mid-arctic < 5 {
+		t.Errorf("arctic cooling too small: mid=%v arctic=%v (delta=%v, want ≥5K)", mid, arctic, mid-arctic)
 	}
 }
 

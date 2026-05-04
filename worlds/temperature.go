@@ -436,13 +436,18 @@ func (t *Temperature) MeanByLatitude(latDeg float64) float64 {
 	}
 	zoneTiltFactor := t.zoneTiltAdjustment(latDeg)
 	lumMod := zoneTiltFactor / t.AtmosphericFactor
+	// Clamp to [-1, 1]: zoneTiltAdjustment can return negative for arctic
+	// latitudes where sin(45° - lat) < 0, producing legitimate cooling.
 	if lumMod > 1 {
 		lumMod = 1
 	}
-	if lumMod < 0 {
-		lumMod = 0
+	if lumMod < -1 {
+		lumMod = -1
 	}
 	latLum := t.Luminosity * (1 + lumMod)
+	if latLum < 0 {
+		latLum = 0
+	}
 	return MeanTemperatureK(latLum, t.Albedo, t.GreenhouseFactor, t.AU)
 }
 
@@ -489,7 +494,18 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 // daysSinceSolstice: 0 = summer solstice in the relevant hemisphere; year/2 = winter solstice.
 // localYearDays: caller decides — for moons, use parent's stellar year (moons co-orbit star with planet).
 //
-// Twilight worlds short-circuit to TwilightK.
+// KNOWN LIMITATION: the current implementation applies the seasonal axial-tilt
+// swing as a signed luminosity modifier without composing it with the latitude
+// zone formula. As a result, latDeg currently does not affect the output (the
+// seasonal swing is uniform across latitudes for a given date). The spec
+// foresaw layering both factors, but the plan's substitution-into-zone
+// approach zeroes out at lat=45° (sin(45-45)=0). Composing them properly is
+// deferred to a follow-up — no production caller exists yet.
+//
+// Twilight worlds always return TwilightK (band centerline). Hemisphere-aware
+// selection — bright/dark/twilight by latitude — is the caller's responsibility:
+// read t.BrightSideK / t.TwilightK / t.DarkSideK directly. The spec foresaw
+// auto-selection inside this method but the implementation defers it.
 func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays float64) float64 {
 	if t.IsTwilight {
 		return t.TwilightK
@@ -532,7 +548,10 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 // lags 15% of the solar day past solar noon (i.e., peak at 65% of the day from
 // dawn). Dawn is the coolest point, peak is shortly after noon.
 //
-// Twilight worlds short-circuit to TwilightK.
+// Twilight worlds always return TwilightK (band centerline). Hemisphere-aware
+// selection — bright/dark/twilight by latitude — is the caller's responsibility:
+// read t.BrightSideK / t.TwilightK / t.DarkSideK directly. The spec foresaw
+// auto-selection inside this method but the implementation defers it.
 func (t *Temperature) AtMoment(latDeg, daysSinceSolstice, localYearDays, hoursSinceDawn, solarDayHours float64) float64 {
 	if t.IsTwilight {
 		return t.TwilightK
