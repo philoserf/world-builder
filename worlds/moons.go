@@ -18,6 +18,16 @@ type Moon struct {
 	GGDiameterCode string
 	DiameterEarth  float64
 	MassEarth      float64
+
+	// 3A1 additions
+	Physical      *BodyPhysical
+	OrbitPD       float64
+	OrbitKm       int
+	Eccentricity  float64
+	Retrograde    bool
+	PeriodHours   float64
+	Atmosphere    *Atmosphere    // for HZ-planet moons only
+	Hydrographics *Hydrographics // for HZ-planet moons only
 }
 
 // ParentInfo describes a moon's parent body. Only one of (terrestrial

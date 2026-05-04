@@ -97,6 +97,89 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		return SystemDetail{}, fmt.Errorf("worlds: detail mark-hz: %w", err)
 	}
 
+	// Step 5A — 3A1 passes: body physical, belt details, atmosphere,
+	// hydrographics, moon refinement.
+	for i := range detailed {
+		dp := &detailed[i]
+
+		hzco := dp.Group.HZCO()
+
+		// Body physical (terrestrials only — not belts, not GGs).
+		if dp.GGClass == NotGasGiant && dp.SizeCode != "" && dp.SizeCode != "0" && dp.SizeCode != "R" {
+			beyondHZCO := 0
+			offset := dp.Orbit - hzco
+			if offset > 0 {
+				beyondHZCO = int(offset)
+			}
+			dms := BodyPhysicalDMs{
+				SizeCode:       dp.SizeCode,
+				AtHZCOOrCloser: dp.HZ,
+				BeyondHZCO:     beyondHZCO,
+				SystemAgeGyr:   sys.Primary.AgeGyr,
+			}
+			bp, err := GenerateBodyPhysical(r, dp.SizeCode, int(dp.DiameterKm), dms)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: body physical %s: %w", dp.Designation, err)
+			}
+			dp.Physical = &bp
+		}
+
+		// Belt details (Size 0 only).
+		if dp.SizeCode == "0" {
+			bd, err := GenerateBeltDetails(r, dp.Orbit, sp.SystemSpread, hzco, sys.Primary.AgeGyr, false, false)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: belt %s: %w", dp.Designation, err)
+			}
+			dp.Belt = &bd
+		}
+
+		// Atmosphere (HZ-orbit terrestrials only).
+		if dp.HZ && dp.GGClass == NotGasGiant && dp.SizeCode != "0" && dp.SizeCode != "R" && dp.SizeCode != "" {
+			offset := dp.Orbit - hzco
+			atmoCode, err := RollAtmoCode(r, dp.SizeCode, offset)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: atmosphere %s: %w", dp.Designation, err)
+			}
+			atmo := Atmosphere{Code: atmoCode}
+			if atmoCode == 11 || atmoCode == 12 {
+				st, serr := RollCorrosiveInsidiousSubtype(r, dp.SizeCode, dp.Orbit, hzco, atmoCode == 12, false)
+				if serr != nil {
+					return SystemDetail{}, fmt.Errorf("worlds: atmo subtype %s: %w", dp.Designation, serr)
+				}
+				atmo.Subtype = st
+			}
+			press, perr := RollTotalPressure(r, atmoCode)
+			if perr != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: pressure %s: %w", dp.Designation, perr)
+			}
+			atmo.Pressure = press
+			if atmoCode >= 2 && atmoCode <= 9 {
+				frac, ferr := RollOxygenFraction(r, sys.Primary.AgeGyr)
+				if ferr != nil {
+					return SystemDetail{}, fmt.Errorf("worlds: oxygen %s: %w", dp.Designation, ferr)
+				}
+				atmo.OxygenPartialPressure = frac * press
+			}
+			if dp.Physical != nil {
+				meanT := tempRangeMidpointK(HZCOOffsetToTempRange(dp.Orbit, hzco))
+				atmo.ScaleHeight = DeriveScaleHeight(meanT, dp.Physical.Gravity)
+			}
+			dp.Atmosphere = &atmo
+
+			// Hydrographics (after atmosphere is known).
+			hydro, herr := GenerateHydrographics(r, atmo, dp.SizeCode, HZCOOffsetToTempRange(dp.Orbit, hzco))
+			if herr != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: hydro %s: %w", dp.Designation, herr)
+			}
+			dp.Hydrographics = &hydro
+		}
+
+		// Moon refinement (any planet with moons).
+		if len(dp.Moons) > 0 {
+			refinePlacementMoons(r, dp)
+		}
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)
@@ -124,6 +207,65 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 	sd.Survey = RenderIISSClass23(sd, sys, h)
 
 	return sd, nil
+}
+
+// tempRangeMidpointK returns a representative mean temperature in Kelvin
+// for the given TempRange band. Used for scale-height calculation in 3A1
+// before the full temperature roll lands in 3A2.
+func tempRangeMidpointK(t TempRange) float64 {
+	switch t {
+	case TempBoiling:
+		return 600
+	case TempHot:
+		return 400
+	case TempTemperate:
+		return 313
+	case TempCold:
+		return 200
+	case TempFrozen:
+		return 100
+	}
+	return 288
+}
+
+// refinePlacementMoons applies WBH pp.75-77 moon refinements: Hill sphere,
+// moon-removal check, per-moon orbit + period. Mutates dp in place.
+// No-op for bodies without resolvable mass.
+func refinePlacementMoons(r roller.Roller, dp *DetailedPlacement) {
+	planetMass := dp.MassEarth
+	if planetMass == 0 && dp.Physical != nil {
+		planetMass = DeriveMass(dp.Physical.Density, dp.DiameterKm)
+	}
+	if planetMass == 0 {
+		return
+	}
+	planetDiameter := dp.DiameterKm
+	if dp.GGClass != NotGasGiant && dp.DiameterEarth > 0 {
+		planetDiameter = dp.DiameterEarth * DiameterTerra
+	}
+	sumStellarMass := sumStellarMassInterior(*dp)
+	au := stars.OrbitToAU(dp.Orbit)
+	_, pd := HillSphere(au, dp.Eccentricity, planetMass, sumStellarMass, planetDiameter)
+	limit := HillSphereMoonLimit(pd)
+	if removeAll, _ := MoonRemovalCheck(limit); removeAll {
+		dp.Moons = nil
+		return
+	}
+	mor := MoonOrbitRange(limit, len(dp.Moons))
+	// MoonPeriodHours uses (PD × effectiveSize) where effectiveSize ≈ parent
+	// diameter in 1600 km units. For terrestrials, parent Size code is the
+	// multiplier; for gas giants, use diameterEarth × 8.
+	effSize := SizeAsInt(dp.SizeCode)
+	if dp.GGClass != NotGasGiant && dp.DiameterEarth > 0 {
+		effSize = int(dp.DiameterEarth * 8)
+	}
+	for j := range dp.Moons {
+		orbit, _ := RollMoonOrbit(r, mor)
+		dp.Moons[j].OrbitPD = orbit
+		if effSize > 0 {
+			dp.Moons[j].PeriodHours = MoonPeriodHours(orbit, effSize, planetMass)
+		}
+	}
 }
 
 // parentInfoOf builds a ParentInfo from a DetailedPlacement.
@@ -246,6 +388,39 @@ type DetailedPlacement struct {
 	Period      Period
 	HZ          bool // within HZCO ± 1.0 — set by MarkHZ
 	Moons       []Moon
+
+	// 3A1 additions — pointer = nil means "not applicable to this body type"
+	Physical      *BodyPhysical
+	Belt          *BeltDetails
+	Atmosphere    *Atmosphere
+	Hydrographics *Hydrographics
+}
+
+// HasPhysical reports whether body-physical data has been generated for this placement.
+func (dp *DetailedPlacement) HasPhysical() bool { return dp.Physical != nil }
+
+// HasAtmosphere reports whether atmosphere data has been generated for this placement.
+func (dp *DetailedPlacement) HasAtmosphere() bool { return dp.Atmosphere != nil }
+
+// HasHydrographics reports whether hydrographics data has been generated for this placement.
+func (dp *DetailedPlacement) HasHydrographics() bool { return dp.Hydrographics != nil }
+
+// RenderSAH returns the 3-character SAH triplet for the IISS form.
+// HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".
+func (dp *DetailedPlacement) RenderSAH() string {
+	size := string(dp.SizeCode)
+	if size == "" {
+		size = "?"
+	}
+	if !dp.HasAtmosphere() || !dp.HasHydrographics() {
+		return size + "??"
+	}
+	atmoChar := atmosphereCodeChar(dp.Atmosphere.Code)
+	hydroChar := fmt.Sprintf("%d", dp.Hydrographics.Code)
+	if dp.Hydrographics.Code == 10 {
+		hydroChar = "A"
+	}
+	return size + atmoChar + hydroChar
 }
 
 // SystemDetail is the DetailSystem façade output, layered atop 2B's
