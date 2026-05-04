@@ -590,7 +590,7 @@ func TestZed_FullDetail(t *testing.T) {
 	// consume additional dice not present in composeZedDetailScript.
 	// Task 15 of the 3A1 plan replaces this with TestZed_FullDetail_3A1
 	// using a free-dice (Seeded) roller and shape-only assertions.
-	t.Skip("superseded by TestZed_FullDetail_3A1 (Task 15 of 3A1 plan)")
+	t.Skip("superseded by TestZed_FullDetail_3A2a (3A2a acceptance gate)")
 
 	sys := composeZed()
 	dice := composeZedDetailScript()
@@ -1026,8 +1026,9 @@ func TestZed_FullDetail_3A2a(t *testing.T) {
 			}
 		}
 
-		// Assertion 7: TidalLock pointer presence is allowed nil (TidalLockCaseNone)
-		// but if present, Case must be valid.
+		// Assertion 7: TidalLock is nil when no case applies; if non-nil, Case
+		// must be one of the three real cases (None on a non-nil TidalLock would
+		// be a pipeline bug — GenerateTidalLock returns nil for None).
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.TidalLock == nil {
@@ -1036,9 +1037,11 @@ func TestZed_FullDetail_3A2a(t *testing.T) {
 			switch dp.TidalLock.Case {
 			case worlds.TidalLockCasePlanetToStar,
 				worlds.TidalLockCaseMoonToPlanet,
-				worlds.TidalLockCasePlanetToMoon,
-				worlds.TidalLockCaseNone:
+				worlds.TidalLockCasePlanetToMoon:
 				// OK
+			case worlds.TidalLockCaseNone:
+				t.Errorf("iter %d: body %s has TidalLock pointer with Case=None (should be nil)",
+					iter, dp.Designation)
 			default:
 				t.Errorf("iter %d: body %s has invalid TidalLock.Case=%v",
 					iter, dp.Designation, dp.TidalLock.Case)
