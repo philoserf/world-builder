@@ -342,8 +342,9 @@ func TestApplyTidalLockEffect_OneToOneLock_EccentricityReroll(t *testing.T) {
 	if !tl.EccentricityMutated {
 		t.Error("expected EccentricityMutated=true")
 	}
-	// body.Eccentricity should be min(0.25, 0.002) = 0.002.
-	if body.Eccentricity > 0.25 {
-		t.Errorf("Eccentricity: got %v, expected ≤ 0.25 (take min)", body.Eccentricity)
+	// stars.RollEccentricity with ExtraDM=-2 + scripted (5, 3) yields ecc ≈ 0.002.
+	// Tight upper bound catches a backwards-min bug (would write back 0.25).
+	if body.Eccentricity > 0.01 {
+		t.Errorf("Eccentricity: got %v, want ≤ 0.01 (min(0.25, ~0.002))", body.Eccentricity)
 	}
 }

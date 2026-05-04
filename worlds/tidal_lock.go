@@ -457,6 +457,9 @@ func ApplyTidalLockEffect(
 	}
 
 	// 3:2 or 1:1 lock axial-tilt reroll: if old tilt > 3°, reroll as (2D-2)/10.
+	// LockRatio (results 11/12+) and BecomesRetrograde (results 9/10) are mutually
+	// exclusive in the FinalResult switch, so body.AxialTilt.Degrees here is the
+	// pre-flip value and the "old tilt" check is meaningful.
 	if (tl.LockRatio == "3:2" || tl.LockRatio == "1:1") && body.AxialTilt != nil && body.AxialTilt.Degrees > 3 {
 		twoD := r.Roll("2D")
 		body.AxialTilt.Degrees = float64(twoD-2) / 10.0
