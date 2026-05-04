@@ -1041,3 +1041,53 @@ func TestTemperature_AtMoment_NoonExceedsDawn(t *testing.T) {
 		t.Errorf("noon %v should exceed dawn %v (with 0.15 lag, peak is post-noon)", noon, dawn)
 	}
 }
+
+func TestTemperature_AdjustedForAltitude_NearGround(t *testing.T) {
+	temp := &Temperature{
+		MeanK:            288,
+		Luminosity:       1.0,
+		Albedo:           0.3,
+		GreenhouseFactor: 0.36,
+		AU:               1.0,
+		ScaleHeight:      8.5,
+	}
+	got := temp.AdjustedForAltitude(288, 0.001) // 1 m altitude
+	if math.Abs(got-288) > 0.5 {
+		t.Errorf("near-ground should return ~baseTemp, got %v", got)
+	}
+}
+
+func TestTemperature_AdjustedForAltitude_8000m_LessThanBase(t *testing.T) {
+	// At ~8000m on Terra-like world, pressure is roughly 0.36 bar (e^(-8/8.5)).
+	// Lower greenhouse → cooler.
+	temp := &Temperature{
+		MeanK:            288,
+		Luminosity:       1.0,
+		Albedo:           0.3,
+		GreenhouseFactor: 0.36,
+		AU:               1.0,
+		ScaleHeight:      8.5,
+	}
+	got := temp.AdjustedForAltitude(288, 8.0)
+	if got >= 288 {
+		t.Errorf("8000m should be cooler than base, got %v", got)
+	}
+}
+
+func TestTemperature_AdjustedForAltitude_NoScaleHeight_Passthrough(t *testing.T) {
+	// Vacuum world or atmosphere with no scale-height data: pass through.
+	temp := &Temperature{MeanK: 288, Albedo: 0.3, GreenhouseFactor: 0, ScaleHeight: 0}
+	got := temp.AdjustedForAltitude(288, 5.0)
+	if got != 288 {
+		t.Errorf("zero scale height should return baseTempK, got %v", got)
+	}
+}
+
+func TestTemperature_AdjustedForAltitude_ZeroAltitude_Passthrough(t *testing.T) {
+	// 0 altitude: pass through.
+	temp := &Temperature{MeanK: 288, Albedo: 0.3, GreenhouseFactor: 0.36, AU: 1.0, ScaleHeight: 8.5}
+	got := temp.AdjustedForAltitude(288, 0)
+	if got != 288 {
+		t.Errorf("zero altitude should return baseTempK, got %v", got)
+	}
+}

@@ -559,3 +559,35 @@ func (t *Temperature) AtMoment(latDeg, daysSinceSolstice, localYearDays, hoursSi
 	}
 	return seasonalK * scale
 }
+
+// AdjustedForAltitude returns a temperature adjusted for altitude per WBH
+// p.123-124. The greenhouse factor is reduced because atmospheric pressure
+// drops with altitude (exp(-altitude/scale_height)). The implementation
+// recomputes the equation with the modified greenhouse factor, then scales
+// baseTempK by the ratio newRefK/storedMeanK to preserve any caller-applied
+// scenario adjustments (latitude, season, etc.).
+//
+// Uses the cached t.ScaleHeight (populated from body.Atmosphere.ScaleHeight
+// at GenerateTemperature time). Returns baseTempK unchanged when altitudeKm
+// is zero or t.ScaleHeight is zero (e.g., vacuum world or atmosphere with
+// no scale-height data).
+//
+// This is an approximation — the book's full altitude treatment includes
+// lapse-rate and density-gradient effects deferred beyond 3A2b-temp.
+func (t *Temperature) AdjustedForAltitude(baseTempK, altitudeKm float64) float64 {
+	if altitudeKm <= 0 || t.ScaleHeight <= 0 {
+		return baseTempK
+	}
+	// Pressure scales as e^(-h/H). Greenhouse factor scales with √(pressure).
+	pressureRatio := math.Exp(-altitudeKm / t.ScaleHeight)
+	gAtAlt := t.GreenhouseFactor * math.Sqrt(pressureRatio)
+
+	// Recompute mean equation with modified G, using stored A/L/AU. Then scale
+	// baseTempK by the ratio to preserve caller-applied scenario adjustments.
+	newRefK := MeanTemperatureK(t.Luminosity, t.Albedo, gAtAlt, t.AU)
+	storedRefK := MeanTemperatureK(t.Luminosity, t.Albedo, t.GreenhouseFactor, t.AU)
+	if storedRefK == 0 {
+		return baseTempK
+	}
+	return baseTempK * (newRefK / storedRefK)
+}
