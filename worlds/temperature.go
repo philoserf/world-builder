@@ -397,3 +397,167 @@ func computeGeographicFactor(body *DetailedPlacement) float64 {
 	}
 	return factor
 }
+
+// SunlightPortion computes the fraction of a solar day with sunlight at a
+// given latitude, axial tilt, and date per WBH p.118. Returns (portion, hours)
+// where hours is portion × solarDayHours; pass 0 for solarDayHours if you
+// only need the portion.
+//
+// Returns (1.0, 0) for polar day, (0, 0) for polar night.
+func SunlightPortion(latDeg, axialTiltDeg, daysSinceSolstice, localYearDays float64) (portion, hours float64) {
+	if localYearDays <= 0 {
+		return 0, 0
+	}
+	// Solar declination (in radians) = axial_tilt × cos(360° × date / year).
+	declRad := axialTiltDeg * math.Cos(2*math.Pi*daysSinceSolstice/localYearDays) * math.Pi / 180.0
+
+	tanLat := math.Tan(latDeg * math.Pi / 180.0)
+	tanDecl := math.Tan(declRad)
+	cosSunrise := -tanLat * tanDecl
+
+	switch {
+	case cosSunrise > 1:
+		return 0, 0 // polar night
+	case cosSunrise < -1:
+		return 1.0, 0 // polar day
+	default:
+		sunriseAngleDeg := math.Acos(cosSunrise) * 180.0 / math.Pi
+		return sunriseAngleDeg / 180.0, 0
+	}
+}
+
+// MeanByLatitude returns the annual mean temperature at a specific latitude
+// per WBH p.116-117, ignoring season and time of day.
+//
+// Twilight worlds short-circuit to TwilightK (no meaningful latitude variation
+// when one hemisphere is in perpetual day and the other in perpetual night;
+// caller should use BrightSideK/DarkSideK directly for hemisphere selection).
+func (t *Temperature) MeanByLatitude(latDeg float64) float64 {
+	if t.IsTwilight {
+		return t.TwilightK
+	}
+	zoneTiltFactor := t.zoneTiltAdjustment(latDeg)
+	lumMod := zoneTiltFactor / t.AtmosphericFactor
+	if lumMod > 1 {
+		lumMod = 1
+	}
+	if lumMod < 0 {
+		lumMod = 0
+	}
+	latLum := t.Luminosity * (1 + lumMod)
+	return MeanTemperatureK(latLum, t.Albedo, t.GreenhouseFactor, t.AU)
+}
+
+// zoneTiltAdjustment returns the latitude-zone-adjusted axial-tilt-equivalent
+// factor per WBH p.116-117 three-zone classification (tropical / middle /
+// arctic). For axial tilt ≥ 45° the middle zone disappears (Part B p.117).
+func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
+	tiltDeg := math.Asin(t.AxialTiltFactor) * 180.0 / math.Pi
+	if math.IsNaN(tiltDeg) {
+		// |AxialTiltFactor| > 1 — clamp.
+		if t.AxialTiltFactor > 0 {
+			tiltDeg = 90
+		} else {
+			tiltDeg = 0
+		}
+	}
+	if latDeg < 0 {
+		latDeg = -latDeg
+	}
+	if latDeg > 90 {
+		latDeg = 90
+	}
+
+	switch {
+	case latDeg <= tiltDeg:
+		// Tropical zone: sin(45° - axial_tilt) replaces axial tilt factor.
+		adj := 45.0 - tiltDeg
+		if adj < 0 {
+			adj = 0
+		}
+		return math.Sin(adj * math.Pi / 180.0)
+	case tiltDeg >= 45 && latDeg < (90-tiltDeg):
+		// Part B: no middle zone; use arctic-edge result at lat=90-tilt.
+		return math.Sin((45.0 - (90.0 - tiltDeg)) * math.Pi / 180.0)
+	default:
+		// Middle/arctic: sin(45° - latitude).
+		return math.Sin((45.0 - latDeg) * math.Pi / 180.0)
+	}
+}
+
+// MeanBySeason returns the mean temperature on a specific day at a specific
+// latitude, ignoring time of day, per WBH p.115.
+//
+// daysSinceSolstice: 0 = summer solstice in the relevant hemisphere; year/2 = winter solstice.
+// localYearDays: caller decides — for moons, use parent's stellar year (moons co-orbit star with planet).
+//
+// Twilight worlds short-circuit to TwilightK.
+func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays float64) float64 {
+	if t.IsTwilight {
+		return t.TwilightK
+	}
+	if localYearDays <= 0 {
+		return t.MeanByLatitude(latDeg)
+	}
+
+	// Adjusted Fractional Year per WBH p.115.
+	stdYearDays := 8766.0 / 24.0 // 365.25
+	lagDays := 0.1 * math.Min(stdYearDays, localYearDays)
+	adjFracYear := (daysSinceSolstice - 0.1*lagDays) / localYearDays
+
+	// Seasonal axial tilt factor: cos(adjFracYear × 360°) × stored AxialTiltFactor.
+	// Positive = summer (sun higher in sky → more heat); negative = winter (less heat).
+	// Apply directly as a signed luminosity modifier: the axial-tilt contribution
+	// swings from +AxialTiltFactor at summer solstice to -AxialTiltFactor at winter.
+	seasonalTilt := math.Cos(adjFracYear*2*math.Pi) * t.AxialTiltFactor
+
+	lumMod := seasonalTilt / t.AtmosphericFactor
+	if lumMod > 1 {
+		lumMod = 1
+	}
+	if lumMod < -1 {
+		lumMod = -1
+	}
+	latLum := t.Luminosity * (1 + lumMod)
+	if latLum < 0 {
+		latLum = 0
+	}
+	return MeanTemperatureK(latLum, t.Albedo, t.GreenhouseFactor, t.AU)
+}
+
+// AtMoment returns the instantaneous temperature at a specific moment per WBH p.117.
+//
+// Uses Method 1 (even-length days) internally; callers wanting Method 2
+// precision should call SunlightPortion separately and modulate hoursSinceDawn.
+//
+// Hourly variation follows a cosine curve centered on the peak-heat time, which
+// lags 15% of the solar day past solar noon (i.e., peak at 65% of the day from
+// dawn). Dawn is the coolest point, peak is shortly after noon.
+//
+// Twilight worlds short-circuit to TwilightK.
+func (t *Temperature) AtMoment(latDeg, daysSinceSolstice, localYearDays, hoursSinceDawn, solarDayHours float64) float64 {
+	if t.IsTwilight {
+		return t.TwilightK
+	}
+	if solarDayHours <= 0 {
+		return t.MeanBySeason(latDeg, daysSinceSolstice, localYearDays)
+	}
+
+	// Seasonal contribution.
+	seasonalK := t.MeanBySeason(latDeg, daysSinceSolstice, localYearDays)
+
+	// Hourly rotation factor: cosine centered on peak-heat time (65% of solar day).
+	// cos(0) = 1 at the hottest point; cos(π) = -1 at dawn (coolest).
+	// peakFrac = 0.65 (noon 0.50 + lag 0.15).
+	peakFrac := 0.65
+	fracDay := hoursSinceDawn / solarDayHours
+	hourlyRot := math.Cos(2*math.Pi*(fracDay-peakFrac)) * t.RotationFactor
+
+	// Apply hourly rotation as a luminosity-modifier delta scaled into K via fourth-root.
+	delta := hourlyRot / t.AtmosphericFactor
+	scale := math.Pow(1+delta, 0.25)
+	if scale <= 0 {
+		scale = 0.01
+	}
+	return seasonalK * scale
+}

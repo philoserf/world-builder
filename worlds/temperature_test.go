@@ -948,3 +948,96 @@ func TestGenerateTemperature_GGMoon_ParentNoTemperature_Skipped(t *testing.T) {
 		t.Errorf("nil parent.Temperature should leave ParentRadianceK=0, got %v", temp.ParentRadianceK)
 	}
 }
+
+func TestSunlightPortion_Equator_Equinox(t *testing.T) {
+	// Equator at equinox: portion 0.5 regardless of axial tilt.
+	// Equinox = 1/4 year past summer solstice → cos(90°) = 0 → declination=0 → portion=0.5.
+	got, _ := SunlightPortion(0.0, 23.45, 0.25*365.25, 365.25)
+	if math.Abs(got-0.5) > 0.01 {
+		t.Errorf("portion: got %v, want 0.5", got)
+	}
+}
+
+func TestSunlightPortion_Pole_SummerSolstice(t *testing.T) {
+	// North pole at summer solstice → polar day → portion 1.0.
+	got, _ := SunlightPortion(89.99, 23.45, 0, 365.25)
+	if got != 1.0 {
+		t.Errorf("polar day: got %v, want 1.0", got)
+	}
+}
+
+func TestSunlightPortion_Pole_WinterSolstice(t *testing.T) {
+	// North pole at winter solstice → polar night → portion 0.
+	got, _ := SunlightPortion(89.99, 23.45, 365.25/2, 365.25)
+	if got != 0 {
+		t.Errorf("polar night: got %v, want 0", got)
+	}
+}
+
+func TestTemperature_MeanByLatitude_Tropical(t *testing.T) {
+	// Tropical zone (lat ≤ axial tilt): higher temperature than at the pole.
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   math.Sin(23.45 * math.Pi / 180.0), // ~0.398
+		AtmosphericFactor: 2.0,
+	}
+	tropic := temp.MeanByLatitude(10) // tropical (< 23.45°)
+	arctic := temp.MeanByLatitude(80) // arctic (> 90 - 23.45 = 66.55°)
+	if tropic <= arctic {
+		t.Errorf("tropic %v should exceed arctic %v", tropic, arctic)
+	}
+}
+
+func TestTemperature_MeanByLatitude_TwilightShortCircuit(t *testing.T) {
+	// Twilight world: MeanByLatitude returns TwilightK regardless of latitude.
+	temp := &Temperature{
+		MeanK:       288,
+		IsTwilight:  true,
+		TwilightK:   285,
+		BrightSideK: 320,
+		DarkSideK:   200,
+	}
+	got := temp.MeanByLatitude(45)
+	if got != 285 {
+		t.Errorf("got %v, want 285 (TwilightK for IsTwilight body)", got)
+	}
+}
+
+func TestTemperature_MeanBySeason_OppositeSolstices(t *testing.T) {
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   0.40,
+		AtmosphericFactor: 2.0,
+	}
+	summer := temp.MeanBySeason(45, 0, 365.25)        // summer solstice at 45°N
+	winter := temp.MeanBySeason(45, 365.25/2, 365.25) // winter solstice at 45°N
+	if summer <= winter {
+		t.Errorf("summer %v should exceed winter %v", summer, winter)
+	}
+}
+
+func TestTemperature_AtMoment_NoonExceedsDawn(t *testing.T) {
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   0.40,
+		RotationFactor:    0.10,
+		AtmosphericFactor: 2.0,
+	}
+	dawn := temp.AtMoment(0, 0, 365.25, 0, 24)
+	noon := temp.AtMoment(0, 0, 365.25, 12, 24)
+	if noon <= dawn {
+		t.Errorf("noon %v should exceed dawn %v (with 0.15 lag, peak is post-noon)", noon, dawn)
+	}
+}
