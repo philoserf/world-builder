@@ -9,10 +9,16 @@ import (
 // DayLength — rotation periods per WBH pp.103-104.
 type DayLength struct {
 	SiderealHours         float64 // post-lock final value
-	SolarHours            float64 // 0 if 1:1 star lock (twilight zone)
+	SolarHours            float64 // 0 when YearDays == 0 (e.g. caller leaves YearDays unset on 1:1 star-lock twilight zones)
 	YearDays              float64 // local solar days = year_h / sidereal_h - 1
 	BaselineSiderealHours float64 // raw roll result, pre-tidal-lock
 }
+
+// maxCascadeIterations bounds the 40+ reroll cascade per WBH p.103. Each
+// iteration has a ~1/3 probability of terminating (1D < 5), so the expected
+// length is ~3 iterations and the chance of reaching 20 iterations is ~10^-8.
+// The cap is purely defensive against pathological scripted-dice or seeds.
+const maxCascadeIterations = 20
 
 // DayLengthDMs accumulates DMs for the basic rotation roll, WBH p.103.
 type DayLengthDMs struct {
@@ -46,7 +52,7 @@ func rollOneBasic(r roller.Roller, dm int) float64 {
 func RollBasicSiderealHours(r roller.Roller, dms DayLengthDMs) (float64, error) {
 	dm := systemAgeDM(dms.SystemAgeGyr)
 	hours := rollOneBasic(r, dm)
-	for hours >= 40 {
+	for i := 0; i < maxCascadeIterations && hours >= 40; i++ {
 		check := r.Roll("1D")
 		if check < 5 {
 			break
@@ -61,9 +67,11 @@ func RollBasicSiderealHours(r roller.Roller, dms DayLengthDMs) (float64, error) 
 
 // ComputeYearDays per WBH p.104: year_hours / sidereal_hours - 1.
 //
-// For tidal-locked-to-star worlds, sidereal day equals year length, so
-// solar days in a year is undefined (caller should detect and skip).
-// Returns 0 for sidereal == 0 (the divide-by-zero guard).
+// Tidal-locked-to-star worlds have sidereal day equal to year length, so the
+// formula yields 0 (which is correct — there are zero solar days in a locked
+// world's year). Callers detecting the twilight-zone case should leave
+// YearDays unset rather than relying on this function. The siderealHours==0
+// guard is purely a divide-by-zero safety.
 func ComputeYearDays(yearHours, siderealHours float64) float64 {
 	if siderealHours == 0 {
 		return 0
