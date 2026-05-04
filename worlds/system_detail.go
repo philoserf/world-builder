@@ -222,10 +222,12 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 
 		for j := range dp.Moons {
 			m := &dp.Moons[j]
-			// Build a synthetic DetailedPlacement view for the moon so GenerateDayLength
-			// can compute year-hours from PeriodHours.
+			// Build a synthetic DetailedPlacement view for the moon. YearDays /
+			// SolarHours are calendar quantities — a moon's year is its parent's
+			// year around the star (they co-orbit), NOT the moon's orbit around
+			// the planet (m.PeriodHours, which is a synodic month).
 			moonDP := &DetailedPlacement{
-				Period:   Period{Hours: m.PeriodHours},
+				Period:   Period{Hours: dp.Period.Hours},
 				SizeCode: m.SizeCode,
 				GGClass:  m.GGClass,
 			}
