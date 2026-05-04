@@ -17,6 +17,7 @@ import "wbh/stars"
 type Period struct {
 	Years float64 // primary representation; from Kepler's 3rd
 	Days  float64 // = Years * 365.25
+	Hours float64 // = Years * 8766 (standard hours per year, WBH p.104)
 }
 
 // massSolarPerEarth is the WBH p.53 "Large Planet" mass-conversion
@@ -32,5 +33,6 @@ func PeriodFor(au, sumStellarMassSolar, bodyMassEarth float64) Period {
 	return Period{
 		Years: years,
 		Days:  years * 365.25,
+		Hours: years * 8766,
 	}
 }
