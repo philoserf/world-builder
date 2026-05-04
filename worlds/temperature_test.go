@@ -124,3 +124,51 @@ func TestComputeAlbedo_Vacuum(t *testing.T) {
 		t.Errorf("got %v, want %v (no atm or hyd modifier should apply)", got, want)
 	}
 }
+
+func TestComputeGreenhouseFactor_Vacuum(t *testing.T) {
+	// Atmosphere code 0 → vacuum → greenhouse 0.
+	r := roller.NewScripted()
+	got := ComputeGreenhouseFactor(r, &Atmosphere{Code: 0, Pressure: 0})
+	if got != 0 {
+		t.Errorf("got %v, want 0 for vacuum", got)
+	}
+}
+
+func TestComputeGreenhouseFactor_ZedPrime(t *testing.T) {
+	// Zed Prime atm 6, pressure 1.04 bar.
+	// Initial = 0.5 × √1.04 = 0.5099.
+	// Atm 1-9 or D/E modifier: +3D × 0.01. Book walk: 3D=8 → +0.08.
+	// Total: 0.51 + 0.08 = 0.59.
+	r := roller.NewScripted(8)
+	got := ComputeGreenhouseFactor(r, &Atmosphere{Code: 6, Pressure: 1.04})
+	want := 0.59
+	if math.Abs(got-want) > 0.005 {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestComputeGreenhouseFactor_AtmosphereA_Min0p5(t *testing.T) {
+	// Atm A (10): × 1D-1 (minimum 0.5).
+	// 1D=1 → 0 → minimum 0.5 applied.
+	r := roller.NewScripted(1)
+	atm := &Atmosphere{Code: 10, Pressure: 0.5}
+	initial := 0.5 * math.Sqrt(0.5) // 0.354
+	got := ComputeGreenhouseFactor(r, atm)
+	want := initial * 0.5 // minimum
+	if math.Abs(got-want) > 0.01 {
+		t.Errorf("got %v, want %v (initial %v × min 0.5)", got, want, initial)
+	}
+}
+
+func TestComputeGreenhouseFactor_AtmosphereB_RollOf6(t *testing.T) {
+	// Atm B (11): 1D=1-5 → × result; 1D=6 → × 3D.
+	// Test 1D=6 path: 1D=6, then 3D=10 → × 10.
+	r := roller.NewScripted(6, 10)
+	atm := &Atmosphere{Code: 11, Pressure: 1.0}
+	initial := 0.5 // 0.5 × √1.0
+	got := ComputeGreenhouseFactor(r, atm)
+	want := initial * 10
+	if math.Abs(got-want) > 0.01 {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
