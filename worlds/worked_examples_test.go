@@ -909,18 +909,19 @@ func TestSol_GenerateSystemPlacement(t *testing.T) {
 	}
 }
 
-// TestZed_FullDetail_3A1 is the 3A1 acceptance gate. Replaces 2C's
-// TestZed_FullDetail (which is now t.Skip()'d as superseded).
+// TestZed_FullDetail_3A2a is the 3A2a acceptance gate. Replaces 3A1's
+// free-dice shape test; extends with property invariants for 3A2a fields.
 //
-// Uses a free-dice (Seeded) roller for unlimited rolls and asserts only
-// shape-level properties:
-//   - HZ-orbit terrestrials have full 3-character SAH (no "?")
-//   - HZ-planet moons (if any) have full 3-character SAH
-//   - Non-HZ bodies render as "<Size>??"
-//   - Belt rows have non-empty Profile string and it appears in form notes
-//   - MainworldCandidates list is non-empty
-//   - No panics across 100 iterations with different seeds
-func TestZed_FullDetail_3A1(t *testing.T) {
+// Per-phase numeric worked-example values (42.37h sidereal, 73.65° axial tilt,
+// 30.6m primary tide, 0.24m star tide) are covered by per-file tests:
+//   - day_length_test.go            → TestGenerateDayLength_ZedPrimeSidereal
+//   - axial_tilt_test.go            → TestGenerateAxialTilt_ZedPrime
+//   - tidal_lock_test.go            → TestGenerateTidalLock_ZedPrime_FullPath
+//   - surface_tidal_effects_test.go → TestGenerateSurfaceTidalEffects_ZedPrime
+//
+// This test asserts that across 100 randomly-seeded iterations the full
+// DetailSystem pipeline produces structurally-valid output for every body.
+func TestZed_FullDetail_3A2a(t *testing.T) {
 	t.Parallel()
 
 	for iter := 0; iter < 100; iter++ {
@@ -945,8 +946,9 @@ func TestZed_FullDetail_3A1(t *testing.T) {
 			t.Fatalf("iter %d: DetailSystem: %v", iter, err)
 		}
 
+		// 3A1 invariants (preserved unchanged):
+
 		// Assertion 1: HZ-orbit terrestrials have 3-char SAH (no '?').
-		hzCount := 0
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.HZ && dp.GGClass == worlds.NotGasGiant && dp.SizeCode != "" && dp.SizeCode != "0" && dp.SizeCode != "R" {
@@ -954,7 +956,6 @@ func TestZed_FullDetail_3A1(t *testing.T) {
 				if strings.ContainsRune(sah, '?') {
 					t.Errorf("iter %d: HZ body %s has '?' in SAH %q", iter, dp.Designation, sah)
 				}
-				hzCount++
 			}
 		}
 
@@ -983,13 +984,84 @@ func TestZed_FullDetail_3A1(t *testing.T) {
 			}
 		}
 
-		// hzCount is informational — with free dice some seeds will place all
-		// terrestrials outside the HZ. We don't assert it must be >0 since
-		// placement is random across seeds.
-
 		// Survey form rendered without error.
 		if sd.Survey.Sector == "" {
 			t.Errorf("iter %d: survey form has empty Sector", iter)
 		}
+
+		// 3A2a invariants (new):
+
+		// Assertion 4: every non-empty body has DayLength + AxialTilt populated.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyEmpty {
+				continue
+			}
+			if !dp.HasDayLength() {
+				t.Errorf("iter %d: body %s missing DayLength", iter, dp.Designation)
+			}
+			if !dp.HasAxialTilt() {
+				t.Errorf("iter %d: body %s missing AxialTilt", iter, dp.Designation)
+			}
+		}
+
+		// Assertion 5: HZ terrestrials with hydrographics have SurfaceDistribution.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.HZ && dp.GGClass == worlds.NotGasGiant && dp.SizeCode != "" && dp.SizeCode != "0" && dp.SizeCode != "R" {
+				if dp.HasHydrographics() && !dp.HasSurfaceDistribution() {
+					t.Errorf("iter %d: HZ body %s with hydro lacks SurfaceDistribution", iter, dp.Designation)
+				}
+			}
+		}
+
+		// Assertion 6: every body has TidalEffects populated (zero is OK; nil is not).
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyEmpty {
+				continue
+			}
+			if !dp.HasTidalEffects() {
+				t.Errorf("iter %d: body %s missing TidalEffects", iter, dp.Designation)
+			}
+		}
+
+		// Assertion 7: TidalLock pointer presence is allowed nil (TidalLockCaseNone)
+		// but if present, Case must be valid.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.TidalLock == nil {
+				continue
+			}
+			switch dp.TidalLock.Case {
+			case worlds.TidalLockCasePlanetToStar,
+				worlds.TidalLockCaseMoonToPlanet,
+				worlds.TidalLockCasePlanetToMoon,
+				worlds.TidalLockCaseNone:
+				// OK
+			default:
+				t.Errorf("iter %d: body %s has invalid TidalLock.Case=%v",
+					iter, dp.Designation, dp.TidalLock.Case)
+			}
+		}
+
+		// Assertion 8: HZ-planet moons with hydrographics have SurfaceDistribution.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HZ {
+				continue
+			}
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.Hydrographics != nil && m.SurfaceDistribution == nil {
+					t.Errorf("iter %d: HZ-planet moon %s with hydro lacks SurfaceDistribution",
+						iter, m.Designation)
+				}
+			}
+		}
 	}
+
+	// Referee-fiat / book-inconsistency logs (informational only).
+	t.Logf("p.101 continent counts deferred to Referee fiat per Q6 option (b)")
+	t.Logf("p.106 tidal lock natural-12 verification implemented per spec; the book's worked example fudges it as a Referee narrative")
 }
