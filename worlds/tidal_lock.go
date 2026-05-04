@@ -225,7 +225,8 @@ func planetToMoonDMs(body *DetailedPlacement) int {
 	// Moon Size 1 or above: DM+Size.
 	dm += nForSizeCode(closest.SizeCode)
 
-	// Moon orbit DM ladder (planetary diameters).
+	// Moon orbit DM ladder (planetary diameters). The 40 < pd ≤ 60 range
+	// receives no DM per the WBH p.106 table.
 	pd := closest.OrbitPD
 	switch {
 	case pd < 5:
