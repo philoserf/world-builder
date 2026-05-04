@@ -184,3 +184,64 @@ func TestComputeGreenhouseFactor_AtmosphereB_NormalPath(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestMeanTemperatureK_ZedPrime(t *testing.T) {
+	// L=1.419, A=0.33, G=0.59, AU=1.06.
+	// T = 279 × ⁴√(1.419 × 0.67 × 1.59 / 1.06²) ≈ 300.4 K → 300K.
+	got := MeanTemperatureK(1.419, 0.33, 0.59, 1.06)
+	want := 300.0
+	if math.Abs(got-want) > 1.0 {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestMeanTemperatureK_Terra_Reference(t *testing.T) {
+	// L=1.0, A=0.30, G=0.36 (book reference), AU=1.0.
+	// T = 279 × ⁴√(1.0 × 0.70 × 1.36 / 1.0²) = 279 × (0.952)^0.25 ≈ 275.6K.
+	// Note: real Earth ~288K requires G≈0.62; WBH's G=0.36 is a simplified model value.
+	got := MeanTemperatureK(1.0, 0.30, 0.36, 1.0)
+	if got < 273 || got > 278 {
+		t.Errorf("got %v, want ~275.6K (L=1.0, A=0.30, G=0.36, AU=1.0)", got)
+	}
+}
+
+func TestMeanTemperatureK_ClampsHighGreenhouse(t *testing.T) {
+	// (1+G) > 1.999 should be clamped. With G=10: T should equal T at G=0.999.
+	gotClamped := MeanTemperatureK(1.0, 0.0, 10.0, 1.0)
+	gotAtLimit := MeanTemperatureK(1.0, 0.0, 0.999, 1.0)
+	if math.Abs(gotClamped-gotAtLimit) > 0.5 {
+		t.Errorf("clamp failed: at G=10 got %v, at G=0.999 got %v", gotClamped, gotAtLimit)
+	}
+}
+
+func TestMeanTemperatureK_AlbedoOne_NearZero(t *testing.T) {
+	// Albedo 1.0 → (1-A) = 0 → T = 0K. (Edge case; clamped to a small positive in clamp.)
+	got := MeanTemperatureK(1.0, 1.0, 0.5, 1.0)
+	if got > 1 {
+		t.Errorf("albedo 1.0 should give near-0K, got %v", got)
+	}
+}
+
+func TestCombineTemperatures_SingleSource(t *testing.T) {
+	got := CombineTemperatures(300)
+	if got != 300 {
+		t.Errorf("single source should pass through, got %v", got)
+	}
+}
+
+func TestCombineTemperatures_TwoEqual(t *testing.T) {
+	// ⁴√(300⁴ + 300⁴) = 300 × ⁴√2 ≈ 356.7.
+	got := CombineTemperatures(300, 300)
+	want := 300 * math.Pow(2, 0.25)
+	if math.Abs(got-want) > 0.5 {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestCombineTemperatures_DominantSource(t *testing.T) {
+	// 1000K + 100K → close to 1000K.
+	got := CombineTemperatures(1000, 100)
+	if math.Abs(got-1000) > 1 {
+		t.Errorf("got %v, want close to 1000 (dominant source)", got)
+	}
+}
