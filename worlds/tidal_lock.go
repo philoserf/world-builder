@@ -489,3 +489,31 @@ func ApplyTidalLockEffect(
 func rerollEccentricityDMMinus2(r roller.Roller) (float64, error) {
 	return stars.RollEccentricity(r, stars.EccentricityOpts{ExtraDM: -2})
 }
+
+// GenerateTidalLock orchestrates the per-body tidal-lock pipeline per WBH p.106.
+// Returns nil (no error) for empty bodies or when no tidal-lock case applies.
+func GenerateTidalLock(
+	r roller.Roller,
+	body *DetailedPlacement,
+	moonRef *Moon,
+	sys stars.System,
+	parentPlanet *DetailedPlacement,
+	yearHours float64,
+) (*TidalLock, error) {
+	if body.Body == BodyEmpty {
+		return nil, nil
+	}
+
+	dms := EvaluateTidalLockDMs(body, sys, parentPlanet, moonRef)
+	kase, dm := SelectHighestDMCase(dms, body)
+	if kase == TidalLockCaseNone {
+		return nil, nil // no case applies; body has no tidal lock pressure
+	}
+
+	initialResult := RollTidalLockStatus(r, dm)
+	tl, err := ApplyTidalLockEffect(r, body, moonRef, kase, initialResult, yearHours)
+	if err != nil {
+		return nil, fmt.Errorf("worlds: GenerateTidalLock: %w", err)
+	}
+	return &tl, nil
+}
