@@ -28,10 +28,8 @@ func ComputeAlbedo(r roller.Roller, body *DetailedPlacement, sys stars.System) f
 		}
 
 		// HZCO in Orbit# — use the group's HZCO when available, otherwise
-		// fall back to sys.Primary.Luminosity as a rough approximation.
-		// The fallback is intentionally imprecise; it exists so test fixtures
-		// that leave Group.Members nil still produce predictable results.
-		hzco := sys.Primary.Luminosity
+		// fall back to sys.Primary.HZCO() (also in Orbit#, never Luminosity).
+		hzco := sys.Primary.HZCO()
 		if len(body.Group.Members) > 0 {
 			hzco = body.Group.HZCO()
 		}
@@ -56,15 +54,14 @@ func ComputeAlbedo(r roller.Roller, body *DetailedPlacement, sys stars.System) f
 
 		// Atmosphere modifier — mutually exclusive bands per WBH p.110 table.
 		if body.Atmosphere != nil {
-			code := body.Atmosphere.Code
-			switch {
-			case code == 1 || code == 2 || code == 3 || code == 14: // 1–3 or E
+			switch body.Atmosphere.Code {
+			case 1, 2, 3, 14: // 1–3 or E
 				albedo += float64(r.Roll("2D")-3) * 0.01
-			case code >= 4 && code <= 9: // 4–9
+			case 4, 5, 6, 7, 8, 9:
 				albedo += float64(r.Roll("2D")) * 0.01
-			case code == 10 || code == 11 || code == 12 || code == 15 || code >= 16: // A–C or F+
+			case 10, 11, 12, 15, 16, 17: // A–C or F+
 				albedo += float64(r.Roll("2D")-2) * 0.05
-			case code == 13: // D
+			case 13: // D
 				albedo += float64(r.Roll("2D")) * 0.03
 			}
 			// Atm 0 and unrecognised codes add no modifier.

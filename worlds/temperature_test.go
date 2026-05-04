@@ -45,8 +45,8 @@ func TestComputeAlbedo_Terra_Reference(t *testing.T) {
 
 	r := roller.NewScripted(7, 7, 6)
 	got := ComputeAlbedo(r, body, sys)
-	if got < 0.20 || got > 0.35 {
-		t.Errorf("Terra-reference albedo got %v, want ~0.27 (Terra book value 0.30)", got)
+	if got < 0.25 || got > 0.30 {
+		t.Errorf("Terra-reference albedo got %v, want ~0.27 (scripted [7,7,6]; book reference 0.30)", got)
 	}
 }
 
@@ -69,10 +69,10 @@ func TestComputeAlbedo_GasGiant(t *testing.T) {
 
 func TestComputeAlbedo_IcyBeyondHZCO2(t *testing.T) {
 	// Icy beyond HZCO+2: 0.25 + (2D-2) × 0.07. With 2D=7: 0.25 + 5*0.07 = 0.60.
-	// HZCO for L=1.0 = 1.0 Orbit#. Body at Orbit# 4 is HZCO+3 → beyond HZCO+2.
+	// Sol HZCO()=3.0, so HZCO+2=5.0. Body at Orbit# 6.0 is clearly beyond.
 	body := &DetailedPlacement{}
 	body.SizeCode = "5"
-	body.Orbit = 4.0
+	body.Orbit = 6.0                            // HZCO+3 for Sol-like star (HZCO()=3.0); clearly beyond HZCO+2
 	body.Physical = &BodyPhysical{Density: 0.3} // icy
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -101,5 +101,26 @@ func TestComputeAlbedo_Clamping(t *testing.T) {
 	// 0.04 + 10*0.02 + 10*0.05 + 8*0.03 = 0.04 + 0.20 + 0.50 + 0.24 = 0.98 exactly.
 	if got > 0.98 {
 		t.Errorf("clamp failed: got %v, want ≤ 0.98", got)
+	}
+}
+
+func TestComputeAlbedo_Vacuum(t *testing.T) {
+	// Vacuum body: Atmosphere{Code: 0} → no atm modifier applied.
+	// Rocky terr base [7]: 0.04 + (7-2)*0.02 = 0.14. Hyd 0 → no hyd modifier.
+	// Sol HZCO()=3.0 → HZCO+2=5.0; orbit 1.0 < 5.0 → rocky branch fires.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Orbit = 1.0
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 0, Pressure: 0}
+	body.Hydrographics = &Hydrographics{Code: 0}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7) // only 1 roll consumed (rocky base)
+	got := ComputeAlbedo(r, body, sys)
+	want := 0.14
+	if math.Abs(got-want) > 0.01 {
+		t.Errorf("got %v, want %v (no atm or hyd modifier should apply)", got, want)
 	}
 }
