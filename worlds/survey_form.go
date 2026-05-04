@@ -80,7 +80,8 @@ func RenderIISSClass23(sd SystemDetail, sys stars.System, h IISSClass23Header) I
 		ClassIIIStatus: false,
 	}
 
-	for _, dp := range sd.Detailed {
+	for i := range sd.Detailed {
+		dp := &sd.Detailed[i]
 		if dp.Body == BodyEmpty {
 			continue
 		}
@@ -91,8 +92,8 @@ func RenderIISSClass23(sd SystemDetail, sys stars.System, h IISSClass23Header) I
 			AU:          stars.OrbitToAU(dp.Orbit),
 			Ecc:         dp.Eccentricity,
 			PeriodStr:   formatPeriod(dp.Period),
-			SAH:         renderSAH(dp),
-			Sub:         renderSub(dp),
+			SAH:         renderSAHRow(dp),
+			Sub:         renderSub(*dp),
 			Notes:       renderNotes(dp),
 		}
 		form.Objects = append(form.Objects, row)
@@ -155,11 +156,13 @@ func fillStarsMAO(form *stars.SurveyForm, avail Result, sys stars.System) {
 	}
 }
 
-// renderSAH produces the SAH/UWP cell for a body.
-func renderSAH(dp DetailedPlacement) string {
+// renderSAHRow produces the SAH/UWP cell for a body row in the Objects table.
+// Terrestrials delegate to dp.RenderSAH() which returns the full 3-character
+// triplet for HZ bodies and "<Size>??" for non-HZ bodies.
+func renderSAHRow(dp *DetailedPlacement) string {
 	switch dp.Body {
 	case BodyTerrestrial:
-		return string(dp.SizeCode) + "??"
+		return dp.RenderSAH()
 	case BodyGasGiant:
 		var prefix string
 		switch dp.GGClass {
@@ -217,8 +220,8 @@ func renderSub(dp DetailedPlacement) string {
 // renderNotes builds the Notes column.
 // Gas giants: "<mass>⊕" prefix; HZ tag if HZ; comma-separated moon SAHs.
 // Terrestrials: HZ tag if HZ.
-// Belts: empty.
-func renderNotes(dp DetailedPlacement) string {
+// Belts: belt profile string if available, otherwise empty.
+func renderNotes(dp *DetailedPlacement) string {
 	parts := []string{}
 	if dp.Body == BodyGasGiant {
 		parts = append(parts, fmt.Sprintf("%s⊕", formatMass(dp.MassEarth)))
@@ -232,6 +235,9 @@ func renderNotes(dp DetailedPlacement) string {
 			moonSAH = append(moonSAH, renderMoonSAH(m, dp.HZ))
 		}
 		parts = append(parts, strings.Join(moonSAH, ", "))
+	}
+	if dp.Belt != nil && dp.Belt.Profile != "" {
+		parts = append(parts, dp.Belt.Profile)
 	}
 	return strings.Join(parts, ", ")
 }
