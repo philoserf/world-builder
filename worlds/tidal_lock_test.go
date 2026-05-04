@@ -3,6 +3,7 @@ package worlds
 import (
 	"testing"
 
+	"wbh/roller"
 	"wbh/stars"
 )
 
@@ -116,5 +117,64 @@ func TestEvaluateTidalLockDMs_NoMoonCases_NotAMoon(t *testing.T) {
 	dms := EvaluateTidalLockDMs(body, sys, nil, nil)
 	if _, ok := dms[TidalLockCaseMoonToPlanet]; ok {
 		t.Errorf("moon→planet should not apply to planets, got dms=%+v", dms)
+	}
+}
+
+func TestSelectHighestDMCase_FilterBelowMinusTen(t *testing.T) {
+	// Cases with DM ≤ -10 → filtered out per p.106.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: -12,
+		TidalLockCaseMoonToPlanet: 5,
+	}
+	body := &DetailedPlacement{}
+	kase, dm := SelectHighestDMCase(dms, body)
+	if kase != TidalLockCaseMoonToPlanet {
+		t.Errorf("got case %v, want MoonToPlanet (planet→star filtered as ≤-10)", kase)
+	}
+	if dm != 5 {
+		t.Errorf("got DM %d, want 5", dm)
+	}
+}
+
+func TestSelectHighestDMCase_AllFiltered_ReturnsNone(t *testing.T) {
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: -15,
+		TidalLockCaseMoonToPlanet: -11,
+	}
+	body := &DetailedPlacement{}
+	kase, _ := SelectHighestDMCase(dms, body)
+	if kase != TidalLockCaseNone {
+		t.Errorf("got case %v, want None", kase)
+	}
+}
+
+func TestSelectHighestDMCase_TieMoonFirst(t *testing.T) {
+	// Per p.106: when tied, moon-cases roll first.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: 5,
+		TidalLockCaseMoonToPlanet: 5,
+	}
+	body := &DetailedPlacement{}
+	kase, _ := SelectHighestDMCase(dms, body)
+	if kase != TidalLockCaseMoonToPlanet {
+		t.Errorf("got case %v, want MoonToPlanet (moon-cases first on tie)", kase)
+	}
+}
+
+func TestRollTidalLockStatus_Plain2DPlusDM(t *testing.T) {
+	// 2D=8, DM+3 → 11.
+	r := roller.NewScripted(8)
+	got := RollTidalLockStatus(r, 3)
+	if got != 11 {
+		t.Errorf("got %d, want 11 (2D=8 + DM+3)", got)
+	}
+}
+
+func TestRollTidalLockStatus_NegativeDMs(t *testing.T) {
+	// 2D=4, DM-3 → 1.
+	r := roller.NewScripted(4)
+	got := RollTidalLockStatus(r, -3)
+	if got != 1 {
+		t.Errorf("got %d, want 1 (2D=4 + DM-3)", got)
 	}
 }
