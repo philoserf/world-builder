@@ -1,6 +1,8 @@
 package worlds
 
 import (
+	"fmt"
+
 	"wbh/roller"
 )
 
@@ -159,4 +161,100 @@ func RollBeltComposition(r roller.Roller, dms int) (BeltComposition, error) {
 	}
 
 	return BeltComposition{MTypePct: m, STypePct: s, CTypePct: c, OtherPct: other}, nil
+}
+
+// RollBeltBulk implements WBH p.73 Belt Bulk = 2D+2 + DMs.
+// System Age contributes DM = -(Gyr ÷ 2 floor); composition contributes DM = +(cType% ÷ 10 floor).
+// Result < 1 is clamped to 1.
+//
+// NOTE: WBH dice notation "2D2" means 2D + 2 (range 4-14). The correct
+// notation for this parser is "2D+2", which Roll returns as the post-modifier sum.
+func RollBeltBulk(r roller.Roller, ageGyr float64, comp BeltComposition) (int, error) {
+	roll := r.Roll("2D+2")
+	dms := -int(ageGyr/2) + comp.CTypePct/10
+	bulk := roll + dms
+	if bulk < 1 {
+		bulk = 1
+	}
+	return bulk, nil
+}
+
+// RollResourceRating implements WBH p.73: 2D-7 + Bulk + (mType%÷10) - (cType%÷10).
+// Rating < 2 is treated as 2; rating > 12 is capped at 12.
+func RollResourceRating(r roller.Roller, bulk int, comp BeltComposition) (int, error) {
+	roll := r.Roll("2D")
+	rating := roll - 7 + bulk + comp.MTypePct/10 - comp.CTypePct/10
+	if rating < 2 {
+		rating = 2
+	}
+	if rating > 12 {
+		rating = 12
+	}
+	return rating, nil
+}
+
+// RollSigSize1Bodies implements WBH p.73: 2D-12 + Bulk + DMs.
+// DMs: beltOrbit ≥ hzco+3 → DM+2; span < 0.1 → DM-4.
+// Negative results are clamped to 0.
+func RollSigSize1Bodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64) (int, error) {
+	roll := r.Roll("2D")
+	dms := 0
+	if beltOrbit >= hzco+3 {
+		dms += 2
+	}
+	if span < 0.1 {
+		dms -= 4
+	}
+	count := roll - 12 + bulk + dms
+	if count < 0 {
+		count = 0
+	}
+	return count, nil
+}
+
+// RollSigSizeSBodies implements WBH p.73: 2D-10 + (DM+1) × (Bulk+1).
+// DMs: hzco+2 ≤ beltOrbit < hzco+3 → DM+1; beltOrbit ≥ hzco+3 → DM+3; span > 1.0 → DM+1.
+// Negative results are clamped to 0. If span < 0.1, result is halved (round up).
+func RollSigSizeSBodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64) (int, error) {
+	roll := r.Roll("2D")
+	dm := 0
+	if beltOrbit >= hzco+2 && beltOrbit < hzco+3 {
+		dm++
+	}
+	if beltOrbit >= hzco+3 {
+		dm += 3
+	}
+	if span > 1.0 {
+		dm++
+	}
+	count := roll - 10 + (dm+1)*(bulk+1)
+	if count < 0 {
+		count = 0
+	}
+	if span < 0.1 {
+		count = (count + 1) / 2
+	}
+	return count, nil
+}
+
+// FormatBeltProfile renders the belt-profile shorthand "S-CC.CC.CC.CC-B-R-#-s" per WBH p.74.
+// Resource rating uses hex letters A/B/C for 10/11/12.
+func FormatBeltProfile(b BeltDetails) string {
+	resourceStr := fmt.Sprintf("%d", b.ResourceRating)
+	switch b.ResourceRating {
+	case 10:
+		resourceStr = "A"
+	case 11:
+		resourceStr = "B"
+	case 12:
+		resourceStr = "C"
+	}
+	return fmt.Sprintf("%g-%02d.%02d.%02d.%02d-%d-%s-%d-%d",
+		b.Span,
+		b.Composition.MTypePct, b.Composition.STypePct,
+		b.Composition.CTypePct, b.Composition.OtherPct,
+		b.Bulk,
+		resourceStr,
+		b.SigSize1Bodies, b.SigSizeSBodies,
+	)
 }
