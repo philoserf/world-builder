@@ -716,3 +716,106 @@ func TestGenerateTemperature_RotationFactorLongDay(t *testing.T) {
 		t.Errorf("RotationFactor: got %v, want 1.0 (solar day > 2500h)", temp.RotationFactor)
 	}
 }
+
+func TestGenerateTemperature_TwilightZone_Detected(t *testing.T) {
+	// Body 1:1 star-locked → IsTwilight=true, BrightSideK > TwilightK > DarkSideK.
+	// Eccentricity=0.2 ensures NearAU < AU < FarAU so bright/dark ordering holds
+	// even when the dark lum modifier clamps to zero.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 1.0 // close to its star
+	body.Eccentricity = 0.2
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 5}
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+	body.DayLength = &DayLength{SiderealHours: 4383, SolarHours: 0} // twilight: undefined solar day
+	body.Period = Period{Years: 0.5, Hours: 4383}
+	body.TidalLock = &TidalLock{
+		Case:      TidalLockCasePlanetToStar,
+		LockRatio: "1:1",
+	}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 0.5}}
+
+	r := roller.NewScripted(7, 7, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !temp.IsTwilight {
+		t.Error("expected IsTwilight=true for 1:1 star-lock")
+	}
+	if temp.BrightSideK <= temp.TwilightK {
+		t.Errorf("BrightSideK %v should exceed TwilightK %v", temp.BrightSideK, temp.TwilightK)
+	}
+	if temp.DarkSideK >= temp.TwilightK {
+		t.Errorf("DarkSideK %v should be below TwilightK %v", temp.DarkSideK, temp.TwilightK)
+	}
+	if math.Abs(temp.TwilightK-temp.MeanK) > 0.5 {
+		t.Errorf("TwilightK %v should equal MeanK %v", temp.TwilightK, temp.MeanK)
+	}
+}
+
+func TestGenerateTemperature_MoonLockedToPlanet_NotTwilight(t *testing.T) {
+	// Moon 1:1 locked to its parent planet (Case == MoonToPlanet) → NOT twilight.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 5}
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
+	body.Period = Period{Hours: 30 * 24}
+	body.TidalLock = &TidalLock{
+		Case:      TidalLockCaseMoonToPlanet, // NOT PlanetToStar
+		LockRatio: "1:1",
+	}
+
+	parent := &DetailedPlacement{}
+	parent.Body = BodyGasGiant
+	parent.Orbit = stars.AUToOrbit(1.0)
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp.IsTwilight {
+		t.Error("moon→planet 1:1 lock should NOT be twilight zone")
+	}
+	if temp.BrightSideK != 0 || temp.DarkSideK != 0 || temp.TwilightK != 0 {
+		t.Errorf("twilight fields should be zero for non-twilight body, got bright=%v dark=%v twilight=%v",
+			temp.BrightSideK, temp.DarkSideK, temp.TwilightK)
+	}
+}
+
+func TestGenerateTemperature_NotLocked_NoTwilight(t *testing.T) {
+	// Normal body with TidalLock == nil → not twilight, fields zero.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.AxialTilt = &AxialTilt{Degrees: 23.45}
+	body.DayLength = &DayLength{SiderealHours: 23.93, SolarHours: 24.0}
+	body.Period = Period{Hours: 8766}
+	// body.TidalLock == nil
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 6, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp.IsTwilight {
+		t.Error("body with no TidalLock should not be twilight")
+	}
+}

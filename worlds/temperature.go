@@ -109,11 +109,11 @@ type Temperature struct {
 // Currently populates: Luminosity, AU, ScaleHeight, Albedo, GreenhouseFactor,
 // MeanK, BasicK (Task 6); AxialTiltFactor, RotationFactor, GeographicFactor,
 // AtmosphericFactor, LuminosityModifier, NearAU, FarAU, HighK, LowK,
-// WorstHighK, WorstLowK (Task 7).
+// WorstHighK, WorstLowK (Task 7); IsTwilight, TwilightK, BrightSideK,
+// DarkSideK for 1:1 star-locked bodies (Task 8).
 //
-// Pending: twilight branch for 1:1 star-locks (Task 8 → IsTwilight,
-// TwilightK, BrightSideK, DarkSideK); parent-IR multi-source addition for
-// moons of warm gas giants (Task 9 → ParentRadianceK).
+// Pending: parent-IR multi-source addition for moons of warm gas giants
+// (Task 9 → ParentRadianceK).
 func GenerateTemperature(
 	r roller.Roller,
 	body *DetailedPlacement,
@@ -194,6 +194,33 @@ func GenerateTemperature(
 	worstLowL := t.Luminosity * (1 - worstMod)
 	t.WorstHighK = MeanTemperatureK(worstHighL, t.Albedo, t.GreenhouseFactor, t.NearAU)
 	t.WorstLowK = MeanTemperatureK(worstLowL, t.Albedo, t.GreenhouseFactor, t.FarAU)
+
+	// Twilight zone branch (p.120): 1:1 star-locked planets/moons.
+	// Moons locked to their parent planet (Case == MoonToPlanet) are NOT
+	// twilight zones — book p.105 reserves the term for star locks.
+	if body.TidalLock != nil &&
+		body.TidalLock.LockRatio == "1:1" &&
+		body.TidalLock.Case == TidalLockCasePlanetToStar {
+
+		t.IsTwilight = true
+		t.TwilightK = t.MeanK // band centerline (rotation factor = 0)
+
+		// Bright side: rotation factor forced to +1.0.
+		brightLumMod := (t.AxialTiltFactor + 1.0 + t.GeographicFactor) / t.AtmosphericFactor
+		if brightLumMod > 1 {
+			brightLumMod = 1
+		}
+		brightL := t.Luminosity * (1 + brightLumMod)
+		t.BrightSideK = MeanTemperatureK(brightL, t.Albedo, t.GreenhouseFactor, t.NearAU)
+
+		// Dark side: rotation factor forced to -1.0.
+		darkLumMod := (t.AxialTiltFactor + (-1.0) + t.GeographicFactor) / t.AtmosphericFactor
+		if darkLumMod < 0 {
+			darkLumMod = 0
+		}
+		darkL := t.Luminosity * (1 - darkLumMod)
+		t.DarkSideK = MeanTemperatureK(darkL, t.Albedo, t.GreenhouseFactor, t.FarAU)
+	}
 
 	return t, nil
 }
