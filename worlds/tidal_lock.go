@@ -492,6 +492,7 @@ func rerollEccentricityDMMinus2(r roller.Roller) (float64, error) {
 
 // GenerateTidalLock orchestrates the per-body tidal-lock pipeline per WBH p.106.
 // Returns nil (no error) for empty bodies or when no tidal-lock case applies.
+// Mutates body's DayLength, AxialTilt, and Eccentricity in place when an effect applies.
 func GenerateTidalLock(
 	r roller.Roller,
 	body *DetailedPlacement,

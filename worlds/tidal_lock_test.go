@@ -432,22 +432,23 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
 
-	// Goal: assert that GenerateTidalLock can return a TidalLock with
-	// Case == TidalLockCasePlanetToMoon when planet→moon is the highest DM.
-	r := roller.NewScripted(7) // 2D=7 → result 7+DM
+	// DM math: planet→star = -63 (filtered ≤-10); planet→moon = +3 (common)
+	// + (-10 base + Size 1 + 4 [pd≤10]) = -2. Roll 7 + (-2) = 5 → DayLengthMultiplier=3.
+	r := roller.NewScripted(7)
 	tl, err := GenerateTidalLock(r, pluto, nil, sys, nil, pluto.Period.Hours)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Depending on the actual DM math, this test may need tuning. The key
-	// assertion is structural: the Case field is one of the three valid cases.
 	if tl == nil {
-		t.Skip("planet→moon DMs may be ≤ -10 for synthetic Pluto/Charon — adjust scenario if so")
+		t.Fatal("expected non-nil TidalLock for planet→moon path (DM=-2, roll=7, result=5)")
 	}
-	switch tl.Case {
-	case TidalLockCasePlanetToStar, TidalLockCaseMoonToPlanet, TidalLockCasePlanetToMoon, TidalLockCaseNone:
-		// OK
-	default:
-		t.Errorf("unexpected Case: %v", tl.Case)
+	if tl.Case != TidalLockCasePlanetToMoon {
+		t.Errorf("Case: got %v, want PlanetToMoon", tl.Case)
+	}
+	if tl.FinalResult != 5 {
+		t.Errorf("FinalResult: got %d, want 5", tl.FinalResult)
+	}
+	if math.Abs(pluto.DayLength.SiderealHours-72.0) > 0.01 {
+		t.Errorf("day length: got %v, want 72.0 (24 × 3)", pluto.DayLength.SiderealHours)
 	}
 }
