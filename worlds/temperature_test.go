@@ -406,3 +406,164 @@ func TestBasicTemperatureRoll_BelowTable_RecomputeAs1DPlus5(t *testing.T) {
 		t.Errorf("got %v, want 9 (recompute as 1D+5 with 1D=4)", k)
 	}
 }
+
+func TestGenerateTemperature_ZedPrime_Mean(t *testing.T) {
+	// Zed Prime as a moon of a gas giant orbiting Aab (L=1.419) at 1.06 AU.
+	// Per WBH p.111: A=0.33, G=0.59 → MeanK ≈ 300K.
+	parent := &DetailedPlacement{}
+	parent.Body = BodyGasGiant
+	parent.Orbit = 3.0 // Use Orbit# such that OrbitToAU produces ~1.06 AU.
+	// Note: stars.OrbitToAU(3.0) for HZCO computation; for the test we
+	// directly set the body's AU expectations via the parent's Orbit.
+
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.03}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.04, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 6}
+	body.Eccentricity = 0.10
+
+	sys := stars.System{Primary: stars.Star{Mass: 0.918, AgeGyr: 6.3, Luminosity: 1.419}}
+
+	// Albedo: [8, 8, 7] → 0.33. Greenhouse: [8] → 0.59. Basic roll: [7].
+	// 5 scripted values total.
+	r := roller.NewScripted(8, 8, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp == nil {
+		t.Fatal("expected non-nil Temperature")
+	}
+	if math.Abs(temp.Albedo-0.33) > 0.01 {
+		t.Errorf("Albedo: got %v, want 0.33", temp.Albedo)
+	}
+	if math.Abs(temp.GreenhouseFactor-0.59) > 0.01 {
+		t.Errorf("GreenhouseFactor: got %v, want 0.59", temp.GreenhouseFactor)
+	}
+	if temp.Luminosity != 1.419 {
+		t.Errorf("Luminosity: got %v, want 1.419", temp.Luminosity)
+	}
+	// MeanK depends on AU which depends on parent.Orbit → OrbitToAU.
+	// We verify it's in plausible range; per-task tests pin specific values.
+	if temp.MeanK < 250 || temp.MeanK > 350 {
+		t.Errorf("MeanK out of plausible range: got %v (expected ~300K for Zed Prime)", temp.MeanK)
+	}
+	// ScaleHeight should be cached for Task 11's AdjustedForAltitude.
+	if temp.ScaleHeight != 8.5 {
+		t.Errorf("ScaleHeight: got %v, want 8.5", temp.ScaleHeight)
+	}
+	// BasicK should be populated and finite.
+	if temp.BasicK == 0 {
+		t.Errorf("BasicK should be populated, got 0")
+	}
+}
+
+func TestGenerateTemperature_BodyEmpty_ReturnsNil(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyEmpty
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted()
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp != nil {
+		t.Errorf("BodyEmpty should return nil, got %+v", temp)
+	}
+}
+
+func TestGenerateTemperature_PlanetUsesOwnOrbit(t *testing.T) {
+	// For a planet (parent==nil), AU comes from body.Orbit via OrbitToAU.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0 // Sol HZCO Orbit#
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 6, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp == nil {
+		t.Fatal("expected non-nil Temperature")
+	}
+	// Terra-like body should land in habitable range.
+	if temp.MeanK < 200 || temp.MeanK > 400 {
+		t.Errorf("MeanK out of plausible range: got %v", temp.MeanK)
+	}
+	// AU should equal stars.OrbitToAU(3.0) ≈ 1.0.
+	if math.Abs(temp.AU-1.0) > 0.05 {
+		t.Errorf("AU: got %v, want ~1.0 (OrbitToAU(3.0))", temp.AU)
+	}
+}
+
+func TestGenerateTemperature_MultiStarLuminositySum(t *testing.T) {
+	// Close binary mate (OrbitClass==OrbitCompanion, ParentIndex==-1) sums
+	// luminosity into the primary group.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+
+	sys := stars.System{
+		Primary: stars.Star{Luminosity: 1.0},
+		Companions: []stars.CompanionStar{
+			{
+				Star:        stars.Star{Luminosity: 0.5},
+				OrbitClass:  stars.OrbitCompanion,
+				ParentIndex: -1,
+			},
+		},
+	}
+
+	r := roller.NewScripted(7, 7, 6, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := 1.5 // 1.0 + 0.5
+	if math.Abs(temp.Luminosity-want) > 0.001 {
+		t.Errorf("Luminosity: got %v, want %v (close binary mate summed)", temp.Luminosity, want)
+	}
+}
+
+func TestGenerateTemperature_NoAtmosphere(t *testing.T) {
+	// Vacuum body: Atmosphere is nil → albedo skips atm modifier; greenhouse 0;
+	// ScaleHeight stays 0; AtmosphericFactor will default in later tasks.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Orbit = 3.0
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Hydrographics = &Hydrographics{Code: 0}
+	// No Atmosphere, no Hydrographics modifier (code 0)
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	// Albedo: 1 roll (rocky base only). Greenhouse: 0 rolls (vacuum). Basic: 1 roll.
+	r := roller.NewScripted(7, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp == nil {
+		t.Fatal("expected non-nil Temperature")
+	}
+	if temp.GreenhouseFactor != 0 {
+		t.Errorf("vacuum should have G=0, got %v", temp.GreenhouseFactor)
+	}
+	if temp.ScaleHeight != 0 {
+		t.Errorf("nil atmosphere should have ScaleHeight=0, got %v", temp.ScaleHeight)
+	}
+}

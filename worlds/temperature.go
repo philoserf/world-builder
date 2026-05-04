@@ -60,6 +60,104 @@ var basicMeanTemperatureK = map[int]float64{
 	8: 293, 9: 298, 10: 313, 11: 338, 12: 388,
 }
 
+// Temperature — per-body temperature characteristics per WBH pp.108-126.
+//
+// Computed from currently-stored Atmosphere.Pressure, Atmosphere.ScaleHeight,
+// and Hydrographics.Code. These 3A1 fields are provisional under HZCO
+// temperature until 3A2b-rederive runs an iteration loop that re-derives
+// them under real temperature.
+type Temperature struct {
+	// Headline values (all Kelvin)
+	MeanK      float64 // canonical mean per equation (p.111)
+	HighK      float64 // p.114 step 9 (populated by Task 7)
+	LowK       float64 // p.114 step 9 (populated by Task 7)
+	BasicK     float64 // basic table value (p.109) — sanity-check companion
+	WorstHighK float64 // p.115 sidebar (populated by Task 7)
+	WorstLowK  float64 // p.115 sidebar (populated by Task 7)
+
+	// Equation inputs
+	Luminosity       float64 // total in-group stellar luminosity (solar units)
+	Albedo           float64 // 0.02..0.98 per p.110
+	GreenhouseFactor float64 // ≥ 0; (1+G) clamped to [0.001, 1.999] inside MeanTemperatureK
+	AU               float64 // distance from primary stellar source
+	ScaleHeight      float64 // km; cached for AdjustedForAltitude (p.123-124)
+
+	// Variance components (cached so scenario methods don't recompute; populated by Task 7)
+	AxialTiltFactor    float64
+	RotationFactor     float64
+	GeographicFactor   float64
+	AtmosphericFactor  float64
+	LuminosityModifier float64
+	NearAU             float64
+	FarAU              float64
+
+	// Twilight zone (only populated when body is 1:1 star-locked; Task 8)
+	IsTwilight  bool
+	TwilightK   float64 // band centerline = MeanK
+	BrightSideK float64 // perpetual day
+	DarkSideK   float64 // perpetual night
+
+	// Multi-source addition (Task 9)
+	ParentRadianceK float64 // contribution from parent body's thermal IR (0 for planets)
+}
+
+// GenerateTemperature is the per-body 3A2b-temp orchestrator. Returns nil
+// (no error) for empty bodies. For a moon, parent is the parent planet's
+// DetailedPlacement.
+//
+// This task (Task 6) implements only the MEAN temperature pipeline: stellar
+// luminosity grouping, AU determination, albedo, greenhouse, mean equation,
+// basic-table roll, and field caching. High/Low (Task 7), twilight (Task 8),
+// and multi-source (Task 9) are filled in by subsequent tasks.
+func GenerateTemperature(
+	r roller.Roller,
+	body *DetailedPlacement,
+	sys stars.System,
+	parent *DetailedPlacement,
+) (*Temperature, error) {
+	if body.Body == BodyEmpty {
+		return nil, nil
+	}
+
+	t := &Temperature{}
+
+	// Equation inputs: stellar luminosity (sum within close-binary group),
+	// AU (parent's AU for moons; otherwise own orbit converted).
+	t.Luminosity = totalStellarLuminosity(sys)
+	if parent != nil {
+		t.AU = stars.OrbitToAU(parent.Orbit)
+	} else {
+		t.AU = stars.OrbitToAU(body.Orbit)
+	}
+	if body.Atmosphere != nil {
+		t.ScaleHeight = body.Atmosphere.ScaleHeight
+	}
+
+	// Albedo + greenhouse → mean.
+	t.Albedo = ComputeAlbedo(r, body, sys)
+	t.GreenhouseFactor = ComputeGreenhouseFactor(r, body.Atmosphere)
+	t.MeanK = MeanTemperatureK(t.Luminosity, t.Albedo, t.GreenhouseFactor, t.AU)
+
+	// Basic table roll (sanity-check companion).
+	_, t.BasicK = BasicTemperatureRoll(r, body, sys)
+
+	return t, nil
+}
+
+// totalStellarLuminosity returns the summed luminosity (solar units) of the
+// primary's group: primary + any close-binary mate (OrbitClass==OrbitCompanion
+// && ParentIndex==-1). Mirrors 3A2a's totalStellarMass pattern from
+// surface_tidal_effects.go.
+func totalStellarLuminosity(sys stars.System) float64 {
+	total := sys.Primary.Luminosity
+	for _, c := range sys.Companions {
+		if c.OrbitClass == stars.OrbitCompanion && c.ParentIndex == -1 {
+			total += c.Star.Luminosity
+		}
+	}
+	return total
+}
+
 // BasicTemperatureRoll rolls 2D + DMs and returns the modified roll plus the
 // Kelvin value from the WBH p.109 Basic Mean Temperature table.
 //
