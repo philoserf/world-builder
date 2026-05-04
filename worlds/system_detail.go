@@ -323,6 +323,29 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		}
 	}
 
+	// Step 5C — 3A2b-temp pass: per-body temperature.
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.Body == BodyEmpty {
+			continue
+		}
+		temp, err := GenerateTemperature(r, dp, sys, nil)
+		if err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: temperature %s: %w", dp.Designation, err)
+		}
+		dp.Temperature = temp
+
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			moonDP := buildMoonPlacementView(m, dp)
+			moonTemp, err := GenerateTemperature(r, moonDP, sys, dp)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon temperature %s: %w", m.Designation, err)
+			}
+			m.Temperature = moonTemp
+		}
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)
@@ -600,6 +623,9 @@ func (dp *DetailedPlacement) HasTidalLock() bool { return dp.TidalLock != nil }
 
 // HasTidalEffects reports whether surface tidal-effects data has been generated.
 func (dp *DetailedPlacement) HasTidalEffects() bool { return dp.TidalEffects != nil }
+
+// HasTemperature reports whether 5C ran for this placement.
+func (dp *DetailedPlacement) HasTemperature() bool { return dp.Temperature != nil }
 
 // RenderSAH returns the 3-character SAH triplet for the IISS form.
 // HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".
