@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"wbh/roller"
@@ -132,5 +133,87 @@ func TestRollDensity_RockAndMetalColumn(t *testing.T) {
 				t.Errorf("roll=%d: got %v, want %v", c.roll, got, c.want)
 			}
 		})
+	}
+}
+
+func TestDeriveGravity(t *testing.T) {
+	t.Parallel()
+	// Terra: density=1.0, diameter=12742 → gravity=1.0 G.
+	if got := DeriveGravity(1.0, 12742); math.Abs(got-1.0) > 1e-6 {
+		t.Errorf("Terra gravity: got %v, want 1.0", got)
+	}
+	// Zed mainworld worked example: density 1.03, diameter 8163.
+	// 1.03 × (8163/12742) ≈ 0.6598 (book rounds to 0.66)
+	if got := DeriveGravity(1.03, 8163); math.Abs(got-0.66) > 0.01 {
+		t.Errorf("Zed gravity: got %v, want ≈0.66", got)
+	}
+}
+
+func TestDeriveMass(t *testing.T) {
+	t.Parallel()
+	if got := DeriveMass(1.0, 12742); math.Abs(got-1.0) > 1e-6 {
+		t.Errorf("Terra mass: got %v, want 1.0", got)
+	}
+	// Zed: 1.03 × 0.640559³ ≈ 0.2708, book rounds to 0.27
+	if got := DeriveMass(1.03, 8163); math.Abs(got-0.27) > 0.01 {
+		t.Errorf("Zed mass: got %v, want ≈0.27", got)
+	}
+}
+
+func TestDeriveEscapeVelocity(t *testing.T) {
+	t.Parallel()
+	// Book p.72 worked example: m=0.27, D=8163 → EscV ≈ 7,262 m/s.
+	if got := DeriveEscapeVelocity(0.27, 8163); math.Abs(got-7262) > 50 {
+		t.Errorf("Zed escape vel: got %v, want ≈7262", got)
+	}
+	// Terra sanity: m=1.0, D=12742 → EscV ≈ 11,186 m/s.
+	if got := DeriveEscapeVelocity(1.0, 12742); math.Abs(got-11186) > 5 {
+		t.Errorf("Terra escape vel: got %v, want ≈11186", got)
+	}
+}
+
+func TestDeriveOrbitalVelocity(t *testing.T) {
+	t.Parallel()
+	// EscV / √2 = 7262 / 1.41421 ≈ 5135 m/s
+	if got := DeriveOrbitalVelocity(7262); math.Abs(got-5135) > 5 {
+		t.Errorf("Zed orbital vel: got %v, want ≈5135", got)
+	}
+}
+
+func TestFormatSizeProfile_Zed(t *testing.T) {
+	t.Parallel()
+	p := BodyPhysical{Density: 1.03, Gravity: 0.66}
+	p.SizeProfile = FormatSizeProfile(p, 0.27, SizeCode("5"), 8163)
+	want := "5-8163-1.03-0.66-0.27"
+	if p.SizeProfile != want {
+		t.Errorf("got %q, want %q", p.SizeProfile, want)
+	}
+}
+
+func TestSol_TerraPhysicalProfile(t *testing.T) {
+	t.Parallel()
+	// WBH pp. 71-72 worked example for the Zed mainworld (Size 5, treated like Terra in 3A1).
+	// Diameter pre-resolved to 8163 km (Size 5 base 7,200 + D3=2 (+600) + 1D=4 (+300) + d100=63).
+	// Composition: 2D=10 + DM+1 (AtHZCOOrCloser DM+1; no size DM) → 11 → "Rock and Metal".
+	// Density 2D=9 → index 7 → 1.03 in Rock-and-Metal column (table: 2D2=0.82 … 2D9=1.03).
+	// Scripted values are pre-DM raw rolls: D3=2, 1D=4, d100=63, 2D-comp=10, 2D-density=9.
+	r := roller.NewScripted(2, 4, 63, 10, 9) // D3, 1D, d100, 2D-comp, 2D-density
+	got, err := GenerateBodyPhysical(r, SizeCode("5"), 8163, BodyPhysicalDMs{
+		AtHZCOOrCloser: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Composition != "Rock and Metal" {
+		t.Errorf("composition: got %q, want %q", got.Composition, "Rock and Metal")
+	}
+	if math.Abs(got.Density-1.03) > 0.001 {
+		t.Errorf("density: got %v, want 1.03", got.Density)
+	}
+	if math.Abs(got.Gravity-0.66) > 0.01 {
+		t.Errorf("gravity: got %v, want 0.66", got.Gravity)
+	}
+	if got.SizeProfile != "5-8163-1.03-0.66-0.27" {
+		t.Errorf("profile: got %q, want %q", got.SizeProfile, "5-8163-1.03-0.66-0.27")
 	}
 }

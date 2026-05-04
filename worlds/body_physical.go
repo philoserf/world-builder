@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"fmt"
+	"math"
 
 	"wbh/roller"
 )
@@ -89,4 +90,71 @@ func RollDensity(r roller.Roller, composition string) (float64, error) {
 		roll = 12
 	}
 	return row[roll-2], nil
+}
+
+// DiameterTerra is Terra's diameter in km, used as the reference for size-relative calculations (WBH p. 71).
+const DiameterTerra = 12742.0
+
+// DeriveGravity returns surface gravity in G: (Density × Diameter) / DiameterTerra.
+func DeriveGravity(densityRel, diameterKm float64) float64 {
+	return densityRel * diameterKm / DiameterTerra
+}
+
+// DeriveMass returns mass in M⊕: Density × (Diameter / DiameterTerra)³.
+func DeriveMass(densityRel, diameterKm float64) float64 {
+	ratio := diameterKm / DiameterTerra
+	return densityRel * ratio * ratio * ratio
+}
+
+// DeriveEscapeVelocity returns escape velocity in m/s: √(m / (D/D⊕)) × 11,186.
+func DeriveEscapeVelocity(massEarth, diameterKm float64) float64 {
+	if diameterKm <= 0 {
+		return 0
+	}
+	ratio := massEarth / (diameterKm / DiameterTerra)
+	if ratio < 0 {
+		return 0
+	}
+	return math.Sqrt(ratio) * 11186
+}
+
+// DeriveOrbitalVelocity returns surface orbital velocity in m/s: EscV / √2.
+func DeriveOrbitalVelocity(escapeVelocity float64) float64 {
+	return escapeVelocity / math.Sqrt(2)
+}
+
+// FormatSizeProfile formats the size profile string "S-Dkm-D-G-M".
+func FormatSizeProfile(p BodyPhysical, massEarth float64, sizeCode SizeCode, diameterKm int) string {
+	return fmt.Sprintf("%s-%d-%.2f-%.2f-%.2f",
+		string(sizeCode), diameterKm, p.Density, p.Gravity, massEarth)
+}
+
+// GenerateBodyPhysical orchestrates the per-body physical pipeline (WBH pp. 71-72).
+// The caller pre-resolves diameterKm from the Size table; this function consumes
+// the diameter dice (D3, 1D, d100) from the roller script for trace alignment,
+// then rolls composition and density, and derives gravity, mass, and velocities.
+func GenerateBodyPhysical(r roller.Roller, sizeCode SizeCode, diameterKm int, dms BodyPhysicalDMs) (BodyPhysical, error) {
+	// Consume diameter dice — values already reflected in diameterKm.
+	r.Roll("D3")
+	r.Roll("1D")
+	r.Roll("d100")
+
+	comp, err := RollComposition(r, dms)
+	if err != nil {
+		return BodyPhysical{}, err
+	}
+	density, err := RollDensity(r, comp)
+	if err != nil {
+		return BodyPhysical{}, err
+	}
+	p := BodyPhysical{
+		Composition: comp,
+		Density:     density,
+	}
+	p.Gravity = DeriveGravity(density, float64(diameterKm))
+	mass := DeriveMass(density, float64(diameterKm))
+	p.EscapeVelocity = DeriveEscapeVelocity(mass, float64(diameterKm))
+	p.OrbitalVelocity = DeriveOrbitalVelocity(p.EscapeVelocity)
+	p.SizeProfile = FormatSizeProfile(p, mass, sizeCode, diameterKm)
+	return p, nil
 }
