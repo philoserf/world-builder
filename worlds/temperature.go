@@ -104,16 +104,14 @@ type Temperature struct {
 // GenerateTemperature is the per-body 3A2b-temp orchestrator. Returns nil
 // (no error) for empty bodies. For a moon, parent is the parent planet's
 // DetailedPlacement (its Temperature field, if populated, is read for
-// multi-source IR addition once Task 9 lands).
+// multi-source IR addition).
 //
 // Currently populates: Luminosity, AU, ScaleHeight, Albedo, GreenhouseFactor,
 // MeanK, BasicK (Task 6); AxialTiltFactor, RotationFactor, GeographicFactor,
 // AtmosphericFactor, LuminosityModifier, NearAU, FarAU, HighK, LowK,
 // WorstHighK, WorstLowK (Task 7); IsTwilight, TwilightK, BrightSideK,
-// DarkSideK for 1:1 star-locked bodies (Task 8).
-//
-// Pending: parent-IR multi-source addition for moons of warm gas giants
-// (Task 9 → ParentRadianceK).
+// DarkSideK for 1:1 star-locked bodies (Task 8); ParentRadianceK plus
+// elevated MeanK/HighK/LowK for moons of warm gas giants (Task 9).
 func GenerateTemperature(
 	r roller.Roller,
 	body *DetailedPlacement,
@@ -220,6 +218,22 @@ func GenerateTemperature(
 		}
 		darkL := t.Luminosity * (1 - darkLumMod)
 		t.DarkSideK = MeanTemperatureK(darkL, t.Albedo, t.GreenhouseFactor, t.FarAU)
+	}
+
+	// Multi-source addition for moons (p.111, p.125-126): parent body's IR
+	// contribution combines with stellar temperature via ⁴√(T₁⁴ + T₂⁴).
+	// Pragmatic MVP threshold: skip unless parent's MeanK exceeds moon's
+	// stellar-only MeanK by 30K — cold gas giants contribute negligibly.
+	// Variance components (axial tilt, rotation, etc.) describe stellar
+	// variability only and are NOT modified.
+	if parent != nil && parent.Temperature != nil {
+		tParent := parent.Temperature.MeanK
+		if tParent > t.MeanK+30 {
+			t.ParentRadianceK = tParent
+			t.MeanK = CombineTemperatures(t.MeanK, tParent)
+			t.HighK = CombineTemperatures(t.HighK, tParent)
+			t.LowK = CombineTemperatures(t.LowK, tParent)
+		}
 	}
 
 	return t, nil

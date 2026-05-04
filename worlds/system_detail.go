@@ -572,6 +572,9 @@ type DetailedPlacement struct {
 	SurfaceDistribution *SurfaceDistribution
 	TidalLock           *TidalLock
 	TidalEffects        *SurfaceTidalEffects
+
+	// 3A2b-temp additions
+	Temperature *Temperature
 }
 
 // HasPhysical reports whether body-physical data has been generated for this placement.

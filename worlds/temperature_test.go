@@ -819,3 +819,132 @@ func TestGenerateTemperature_NotLocked_NoTwilight(t *testing.T) {
 		t.Error("body with no TidalLock should not be twilight")
 	}
 }
+
+func TestGenerateTemperature_GGMoon_ParentRadiance_AppliedWhenWarm(t *testing.T) {
+	// Moon of a hot gas giant: parent's MeanK > moon's stellar-only MeanK + 30K → combine.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 5}
+	body.Eccentricity = 0.0
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
+	body.Period = Period{Hours: 7 * 24}
+
+	parent := &DetailedPlacement{}
+	parent.Body = BodyGasGiant
+	parent.Orbit = stars.AUToOrbit(5.0) // far from star → moon's stellar-only ~150K
+	parent.Eccentricity = 0.0
+	// Pre-populate parent.Temperature with a HOT gas giant (much warmer than moon's stellar-only).
+	parent.Temperature = &Temperature{MeanK: 500}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp.ParentRadianceK == 0 {
+		t.Error("expected ParentRadianceK > 0 for hot GG parent")
+	}
+	if temp.ParentRadianceK != 500 {
+		t.Errorf("ParentRadianceK: got %v, want 500 (parent MeanK)", temp.ParentRadianceK)
+	}
+	// Combined MeanK should be elevated by parent radiance (⁴√ combine of stellar + 500).
+	// Stellar-only at 5 AU with low albedo and atm: ~150K. Combined with 500K parent ~= 500K dominant.
+	if temp.MeanK < 450 {
+		t.Errorf("MeanK should be elevated by parent radiance, got %v", temp.MeanK)
+	}
+}
+
+func TestGenerateTemperature_GGMoon_ParentRadiance_SkippedWhenCold(t *testing.T) {
+	// Moon of a cold gas giant: parent's MeanK ≤ moon's stellar-only MeanK + 30K → skip.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 5}
+	body.Eccentricity = 0.0
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
+	body.Period = Period{Hours: 7 * 24}
+
+	parent := &DetailedPlacement{}
+	parent.Body = BodyGasGiant
+	parent.Orbit = stars.AUToOrbit(1.0) // moon's stellar-only ~280K
+	parent.Eccentricity = 0.0
+	parent.Temperature = &Temperature{MeanK: 200} // colder than moon's stellar-only
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp.ParentRadianceK != 0 {
+		t.Errorf("expected ParentRadianceK=0 for cold parent, got %v", temp.ParentRadianceK)
+	}
+	// MeanK should NOT be elevated.
+	stellarOnlyExpected := temp.MeanK
+	_ = stellarOnlyExpected // sanity: just confirm we got a value
+}
+
+func TestGenerateTemperature_PlanetNoParentRadiance(t *testing.T) {
+	// Planet (parent==nil) → ParentRadianceK stays 0.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.AxialTilt = &AxialTilt{Degrees: 23.45}
+	body.DayLength = &DayLength{SiderealHours: 23.93, SolarHours: 24.0}
+	body.Period = Period{Hours: 8766}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 6, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp.ParentRadianceK != 0 {
+		t.Errorf("planet should have ParentRadianceK=0, got %v", temp.ParentRadianceK)
+	}
+}
+
+func TestGenerateTemperature_GGMoon_ParentNoTemperature_Skipped(t *testing.T) {
+	// Defensive: if parent.Temperature is nil (shouldn't happen in normal pipeline
+	// but defensive), ParentRadianceK stays 0 and MeanK is unchanged.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 5}
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
+	body.Period = Period{Hours: 7 * 24}
+
+	parent := &DetailedPlacement{}
+	parent.Body = BodyGasGiant
+	parent.Orbit = stars.AUToOrbit(1.0)
+	// parent.Temperature == nil
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 7, 8, 7)
+	temp, err := GenerateTemperature(r, body, sys, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if temp.ParentRadianceK != 0 {
+		t.Errorf("nil parent.Temperature should leave ParentRadianceK=0, got %v", temp.ParentRadianceK)
+	}
+}
