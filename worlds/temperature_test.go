@@ -352,17 +352,15 @@ func TestBasicTemperatureRoll_OrbitOutside_DMMinus(t *testing.T) {
 }
 
 func TestBasicTemperatureRoll_AboveTable(t *testing.T) {
-	// Force modified roll 14 → 388 + 2*50 = 488K.
+	// Force modified roll 14 → 388 + 2*50 = 488K. Per the project's roller
+	// convention, NewScripted(14) returns 14 from any Roll() call regardless
+	// of dice notation — so we can directly script the modified-roll value.
 	body := &DetailedPlacement{}
-	body.Atmosphere = &Atmosphere{Code: 6}
-	body.Orbit = 3.0
+	body.Atmosphere = &Atmosphere{Code: 6} // DM 0
+	body.Orbit = 3.0                       // at HZCO; no orbit DM
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
-	// Need raw + DM = 14. Atm 6 DM = 0, orbit at HZCO → no orbit DM.
-	// Raw 2D max is 12, so we can't naturally hit 14 with these DMs.
-	// Use atm 11 (B) DM +6: raw 8 + 6 = 14.
-	body.Atmosphere.Code = 11
-	r := roller.NewScripted(8)
+	r := roller.NewScripted(14)
 	_, k := BasicTemperatureRoll(r, body, sys)
 	if k != 488 {
 		t.Errorf("got %v, want 488", k)
@@ -370,10 +368,10 @@ func TestBasicTemperatureRoll_AboveTable(t *testing.T) {
 }
 
 func TestBasicTemperatureRoll_BelowTable_NoRecompute(t *testing.T) {
-	// Atm B (11) DM +6 doesn't help us go below 0. We need orbit far outside.
 	// Sol HZCO=3.0, HZCO+1=4.0. Body at orbit 10.0 → 10-4 = 6 above HZCO+1
 	// → DM = -(4 + 12) = -16.
 	// Atm 6 (DM 0). 2D=12 → mod = 12 - 16 = -4 → kelvin = 178 + (-4)*5 = 158K.
+	// 158K > 10K → no recompute path fires.
 	body := &DetailedPlacement{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Orbit = 10.0
@@ -386,5 +384,25 @@ func TestBasicTemperatureRoll_BelowTable_NoRecompute(t *testing.T) {
 	}
 	if math.Abs(k-158) > 0.1 {
 		t.Errorf("got %v, want 158", k)
+	}
+}
+
+func TestBasicTemperatureRoll_BelowTable_RecomputeAs1DPlus5(t *testing.T) {
+	// Force modified roll low enough to trigger the < 10K recompute branch.
+	// Sol HZCO=3.0, HZCO+1=4.0. Body at orbit 20.0 → 20-4 = 16 above HZCO+1
+	// → orbit DM = -(4 + floor(16/0.5)) = -(4 + 32) = -36.
+	// Atm 6 (DM 0). 2D=2 → mod = 2 - 36 = -34.
+	// 178 + (-34)*5 = 178 - 170 = 8K → triggers recompute.
+	// Recompute: 1D=4 → 4 + 5 = 9K (above 3K floor → no further adjustment).
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Orbit = 20.0
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	// Two scripted values: first for 2D (raw temp roll), second for 1D (recompute).
+	r := roller.NewScripted(2, 4)
+	_, k := BasicTemperatureRoll(r, body, sys)
+	if k != 9 {
+		t.Errorf("got %v, want 9 (recompute as 1D+5 with 1D=4)", k)
 	}
 }
