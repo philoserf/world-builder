@@ -394,6 +394,9 @@ type DetailedPlacement struct {
 	Belt          *BeltDetails
 	Atmosphere    *Atmosphere
 	Hydrographics *Hydrographics
+
+	// 3A2a additions
+	AxialTilt *AxialTilt
 }
 
 // HasPhysical reports whether body-physical data has been generated for this placement.
