@@ -412,9 +412,10 @@ func TestGenerateTemperature_ZedPrime_Mean(t *testing.T) {
 	// Per WBH p.111: A=0.33, G=0.59 → MeanK ≈ 300K.
 	parent := &DetailedPlacement{}
 	parent.Body = BodyGasGiant
-	parent.Orbit = 3.0 // Use Orbit# such that OrbitToAU produces ~1.06 AU.
-	// Note: stars.OrbitToAU(3.0) for HZCO computation; for the test we
-	// directly set the body's AU expectations via the parent's Orbit.
+	// Set parent.Orbit so OrbitToAU round-trips to ≈1.06 AU (Zed Prime's actual
+	// distance per WBH p.111). Using a raw Orbit#=3.0 would give 1.0 AU and
+	// drift MeanK ~9K from the book.
+	parent.Orbit = stars.AUToOrbit(1.06)
 
 	body := &DetailedPlacement{}
 	body.Body = BodyTerrestrial
@@ -445,10 +446,12 @@ func TestGenerateTemperature_ZedPrime_Mean(t *testing.T) {
 	if temp.Luminosity != 1.419 {
 		t.Errorf("Luminosity: got %v, want 1.419", temp.Luminosity)
 	}
-	// MeanK depends on AU which depends on parent.Orbit → OrbitToAU.
-	// We verify it's in plausible range; per-task tests pin specific values.
-	if temp.MeanK < 250 || temp.MeanK > 350 {
-		t.Errorf("MeanK out of plausible range: got %v (expected ~300K for Zed Prime)", temp.MeanK)
+	if math.Abs(temp.AU-1.06) > 0.01 {
+		t.Errorf("AU: got %v, want ~1.06 (parent at AUToOrbit(1.06))", temp.AU)
+	}
+	// MeanK pinned to book worked example (~300K per WBH p.111).
+	if math.Abs(temp.MeanK-300) > 5 {
+		t.Errorf("MeanK: got %v, want 300 ±5K (Zed Prime per WBH p.111)", temp.MeanK)
 	}
 	// ScaleHeight should be cached for Task 11's AdjustedForAltitude.
 	if temp.ScaleHeight != 8.5 {
