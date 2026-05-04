@@ -245,3 +245,146 @@ func TestCombineTemperatures_DominantSource(t *testing.T) {
 		t.Errorf("got %v, want close to 1000 (dominant source)", got)
 	}
 }
+
+func TestHZRegionAtmosphereDM(t *testing.T) {
+	cases := []struct {
+		code int
+		want int
+	}{
+		{0, 0},
+		{1, 0},
+		{2, -2},
+		{3, -2},
+		{4, -1},
+		{5, -1},
+		{14, -1}, // E
+		{6, 0},
+		{7, 0},
+		{8, 1},
+		{9, 1},
+		{10, 2},
+		{13, 2},
+		{15, 2}, // A, D, F
+		{11, 6},
+		{12, 6}, // B, C
+		{16, 0},
+		{17, 0},
+		{99, 0}, // outside table
+	}
+	for _, c := range cases {
+		if got := HZRegionAtmosphereDM(c.code); got != c.want {
+			t.Errorf("code %d: got %d, want %d", c.code, got, c.want)
+		}
+	}
+}
+
+func TestBasicTemperatureRoll_Mod7_TableValue(t *testing.T) {
+	// Atm 6 → DM 0; orbit at HZCO → no orbit DM. 2D=7 → mod=7 → 288K.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	// Sol HZCO()=3.0; set body.Orbit=3.0 to be exactly at HZCO (in zone, no orbit DM).
+	body.Orbit = 3.0
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7)
+	mod, k := BasicTemperatureRoll(r, body, sys)
+	if mod != 7 {
+		t.Errorf("mod: got %d, want 7", mod)
+	}
+	if k != 288 {
+		t.Errorf("kelvin: got %v, want 288", k)
+	}
+}
+
+func TestBasicTemperatureRoll_AtmDMShifts(t *testing.T) {
+	// Atm B (11) → DM +6. 2D=2 → mod=8 → 293K.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 11}
+	body.Orbit = 3.0
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(2)
+	mod, k := BasicTemperatureRoll(r, body, sys)
+	if mod != 8 {
+		t.Errorf("mod: got %d, want 8 (raw 2 + DM +6)", mod)
+	}
+	if k != 293 {
+		t.Errorf("kelvin: got %v, want 293", k)
+	}
+}
+
+func TestBasicTemperatureRoll_OrbitInside_DMPlus(t *testing.T) {
+	// Sol HZCO=3.0, HZCO-1=2.0. Body at orbit 1.0 → 2.0 - 1.0 = 1.0 below HZCO-1
+	// → DM = 4 + floor(1.0/0.5) = 4 + 2 = +6.
+	// Atm 6 (DM 0). 2D=2 → mod=8 → 293K.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Orbit = 1.0
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(2)
+	mod, k := BasicTemperatureRoll(r, body, sys)
+	if mod != 8 {
+		t.Errorf("mod: got %d, want 8 (raw 2 + orbit DM +6)", mod)
+	}
+	if k != 293 {
+		t.Errorf("kelvin: got %v, want 293", k)
+	}
+}
+
+func TestBasicTemperatureRoll_OrbitOutside_DMMinus(t *testing.T) {
+	// Sol HZCO=3.0, HZCO+1=4.0. Body at orbit 5.0 → 5.0 - 4.0 = 1.0 above HZCO+1
+	// → DM = -(4 + floor(1.0/0.5)) = -(4+2) = -6.
+	// Atm 6 (DM 0). 2D=12 → mod=6 → 283K.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Orbit = 5.0
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(12)
+	mod, k := BasicTemperatureRoll(r, body, sys)
+	if mod != 6 {
+		t.Errorf("mod: got %d, want 6 (raw 12 + orbit DM -6)", mod)
+	}
+	if k != 283 {
+		t.Errorf("kelvin: got %v, want 283", k)
+	}
+}
+
+func TestBasicTemperatureRoll_AboveTable(t *testing.T) {
+	// Force modified roll 14 → 388 + 2*50 = 488K.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Orbit = 3.0
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	// Need raw + DM = 14. Atm 6 DM = 0, orbit at HZCO → no orbit DM.
+	// Raw 2D max is 12, so we can't naturally hit 14 with these DMs.
+	// Use atm 11 (B) DM +6: raw 8 + 6 = 14.
+	body.Atmosphere.Code = 11
+	r := roller.NewScripted(8)
+	_, k := BasicTemperatureRoll(r, body, sys)
+	if k != 488 {
+		t.Errorf("got %v, want 488", k)
+	}
+}
+
+func TestBasicTemperatureRoll_BelowTable_NoRecompute(t *testing.T) {
+	// Atm B (11) DM +6 doesn't help us go below 0. We need orbit far outside.
+	// Sol HZCO=3.0, HZCO+1=4.0. Body at orbit 10.0 → 10-4 = 6 above HZCO+1
+	// → DM = -(4 + 12) = -16.
+	// Atm 6 (DM 0). 2D=12 → mod = 12 - 16 = -4 → kelvin = 178 + (-4)*5 = 158K.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Orbit = 10.0
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(12)
+	mod, k := BasicTemperatureRoll(r, body, sys)
+	if mod != -4 {
+		t.Errorf("mod: got %d, want -4", mod)
+	}
+	if math.Abs(k-158) > 0.1 {
+		t.Errorf("got %v, want 158", k)
+	}
+}
