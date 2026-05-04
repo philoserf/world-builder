@@ -103,12 +103,17 @@ type Temperature struct {
 
 // GenerateTemperature is the per-body 3A2b-temp orchestrator. Returns nil
 // (no error) for empty bodies. For a moon, parent is the parent planet's
-// DetailedPlacement.
+// DetailedPlacement (its Temperature field, if populated, is read for
+// multi-source IR addition once Task 9 lands).
 //
-// This task (Task 6) implements only the MEAN temperature pipeline: stellar
-// luminosity grouping, AU determination, albedo, greenhouse, mean equation,
-// basic-table roll, and field caching. High/Low (Task 7), twilight (Task 8),
-// and multi-source (Task 9) are filled in by subsequent tasks.
+// Currently populates: Luminosity, AU, ScaleHeight, Albedo, GreenhouseFactor,
+// MeanK, BasicK (Task 6); AxialTiltFactor, RotationFactor, GeographicFactor,
+// AtmosphericFactor, LuminosityModifier, NearAU, FarAU, HighK, LowK,
+// WorstHighK, WorstLowK (Task 7).
+//
+// Pending: twilight branch for 1:1 star-locks (Task 8 → IsTwilight,
+// TwilightK, BrightSideK, DarkSideK); parent-IR multi-source addition for
+// moons of warm gas giants (Task 9 → ParentRadianceK).
 func GenerateTemperature(
 	r roller.Roller,
 	body *DetailedPlacement,
