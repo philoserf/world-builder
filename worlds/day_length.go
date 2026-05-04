@@ -1,9 +1,11 @@
 package worlds
 
 import (
+	"fmt"
 	"math"
 
 	"wbh/roller"
+	"wbh/stars"
 )
 
 // DayLength — rotation periods per WBH pp.103-104.
@@ -85,4 +87,66 @@ func ComputeSolarHours(yearHours, yearDays float64) float64 {
 		return 0
 	}
 	return yearHours / yearDays
+}
+
+// addMinuteSecondPrecision rolls minutes (0-59) + seconds (0-59) precision per
+// WBH p.103 ("1D-1 for the 'tens' digit and d10 for the 'ones' digit"). Returns
+// the additive hours value (minutes/60 + seconds/3600).
+//
+// Caps each component at 59.
+func addMinuteSecondPrecision(r roller.Roller) float64 {
+	mins := tensOnesValue(r)
+	if mins > 59 {
+		mins = 59
+	}
+	secs := tensOnesValue(r)
+	if secs > 59 {
+		secs = 59
+	}
+	return float64(mins)/60.0 + float64(secs)/3600.0
+}
+
+// tensOnesValue rolls a 1D-1 (tens) + d10 (ones) and returns the combined value.
+// d10 is treated as 0-9 (any 10 returned by the roller is clamped to 9).
+func tensOnesValue(r roller.Roller) int {
+	tens := r.Roll("1D") - 1
+	if tens < 0 {
+		tens = 0
+	}
+	ones := r.Roll("d10")
+	if ones >= 10 {
+		ones = 9
+	}
+	return tens*10 + ones
+}
+
+// GenerateDayLength orchestrates per-body day-length generation per WBH pp.103-104.
+// Returns nil for empty (Body == BodyEmpty) bodies.
+//
+// For terrestrials (Size 1+): RollBasicSiderealHours + addMinuteSecondPrecision.
+// For Size 0/S/R terrestrials and gas giants: × 2 modifier applied via DayLengthDMs.IsGGOrSizeS.
+//
+// Year input comes from dp.Period.Hours (1 standard year = 8766 hours).
+func GenerateDayLength(r roller.Roller, dp *DetailedPlacement, sys stars.System) (*DayLength, error) {
+	if dp.Body == BodyEmpty {
+		return nil, nil
+	}
+	dms := DayLengthDMs{
+		SystemAgeGyr: sys.Primary.AgeGyr,
+		IsGGOrSizeS:  dp.GGClass != NotGasGiant || dp.SizeCode == "0" || dp.SizeCode == "S" || dp.SizeCode == "R",
+	}
+	hours, err := RollBasicSiderealHours(r, dms)
+	if err != nil {
+		return nil, fmt.Errorf("worlds: GenerateDayLength: %w", err)
+	}
+	hours += addMinuteSecondPrecision(r)
+
+	yearDays := ComputeYearDays(dp.Period.Hours, hours)
+	solar := ComputeSolarHours(dp.Period.Hours, yearDays)
+	return &DayLength{
+		SiderealHours:         hours,
+		SolarHours:            solar,
+		YearDays:              yearDays,
+		BaselineSiderealHours: hours,
+	}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"wbh/roller"
+	"wbh/stars"
 )
 
 func TestRollBasicSiderealHours_NoDMsNoCascade(t *testing.T) {
@@ -83,5 +84,71 @@ func TestComputeSolarHours_TerraExample(t *testing.T) {
 	want := 24.0
 	if math.Abs(got-want) > 0.1 {
 		t.Errorf("got %v, want ~%v", got, want)
+	}
+}
+
+func TestAddMinuteSecondPrecision(t *testing.T) {
+	// 1D-1 for tens, d10 for ones. Range 0-59 for minutes; 0-59 for seconds.
+	// Scripted: 1D=3 → tens-min=2; d10=2 → ones-min=2 → minutes=22.
+	// Scripted: 1D=2 → tens-sec=1; d10=5 → ones-sec=5 → seconds=15.
+	// Total addition: 22/60 + 15/3600 = 0.3667 + 0.00417 = 0.37083 hours.
+	r := roller.NewScripted(3, 2, 2, 5)
+	got := addMinuteSecondPrecision(r)
+	want := 22.0/60.0 + 15.0/3600.0
+	if math.Abs(got-want) > 0.0001 {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestGenerateDayLength_ZedPrimeSidereal(t *testing.T) {
+	// Zed Prime: moon of gas giant, around binary Aab (system age 6.3 Gyr).
+	// Per p.103 Zed example:
+	//   2D=11, 1D=1, age DM+3 → (11-2)×4 + 2 + 1 + 3 = 42 hours.
+	//   Cascade 1D=4 → no addition.
+	//   Precision: minutes 22, seconds 15 → 22/60 + 15/3600 hours added.
+	//   Final: 42 + 22/60 + 15/3600 = 42.37083... h.
+	//
+	// Year (computed by 2C): 0.805 yr × 8766 h/yr = 7056.63 h.
+	// year_days = 7056.63 / 42.37 - 1 ≈ 165.548.
+	// solar_hours = 7056.63 / 165.548 ≈ 42.626.
+	r := roller.NewScripted(
+		11, 1, // basic 2D, 1D
+		4,    // cascade 1D
+		3, 2, // minutes 1D, d10
+		2, 5, // seconds 1D, d10
+	)
+	dp := &DetailedPlacement{
+		Period: Period{Years: 0.805, Days: 0.805 * 365.25, Hours: 0.805 * 8766},
+	}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "5"
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 6.3}}
+	dl, err := GenerateDayLength(r, dp, sys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dl == nil {
+		t.Fatal("expected non-nil DayLength")
+	}
+
+	// Pre-effect baseline.
+	wantBaseline := 42.37083
+	if math.Abs(dl.BaselineSiderealHours-wantBaseline) > 0.001 {
+		t.Errorf("BaselineSiderealHours: got %v, want %v", dl.BaselineSiderealHours, wantBaseline)
+	}
+	// SiderealHours (pre-tidal-lock — same as baseline at this stage).
+	if math.Abs(dl.SiderealHours-wantBaseline) > 0.001 {
+		t.Errorf("SiderealHours: got %v, want %v", dl.SiderealHours, wantBaseline)
+	}
+	// YearDays per p.104 example.
+	wantYearDays := 7056.63/42.37083 - 1
+	if math.Abs(dl.YearDays-wantYearDays) > 0.5 {
+		t.Errorf("YearDays: got %v, want %v", dl.YearDays, wantYearDays)
+	}
+	// SolarHours per p.104 example.
+	wantSolar := 7056.63 / wantYearDays
+	if math.Abs(dl.SolarHours-wantSolar) > 0.5 {
+		t.Errorf("SolarHours: got %v, want %v", dl.SolarHours, wantSolar)
 	}
 }
