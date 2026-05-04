@@ -80,6 +80,10 @@ func DetermineFundamentalGeography(r roller.Roller, hydroCode int) (FundamentalG
 		}
 		return GeographyLand, nil
 	}
+	// Unreachable: the switch above is exhaustive over all integers
+	// (hydroCode >= 6 || hydroCode <= 4 || hydroCode == 5). The error
+	// return is preserved for signature consistency with peer Roll*/Generate*
+	// helpers in this package.
 	return GeographyLand, fmt.Errorf("worlds: DetermineFundamentalGeography: invalid hydroCode %d", hydroCode)
 }
 
