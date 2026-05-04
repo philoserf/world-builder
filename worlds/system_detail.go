@@ -396,6 +396,7 @@ type DetailedPlacement struct {
 	Hydrographics *Hydrographics
 
 	// 3A2a additions
+	DayLength *DayLength
 	AxialTilt *AxialTilt
 }
 

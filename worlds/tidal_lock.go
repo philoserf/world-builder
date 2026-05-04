@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"fmt"
 	"math"
 
 	"wbh/roller"
@@ -356,4 +357,132 @@ func parentMassEarth(parent *DetailedPlacement) float64 {
 		return DeriveMass(parent.Physical.Density, parent.DiameterKm)
 	}
 	return 0
+}
+
+// ApplyTidalLockEffect mutates body fields based on the rolled 2D+DM result,
+// per WBH p.105 effect table.
+//
+// Natural-12 verification (p.105 footnote): when InitialResult ≥ 12, rolls 2D;
+// on a natural 12, rerolls TidalLockStatus with DM=0 and uses that as FinalResult.
+//
+// On 3:2 or 1:1 lock with old tilt > 3°: rerolls AxialTilt.Degrees as (2D-2)/10.
+// On 1:1 lock with old ecc > 0.1: rerolls eccentricity with DM-2 on the standard
+// eccentricity table (stars.EccentricityValues), takes min of original/new.
+//
+// Recomputes YearDays + SolarHours after SiderealHours mutation.
+func ApplyTidalLockEffect(
+	r roller.Roller,
+	body *DetailedPlacement,
+	_ *Moon,
+	kase TidalLockCase,
+	initialResult int,
+	yearHours float64,
+) (TidalLock, error) {
+	tl := TidalLock{
+		Case:          kase,
+		InitialResult: initialResult,
+		FinalResult:   initialResult,
+	}
+
+	// Natural-12 verification per p.105 footnote: result ≥ 12 may break the
+	// 1:1 lock via a 2D verification roll; on natural 12 reroll status with no DMs.
+	if initialResult >= 12 {
+		verification := r.Roll("2D")
+		if verification == 12 {
+			tl.VerificationFired = true
+			tl.FinalResult = RollTidalLockStatus(r, 0)
+		}
+	}
+
+	// Apply effect based on FinalResult.
+	switch {
+	case tl.FinalResult <= 2:
+		// No effect.
+	case tl.FinalResult == 3:
+		tl.DayLengthMultiplier = 1.5
+	case tl.FinalResult == 4:
+		tl.DayLengthMultiplier = 2
+	case tl.FinalResult == 5:
+		tl.DayLengthMultiplier = 3
+	case tl.FinalResult == 6:
+		tl.DayLengthMultiplier = 5
+	case tl.FinalResult == 7:
+		tl.NewSiderealHours = float64(r.Roll("1D") * 5 * 24)
+	case tl.FinalResult == 8:
+		tl.NewSiderealHours = float64(r.Roll("1D") * 20 * 24)
+	case tl.FinalResult == 9:
+		tl.NewSiderealHours = float64(r.Roll("1D") * 10 * 24)
+		tl.BecomesRetrograde = true
+	case tl.FinalResult == 10:
+		tl.NewSiderealHours = float64(r.Roll("1D") * 50 * 24)
+		tl.BecomesRetrograde = true
+	case tl.FinalResult == 11:
+		tl.LockRatio = "3:2"
+	case tl.FinalResult >= 12:
+		tl.LockRatio = "1:1"
+		if kase == TidalLockCasePlanetToStar {
+			tl.IsTwilightZone = true
+		}
+	}
+
+	// Apply day-length effects.
+	if body.DayLength != nil {
+		switch {
+		case tl.DayLengthMultiplier > 0:
+			body.DayLength.SiderealHours *= tl.DayLengthMultiplier
+		case tl.NewSiderealHours > 0:
+			body.DayLength.SiderealHours = tl.NewSiderealHours
+		case tl.LockRatio == "3:2":
+			body.DayLength.SiderealHours = yearHours * 2.0 / 3.0
+		case tl.LockRatio == "1:1":
+			body.DayLength.SiderealHours = yearHours
+		}
+
+		// Recompute YearDays + SolarHours.
+		if tl.LockRatio == "1:1" && tl.IsTwilightZone {
+			body.DayLength.SolarHours = 0
+			body.DayLength.YearDays = 0
+		} else if body.DayLength.SiderealHours > 0 {
+			body.DayLength.YearDays = ComputeYearDays(yearHours, body.DayLength.SiderealHours)
+			body.DayLength.SolarHours = ComputeSolarHours(yearHours, body.DayLength.YearDays)
+		}
+	}
+
+	// Apply retrograde flag (results 9-10).
+	if tl.BecomesRetrograde && body.AxialTilt != nil {
+		if body.AxialTilt.Degrees < 90 {
+			body.AxialTilt.Degrees = 180 - body.AxialTilt.Degrees
+		}
+		body.AxialTilt.Retrograde = body.AxialTilt.Degrees > 90
+	}
+
+	// 3:2 or 1:1 lock axial-tilt reroll: if old tilt > 3°, reroll as (2D-2)/10.
+	if (tl.LockRatio == "3:2" || tl.LockRatio == "1:1") && body.AxialTilt != nil && body.AxialTilt.Degrees > 3 {
+		twoD := r.Roll("2D")
+		body.AxialTilt.Degrees = float64(twoD-2) / 10.0
+		body.AxialTilt.Retrograde = false
+		tl.AxialTiltMutated = true
+	}
+
+	// 1:1 lock eccentricity reroll: if old ecc > 0.1, reroll with DM-2, take min.
+	if tl.LockRatio == "1:1" && body.Eccentricity > 0.1 {
+		newEcc, err := rerollEccentricityDMMinus2(r)
+		if err != nil {
+			return tl, fmt.Errorf("worlds: ApplyTidalLockEffect: ecc reroll: %w", err)
+		}
+		if newEcc < body.Eccentricity {
+			body.Eccentricity = newEcc
+		}
+		tl.EccentricityMutated = true
+	}
+
+	return tl, nil
+}
+
+// rerollEccentricityDMMinus2 rerolls eccentricity using stars.RollEccentricity
+// with ExtraDM=-2 per WBH p.105 footnote. Called only for 1:1-locked bodies
+// whose existing eccentricity exceeds 0.1. Consumes 2 roller calls:
+// one 2D for the table row, one 1D (or 2D for rows 11-12) for the value.
+func rerollEccentricityDMMinus2(r roller.Roller) (float64, error) {
+	return stars.RollEccentricity(r, stars.EccentricityOpts{ExtraDM: -2})
 }

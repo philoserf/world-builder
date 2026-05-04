@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 
 	"wbh/roller"
@@ -176,5 +177,173 @@ func TestRollTidalLockStatus_NegativeDMs(t *testing.T) {
 	got := RollTidalLockStatus(r, -3)
 	if got != 1 {
 		t.Errorf("got %d, want 1 (2D=4 + DM-3)", got)
+	}
+}
+
+func TestApplyTidalLockEffect_NoEffectResult2(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
+	body.AxialTilt = &AxialTilt{Degrees: 30}
+	body.Eccentricity = 0.05
+
+	r := roller.NewScripted()
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 2, 8766.0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tl.LockRatio != "" {
+		t.Errorf("LockRatio: got %q, want empty", tl.LockRatio)
+	}
+	if body.DayLength.SiderealHours != 24 {
+		t.Errorf("SiderealHours mutated: %v", body.DayLength.SiderealHours)
+	}
+}
+
+func TestApplyTidalLockEffect_DayMultiplier_Result4(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 42.37, BaselineSiderealHours: 42.37}
+	r := roller.NewScripted() // result 4 doesn't roll any further dice
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCaseMoonToPlanet, 4, 7056.63)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tl.DayLengthMultiplier != 2.0 {
+		t.Errorf("DayLengthMultiplier: got %v, want 2.0", tl.DayLengthMultiplier)
+	}
+	if math.Abs(body.DayLength.SiderealHours-84.74) > 0.01 {
+		t.Errorf("SiderealHours: got %v, want 84.74", body.DayLength.SiderealHours)
+	}
+}
+
+func TestApplyTidalLockEffect_OneToOneLock_StarCase_TwilightZone(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
+	body.AxialTilt = &AxialTilt{Degrees: 0, BaselineDegrees: 0}
+	body.Eccentricity = 0.0
+	body.Period = Period{Years: 0.5, Hours: 4383}
+
+	// 1:1 lock, no axial-tilt reroll (tilt < 3°), no ecc reroll (ecc < 0.1).
+	// Verification roll: 2D=10 (NOT natural 12) → no reroll, lock stands.
+	r := roller.NewScripted(10)
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 12, 4383.0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio: got %q, want 1:1", tl.LockRatio)
+	}
+	if !tl.IsTwilightZone {
+		t.Error("expected IsTwilightZone for star→planet 1:1 lock")
+	}
+	if body.DayLength.SiderealHours != 4383 {
+		t.Errorf("SiderealHours: got %v, want 4383 (= year hours)", body.DayLength.SiderealHours)
+	}
+	if body.DayLength.SolarHours != 0 {
+		t.Errorf("SolarHours: got %v, want 0 (twilight zone)", body.DayLength.SolarHours)
+	}
+}
+
+func TestApplyTidalLockEffect_NaturalTwelve_BreaksLock_ZedPath(t *testing.T) {
+	// Zed Prime path: InitialResult=13 (1:1 lock pending) → verification 2D=12 (natural 12)
+	// → reroll TidalLockStatus with no DMs → 2D=4 → result 4 → day × 2 effect.
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 42.37, BaselineSiderealHours: 42.37}
+	body.AxialTilt = &AxialTilt{Degrees: 73.65, BaselineDegrees: 73.65}
+	body.Eccentricity = 0.25
+
+	// Verification rolls 12 (natural), then reroll status with no DMs rolls 4.
+	r := roller.NewScripted(12, 4)
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCaseMoonToPlanet, 13, 7056.63)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !tl.VerificationFired {
+		t.Error("expected VerificationFired=true")
+	}
+	if tl.InitialResult != 13 {
+		t.Errorf("InitialResult: got %d, want 13", tl.InitialResult)
+	}
+	if tl.FinalResult != 4 {
+		t.Errorf("FinalResult: got %d, want 4", tl.FinalResult)
+	}
+	if tl.LockRatio != "" {
+		t.Errorf("LockRatio: got %q, want empty (lock broken by verification)", tl.LockRatio)
+	}
+	if math.Abs(tl.DayLengthMultiplier-2.0) > 0.001 {
+		t.Errorf("DayLengthMultiplier: got %v, want 2.0", tl.DayLengthMultiplier)
+	}
+	if math.Abs(body.DayLength.SiderealHours-84.74) > 0.01 {
+		t.Errorf("SiderealHours: got %v, want 84.74", body.DayLength.SiderealHours)
+	}
+	// Axial tilt unchanged (no lock means no axial-tilt mutation).
+	if math.Abs(body.AxialTilt.Degrees-73.65) > 0.05 {
+		t.Errorf("Degrees: got %v, want 73.65 (unchanged)", body.AxialTilt.Degrees)
+	}
+	if tl.AxialTiltMutated {
+		t.Error("expected AxialTiltMutated=false")
+	}
+	if tl.EccentricityMutated {
+		t.Error("expected EccentricityMutated=false")
+	}
+}
+
+func TestApplyTidalLockEffect_OneToOneLock_AxialTiltReroll(t *testing.T) {
+	// 1:1 lock with old tilt > 3° → reroll as (2D-2)/10. Verification doesn't reroll.
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
+	body.AxialTilt = &AxialTilt{Degrees: 25, BaselineDegrees: 25}
+	body.Eccentricity = 0.0
+	body.Period = Period{Years: 1.0, Hours: 8766}
+
+	// Verification: 2D=11 (not natural 12) → lock stands.
+	// Axial tilt reroll: 2D=8 → (8-2)/10 = 0.6°.
+	r := roller.NewScripted(11, 8)
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 12, 8766.0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio: got %q, want 1:1", tl.LockRatio)
+	}
+	if !tl.AxialTiltMutated {
+		t.Error("expected AxialTiltMutated=true")
+	}
+	if math.Abs(body.AxialTilt.Degrees-0.6) > 0.05 {
+		t.Errorf("Degrees: got %v, want 0.6", body.AxialTilt.Degrees)
+	}
+	if body.AxialTilt.BaselineDegrees != 25 {
+		t.Errorf("BaselineDegrees should preserve original 25, got %v", body.AxialTilt.BaselineDegrees)
+	}
+}
+
+func TestApplyTidalLockEffect_OneToOneLock_EccentricityReroll(t *testing.T) {
+	// 1:1 lock with old ecc > 0.1 → reroll with DM-2, take min of original/new.
+	// Verification: 2D=10 (not natural 12) → lock stands.
+	// No axial tilt reroll (tilt < 3°).
+	// Ecc reroll: 2D=5 → row = max(5, 5-2=3)=5 → SecondRoll="1D"=3 → v=-0.001+3/1000=0.002.
+	body := &DetailedPlacement{}
+	body.Eccentricity = 0.25
+	body.AxialTilt = &AxialTilt{Degrees: 0, BaselineDegrees: 0}
+	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
+	body.Period = Period{Years: 1.0, Hours: 8766}
+
+	r := roller.NewScripted(
+		10, // verification 2D=10 (not natural 12)
+		5,  // ecc table 2D=5 → row=max(5,3)=5
+		3,  // ecc row-5 SecondRoll "1D"=3 → v=0.002 < 0.25
+	)
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 12, 8766.0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio: got %q, want 1:1", tl.LockRatio)
+	}
+	if !tl.EccentricityMutated {
+		t.Error("expected EccentricityMutated=true")
+	}
+	// body.Eccentricity should be min(0.25, 0.002) = 0.002.
+	if body.Eccentricity > 0.25 {
+		t.Errorf("Eccentricity: got %v, expected ≤ 0.25 (take min)", body.Eccentricity)
 	}
 }
