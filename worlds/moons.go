@@ -28,7 +28,29 @@ type Moon struct {
 	PeriodHours   float64
 	Atmosphere    *Atmosphere    // for HZ-planet moons only
 	Hydrographics *Hydrographics // for HZ-planet moons only
+
+	// 3A2a additions
+	SurfaceDistribution *SurfaceDistribution
+	DayLength           *DayLength
+	AxialTilt           *AxialTilt
+	TidalLock           *TidalLock
+	TidalEffects        *SurfaceTidalEffects
 }
+
+// HasSurfaceDistribution reports whether surface-distribution data has been generated for this moon.
+func (m *Moon) HasSurfaceDistribution() bool { return m.SurfaceDistribution != nil }
+
+// HasDayLength reports whether day-length data has been generated for this moon.
+func (m *Moon) HasDayLength() bool { return m.DayLength != nil }
+
+// HasAxialTilt reports whether axial-tilt data has been generated for this moon.
+func (m *Moon) HasAxialTilt() bool { return m.AxialTilt != nil }
+
+// HasTidalLock reports whether tidal-lock data has been generated for this moon.
+func (m *Moon) HasTidalLock() bool { return m.TidalLock != nil }
+
+// HasTidalEffects reports whether surface tidal-effects data has been generated for this moon.
+func (m *Moon) HasTidalEffects() bool { return m.TidalEffects != nil }
 
 // ParentInfo describes a moon's parent body. Only one of (terrestrial
 // SizeCode) or (IsGasGiant + GGClass) should be populated.

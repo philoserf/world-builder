@@ -180,6 +180,150 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		}
 	}
 
+	// Step 5B — 3A2a passes: surface distribution, day length, axial tilt,
+	// tidal lock, surface tidal effects.
+
+	// 5B.1 — surface feature distribution (per terrestrial + per HZ-planet moon).
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.HasHydrographics() {
+			sd, err := GenerateSurfaceDistribution(r, dp.Hydrographics)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: surface distribution %s: %w", dp.Designation, err)
+			}
+			dp.SurfaceDistribution = sd
+		}
+		// Per-moon surface distribution for HZ-planet moons.
+		if dp.HZ {
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.Hydrographics != nil {
+					sd, err := GenerateSurfaceDistribution(r, m.Hydrographics)
+					if err != nil {
+						return SystemDetail{}, fmt.Errorf("worlds: moon surface distribution %s: %w", m.Designation, err)
+					}
+					m.SurfaceDistribution = sd
+				}
+			}
+		}
+	}
+
+	// 5B.2 — day length (per body + per moon).
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.Body == BodyEmpty {
+			continue
+		}
+		dl, err := GenerateDayLength(r, dp, sys)
+		if err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: day length %s: %w", dp.Designation, err)
+		}
+		dp.DayLength = dl
+
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			// Build a synthetic DetailedPlacement view for the moon so GenerateDayLength
+			// can compute year-hours from PeriodHours.
+			moonDP := &DetailedPlacement{
+				Period:   Period{Hours: m.PeriodHours},
+				SizeCode: m.SizeCode,
+				GGClass:  m.GGClass,
+			}
+			moonDP.Body = BodyTerrestrial
+			if m.GGClass != NotGasGiant {
+				moonDP.Body = BodyGasGiant
+			}
+			dl, err := GenerateDayLength(r, moonDP, sys)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon day length %s: %w", m.Designation, err)
+			}
+			m.DayLength = dl
+		}
+	}
+
+	// 5B.3 — axial tilt (per body + per moon).
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.Body == BodyEmpty {
+			continue
+		}
+		at, err := GenerateAxialTilt(r, dp)
+		if err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: axial tilt %s: %w", dp.Designation, err)
+		}
+		dp.AxialTilt = at
+
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			moonDP := &DetailedPlacement{SizeCode: m.SizeCode}
+			moonDP.Body = BodyTerrestrial
+			if m.GGClass != NotGasGiant {
+				moonDP.Body = BodyGasGiant
+			}
+			at, err := GenerateAxialTilt(r, moonDP)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon axial tilt %s: %w", m.Designation, err)
+			}
+			m.AxialTilt = at
+		}
+	}
+
+	// 5B.4 — tidal lock (per body + per moon).
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.Body == BodyEmpty {
+			continue
+		}
+		tl, err := GenerateTidalLock(r, dp, nil, sys, nil, dp.Period.Hours)
+		if err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: tidal lock %s: %w", dp.Designation, err)
+		}
+		dp.TidalLock = tl
+
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			// Build a moon-side DetailedPlacement view that carries the moon's
+			// own size/eccentricity/axial-tilt/atmosphere/etc. for DM evaluation.
+			moonDP := buildMoonPlacementView(m, dp)
+			tl, err := GenerateTidalLock(r, moonDP, m, sys, dp, m.PeriodHours)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon tidal lock %s: %w", m.Designation, err)
+			}
+			m.TidalLock = tl
+			// Apply moon-side mutations back to the actual Moon struct.
+			if moonDP.DayLength != nil {
+				m.DayLength = moonDP.DayLength
+			}
+			if moonDP.AxialTilt != nil {
+				m.AxialTilt = moonDP.AxialTilt
+			}
+			m.Eccentricity = moonDP.Eccentricity // ecc may have been mutated by 1:1 lock
+		}
+	}
+
+	// 5B.5 — surface tidal effects (per body + per moon).
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.Body == BodyEmpty {
+			continue
+		}
+		te, err := GenerateSurfaceTidalEffects(dp, nil, sys, nil)
+		if err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: tidal effects %s: %w", dp.Designation, err)
+		}
+		dp.TidalEffects = te
+
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			moonDP := buildMoonPlacementView(m, dp)
+			te, err := GenerateSurfaceTidalEffects(moonDP, m, sys, dp)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon tidal effects %s: %w", m.Designation, err)
+			}
+			m.TidalEffects = te
+		}
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)
@@ -274,6 +418,34 @@ func parentInfoOf(dp DetailedPlacement) ParentInfo {
 		return ParentInfo{IsGasGiant: true, GGClass: dp.GGClass}
 	}
 	return ParentInfo{SizeCode: dp.SizeCode}
+}
+
+// buildMoonPlacementView constructs a DetailedPlacement-shaped view of a moon
+// for the purpose of feeding it into 3A2a's Generate* functions. The moon's
+// orbital fields (Eccentricity, etc.) come from the Moon struct; star-relative
+// fields (Orbit, HZ) are inherited from the parent placement.
+func buildMoonPlacementView(m *Moon, parent *DetailedPlacement) *DetailedPlacement {
+	dp := &DetailedPlacement{
+		SizeCode:      m.SizeCode,
+		DiameterKm:    m.DiameterKm,
+		GGClass:       m.GGClass,
+		MassEarth:     m.MassEarth,
+		Designation:   m.Designation,
+		Period:        Period{Hours: m.PeriodHours},
+		HZ:            parent.HZ,
+		Atmosphere:    m.Atmosphere,
+		Hydrographics: m.Hydrographics,
+		Physical:      m.Physical,
+	}
+	dp.Eccentricity = m.Eccentricity
+	dp.AxialTilt = m.AxialTilt
+	dp.DayLength = m.DayLength
+	dp.Body = BodyTerrestrial
+	if m.GGClass != NotGasGiant {
+		dp.Body = BodyGasGiant
+	}
+	dp.Orbit = parent.Orbit
+	return dp
 }
 
 // gasGiantSizingDM derives the WBH p.55 Gas Giant Sizing DM.
@@ -396,8 +568,11 @@ type DetailedPlacement struct {
 	Hydrographics *Hydrographics
 
 	// 3A2a additions
-	DayLength *DayLength
-	AxialTilt *AxialTilt
+	DayLength           *DayLength
+	AxialTilt           *AxialTilt
+	SurfaceDistribution *SurfaceDistribution
+	TidalLock           *TidalLock
+	TidalEffects        *SurfaceTidalEffects
 }
 
 // HasPhysical reports whether body-physical data has been generated for this placement.
@@ -408,6 +583,21 @@ func (dp *DetailedPlacement) HasAtmosphere() bool { return dp.Atmosphere != nil 
 
 // HasHydrographics reports whether hydrographics data has been generated for this placement.
 func (dp *DetailedPlacement) HasHydrographics() bool { return dp.Hydrographics != nil }
+
+// HasDayLength reports whether day-length data has been generated for this placement.
+func (dp *DetailedPlacement) HasDayLength() bool { return dp.DayLength != nil }
+
+// HasAxialTilt reports whether axial-tilt data has been generated for this placement.
+func (dp *DetailedPlacement) HasAxialTilt() bool { return dp.AxialTilt != nil }
+
+// HasSurfaceDistribution reports whether surface-distribution data has been generated.
+func (dp *DetailedPlacement) HasSurfaceDistribution() bool { return dp.SurfaceDistribution != nil }
+
+// HasTidalLock reports whether tidal-lock data has been generated for this placement.
+func (dp *DetailedPlacement) HasTidalLock() bool { return dp.TidalLock != nil }
+
+// HasTidalEffects reports whether surface tidal-effects data has been generated.
+func (dp *DetailedPlacement) HasTidalEffects() bool { return dp.TidalEffects != nil }
 
 // RenderSAH returns the 3-character SAH triplet for the IISS form.
 // HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".
