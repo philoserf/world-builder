@@ -952,7 +952,7 @@ func TestGenerateTemperature_GGMoon_ParentNoTemperature_Skipped(t *testing.T) {
 func TestSunlightPortion_Equator_Equinox(t *testing.T) {
 	// Equator at equinox: portion 0.5 regardless of axial tilt.
 	// Equinox = 1/4 year past summer solstice → cos(90°) = 0 → declination=0 → portion=0.5.
-	got, _ := SunlightPortion(0.0, 23.45, 0.25*365.25, 365.25)
+	got := SunlightPortion(0.0, 23.45, 0.25*365.25, 365.25)
 	if math.Abs(got-0.5) > 0.01 {
 		t.Errorf("portion: got %v, want 0.5", got)
 	}
@@ -960,7 +960,7 @@ func TestSunlightPortion_Equator_Equinox(t *testing.T) {
 
 func TestSunlightPortion_Pole_SummerSolstice(t *testing.T) {
 	// North pole at summer solstice → polar day → portion 1.0.
-	got, _ := SunlightPortion(89.99, 23.45, 0, 365.25)
+	got := SunlightPortion(89.99, 23.45, 0, 365.25)
 	if got != 1.0 {
 		t.Errorf("polar day: got %v, want 1.0", got)
 	}
@@ -968,7 +968,7 @@ func TestSunlightPortion_Pole_SummerSolstice(t *testing.T) {
 
 func TestSunlightPortion_Pole_WinterSolstice(t *testing.T) {
 	// North pole at winter solstice → polar night → portion 0.
-	got, _ := SunlightPortion(89.99, 23.45, 365.25/2, 365.25)
+	got := SunlightPortion(89.99, 23.45, 365.25/2, 365.25)
 	if got != 0 {
 		t.Errorf("polar night: got %v, want 0", got)
 	}

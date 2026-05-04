@@ -399,14 +399,13 @@ func computeGeographicFactor(body *DetailedPlacement) float64 {
 }
 
 // SunlightPortion computes the fraction of a solar day with sunlight at a
-// given latitude, axial tilt, and date per WBH p.118. Returns (portion, hours)
-// where hours is portion × solarDayHours; pass 0 for solarDayHours if you
-// only need the portion.
+// given latitude, axial tilt, and date per WBH p.118. Returns 1.0 for polar
+// day, 0.0 for polar night, otherwise the sunrise-angle fraction.
 //
-// Returns (1.0, 0) for polar day, (0, 0) for polar night.
-func SunlightPortion(latDeg, axialTiltDeg, daysSinceSolstice, localYearDays float64) (portion, hours float64) {
+// Callers wanting daylight hours multiply the result by their solarDayHours.
+func SunlightPortion(latDeg, axialTiltDeg, daysSinceSolstice, localYearDays float64) float64 {
 	if localYearDays <= 0 {
-		return 0, 0
+		return 0
 	}
 	// Solar declination (in radians) = axial_tilt × cos(360° × date / year).
 	declRad := axialTiltDeg * math.Cos(2*math.Pi*daysSinceSolstice/localYearDays) * math.Pi / 180.0
@@ -417,12 +416,11 @@ func SunlightPortion(latDeg, axialTiltDeg, daysSinceSolstice, localYearDays floa
 
 	switch {
 	case cosSunrise > 1:
-		return 0, 0 // polar night
+		return 0 // polar night
 	case cosSunrise < -1:
-		return 1.0, 0 // polar day
+		return 1.0 // polar day
 	default:
-		sunriseAngleDeg := math.Acos(cosSunrise) * 180.0 / math.Pi
-		return sunriseAngleDeg / 180.0, 0
+		return math.Acos(cosSunrise) / math.Pi
 	}
 }
 
