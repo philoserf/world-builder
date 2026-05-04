@@ -92,6 +92,10 @@ func GenerateSurfaceTidalEffects(
 	if body == nil {
 		return nil, fmt.Errorf("worlds: GenerateSurfaceTidalEffects: body is nil")
 	}
+	// Empty orbit slots have no tidal surface; skip per spec.
+	if body.Body == BodyEmpty {
+		return nil, nil
+	}
 
 	bodySizeN := nForSizeCode(body.SizeCode)
 	var components []TidalComponent
@@ -125,7 +129,10 @@ func GenerateSurfaceTidalEffects(
 		auFromStar = parentPlanet.Orbit
 	}
 
-	// Sum primary group: primary mass + all close-binary companions (OrbitCompanion, ParentIndex == -1).
+	// Sum primary group: primary mass + OrbitCompanion-class mates (sub-AU pairs
+	// like Aab) sharing ParentIndex == -1. OrbitClose-class companions (0.05-0.5 AU)
+	// are NOT summed; they form their own group below. ParentIndex values are slice
+	// indices into sys.Companions as produced by stars.GenerateSystem.
 	primaryGroupMass := sys.Primary.Mass
 	for _, c := range sys.Companions {
 		if c.OrbitClass == stars.OrbitCompanion && c.ParentIndex == -1 {
