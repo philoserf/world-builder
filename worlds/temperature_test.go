@@ -172,3 +172,15 @@ func TestComputeGreenhouseFactor_AtmosphereB_RollOf6(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestComputeGreenhouseFactor_AtmosphereB_NormalPath(t *testing.T) {
+	// Atm B (11) 1D ≤ 5 path: × first roll (the dominant 5/6 probability branch).
+	// 1D=3, pressure 1.0 → initial 0.5, × 3 → 1.5.
+	r := roller.NewScripted(3)
+	atm := &Atmosphere{Code: 11, Pressure: 1.0}
+	got := ComputeGreenhouseFactor(r, atm)
+	want := 1.5
+	if math.Abs(got-want) > 0.01 {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
