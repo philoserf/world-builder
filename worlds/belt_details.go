@@ -237,6 +237,62 @@ func RollSigSizeSBodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64
 	return count, nil
 }
 
+// GenerateBeltDetails orchestrates the per-belt pipeline per WBH pp.72-74.
+// Caller supplies pre-resolved geometric parameters (orbit, spread, hzco, age) and
+// neighbor flags (adjacentToGG triggers DM-1 on span; outermostSlot triggers DM+3).
+func GenerateBeltDetails(r roller.Roller, beltOrbit, spreadOrbits, hzco, ageGyr float64, adjacentToGG, outermostSlot bool) (BeltDetails, error) {
+	spanDM := 0
+	if adjacentToGG {
+		spanDM = -1
+	}
+	if outermostSlot {
+		spanDM = 3
+	}
+	span, err := RollBeltSpan(r, spreadOrbits, spanDM)
+	if err != nil {
+		return BeltDetails{}, err
+	}
+
+	compDM := 0
+	if beltOrbit < hzco {
+		compDM = -4
+	}
+	if beltOrbit > hzco+2 {
+		compDM = 4
+	}
+	comp, err := RollBeltComposition(r, compDM)
+	if err != nil {
+		return BeltDetails{}, err
+	}
+
+	bulk, err := RollBeltBulk(r, ageGyr, comp)
+	if err != nil {
+		return BeltDetails{}, err
+	}
+
+	resources, err := RollResourceRating(r, bulk, comp)
+	if err != nil {
+		return BeltDetails{}, err
+	}
+
+	size1, err := RollSigSize1Bodies(r, bulk, beltOrbit, hzco, span)
+	if err != nil {
+		return BeltDetails{}, err
+	}
+
+	sizeS, err := RollSigSizeSBodies(r, bulk, beltOrbit, hzco, span)
+	if err != nil {
+		return BeltDetails{}, err
+	}
+
+	belt := BeltDetails{
+		Span: span, Composition: comp, Bulk: bulk,
+		ResourceRating: resources, SigSize1Bodies: size1, SigSizeSBodies: sizeS,
+	}
+	belt.Profile = FormatBeltProfile(belt)
+	return belt, nil
+}
+
 // FormatBeltProfile renders the belt-profile shorthand "S-CC.CC.CC.CC-B-R-#-s" per WBH p.74.
 // Resource rating uses hex letters A/B/C for 10/11/12.
 func FormatBeltProfile(b BeltDetails) string {
