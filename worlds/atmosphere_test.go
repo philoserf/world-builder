@@ -183,3 +183,51 @@ func TestScaleHeight_Edge(t *testing.T) {
 		t.Errorf("g=0: got %v, want 0", got)
 	}
 }
+
+func TestRollCorrosiveInsidiousSubtype_AabI(t *testing.T) {
+	t.Parallel()
+	// Aab I: Size B (11), orbit 1.0, hzco 3.3, corrosive, no runaway.
+	// DMs: Size 8+ → +2; Orbit < HZCO-1 → +4. Total +6.
+	// 2D=7 + 6 = 13 → subtype "D".
+	r := roller.NewScripted(7)
+	got, err := RollCorrosiveInsidiousSubtype(r, SizeCode("B"), 1.0, 3.3, false, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "D" {
+		t.Errorf("Aab I subtype: got %q, want %q", got, "D")
+	}
+}
+
+func TestRollCorrosiveInsidiousSubtype_Boundaries(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name        string
+		roll        int
+		size        SizeCode
+		orbit, hzco float64
+		insidious   bool
+		runaway     bool
+		want        string
+	}{
+		{"min: 2D=2, no DM → 2", 2, "5", 3.3, 3.3, false, false, "2"},
+		{"max: 2D=12 + DM+2 → 14 → E", 12, "8", 3.3, 3.3, false, false, "E"},
+		{"2D=10 → A", 10, "5", 3.3, 3.3, false, false, "A"},
+		{"insidious DM+2: 2D=10 + 2 = 12 → C", 10, "5", 3.3, 3.3, true, false, "C"},
+		{"runaway DM+4: 2D=8 + 4 = 12 → C", 8, "5", 3.3, 3.3, false, true, "C"},
+		{"size 2-4 DM-3: 2D=10 - 3 = 7 → 7", 10, "3", 3.3, 3.3, false, false, "7"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			r := roller.NewScripted(c.roll)
+			got, err := RollCorrosiveInsidiousSubtype(r, c.size, c.orbit, c.hzco, c.insidious, c.runaway)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != c.want {
+				t.Errorf("got %q, want %q", got, c.want)
+			}
+		})
+	}
+}

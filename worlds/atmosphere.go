@@ -1,6 +1,8 @@
 package worlds
 
 import (
+	"fmt"
+
 	"wbh/roller"
 )
 
@@ -191,6 +193,63 @@ func DeriveScaleHeight(meanTempK, gravityG float64) float64 {
 		return 0
 	}
 	return 8.5 * (meanTempK / 288) / gravityG
+}
+
+// RollCorrosiveInsidiousSubtype rolls on WBH p.89 Corrosive and Insidious Atmosphere Subtype table.
+//
+// DMs (WBH p.89):
+//   - Size 2-4 → DM-3
+//   - Size 8+  → DM+2
+//   - Orbit < HZCO-1 → DM+4
+//   - Orbit > HZCO+2 → DM-2
+//   - Atmosphere is Insidious (code 12) → DM+2
+//   - Runaway greenhouse result → DM+4
+//
+// Returns subtype letter "1"-"9", "A"-"E".
+func RollCorrosiveInsidiousSubtype(
+	r roller.Roller,
+	sizeCode SizeCode,
+	orbit, hzco float64,
+	isInsidious, runawayResult bool,
+) (string, error) {
+	roll := r.Roll("2D")
+	dm := 0
+	si := SizeAsInt(sizeCode)
+	if si >= 2 && si <= 4 {
+		dm -= 3
+	}
+	if si >= 8 {
+		dm += 2
+	}
+	if orbit < hzco-1 {
+		dm += 4
+	}
+	if orbit > hzco+2 {
+		dm -= 2
+	}
+	if isInsidious {
+		dm += 2
+	}
+	if runawayResult {
+		dm += 4
+	}
+	total := roll + dm
+	switch {
+	case total <= 1:
+		return "1", nil
+	case total <= 9:
+		return fmt.Sprintf("%d", total), nil
+	case total == 10:
+		return "A", nil
+	case total == 11:
+		return "B", nil
+	case total == 12:
+		return "C", nil
+	case total == 13:
+		return "D", nil
+	default:
+		return "E", nil
+	}
 }
 
 // RollAtmoCode rolls the unified WBH atmosphere digit formula: 2D-7+Size.
