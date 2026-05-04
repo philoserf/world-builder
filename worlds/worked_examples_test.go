@@ -909,19 +909,16 @@ func TestSol_GenerateSystemPlacement(t *testing.T) {
 	}
 }
 
-// TestZed_FullDetail_3A2a is the 3A2a acceptance gate. Replaces 3A1's
-// free-dice shape test; extends with property invariants for 3A2a fields.
+// TestZed_FullDetail_3A2b_temp is the 3A2b-temp acceptance gate. Replaces
+// TestZed_FullDetail_3A2a's free-dice shape test; extends with property
+// invariants for 3A2b-temp Temperature fields.
 //
-// Per-phase numeric worked-example values (42.37h sidereal, 73.65° axial tilt,
-// 30.6m primary tide, 0.24m star tide) are covered by per-file tests:
-//   - day_length_test.go            → TestGenerateDayLength_ZedPrimeSidereal
-//   - axial_tilt_test.go            → TestGenerateAxialTilt_ZedPrime
-//   - tidal_lock_test.go            → TestGenerateTidalLock_ZedPrime_FullPath
-//   - surface_tidal_effects_test.go → TestGenerateSurfaceTidalEffects_ZedPrime
-//
-// This test asserts that across 100 randomly-seeded iterations the full
-// DetailSystem pipeline produces structurally-valid output for every body.
-func TestZed_FullDetail_3A2a(t *testing.T) {
+// Per-phase numeric worked-example values (300K mean, 346K high, 250K low,
+// 0.33 albedo, 0.59 greenhouse) are pinned in worlds/temperature_test.go
+// per-task tests. This test asserts that across 100 randomly-seeded
+// iterations the full DetailSystem pipeline produces structurally-valid
+// output for every body's Temperature.
+func TestZed_FullDetail_3A2b_temp(t *testing.T) {
 	t.Parallel()
 
 	for iter := 0; iter < 100; iter++ {
@@ -946,7 +943,7 @@ func TestZed_FullDetail_3A2a(t *testing.T) {
 			t.Fatalf("iter %d: DetailSystem: %v", iter, err)
 		}
 
-		// 3A1 invariants (preserved unchanged):
+		// 3A1 invariants (preserved):
 
 		// Assertion 1: HZ-orbit terrestrials have 3-char SAH (no '?').
 		for i := range sd.Detailed {
@@ -989,9 +986,9 @@ func TestZed_FullDetail_3A2a(t *testing.T) {
 			t.Errorf("iter %d: survey form has empty Sector", iter)
 		}
 
-		// 3A2a invariants (new):
+		// 3A2a invariants:
 
-		// Assertion 4: every non-empty body has DayLength + AxialTilt populated.
+		// Assertion 4: every non-empty body has DayLength + AxialTilt.
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.Body == worlds.BodyEmpty {
@@ -1015,7 +1012,7 @@ func TestZed_FullDetail_3A2a(t *testing.T) {
 			}
 		}
 
-		// Assertion 6: every body has TidalEffects populated (zero is OK; nil is not).
+		// Assertion 6: every body has TidalEffects populated.
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.Body == worlds.BodyEmpty {
@@ -1026,9 +1023,7 @@ func TestZed_FullDetail_3A2a(t *testing.T) {
 			}
 		}
 
-		// Assertion 7: TidalLock is nil when no case applies; if non-nil, Case
-		// must be one of the three real cases (None on a non-nil TidalLock would
-		// be a pipeline bug — GenerateTidalLock returns nil for None).
+		// Assertion 7: TidalLock pointer presence — if non-nil, Case must be valid (not None).
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.TidalLock == nil {
@@ -1062,9 +1057,132 @@ func TestZed_FullDetail_3A2a(t *testing.T) {
 				}
 			}
 		}
+
+		// 3A2b-temp invariants (new):
+
+		// Assertion 9: every non-empty body has Temperature populated.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyEmpty {
+				continue
+			}
+			if !dp.HasTemperature() {
+				t.Errorf("iter %d: body %s missing Temperature", iter, dp.Designation)
+			}
+		}
+
+		// Assertion 10: every body satisfies LowK ≤ MeanK ≤ HighK.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasTemperature() {
+				continue
+			}
+			tt := dp.Temperature
+			if tt.LowK > tt.MeanK {
+				t.Errorf("iter %d: body %s: LowK %v > MeanK %v", iter, dp.Designation, tt.LowK, tt.MeanK)
+			}
+			if tt.MeanK > tt.HighK {
+				t.Errorf("iter %d: body %s: MeanK %v > HighK %v", iter, dp.Designation, tt.MeanK, tt.HighK)
+			}
+		}
+
+		// Assertion 11: every body satisfies WorstLowK ≤ LowK and HighK ≤ WorstHighK.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasTemperature() {
+				continue
+			}
+			tt := dp.Temperature
+			if tt.WorstLowK > tt.LowK {
+				t.Errorf("iter %d: body %s: WorstLowK %v > LowK %v", iter, dp.Designation, tt.WorstLowK, tt.LowK)
+			}
+			if tt.HighK > tt.WorstHighK {
+				t.Errorf("iter %d: body %s: HighK %v > WorstHighK %v", iter, dp.Designation, tt.HighK, tt.WorstHighK)
+			}
+		}
+
+		// Assertion 12: Albedo ∈ [0.02, 0.98].
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasTemperature() {
+				continue
+			}
+			a := dp.Temperature.Albedo
+			if a < 0.02 || a > 0.98 {
+				t.Errorf("iter %d: body %s: Albedo %v out of [0.02, 0.98]", iter, dp.Designation, a)
+			}
+		}
+
+		// Assertion 13: GreenhouseFactor ≥ 0 and < 5 (sanity bound).
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasTemperature() {
+				continue
+			}
+			g := dp.Temperature.GreenhouseFactor
+			if g < 0 {
+				t.Errorf("iter %d: body %s: GreenhouseFactor %v < 0", iter, dp.Designation, g)
+			}
+			if g >= 5 {
+				t.Errorf("iter %d: body %s: GreenhouseFactor %v ≥ 5 (sanity bound)", iter, dp.Designation, g)
+			}
+		}
+
+		// Assertion 14: HZ bodies have MeanK in a non-degenerate range [50K, 1500K].
+		// The WBH HZ definition is HZCO ± 1.0 orbit numbers (p.58), not a thermal
+		// constraint. Close-in orbits around cool stars (Zed B, Zed Cab) are legitimately
+		// flagged HZ by orbit number but can be extremely hot (>800K at 0.02 AU). The
+		// bounds here catch implementation bugs (zero/negative, or star-temperature output)
+		// without falsely excluding valid close-in HZ orbits.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HZ || !dp.HasTemperature() {
+				continue
+			}
+			m := dp.Temperature.MeanK
+			if m < 50 || m > 1500 {
+				t.Errorf("iter %d: HZ body %s: MeanK %v outside [50, 1500]", iter, dp.Designation, m)
+			}
+		}
+
+		// Assertion 15: 1:1 star-locked bodies are twilight zones.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.TidalLock == nil ||
+				dp.TidalLock.LockRatio != "1:1" ||
+				dp.TidalLock.Case != worlds.TidalLockCasePlanetToStar ||
+				!dp.HasTemperature() {
+				continue
+			}
+			tt := dp.Temperature
+			if !tt.IsTwilight {
+				t.Errorf("iter %d: body %s 1:1 star-locked but IsTwilight=false", iter, dp.Designation)
+			}
+			if tt.DarkSideK >= tt.TwilightK {
+				t.Errorf("iter %d: body %s twilight order broken: dark %v ≥ twilight %v",
+					iter, dp.Designation, tt.DarkSideK, tt.TwilightK)
+			}
+			if tt.TwilightK >= tt.BrightSideK {
+				t.Errorf("iter %d: body %s twilight order broken: twilight %v ≥ bright %v",
+					iter, dp.Designation, tt.TwilightK, tt.BrightSideK)
+			}
+		}
+
+		// Assertion 16: book-divergence informational (not a failure).
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasTemperature() {
+				continue
+			}
+			if math.Abs(dp.Temperature.MeanK-dp.Temperature.BasicK) > 10 {
+				t.Logf("iter %d: body %s MeanK %.0fK and BasicK %.0fK diverge by >10K (book inconsistency surfacing)",
+					iter, dp.Designation, dp.Temperature.MeanK, dp.Temperature.BasicK)
+			}
+		}
 	}
 
 	// Referee-fiat / book-inconsistency logs (informational only).
-	t.Logf("p.101 continent counts deferred to Referee fiat per Q6 option (b)")
+	t.Logf("p.101 continent counts deferred to Referee fiat per 3A2a Q6 option (b)")
 	t.Logf("p.106 tidal lock natural-12 verification implemented per spec; the book's worked example fudges it as a Referee narrative")
+	t.Logf("p.115 sidebar Zed Prime WorstLow=230K (book) vs 219K (consistent Near/Far AU computation) — implementation uses consistent Near/Far AU")
 }

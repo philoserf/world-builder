@@ -35,6 +35,9 @@ type Moon struct {
 	AxialTilt           *AxialTilt
 	TidalLock           *TidalLock
 	TidalEffects        *SurfaceTidalEffects
+
+	// 3A2b-temp additions
+	Temperature *Temperature
 }
 
 // HasSurfaceDistribution reports whether surface-distribution data has been generated for this moon.
@@ -51,6 +54,9 @@ func (m *Moon) HasTidalLock() bool { return m.TidalLock != nil }
 
 // HasTidalEffects reports whether surface tidal-effects data has been generated for this moon.
 func (m *Moon) HasTidalEffects() bool { return m.TidalEffects != nil }
+
+// HasTemperature reports whether 5C ran for this moon.
+func (m *Moon) HasTemperature() bool { return m.Temperature != nil }
 
 // ParentInfo describes a moon's parent body. Only one of (terrestrial
 // SizeCode) or (IsGasGiant + GGClass) should be populated.

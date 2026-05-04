@@ -252,6 +252,42 @@ func RollCorrosiveInsidiousSubtype(
 	}
 }
 
+// HZRegionAtmosphereDM returns the WBH p.47 Habitable Zones Regions
+// atmosphere DM for the given atmosphere code. Used by both the atmosphere
+// generation (3A1) and the basic temperature roll (3A2b-temp p.109).
+//
+// Verified against the table on WBH p.47:
+//
+//	0, 1     → 0  (no modifier; temperature swings between day and night)
+//	2, 3     → -2
+//	4, 5, E  → -1
+//	6, 7     → 0
+//	8, 9     → +1
+//	A, D, F  → +2
+//	B, C     → +6
+//
+// Codes outside the table (G, H, others) return 0 (defensive).
+func HZRegionAtmosphereDM(code int) int {
+	switch code {
+	case 0, 1:
+		return 0
+	case 2, 3:
+		return -2
+	case 4, 5, 14: // 4, 5, E
+		return -1
+	case 6, 7:
+		return 0
+	case 8, 9:
+		return 1
+	case 10, 13, 15: // A, D, F
+		return 2
+	case 11, 12: // B, C
+		return 6
+	default:
+		return 0
+	}
+}
+
 // RollAtmoCode rolls the unified WBH atmosphere digit formula: 2D-7+Size.
 //
 // Sizes 0, 1, and S return automatic atmo code 0 without consuming a roll.
