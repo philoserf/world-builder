@@ -290,14 +290,11 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 				return SystemDetail{}, fmt.Errorf("worlds: moon tidal lock %s: %w", m.Designation, err)
 			}
 			m.TidalLock = tl
-			// Apply moon-side mutations back to the actual Moon struct.
-			if moonDP.DayLength != nil {
-				m.DayLength = moonDP.DayLength
-			}
-			if moonDP.AxialTilt != nil {
-				m.AxialTilt = moonDP.AxialTilt
-			}
-			m.Eccentricity = moonDP.Eccentricity // ecc may have been mutated by 1:1 lock
+			// DayLength and AxialTilt are aliased through buildMoonPlacementView's
+			// pointer copies, so mutations inside ApplyTidalLockEffect already reach
+			// the Moon. Eccentricity is a value field on embedded Placement, so it
+			// must be written back explicitly when a 1:1 lock rerolled it.
+			m.Eccentricity = moonDP.Eccentricity
 		}
 	}
 

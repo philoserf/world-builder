@@ -76,8 +76,9 @@ func PlanetTideOnMoon(planetMassEarth float64, moonSizeN int, orbitKm int) float
 // orbits).
 //
 // Three tidal sources are summed:
-//  1. Parent planet → moon (PlanetTideOnMoon), when body is a moon.
-//     TODO Task 11: skip when moon is 1:1 tidally locked (Moon.TidalLock not yet present).
+//  1. Parent planet → moon (PlanetTideOnMoon), when body is a moon and the
+//     moon is not 1:1 locked to its parent (a 1:1 lock fixes the tidal bulge,
+//     producing no surface amplitude per WBH p.108).
 //  2. Stars → body (StarTide), summing mass within each close-binary group.
 //  3. Sibling moons → body (MoonTideOnPlanet), using each sibling moon's
 //     mass and orbit (moon-to-moon tides not yet implemented — Referee fiat per p.108).
@@ -102,8 +103,9 @@ func GenerateSurfaceTidalEffects(
 
 	// ── 1. Parent planet → moon ───────────────────────────────────────────
 	// Applied when body is a moon (moonRef != nil) and parentPlanet is provided.
-	// TODO Task 11: skip when moonRef.TidalLock != nil && moonRef.TidalLock.LockRatio == "1:1"
-	if moonRef != nil && parentPlanet != nil {
+	// Skipped when the moon is 1:1 tidally locked: a fixed bulge yields no surface tide.
+	isOneToOneLocked := moonRef != nil && moonRef.TidalLock != nil && moonRef.TidalLock.LockRatio == "1:1"
+	if moonRef != nil && parentPlanet != nil && !isOneToOneLocked {
 		planetMass := parentPlanet.MassEarth
 		if moonRef.OrbitKm > 0 && planetMass > 0 {
 			tide := PlanetTideOnMoon(planetMass, bodySizeN, moonRef.OrbitKm)
