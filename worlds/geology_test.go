@@ -146,27 +146,21 @@ func TestComputeTidalStressFactor_HighTotal(t *testing.T) {
 
 func TestComputeTidalHeatingFactor_ZedPrime(t *testing.T) {
 	// Zed Prime as a moon orbiting its parent gas giant.
-	// PrimaryMass⊕ = 1200, Size=5, ecc and Period are illustrative
-	// (book worked example pins factor=14 but doesn't state ecc/period).
-	// We assert only that the formula produces a non-zero result with
-	// realistic moon-of-GG inputs.
+	// PrimaryMass⊕=1200, Size=5, ecc=0.1, Distance=3.92 Mkm, Period=2.0 days,
+	// WorldMass⊕=0.55 reproduces the WBH p.126 worked example value of 14.
+	// (The book's worked example pins the result at 14 but does not state
+	// the exact ecc/Period; these values were tuned to match.)
 	in := TidalHeatingInputs{
 		PrimaryMassEarth: 1200,
 		SizeN:            5,
-		Eccentricity:     0.1,  // tuned to produce a non-trivial result
-		DistanceMkm:      3.92, // per p.125 worked example
-		PeriodDays:       2.0,  // tuned to produce a non-trivial result
+		Eccentricity:     0.1,
+		DistanceMkm:      3.92,
+		PeriodDays:       2.0,
 		WorldMassEarth:   0.55,
 	}
 	got := ComputeTidalHeatingFactor(in)
-	// With these inputs and constant 3000: ~14. Lower bound 1 verifies the
-	// formula returns a non-trivial non-zero result for moon-of-GG geometry.
-	if got < 1 {
-		t.Errorf("got %d, want >= 1 (non-trivial tidal heating expected)", got)
-	}
-	// Sanity upper bound — these inputs shouldn't produce Io-territory results.
-	if got > 1000 {
-		t.Errorf("got %d, want <= 1000 (sanity)", got)
+	if got != 14 {
+		t.Errorf("got %d, want 14 (Zed Prime book worked example)", got)
 	}
 }
 
