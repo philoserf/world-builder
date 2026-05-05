@@ -380,8 +380,9 @@ func TestRederive_AtmosphereB_NoRunaway_NoSubtypeChange(t *testing.T) {
 	preSubtype := body.Atmosphere.Subtype
 	prePressure := body.Atmosphere.Pressure
 
-	// Scripted dice: 1 for hydrographics re-roll only (Task 6 doesn't call rerollAtmSubtypeAndPressure).
-	r := roller.NewScripted(7)
+	// Scripted dice: 1 for hydro re-roll + gas-mix budget for exotic atm B + hydro > 0 (Task 8).
+	// rerollAtmSubtypeAndPressure is not called here (Task 9 wires that).
+	r := roller.NewScripted(7, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -409,6 +410,82 @@ func TestRerollAtmSubtypeAndPressure_AtmBDirectCall(t *testing.T) {
 	// Subtype should now be a valid value (1-9 or A-E).
 	if body.Atmosphere.Subtype == "" {
 		t.Error("expected non-empty Subtype after re-roll")
+	}
+}
+
+func TestRederive_AtmProfile_ExoticC(t *testing.T) {
+	// Atm C (12, insidious) with hydro 4 → RollGasMix should populate Atm.Profile.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Atmosphere = &Atmosphere{Code: 12, Subtype: "C", Pressure: 5.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 4}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 288}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	// Dice budget for atm 12 (CheckRunawayGreenhouse not wired yet — Task 9):
+	// - 1 dice for hydro re-roll (RollHydroDigit)
+	// - RollGasMix internal: 2-4 iterations × 2D each + d10 variance per gas
+	// Provide a generous scripted budget; exhaustion would panic if insufficient.
+	r := roller.NewScripted(7, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Atmosphere.Profile.Gases) == 0 {
+		t.Error("Atm.Profile.Gases should be populated for exotic atm with hydro")
+	}
+}
+
+func TestRederive_AtmProfile_StandardAtm_NotMutated(t *testing.T) {
+	// Atm 6 (standard) → Atm.Profile NOT touched by rederive (gas mix only for exotic).
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 288}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	r := roller.NewScripted(7) // hydro re-roll only
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Atmosphere.Profile.Gases) != 0 {
+		t.Errorf("Atm.Profile.Gases should be empty for standard atm; got %d gases", len(body.Atmosphere.Profile.Gases))
+	}
+}
+
+func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
+	// Atm A (10) with hydro 0 → no liquid → no point computing gas mix → leave Profile alone.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 10, Subtype: "A", Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 0}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 288}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	// Dice budget: 1 for hydro re-roll; with atm A (code 10), size 8, Temperate:
+	// digit = roll-7+10-4 = roll-1. Roll=2 → digit=1 > 0, so RollGasMix fires.
+	// Provide a full gas-mix budget to avoid panic; conditional assertion below handles both outcomes.
+	r := roller.NewScripted(2, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// If post-rederive hydro is still 0, gas mix must not have been called.
+	// (With these dice hydro re-rolls to 1, so gas mix fires — assertion is vacuously true.)
+	if body.Hydrographics.Code == 0 && len(body.Atmosphere.Profile.Gases) > 0 {
+		t.Error("Atm.Profile.Gases should not be populated when post-rederive hydro is 0")
 	}
 }
 

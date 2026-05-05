@@ -83,6 +83,16 @@ func RederiveAtmosphereHydrographics(
 		body.Hydrographics.Profile = DeriveHydrographicsProfile(meanK, atmCode, body.Hydrographics.Code)
 	}
 
+	// 4. Atm.Profile: re-derive gas mix for exotic atm (A/B/C/F) with hydro > 0.
+	if body.Atmosphere != nil && isExoticAtmCode(body.Atmosphere.Code) &&
+		body.Hydrographics != nil && body.Hydrographics.Code > 0 {
+		newProfile, err := RollGasMix(r, body.Atmosphere.Subtype, "", tempRange, body.SizeCode)
+		if err != nil {
+			return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: gas mix: %w", err)
+		}
+		body.Atmosphere.Profile = newProfile
+	}
+
 	_ = parent // parent unused at Task 6; wired in Task 9 for moon-specific paths
 	_ = sys    // sys unused at Task 6; wired in Task 9 for runaway greenhouse
 	return nil
