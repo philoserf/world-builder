@@ -104,10 +104,7 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 	}
 
 	// Order: empty → GG → belts → terrestrials.
-	emptyCount := n - counts.Total
-	if emptyCount < 0 {
-		emptyCount = 0
-	}
+	emptyCount := max(n-counts.Total, 0)
 	for i := 0; i < emptyCount; i++ {
 		if err := placeOne(BodyEmpty); err != nil {
 			return nil, err

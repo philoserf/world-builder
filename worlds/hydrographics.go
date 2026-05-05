@@ -49,10 +49,7 @@ func RollHydroDigit(r roller.Roller, atmoCode int, atmoSubtype string, sizeCode 
 		}
 	}
 
-	digit := roll - 7 + atmoCode + dm
-	if digit < 0 {
-		digit = 0
-	}
+	digit := max(roll-7+atmoCode+dm, 0)
 	if digit > 10 {
 		digit = 10
 	}
@@ -97,22 +94,13 @@ func RefineHydroPercent(r roller.Roller, digit int, hydroRange [2]int) (int, err
 	v := r.Roll("d10")
 	switch digit {
 	case 0:
-		pct := -4 + v
-		if pct < 0 {
-			pct = 0
-		}
+		pct := max(-4+v, 0)
 		return pct, nil
 	case 10:
-		pct := 96 + v
-		if pct > 100 {
-			pct = 100
-		}
+		pct := min(96+v, 100)
 		return pct, nil
 	}
-	pct := hydroRange[0] + (v - 1)
-	if pct > hydroRange[1] {
-		pct = hydroRange[1]
-	}
+	pct := min(hydroRange[0]+(v-1), hydroRange[1])
 	return pct, nil
 }
 

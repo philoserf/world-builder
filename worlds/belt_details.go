@@ -30,10 +30,7 @@ type BeltComposition struct {
 // The effective roll is clamped to a minimum of 1.
 func RollBeltSpan(r roller.Roller, spreadOrbits float64, dms int) (float64, error) {
 	roll := r.Roll("2D")
-	effective := roll + dms
-	if effective < 1 {
-		effective = 1
-	}
+	effective := max(roll+dms, 1)
 	return spreadOrbits * float64(effective) / 10.0, nil
 }
 
@@ -123,10 +120,7 @@ func rollComponent(r roller.Roller, base, mult int, isD3 bool) int {
 // s-type; any shortfall below 100% is allocated as "other".
 func RollBeltComposition(r roller.Roller, dms int) (BeltComposition, error) {
 	roll := r.Roll("2D")
-	idx := roll + dms
-	if idx < 0 {
-		idx = 0
-	}
+	idx := max(roll+dms, 0)
 	if idx > 12 {
 		idx = 12
 	}
@@ -155,10 +149,7 @@ func RollBeltComposition(r roller.Roller, dms int) (BeltComposition, error) {
 	}
 
 	// Any shortfall below 100% is "other" composition.
-	other := 100 - (m + s + c)
-	if other < 0 {
-		other = 0
-	}
+	other := max(100-(m+s+c), 0)
 
 	return BeltComposition{MTypePct: m, STypePct: s, CTypePct: c, OtherPct: other}, nil
 }
@@ -172,10 +163,7 @@ func RollBeltComposition(r roller.Roller, dms int) (BeltComposition, error) {
 func RollBeltBulk(r roller.Roller, ageGyr float64, comp BeltComposition) (int, error) {
 	roll := r.Roll("2D+2")
 	dms := -int(ageGyr/2) + comp.CTypePct/10
-	bulk := roll + dms
-	if bulk < 1 {
-		bulk = 1
-	}
+	bulk := max(roll+dms, 1)
 	return bulk, nil
 }
 
@@ -183,10 +171,7 @@ func RollBeltBulk(r roller.Roller, ageGyr float64, comp BeltComposition) (int, e
 // Rating < 2 is treated as 2; rating > 12 is capped at 12.
 func RollResourceRating(r roller.Roller, bulk int, comp BeltComposition) (int, error) {
 	roll := r.Roll("2D")
-	rating := roll - 7 + bulk + comp.MTypePct/10 - comp.CTypePct/10
-	if rating < 2 {
-		rating = 2
-	}
+	rating := max(roll-7+bulk+comp.MTypePct/10-comp.CTypePct/10, 2)
 	if rating > 12 {
 		rating = 12
 	}
@@ -205,10 +190,7 @@ func RollSigSize1Bodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64
 	if span < 0.1 {
 		dms -= 4
 	}
-	count := roll - 12 + bulk + dms
-	if count < 0 {
-		count = 0
-	}
+	count := max(roll-12+bulk+dms, 0)
 	return count, nil
 }
 
@@ -227,10 +209,7 @@ func RollSigSizeSBodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64
 	if span > 1.0 {
 		dm++
 	}
-	count := roll - 10 + (dm+1)*(bulk+1)
-	if count < 0 {
-		count = 0
-	}
+	count := max(roll-10+(dm+1)*(bulk+1), 0)
 	if span < 0.1 {
 		count = (count + 1) / 2
 	}
@@ -305,7 +284,8 @@ func FormatBeltProfile(b BeltDetails) string {
 	case 12:
 		resourceStr = "C"
 	}
-	return fmt.Sprintf("%g-%02d.%02d.%02d.%02d-%d-%s-%d-%d",
+	return fmt.Sprintf(
+		"%g-%02d.%02d.%02d.%02d-%d-%s-%d-%d",
 		b.Span,
 		b.Composition.MTypePct, b.Composition.STypePct,
 		b.Composition.CTypePct, b.Composition.OtherPct,

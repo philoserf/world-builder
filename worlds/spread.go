@@ -13,10 +13,7 @@ package worlds
 // totalStars counts primary + Close/Near/Far secondaries. Companions do
 // not count.
 func Spread(primary Group, primaryAllocated int, baselineOrbit float64, baselineN, totalStars int) float64 {
-	n := baselineN
-	if n < 1 {
-		n = 1
-	}
+	n := max(baselineN, 1)
 	base := (baselineOrbit - primary.MAO) / float64(n)
 	// Outermost slot would be at MAO + primaryAllocated × base. The cap
 	// fires when this exceeds Orbit# 20, including the baselineN < 1 case

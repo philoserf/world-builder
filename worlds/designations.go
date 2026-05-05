@@ -1,5 +1,7 @@
 package worlds
 
+import "strings"
+
 import "fmt"
 
 // AssignPlanetDesignations walks Detailed in arrival order (orbit order
@@ -64,12 +66,12 @@ func romanNumeral(n int) string {
 	}
 	values := []int{10, 9, 5, 4, 1}
 	symbols := []string{"X", "IX", "V", "IV", "I"}
-	out := ""
+	var out strings.Builder
 	for i, v := range values {
 		for n >= v {
-			out += symbols[i]
+			out.WriteString(symbols[i])
 			n -= v
 		}
 	}
-	return out
+	return out.String()
 }

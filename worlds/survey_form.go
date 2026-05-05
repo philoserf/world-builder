@@ -113,8 +113,8 @@ func RenderIISSClass23(sd SystemDetail, sys stars.System, h IISSClass23Header) I
 
 // splitSectorLocation parses "Sector | NNNN" into (sector, location).
 func splitSectorLocation(s string) (sector, location string) {
-	if idx := strings.Index(s, " | "); idx >= 0 {
-		return s[:idx], s[idx+3:]
+	if before, after, ok := strings.Cut(s, " | "); ok {
+		return before, after
 	}
 	return s, ""
 }

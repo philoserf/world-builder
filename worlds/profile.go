@@ -14,7 +14,8 @@ import (
 // Different profiles for different purposes; package qualifier disambiguates.
 func ShortProfile(sd SystemDetail) string {
 	n := max(0, sd.BaselineN)
-	return fmt.Sprintf("%d-%d-%d-%d-%s",
+	return fmt.Sprintf(
+		"%d-%d-%d-%d-%s",
 		sd.Counts.GasGiants,
 		sd.Counts.PlanetoidBelts,
 		sd.Counts.Terrestrials,

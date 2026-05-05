@@ -93,7 +93,7 @@ func PlaceOrbitSlots(
 		}
 
 		cur := alloc.Group.MAO
-		for j := 0; j < slotCount; j++ {
+		for j := range slotCount {
 			label := slotLabel(alloc.Group.Designation, j, alloc.AllocatedWorlds)
 			isBaselineSlot := i == 0 && j == baselineN-1
 

@@ -433,19 +433,13 @@ func RollGasMix(
 		// We model this as: base = (1D+4)×1000 BP; variance = (d10-5)×50 BP (±2.5%).
 		baseFrac := (r.Roll("1D") + 4) * 1000
 		variance := (r.Roll("d10") - 5) * 50
-		fracOfRemaining := baseFrac + variance
-		if fracOfRemaining < 500 {
-			fracOfRemaining = 500
-		}
+		fracOfRemaining := max(baseFrac+variance, 500)
 		if fracOfRemaining > 10000 {
 			fracOfRemaining = 10000
 		}
 
 		// Convert fraction-of-remaining to absolute BP.
-		alloc := remainingBP * fracOfRemaining / 10000
-		if alloc < 100 {
-			alloc = 100
-		}
+		alloc := max(remainingBP*fracOfRemaining/10000, 100)
 		if alloc > remainingBP {
 			alloc = remainingBP
 		}

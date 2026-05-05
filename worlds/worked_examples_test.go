@@ -839,7 +839,7 @@ func composeZedDetailScript() []int {
 	// (size "7" = 3-9 band, valid for moon-count rolls.)
 	// 12 terrestrials, 2 rolls each.
 	sizingTerr := []int{}
-	for i := 0; i < 12; i++ {
+	for range 12 {
 		sizingTerr = append(sizingTerr, 3, 7) // selector=3→2D, 2D=7→size "7"
 	}
 
@@ -863,7 +863,7 @@ func composeZedDetailScript() []int {
 	}
 
 	moonsTerr := []int{}
-	for i := 0; i < 12; i++ {
+	for range 12 {
 		moonsTerr = append(moonsTerr, 8) // Terr CountMoons: 2D=8 → 0 moons
 	}
 
@@ -917,7 +917,7 @@ func TestSol_GenerateSystemPlacement(t *testing.T) {
 func TestZed_FullDetail_3A2b(t *testing.T) {
 	t.Parallel()
 
-	for iter := 0; iter < 100; iter++ {
+	for iter := range 100 {
 		seed := int64(iter)
 		r := roller.NewSeeded(seed)
 		sys := composeZed()

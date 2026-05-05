@@ -95,24 +95,15 @@ func ComputeSolarHours(yearHours, yearDays float64) float64 {
 //
 // Caps each component at 59.
 func addMinuteSecondPrecision(r roller.Roller) float64 {
-	mins := tensOnesValue(r)
-	if mins > 59 {
-		mins = 59
-	}
-	secs := tensOnesValue(r)
-	if secs > 59 {
-		secs = 59
-	}
+	mins := min(tensOnesValue(r), 59)
+	secs := min(tensOnesValue(r), 59)
 	return float64(mins)/60.0 + float64(secs)/3600.0
 }
 
 // tensOnesValue rolls a 1D-1 (tens) + d10 (ones) and returns the combined value.
 // d10 is treated as 0-9 (any 10 returned by the roller is clamped to 9).
 func tensOnesValue(r roller.Roller) int {
-	tens := r.Roll("1D") - 1
-	if tens < 0 {
-		tens = 0
-	}
+	tens := max(r.Roll("1D")-1, 0)
 	ones := r.Roll("d10")
 	if ones >= 10 {
 		ones = 9

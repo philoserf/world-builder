@@ -66,7 +66,7 @@ func AddAnomalous(
 		return out, counts, nil
 	}
 
-	for i := 0; i < n; i++ {
+	for range n {
 		atype := anomalousType(r.Roll("2D"))
 		// Pick parent group (multi-star uses D3; single-star uses index 0).
 		parentIdx := 0
@@ -155,7 +155,7 @@ func eccentricityDMFor(t AnomalyType) int {
 // rollAnomalousOrbit rolls 2D-2 + d10/10, clamped to [mao, 20.0], with
 // up to 5 retries before bailing to the clamp value.
 func rollAnomalousOrbit(r roller.Roller, mao float64) float64 {
-	for try := 0; try < 5; try++ {
+	for range 5 {
 		whole := r.Roll("2D") - 2
 		frac := r.Roll("d10")
 		v := float64(whole) + float64(frac)/10.0

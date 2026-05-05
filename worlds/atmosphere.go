@@ -302,9 +302,6 @@ func RollAtmoCode(r roller.Roller, sizeCode SizeCode, _ float64) (int, error) {
 		return 0, nil
 	}
 	roll := r.Roll("2D")
-	code := roll - 7 + SizeAsInt(sizeCode)
-	if code < 0 {
-		code = 0
-	}
+	code := max(roll-7+SizeAsInt(sizeCode), 0)
 	return code, nil
 }

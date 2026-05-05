@@ -64,7 +64,7 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 			return SystemDetail{}, fmt.Errorf("worlds: detail moon-count[%d]: %w", i, err)
 		}
 		moons := make([]Moon, 0, count)
-		for j := 0; j < count; j++ {
+		for j := range count {
 			m, err := SizeMoon(r, parent)
 			if err != nil {
 				return SystemDetail{}, fmt.Errorf("worlds: detail moon-size[%d/%d]: %w", i, j, err)

@@ -89,14 +89,14 @@ func RollExtremeAxialTilt(r roller.Roller) (float64, error) {
 // d10 (ones) for each. Caller clamps the total to [0, 180]. Reuses
 // tensOnesValue from day_length.go.
 func addAxialTiltPrecision(r roller.Roller) float64 {
-	extraDeg := tensOnesValue(r) // 0-59
-	if extraDeg > 59 {
-		extraDeg = 59
-	}
-	extraArcmin := tensOnesValue(r) // 0-59
-	if extraArcmin > 59 {
-		extraArcmin = 59
-	}
+	extraDeg := min(
+		// 0-59
+		tensOnesValue(r), 59,
+	)
+	extraArcmin := min(
+		// 0-59
+		tensOnesValue(r), 59,
+	)
 	return float64(extraDeg) + float64(extraArcmin)/60.0
 }
 

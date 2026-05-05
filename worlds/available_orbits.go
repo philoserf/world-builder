@@ -85,9 +85,6 @@ var ErrPostStellarPrimaryUnsupported = errors.New(
 	"worlds: post-stellar primary MAO requires Special Circumstances chapter",
 )
 
-// fp returns a pointer to the float64 — used for nil-able cells in tables.
-func fp(x float64) *float64 { return &x }
-
 // maoRow is one row of the WBH p. 39 Minimum Allowable Orbit# table,
 // keyed by luminosity class.
 type maoRow struct {
@@ -100,21 +97,21 @@ type maoRow struct {
 // nil pointer means the book leaves the cell as "—" (combination does
 // not exist as a star).
 var maoTablePage39 = map[string]maoRow{
-	"O0": {Ia: fp(0.63), Ib: fp(0.60), II: fp(0.55), III: fp(0.53), V: fp(0.5), VI: fp(0.01)},
-	"O5": {Ia: fp(0.55), Ib: fp(0.50), II: fp(0.45), III: fp(0.38), V: fp(0.3), VI: fp(0.01)},
-	"B0": {Ia: fp(0.50), Ib: fp(0.35), II: fp(0.30), III: fp(0.25), IV: fp(0.20), V: fp(0.18), VI: fp(0.01)},
-	"B5": {Ia: fp(1.67), Ib: fp(0.63), II: fp(0.35), III: fp(0.15), IV: fp(0.13), V: fp(0.09), VI: fp(0.01)},
-	"A0": {Ia: fp(3.34), Ib: fp(1.40), II: fp(0.75), III: fp(0.13), IV: fp(0.10), V: fp(0.06)},
-	"A5": {Ia: fp(4.17), Ib: fp(2.17), II: fp(1.17), III: fp(0.13), IV: fp(0.07), V: fp(0.05)},
-	"F0": {Ia: fp(4.42), Ib: fp(2.50), II: fp(1.33), III: fp(0.13), IV: fp(0.07), V: fp(0.04)},
-	"F5": {Ia: fp(5.00), Ib: fp(3.25), II: fp(1.87), III: fp(0.13), IV: fp(0.06), V: fp(0.03)},
-	"G0": {Ia: fp(5.21), Ib: fp(3.59), II: fp(2.24), III: fp(0.25), IV: fp(0.07), V: fp(0.03), VI: fp(0.02)},
-	"G5": {Ia: fp(5.34), Ib: fp(3.84), II: fp(2.67), III: fp(0.38), IV: fp(0.10), V: fp(0.02), VI: fp(0.02)},
-	"K0": {Ia: fp(5.59), Ib: fp(4.17), II: fp(3.17), III: fp(0.50), IV: fp(0.15), V: fp(0.02), VI: fp(0.02)},
-	"K5": {Ia: fp(6.17), Ib: fp(4.84), II: fp(4.00), III: fp(1.00), V: fp(0.02), VI: fp(0.01)},
-	"M0": {Ia: fp(6.80), Ib: fp(5.42), II: fp(4.59), III: fp(1.68), V: fp(0.02), VI: fp(0.01)},
-	"M5": {Ia: fp(7.20), Ib: fp(6.17), II: fp(5.30), III: fp(3.00), V: fp(0.01), VI: fp(0.01)},
-	"M9": {Ia: fp(7.80), Ib: fp(6.59), II: fp(5.92), III: fp(4.34), V: fp(0.01), VI: fp(0.01)},
+	"O0": {Ia: new(0.63), Ib: new(0.60), II: new(0.55), III: new(0.53), V: new(0.5), VI: new(0.01)},
+	"O5": {Ia: new(0.55), Ib: new(0.50), II: new(0.45), III: new(0.38), V: new(0.3), VI: new(0.01)},
+	"B0": {Ia: new(0.50), Ib: new(0.35), II: new(0.30), III: new(0.25), IV: new(0.20), V: new(0.18), VI: new(0.01)},
+	"B5": {Ia: new(1.67), Ib: new(0.63), II: new(0.35), III: new(0.15), IV: new(0.13), V: new(0.09), VI: new(0.01)},
+	"A0": {Ia: new(3.34), Ib: new(1.40), II: new(0.75), III: new(0.13), IV: new(0.10), V: new(0.06)},
+	"A5": {Ia: new(4.17), Ib: new(2.17), II: new(1.17), III: new(0.13), IV: new(0.07), V: new(0.05)},
+	"F0": {Ia: new(4.42), Ib: new(2.50), II: new(1.33), III: new(0.13), IV: new(0.07), V: new(0.04)},
+	"F5": {Ia: new(5.00), Ib: new(3.25), II: new(1.87), III: new(0.13), IV: new(0.06), V: new(0.03)},
+	"G0": {Ia: new(5.21), Ib: new(3.59), II: new(2.24), III: new(0.25), IV: new(0.07), V: new(0.03), VI: new(0.02)},
+	"G5": {Ia: new(5.34), Ib: new(3.84), II: new(2.67), III: new(0.38), IV: new(0.10), V: new(0.02), VI: new(0.02)},
+	"K0": {Ia: new(5.59), Ib: new(4.17), II: new(3.17), III: new(0.50), IV: new(0.15), V: new(0.02), VI: new(0.02)},
+	"K5": {Ia: new(6.17), Ib: new(4.84), II: new(4.00), III: new(1.00), V: new(0.02), VI: new(0.01)},
+	"M0": {Ia: new(6.80), Ib: new(5.42), II: new(4.59), III: new(1.68), V: new(0.02), VI: new(0.01)},
+	"M5": {Ia: new(7.20), Ib: new(6.17), II: new(5.30), III: new(3.00), V: new(0.01), VI: new(0.01)},
+	"M9": {Ia: new(7.80), Ib: new(6.59), II: new(5.92), III: new(4.34), V: new(0.01), VI: new(0.01)},
 }
 
 // ErrNoMAOForStar reports a "—" cell in the p. 39 MAO table — the

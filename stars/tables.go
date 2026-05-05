@@ -67,26 +67,24 @@ func (r ClassRow) Get(lc LuminosityClass) (float64, bool) {
 	return *p, true
 }
 
-func f(x float64) *float64 { return &x }
-
 // StarMass is the WBH p. 17 Star Mass and Temperature by Class table — Mass column.
 // Values are in solar masses (Sol = 1.0).
 var StarMass = map[string]ClassRow{
-	"O0": {Ia: f(200), Ib: f(150), II: f(130), III: f(110), V: f(90), VI: f(2)},
-	"O5": {Ia: f(80), Ib: f(60), II: f(40), III: f(30), V: f(60), VI: f(1.5)},
-	"B0": {Ia: f(60), Ib: f(40), II: f(30), III: f(20), IV: f(20), V: f(18), VI: f(0.5)},
-	"B5": {Ia: f(30), Ib: f(25), II: f(20), III: f(10), IV: f(10), V: f(5), VI: f(0.4)},
-	"A0": {Ia: f(20), Ib: f(15), II: f(14), III: f(8), IV: f(4), V: f(2.2)},
-	"A5": {Ia: f(15), Ib: f(13), II: f(11), III: f(6), IV: f(2.3), V: f(1.5)},
-	"F0": {Ia: f(13), Ib: f(12), II: f(10), III: f(4), IV: f(2), V: f(1.5)},
-	"F5": {Ia: f(12), Ib: f(10), II: f(8), III: f(3), IV: f(1.5), V: f(1.3)},
-	"G0": {Ia: f(12), Ib: f(10), II: f(8), III: f(2.5), IV: f(1.7), V: f(1.1), VI: f(0.8)},
-	"G5": {Ia: f(13), Ib: f(11), II: f(10), III: f(2.4), IV: f(1.2), V: f(0.9), VI: f(0.7)},
-	"K0": {Ia: f(14), Ib: f(12), II: f(10), III: f(1.1), IV: f(1.5), V: f(0.8), VI: f(0.6)},
-	"K5": {Ia: f(18), Ib: f(13), II: f(12), III: f(1.5), V: f(0.7), VI: f(0.5)},
-	"M0": {Ia: f(20), Ib: f(15), II: f(14), III: f(1.8), V: f(0.5), VI: f(0.4)},
-	"M5": {Ia: f(25), Ib: f(20), II: f(16), III: f(2.4), V: f(0.16), VI: f(0.12)},
-	"M9": {Ia: f(30), Ib: f(25), II: f(18), III: f(8), V: f(0.08), VI: f(0.075)},
+	"O0": {Ia: new(200.0), Ib: new(150.0), II: new(130.0), III: new(110.0), V: new(90.0), VI: new(2.0)},
+	"O5": {Ia: new(80.0), Ib: new(60.0), II: new(40.0), III: new(30.0), V: new(60.0), VI: new(1.5)},
+	"B0": {Ia: new(60.0), Ib: new(40.0), II: new(30.0), III: new(20.0), IV: new(20.0), V: new(18.0), VI: new(0.5)},
+	"B5": {Ia: new(30.0), Ib: new(25.0), II: new(20.0), III: new(10.0), IV: new(10.0), V: new(5.0), VI: new(0.4)},
+	"A0": {Ia: new(20.0), Ib: new(15.0), II: new(14.0), III: new(8.0), IV: new(4.0), V: new(2.2)},
+	"A5": {Ia: new(15.0), Ib: new(13.0), II: new(11.0), III: new(6.0), IV: new(2.3), V: new(1.5)},
+	"F0": {Ia: new(13.0), Ib: new(12.0), II: new(10.0), III: new(4.0), IV: new(2.0), V: new(1.5)},
+	"F5": {Ia: new(12.0), Ib: new(10.0), II: new(8.0), III: new(3.0), IV: new(1.5), V: new(1.3)},
+	"G0": {Ia: new(12.0), Ib: new(10.0), II: new(8.0), III: new(2.5), IV: new(1.7), V: new(1.1), VI: new(0.8)},
+	"G5": {Ia: new(13.0), Ib: new(11.0), II: new(10.0), III: new(2.4), IV: new(1.2), V: new(0.9), VI: new(0.7)},
+	"K0": {Ia: new(14.0), Ib: new(12.0), II: new(10.0), III: new(1.1), IV: new(1.5), V: new(0.8), VI: new(0.6)},
+	"K5": {Ia: new(18.0), Ib: new(13.0), II: new(12.0), III: new(1.5), V: new(0.7), VI: new(0.5)},
+	"M0": {Ia: new(20.0), Ib: new(15.0), II: new(14.0), III: new(1.8), V: new(0.5), VI: new(0.4)},
+	"M5": {Ia: new(25.0), Ib: new(20.0), II: new(16.0), III: new(2.4), V: new(0.16), VI: new(0.12)},
+	"M9": {Ia: new(30.0), Ib: new(25.0), II: new(18.0), III: new(8.0), V: new(0.08), VI: new(0.075)},
 }
 
 // StarTemperature is the WBH p. 17 Star Mass and Temperature by Class table —
@@ -103,41 +101,41 @@ var StarTemperature = map[string]float64{
 // StarDiameter is the WBH p. 19 Star Diameter by Class table.
 // Values are in solar diameters (Sol = 1.0).
 var StarDiameter = map[string]ClassRow{
-	"O0": {Ia: f(25), Ib: f(24), II: f(22), III: f(21), V: f(20), VI: f(0.18)},
-	"O5": {Ia: f(22), Ib: f(20), II: f(18), III: f(15), V: f(12), VI: f(0.18)},
-	"B0": {Ia: f(20), Ib: f(14), II: f(12), III: f(10), IV: f(8), V: f(7), VI: f(0.2)},
-	"B5": {Ia: f(60), Ib: f(25), II: f(14), III: f(6), IV: f(5), V: f(3.5), VI: f(0.5)},
-	"A0": {Ia: f(120), Ib: f(50), II: f(30), III: f(5), IV: f(4), V: f(2.2)},
-	"A5": {Ia: f(180), Ib: f(75), II: f(45), III: f(5), IV: f(3), V: f(2)},
-	"F0": {Ia: f(210), Ib: f(85), II: f(50), III: f(5), IV: f(3), V: f(1.7)},
-	"F5": {Ia: f(280), Ib: f(115), II: f(66), III: f(5), IV: f(2), V: f(1.5)},
-	"G0": {Ia: f(330), Ib: f(135), II: f(77), III: f(10), IV: f(3), V: f(1.1), VI: f(0.8)},
-	"G5": {Ia: f(360), Ib: f(150), II: f(90), III: f(15), IV: f(4), V: f(0.95), VI: f(0.7)},
-	"K0": {Ia: f(420), Ib: f(180), II: f(110), III: f(20), IV: f(6), V: f(0.9), VI: f(0.6)},
-	"K5": {Ia: f(600), Ib: f(260), II: f(160), III: f(40), V: f(0.8), VI: f(0.5)},
-	"M0": {Ia: f(900), Ib: f(380), II: f(230), III: f(60), V: f(0.7), VI: f(0.4)},
-	"M5": {Ia: f(1200), Ib: f(600), II: f(350), III: f(100), V: f(0.2), VI: f(0.1)},
-	"M9": {Ia: f(1800), Ib: f(800), II: f(500), III: f(200), V: f(0.1), VI: f(0.08)},
+	"O0": {Ia: new(25.0), Ib: new(24.0), II: new(22.0), III: new(21.0), V: new(20.0), VI: new(0.18)},
+	"O5": {Ia: new(22.0), Ib: new(20.0), II: new(18.0), III: new(15.0), V: new(12.0), VI: new(0.18)},
+	"B0": {Ia: new(20.0), Ib: new(14.0), II: new(12.0), III: new(10.0), IV: new(8.0), V: new(7.0), VI: new(0.2)},
+	"B5": {Ia: new(60.0), Ib: new(25.0), II: new(14.0), III: new(6.0), IV: new(5.0), V: new(3.5), VI: new(0.5)},
+	"A0": {Ia: new(120.0), Ib: new(50.0), II: new(30.0), III: new(5.0), IV: new(4.0), V: new(2.2)},
+	"A5": {Ia: new(180.0), Ib: new(75.0), II: new(45.0), III: new(5.0), IV: new(3.0), V: new(2.0)},
+	"F0": {Ia: new(210.0), Ib: new(85.0), II: new(50.0), III: new(5.0), IV: new(3.0), V: new(1.7)},
+	"F5": {Ia: new(280.0), Ib: new(115.0), II: new(66.0), III: new(5.0), IV: new(2.0), V: new(1.5)},
+	"G0": {Ia: new(330.0), Ib: new(135.0), II: new(77.0), III: new(10.0), IV: new(3.0), V: new(1.1), VI: new(0.8)},
+	"G5": {Ia: new(360.0), Ib: new(150.0), II: new(90.0), III: new(15.0), IV: new(4.0), V: new(0.95), VI: new(0.7)},
+	"K0": {Ia: new(420.0), Ib: new(180.0), II: new(110.0), III: new(20.0), IV: new(6.0), V: new(0.9), VI: new(0.6)},
+	"K5": {Ia: new(600.0), Ib: new(260.0), II: new(160.0), III: new(40.0), V: new(0.8), VI: new(0.5)},
+	"M0": {Ia: new(900.0), Ib: new(380.0), II: new(230.0), III: new(60.0), V: new(0.7), VI: new(0.4)},
+	"M5": {Ia: new(1200.0), Ib: new(600.0), II: new(350.0), III: new(100.0), V: new(0.2), VI: new(0.1)},
+	"M9": {Ia: new(1800.0), Ib: new(800.0), II: new(500.0), III: new(200.0), V: new(0.1), VI: new(0.08)},
 }
 
 // StarLuminosity is the WBH p. 19 Star Luminosity by Class table.
 // Values are in solar luminosities (Sol = 1.0).
 var StarLuminosity = map[string]ClassRow{
-	"O0": {Ia: f(3_400_000), Ib: f(3_200_000), II: f(2_700_000), III: f(2_400_000), V: f(2_200_000), VI: f(180)},
-	"O5": {Ia: f(1_100_000), Ib: f(900_000), II: f(730_000), III: f(510_000), V: f(330_000), VI: f(73)},
-	"B0": {Ia: f(290_000), Ib: f(140_000), II: f(100_000), III: f(72_000), IV: f(46_000), V: f(35_000), VI: f(29)},
-	"B5": {Ia: f(160_000), Ib: f(28_000), II: f(8800), III: f(1600), IV: f(1100), V: f(550), VI: f(11)},
-	"A0": {Ia: f(130_000), Ib: f(22_000), II: f(8000), III: f(220), IV: f(140), V: f(43)},
-	"A5": {Ia: f(120_000), Ib: f(20_000), II: f(7300), III: f(90), IV: f(33), V: f(15)},
-	"F0": {Ia: f(120_000), Ib: f(20_000), II: f(7000), III: f(70), IV: f(25), V: f(8.1)},
-	"F5": {Ia: f(120_000), Ib: f(20_000), II: f(6900), III: f(39), IV: f(6), V: f(3.5)},
-	"G0": {Ia: f(120_000), Ib: f(20_000), II: f(6800), III: f(120), IV: f(10), V: f(1.4), VI: f(0.73)},
-	"G5": {Ia: f(110_000), Ib: f(20_000), II: f(7000), III: f(200), IV: f(14), V: f(0.78), VI: f(0.43)},
-	"K0": {Ia: f(110_000), Ib: f(21_000), II: f(7800), III: f(260), IV: f(23), V: f(0.52), VI: f(0.23)},
-	"K5": {Ia: f(120_000), Ib: f(22_000), II: f(8400), III: f(530), V: f(0.21), VI: f(0.083)},
-	"M0": {Ia: f(130_000), Ib: f(24_000), II: f(8800), III: f(600), V: f(0.082), VI: f(0.027)},
-	"M5": {Ia: f(100_000), Ib: f(26_000), II: f(8800), III: f(720), V: f(0.0029), VI: f(0.00072)},
-	"M9": {Ia: f(90_000), Ib: f(19_000), II: f(7300), III: f(1200), V: f(0.00029), VI: f(0.00019)},
+	"O0": {Ia: new(3_400_000.0), Ib: new(3_200_000.0), II: new(2_700_000.0), III: new(2_400_000.0), V: new(2_200_000.0), VI: new(180.0)},
+	"O5": {Ia: new(1_100_000.0), Ib: new(900_000.0), II: new(730_000.0), III: new(510_000.0), V: new(330_000.0), VI: new(73.0)},
+	"B0": {Ia: new(290_000.0), Ib: new(140_000.0), II: new(100_000.0), III: new(72_000.0), IV: new(46_000.0), V: new(35_000.0), VI: new(29.0)},
+	"B5": {Ia: new(160_000.0), Ib: new(28_000.0), II: new(8800.0), III: new(1600.0), IV: new(1100.0), V: new(550.0), VI: new(11.0)},
+	"A0": {Ia: new(130_000.0), Ib: new(22_000.0), II: new(8000.0), III: new(220.0), IV: new(140.0), V: new(43.0)},
+	"A5": {Ia: new(120_000.0), Ib: new(20_000.0), II: new(7300.0), III: new(90.0), IV: new(33.0), V: new(15.0)},
+	"F0": {Ia: new(120_000.0), Ib: new(20_000.0), II: new(7000.0), III: new(70.0), IV: new(25.0), V: new(8.1)},
+	"F5": {Ia: new(120_000.0), Ib: new(20_000.0), II: new(6900.0), III: new(39.0), IV: new(6.0), V: new(3.5)},
+	"G0": {Ia: new(120_000.0), Ib: new(20_000.0), II: new(6800.0), III: new(120.0), IV: new(10.0), V: new(1.4), VI: new(0.73)},
+	"G5": {Ia: new(110_000.0), Ib: new(20_000.0), II: new(7000.0), III: new(200.0), IV: new(14.0), V: new(0.78), VI: new(0.43)},
+	"K0": {Ia: new(110_000.0), Ib: new(21_000.0), II: new(7800.0), III: new(260.0), IV: new(23.0), V: new(0.52), VI: new(0.23)},
+	"K5": {Ia: new(120_000.0), Ib: new(22_000.0), II: new(8400.0), III: new(530.0), V: new(0.21), VI: new(0.083)},
+	"M0": {Ia: new(130_000.0), Ib: new(24_000.0), II: new(8800.0), III: new(600.0), V: new(0.082), VI: new(0.027)},
+	"M5": {Ia: new(100_000.0), Ib: new(26_000.0), II: new(8800.0), III: new(720.0), V: new(0.0029), VI: new(0.00072)},
+	"M9": {Ia: new(90_000.0), Ib: new(19_000.0), II: new(7300.0), III: new(1200.0), V: new(0.00029), VI: new(0.00019)},
 }
 
 // MultipleStarsPresenceThreshold is the WBH p.23 2D threshold (after
