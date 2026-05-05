@@ -225,3 +225,51 @@ func TestCheckRunawayGreenhouse_SizeDM(t *testing.T) {
 		t.Error("expected true (size DM applied; mod=14)")
 	}
 }
+
+func TestDeriveHydrographicsProfile_Water(t *testing.T) {
+	// Atm 6 (standard), hydro 6, meanK 288 → "H6:H2O-100".
+	got := DeriveHydrographicsProfile(288, 6, 6)
+	if got != "H6:H2O-100" {
+		t.Errorf("got %q, want H6:H2O-100", got)
+	}
+}
+
+func TestDeriveHydrographicsProfile_ExoticMethane(t *testing.T) {
+	// Atm A (10), hydro 4, meanK 100 → "H4:CH4-100" (methane wins by Abundance 70).
+	got := DeriveHydrographicsProfile(100, 10, 4)
+	if got != "H4:CH4-100" {
+		t.Errorf("got %q, want H4:CH4-100", got)
+	}
+}
+
+func TestDeriveHydrographicsProfile_Vacuum_Empty(t *testing.T) {
+	// Atm 0, hydro 0 → empty (no liquid).
+	got := DeriveHydrographicsProfile(288, 0, 0)
+	if got != "" {
+		t.Errorf("got %q, want empty", got)
+	}
+}
+
+func TestDeriveHydrographicsProfile_NoHydro_Empty(t *testing.T) {
+	// Atm 6, hydro 0 → empty (no liquid surface).
+	got := DeriveHydrographicsProfile(288, 6, 0)
+	if got != "" {
+		t.Errorf("got %q, want empty", got)
+	}
+}
+
+func TestDeriveHydrographicsProfile_HydroA(t *testing.T) {
+	// Hydro 10 renders as "A" in the formula tail.
+	got := DeriveHydrographicsProfile(288, 6, 10)
+	if got != "HA:H2O-100" {
+		t.Errorf("got %q, want HA:H2O-100", got)
+	}
+}
+
+func TestDeriveHydrographicsProfile_ExoticAtm_NoCandidate(t *testing.T) {
+	// Atm A, hydro 5, meanK 2000 → no exotic liquid fits → empty.
+	got := DeriveHydrographicsProfile(2000, 10, 5)
+	if got != "" {
+		t.Errorf("got %q, want empty (no liquid candidate at meanK 2000)", got)
+	}
+}
