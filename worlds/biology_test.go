@@ -337,3 +337,86 @@ func TestRollBiodiversity_IntegerArithmetic_NoFractional(t *testing.T) {
 		t.Errorf("got %d, want 4 (no rounding when integer)", got)
 	}
 }
+
+func TestRollCompatibility_ZedPrime_FollowsFormula(t *testing.T) {
+	// Per WBH p.131 formula box: 2D - Biocomplexity/2 + DMs.
+	// Atm 6 (DM+2), Biocomplexity=5, Age 6.3, 2D=7 → 7 - 2.5 + 2 = 6.5 → floor → 6.
+	//
+	// NOTE: WBH p.131 worked example shows 7 + 3 - 2.5 + 2 = 9.5 → 9. The
+	// "+3" has no source in the formula box. Implementation follows formula
+	// → Zed Prime gets 6 (book says 9). Logged as feedback memory after merge.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(7)
+	got := RollCompatibility(r, body, 5, 6.3)
+	if got != 6 {
+		t.Errorf("Zed Prime per formula: got %d, want 6 (book worked example says 9)", got)
+	}
+}
+
+func TestRollCompatibility_BiomassDependsOnPrereq_NoDirectGate(t *testing.T) {
+	// The Compatibility function itself doesn't gate on biomass — caller
+	// should check biomass > 0 before calling. This test verifies the
+	// function still returns the formula result for any inputs.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(7)
+	got := RollCompatibility(r, body, 5, 5.0)
+	if got != 6 {
+		t.Errorf("got %d, want 6", got)
+	}
+}
+
+func TestRollCompatibility_NegativeResult_ClampedToZero(t *testing.T) {
+	// Atm C (DM-10), Biocomplexity=10, 2D=2 → 2 - 5 - 10 = -13 → ≤ 0 → 0.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 12}
+	r := roller.NewScripted(2)
+	got := RollCompatibility(r, body, 10, 5.0)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (negative result clamped)", got)
+	}
+}
+
+func TestRollCompatibility_AtmCRich_DMMinus10(t *testing.T) {
+	// Atm C (DM-10), Biocomplexity=4, 2D=12 → 12 - 2 - 10 = 0 → 0.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 12}
+	r := roller.NewScripted(12)
+	got := RollCompatibility(r, body, 4, 5.0)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (atm C heavy penalty)", got)
+	}
+}
+
+func TestRollCompatibility_AgeOver8_DMMinus2(t *testing.T) {
+	// Atm 6 (+2), Biocomplexity=4, Age=9 (DM-2), 2D=10 → 10 - 2 + 2 - 2 = 8.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(10)
+	got := RollCompatibility(r, body, 4, 9.0)
+	if got != 8 {
+		t.Errorf("got %d, want 8 (age>8 DM-2)", got)
+	}
+}
+
+func TestRollCompatibility_FloorRounding(t *testing.T) {
+	// Biocomplexity=3 → 3/2 = 1.5. 2D=10, Atm 6 (+2) → 10 - 1.5 + 2 = 10.5 → floor → 10.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(10)
+	got := RollCompatibility(r, body, 3, 5.0)
+	if got != 10 {
+		t.Errorf("got %d, want 10 (floor 10.5)", got)
+	}
+}
+
+func TestRollCompatibility_NilAtmosphere_NoAtmDM(t *testing.T) {
+	// Defensive: nil atm → no atm DM applied. Biocomplexity=4, Age 5, 2D=10 → 10 - 2 = 8.
+	body := &DetailedPlacement{}
+	r := roller.NewScripted(10)
+	got := RollCompatibility(r, body, 4, 5.0)
+	if got != 8 {
+		t.Errorf("got %d, want 8 (nil atm)", got)
+	}
+}

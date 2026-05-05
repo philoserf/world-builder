@@ -292,6 +292,71 @@ func RollBiodiversity(r roller.Roller, biomass, biocomplexity int) int {
 	return result
 }
 
+// RollCompatibility per WBH p.130-131:
+//
+//	floor(2D - Biocomplexity/2 + DMs)
+//
+// Result clamped to ≥ 0. Caller is responsible for the biomass > 0
+// prerequisite — this function returns the formula result for any inputs.
+//
+// DMs:
+//   - Atmosphere 0, 1, B: -8
+//   - Atmosphere 2, 4, 7, 9: -2
+//   - Atmosphere 3, 5, 8: +1
+//   - Atmosphere 6: +2
+//   - Atmosphere A, F: -6
+//   - Atmosphere C: -10
+//   - Atmosphere D, E: -1
+//   - Age > 8 Gyrs: -2
+//
+// NOTE: WBH p.131 worked example shows 7 + 3 - 2.5 + 2 = 9.5 for Zed Prime
+// (giving compatibility 9), but the formula box has no "+3" addend.
+// Implementation follows the formula → Zed Prime compatibility = 6.
+// This divergence is documented as a feedback memory after merge.
+//
+// Atm codes G/H mentioned in the book DM table don't exist in the WBH
+// 0-F atm system. They cannot be produced by RollAtmoCode — no DM applied.
+//
+// Skipped: "or otherwise tainted" qualifier on the -2 row deferred per
+// spec Q3-a (Atmosphere taint typology not yet modeled).
+func RollCompatibility(r roller.Roller, body *DetailedPlacement, biocomplexity int, ageGyr float64) int {
+	dm := compatibilityAtmDM(body)
+	if ageGyr > 8 {
+		dm += -2
+	}
+	roll := r.Roll("2D")
+	v := float64(roll) - float64(biocomplexity)/2.0 + float64(dm)
+	result := int(math.Floor(v))
+	if result < 0 {
+		return 0
+	}
+	return result
+}
+
+// compatibilityAtmDM per WBH p.131 atmosphere-DM table.
+func compatibilityAtmDM(body *DetailedPlacement) int {
+	if body == nil || body.Atmosphere == nil {
+		return 0
+	}
+	switch body.Atmosphere.Code {
+	case 0, 1, 11: // 0, 1, B (G and H don't exist in our system)
+		return -8
+	case 2, 4, 7, 9:
+		return -2
+	case 3, 5, 8:
+		return +1
+	case 6:
+		return +2
+	case 10, 15: // A, F
+		return -6
+	case 12: // C
+		return -10
+	case 13, 14: // D, E
+		return -1
+	}
+	return 0
+}
+
 // atmIs4to9 reports whether body.Atmosphere.Code is in [4, 9]. Returns
 // false on nil atmosphere.
 func atmIs4to9(body *DetailedPlacement) bool {
