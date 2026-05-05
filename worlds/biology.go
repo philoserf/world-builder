@@ -246,6 +246,27 @@ func RollNativeSophont(r roller.Roller, biocomplexity int) bool {
 	return roll+bx-7 >= 13
 }
 
+// RollExtinctSophont per WBH p.130: evidence of an extinct native sophont
+// existed if 2D + min(Biocomplexity, 9) - 7 + DMs ≥ 13.
+//
+// DMs: +1 if system age > 5 Gyrs.
+//
+// Returns false without consuming dice if biocomplexity < 8. Independent
+// of RollNativeSophont — both can be true (extant species with extinct
+// ancestors).
+func RollExtinctSophont(r roller.Roller, biocomplexity int, ageGyr float64) bool {
+	if biocomplexity < 8 {
+		return false
+	}
+	dm := 0
+	if ageGyr > 5 {
+		dm = 1
+	}
+	bx := min(biocomplexity, 9)
+	roll := r.Roll("2D")
+	return roll+bx-7+dm >= 13
+}
+
 // atmIs4to9 reports whether body.Atmosphere.Code is in [4, 9]. Returns
 // false on nil atmosphere.
 func atmIs4to9(body *DetailedPlacement) bool {

@@ -253,3 +253,44 @@ func TestRollNativeSophont_BiocomplexityClamp_Above9(t *testing.T) {
 		t.Error("got false, want true (Biocomplexity=15 → uses 9)")
 	}
 }
+
+func TestRollExtinctSophont_BelowPrerequisite_False(t *testing.T) {
+	// Biocomplexity=7 → no roll, no dice consumed.
+	r := roller.NewScripted()
+	if got := RollExtinctSophont(r, 7, 6.0); got {
+		t.Error("got true, want false (Biocomplexity<8)")
+	}
+}
+
+func TestRollExtinctSophont_AgeOver5_DMPlusOne(t *testing.T) {
+	// Biocomplexity=9, Age=6 (DM+1), 2D=10 → 10+9-7+1=13 ≥ 13 → true.
+	// Without the +1: 10+9-7=12 < 13 → false. So this test verifies the DM applies.
+	r := roller.NewScripted(10)
+	if got := RollExtinctSophont(r, 9, 6.0); !got {
+		t.Error("got false, want true (age>5 DM+1 makes mod=13)")
+	}
+}
+
+func TestRollExtinctSophont_AgeUnder5_NoDM(t *testing.T) {
+	// Biocomplexity=9, Age=4 (no DM), 2D=10 → 10+9-7=12 < 13 → false.
+	r := roller.NewScripted(10)
+	if got := RollExtinctSophont(r, 9, 4.0); got {
+		t.Error("got true, want false (age≤5 no DM, mod=12)")
+	}
+}
+
+func TestRollExtinctSophont_HighRoll_AlwaysTrue(t *testing.T) {
+	// Biocomplexity=8, Age=4, 2D=12 → 12+8-7=13 ≥ 13 → true.
+	r := roller.NewScripted(12)
+	if got := RollExtinctSophont(r, 8, 4.0); !got {
+		t.Error("got false, want true (mod=13 even without age DM)")
+	}
+}
+
+func TestRollExtinctSophont_BiocomplexityClamp_Above9(t *testing.T) {
+	// Biocomplexity=15 → clamped to 9. 2D=10, Age=4 → 10+9-7=12 < 13 → false.
+	r := roller.NewScripted(10)
+	if got := RollExtinctSophont(r, 15, 4.0); got {
+		t.Error("got true, want false (Biocomplexity=15 → 9, mod=12)")
+	}
+}
