@@ -2,6 +2,9 @@ package worlds
 
 import (
 	"testing"
+
+	"wbh/roller"
+	"wbh/stars"
 )
 
 func TestSelectExoticLiquid_Water_Terra(t *testing.T) {
@@ -89,5 +92,136 @@ func TestMeanKToTempRange_Boundaries(t *testing.T) {
 		if got := MeanKToTempRange(c.meanK); got != c.want {
 			t.Errorf("meanK=%v: got %v, want %v", c.meanK, got, c.want)
 		}
+	}
+}
+
+func TestCheckRunawayGreenhouse_BelowTempThreshold(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Temperature = &Temperature{MeanK: 300}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
+
+	r := roller.NewScripted()
+	if got := CheckRunawayGreenhouse(r, body, sys); got {
+		t.Error("expected false (meanK below 303K)")
+	}
+}
+
+func TestCheckRunawayGreenhouse_LowAtmCode(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 1}
+	body.Temperature = &Temperature{MeanK: 400}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
+
+	r := roller.NewScripted()
+	if got := CheckRunawayGreenhouse(r, body, sys); got {
+		t.Error("expected false (atm 1 out of trigger range)")
+	}
+}
+
+func TestCheckRunawayGreenhouse_AtmAlreadyExotic_Skipped(t *testing.T) {
+	for _, code := range []int{10, 11, 12, 15} {
+		body := &DetailedPlacement{}
+		body.Atmosphere = &Atmosphere{Code: code}
+		body.Temperature = &Temperature{MeanK: 400}
+		sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
+
+		r := roller.NewScripted()
+		if got := CheckRunawayGreenhouse(r, body, sys); got {
+			t.Errorf("atm %d: expected false (exotic atm skipped per MVP)", code)
+		}
+	}
+}
+
+func TestCheckRunawayGreenhouse_LowDiceRoll(t *testing.T) {
+	// atm 6, meanK=400, sysAge=1 → DM age+1 (ceil), boil+4 (400≥388). 2D=2 + 5 = 7 < 12 → false.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Temperature = &Temperature{MeanK: 400}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 1}}
+
+	r := roller.NewScripted(2)
+	if got := CheckRunawayGreenhouse(r, body, sys); got {
+		t.Error("expected false (mod=7, below 12)")
+	}
+}
+
+func TestCheckRunawayGreenhouse_Triggered_AtmA(t *testing.T) {
+	// atm 6, meanK=400 (boiling +4), sysAge=5 (round up +5).
+	// 2D=3 + 5 + 4 = 12 → trigger. 1D=1 → atm becomes A (10).
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.SizeCode = "8"
+	body.Temperature = &Temperature{MeanK: 400}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
+
+	r := roller.NewScripted(3, 1)
+	if got := CheckRunawayGreenhouse(r, body, sys); !got {
+		t.Error("expected true (mod=12, triggered)")
+	}
+	if body.Atmosphere.Code != 10 {
+		t.Errorf("atm code: got %d, want 10 (A)", body.Atmosphere.Code)
+	}
+}
+
+func TestCheckRunawayGreenhouse_Triggered_AtmB(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.SizeCode = "8"
+	body.Temperature = &Temperature{MeanK: 400}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
+
+	r := roller.NewScripted(3, 3)
+	if got := CheckRunawayGreenhouse(r, body, sys); !got {
+		t.Error("expected true")
+	}
+	if body.Atmosphere.Code != 11 {
+		t.Errorf("atm code: got %d, want 11 (B)", body.Atmosphere.Code)
+	}
+}
+
+func TestCheckRunawayGreenhouse_Triggered_AtmC(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.SizeCode = "8"
+	body.Temperature = &Temperature{MeanK: 400}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
+
+	r := roller.NewScripted(3, 6)
+	if got := CheckRunawayGreenhouse(r, body, sys); !got {
+		t.Error("expected true")
+	}
+	if body.Atmosphere.Code != 12 {
+		t.Errorf("atm code: got %d, want 12 (C)", body.Atmosphere.Code)
+	}
+}
+
+func TestCheckRunawayGreenhouse_TaintedDM(t *testing.T) {
+	// atm 7 (tainted), meanK=400, sysAge=2 → DM age+2, boil+4, taint+1, size 8 no penalty = +7.
+	// 2D=4 + 7 = 11 < 12 → false. Confirms tainted DM applied (without taint mod=10; with taint mod=11).
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 7}
+	body.SizeCode = "8"
+	body.Temperature = &Temperature{MeanK: 400}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 2}}
+
+	r := roller.NewScripted(4)
+	if got := CheckRunawayGreenhouse(r, body, sys); got {
+		t.Error("expected false (mod=11 with taint+1; without taint mod=10 — taint applied means mod=11)")
+	}
+}
+
+func TestCheckRunawayGreenhouse_SizeDM(t *testing.T) {
+	// Size 4 → DM-2. atm 6, meanK=400, sysAge=10 → DM age+10, boil+4, size-2 = +12.
+	// 2D=2 + 12 = 14 → trigger.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.SizeCode = "4"
+	body.Temperature = &Temperature{MeanK: 400}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 10}}
+
+	r := roller.NewScripted(2, 3)
+	if got := CheckRunawayGreenhouse(r, body, sys); !got {
+		t.Error("expected true (size DM applied; mod=14)")
 	}
 }
