@@ -420,3 +420,147 @@ func TestRollCompatibility_NilAtmosphere_NoAtmDM(t *testing.T) {
 		t.Errorf("got %d, want 8 (nil atm)", got)
 	}
 }
+
+func TestRollTerrestrialResourceRating_TerrestrialNoLife(t *testing.T) {
+	// Size 5, Density 1.0 (no DM), no biology.
+	// 2D=8 → 8 - 7 + 5 = 6.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, &Biology{})
+	if got != 6 {
+		t.Errorf("got %d, want 6", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_HighDensity_PlusTwo(t *testing.T) {
+	// Size 5, Density 1.5 (>1.12 → +2). 2D=8 → 8 - 7 + 5 + 2 = 8.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.5}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, &Biology{})
+	if got != 8 {
+		t.Errorf("got %d, want 8 (high density +2)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_LowDensity_MinusTwo(t *testing.T) {
+	// Size 5, Density 0.4 (<0.5 → -2). 2D=8 → 8 - 7 + 5 - 2 = 4.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 0.4}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, &Biology{})
+	if got != 4 {
+		t.Errorf("got %d, want 4 (low density -2)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_HighBiomass_PlusTwo(t *testing.T) {
+	// Size 5, Density 1.0, Biomass=5 (≥3 → +2). 2D=8 → 8-7+5+2 = 8.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	bio := &Biology{Biomass: 5}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, bio)
+	if got != 8 {
+		t.Errorf("got %d, want 8 (biomass≥3 +2)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_HighBiodiversity_PlusOne_8toA(t *testing.T) {
+	// Size 5, Density 1.0, Biomass=1 (no biomass DM since <3),
+	// Biodiversity=8 (8-A → +1). 2D=8 → 8-7+5+1 = 7.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	bio := &Biology{Biomass: 1, Biodiversity: 8}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, bio)
+	if got != 7 {
+		t.Errorf("got %d, want 7 (biodiversity 8-A +1)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_HighBiodiversity_PlusTwo_BPlus(t *testing.T) {
+	// Biodiversity=11 (B+ → +2). Size 5, Density 1.0. 2D=8 → 8-7+5+2 = 8.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	bio := &Biology{Biomass: 1, Biodiversity: 11}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, bio)
+	if got != 8 {
+		t.Errorf("got %d, want 8 (biodiversity B+ +2)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_LowCompatibilityWithLife_MinusOne(t *testing.T) {
+	// Compatibility 0-3 + Biomass ≥ 1 → -1. Size 5, Density 1.0.
+	// 2D=8, Biomass=1, Compatibility=2 → 8-7+5-1 = 5.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	bio := &Biology{Biomass: 1, Compatibility: 2}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, bio)
+	if got != 5 {
+		t.Errorf("got %d, want 5 (compatibility 0-3 with biomass≥1: -1)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_LowCompatibilityNoLife_NoDMSkipped(t *testing.T) {
+	// Biomass=0 → the compatibility-0-3 -1 DM does NOT apply.
+	// Size 5, Density 1.0, 2D=8 → 8-7+5 = 6.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	bio := &Biology{Biomass: 0, Compatibility: 2}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, bio)
+	if got != 6 {
+		t.Errorf("got %d, want 6 (no biomass: -1 DM skipped)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_HighCompatibility_PlusTwo(t *testing.T) {
+	// Compatibility 8+ → +2. Size 5, Density 1.0, 2D=8, Biomass=1 → 8-7+5+2 = 8.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Physical = &BodyPhysical{Density: 1.0}
+	bio := &Biology{Biomass: 1, Compatibility: 8}
+	r := roller.NewScripted(8)
+	got := RollTerrestrialResourceRating(r, body, bio)
+	if got != 8 {
+		t.Errorf("got %d, want 8 (compatibility 8+ +2)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_ResultBelowTwo_ClampedToTwo(t *testing.T) {
+	// Force result < 2: Size 1, Density 0.4 (-2), 2D=2 → 2-7+1-2 = -6 → < 2 → 2.
+	body := &DetailedPlacement{}
+	body.SizeCode = "1"
+	body.Physical = &BodyPhysical{Density: 0.4}
+	r := roller.NewScripted(2)
+	got := RollTerrestrialResourceRating(r, body, &Biology{})
+	if got != 2 {
+		t.Errorf("got %d, want 2 (clamp to ≥2)", got)
+	}
+}
+
+func TestRollTerrestrialResourceRating_ResultAboveTwelve_ClampedToTwelve(t *testing.T) {
+	// Force result > 12: Size 15 (F), Density 1.5 (+2), Biomass=5 (+2),
+	// Biodiversity=11 (+2), Compatibility=10 (+2), 2D=12 → 12-7+15+2+2+2+2 = 28 → > 12 → 12.
+	body := &DetailedPlacement{}
+	body.SizeCode = "F"
+	body.Physical = &BodyPhysical{Density: 1.5}
+	bio := &Biology{Biomass: 5, Biodiversity: 11, Compatibility: 10}
+	r := roller.NewScripted(12)
+	got := RollTerrestrialResourceRating(r, body, bio)
+	if got != 12 {
+		t.Errorf("got %d, want 12 (clamp to ≤12)", got)
+	}
+}

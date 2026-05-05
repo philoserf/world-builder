@@ -366,3 +366,56 @@ func atmIs4to9(body *DetailedPlacement) bool {
 	c := body.Atmosphere.Code
 	return c >= 4 && c <= 9
 }
+
+// RollTerrestrialResourceRating per WBH p.131:
+//
+//	2D - 7 + Size + DMs, clamped to [2, 12]
+//
+// Runs for ALL terrestrial bodies regardless of biology — biology DMs
+// only apply when ratings are non-zero.
+//
+// DMs:
+//   - Density > 1.12: +2
+//   - Density < 0.5: -2
+//   - Biomass ≥ 3: +2
+//   - Biodiversity 8-10 (8-A): +1
+//   - Biodiversity ≥ 11 (B+): +2
+//   - Compatibility 0-3: -1 (only if Biomass ≥ 1)
+//   - Compatibility ≥ 8: +2
+//
+// bio may be a zero Biology{} for bodies without life.
+func RollTerrestrialResourceRating(r roller.Roller, body *DetailedPlacement, bio *Biology) int {
+	dm := 0
+	if body != nil && body.Physical != nil {
+		switch {
+		case body.Physical.Density > 1.12:
+			dm += 2
+		case body.Physical.Density < 0.5:
+			dm += -2
+		}
+	}
+	if bio != nil {
+		if bio.Biomass >= 3 {
+			dm += 2
+		}
+		switch {
+		case bio.Biodiversity >= 11:
+			dm += 2
+		case bio.Biodiversity >= 8:
+			dm++
+		}
+		if bio.Compatibility >= 1 && bio.Compatibility <= 3 && bio.Biomass >= 1 {
+			dm += -1
+		}
+		if bio.Compatibility >= 8 {
+			dm += 2
+		}
+	}
+	roll := r.Roll("2D")
+	size := 0
+	if body != nil {
+		size = SizeAsInt(body.SizeCode)
+	}
+	result := roll - 7 + size + dm
+	return min(max(result, 2), 12)
+}
