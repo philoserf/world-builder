@@ -119,6 +119,11 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		return SystemDetail{}, err
 	}
 
+	// Step 5E — 3B-geology pass: seismic + GG residual heat + temp recompute + tectonic plates.
+	if err := runStep5E(r, detailed, sys); err != nil {
+		return SystemDetail{}, err
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)

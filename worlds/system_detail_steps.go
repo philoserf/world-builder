@@ -320,3 +320,115 @@ func runStep5D(r roller.Roller, detailed []DetailedPlacement, sys stars.System) 
 	}
 	return nil
 }
+
+// runStep5E applies the 3B-geology pass: residual seismic stress, tidal
+// stress factor, tidal heating factor, total seismic stress, GG residual
+// heat, post-TSS temperature recompute, and tectonic plates. Mutates
+// detailed in place. WBH pp.125-127.
+//
+// Per-body dice budget: 1 × 2D per terrestrial body that passes plate
+// prerequisites (Hydro ≥ 1, TSS > 0). Otherwise zero. Moons add the same
+// conditional 2D each.
+//
+//nolint:unparam // error return kept for pipeline consistency with runStep5A-5D.
+func runStep5E(r roller.Roller, detailed []DetailedPlacement, sys stars.System) error {
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.Body == BodyEmpty {
+			continue
+		}
+		// Belts (Size 0) get no Geology.
+		if dp.SizeCode == "0" {
+			continue
+		}
+
+		dp.Geology = computeGeology(r, dp, sys)
+
+		// Temperature recompute (in place) per WBH p.125.
+		if dp.Temperature != nil {
+			ApplyInherentTempAddition(dp.Temperature, dp.Geology.InherentTemperatureK)
+		}
+
+		// Process moons.
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			m.Geology = computeMoonGeology(r, m, dp, sys)
+			if m.Temperature != nil {
+				ApplyInherentTempAddition(m.Temperature, m.Geology.InherentTemperatureK)
+			}
+		}
+	}
+	return nil
+}
+
+// computeGeology populates a Geology for the given body. Caller is
+// responsible for applying ApplyInherentTempAddition afterwards.
+func computeGeology(r roller.Roller, dp *DetailedPlacement, sys stars.System) *Geology {
+	g := &Geology{}
+	if dp.Body == BodyGasGiant {
+		g.InherentTemperatureK = ComputeGGResidualHeat(dp.MassEarth, sys.Primary.AgeGyr)
+		// GGs don't get seismic factors or plates.
+		return g
+	}
+	// Terrestrial path.
+	g.ResidualSeismicStress = ComputeResidualSeismicStress(dp, sys.Primary.AgeGyr, false)
+	g.TidalStressFactor = ComputeTidalStressFactor(dp)
+	g.TidalHeatingFactor = ComputeTidalHeatingFactor(planetTidalHeatingInputs(dp, sys))
+	g.TotalSeismicStress = g.ResidualSeismicStress + g.TidalStressFactor + g.TidalHeatingFactor
+	g.InherentTemperatureK = float64(g.TotalSeismicStress)
+	g.TectonicPlates = RollTectonicPlates(r, dp, g.TotalSeismicStress)
+	return g
+}
+
+// computeMoonGeology populates a Geology for a moon. Builds a synthetic
+// DetailedPlacement view via buildMoonPlacementView; uses the parent
+// planet's mass for tidal heating instead of the primary star's.
+func computeMoonGeology(r roller.Roller, m *Moon, parent *DetailedPlacement, sys stars.System) *Geology {
+	moonDP := buildMoonPlacementView(m, parent)
+	// buildMoonPlacementView does not copy TidalEffects; set it explicitly
+	// so ComputeTidalStressFactor can read it.
+	moonDP.TidalEffects = m.TidalEffects
+	g := &Geology{}
+	if moonDP.Body == BodyGasGiant {
+		// Rare moon-of-GG-class scenario; reuse the GG formula.
+		g.InherentTemperatureK = ComputeGGResidualHeat(m.MassEarth, sys.Primary.AgeGyr)
+		return g
+	}
+	g.ResidualSeismicStress = ComputeResidualSeismicStress(moonDP, sys.Primary.AgeGyr, true)
+	g.TidalStressFactor = ComputeTidalStressFactor(moonDP)
+	g.TidalHeatingFactor = ComputeTidalHeatingFactor(moonTidalHeatingInputs(m, parent))
+	g.TotalSeismicStress = g.ResidualSeismicStress + g.TidalStressFactor + g.TidalHeatingFactor
+	g.InherentTemperatureK = float64(g.TotalSeismicStress)
+	g.TectonicPlates = RollTectonicPlates(r, moonDP, g.TotalSeismicStress)
+	return g
+}
+
+// planetTidalHeatingInputs derives TidalHeatingInputs for a planet around
+// its primary star. Converts AU → Mkm and hours → days.
+func planetTidalHeatingInputs(dp *DetailedPlacement, sys stars.System) TidalHeatingInputs {
+	const auMkm = 149.6 // Mkm per AU
+	const solarMassEarth = 332946.0
+	au := stars.OrbitToAU(dp.Orbit)
+	mass := dp.MassEarth
+	return TidalHeatingInputs{
+		PrimaryMassEarth: sys.Primary.Mass * solarMassEarth,
+		SizeN:            SizeAsInt(dp.SizeCode),
+		Eccentricity:     dp.Eccentricity,
+		DistanceMkm:      au * auMkm,
+		PeriodDays:       dp.Period.Hours / 24.0,
+		WorldMassEarth:   mass,
+	}
+}
+
+// moonTidalHeatingInputs derives TidalHeatingInputs for a moon around its
+// parent planet. Distance and period are already in km/hours; convert.
+func moonTidalHeatingInputs(m *Moon, parent *DetailedPlacement) TidalHeatingInputs {
+	return TidalHeatingInputs{
+		PrimaryMassEarth: parent.MassEarth,
+		SizeN:            SizeAsInt(m.SizeCode),
+		Eccentricity:     m.Eccentricity,
+		DistanceMkm:      float64(m.OrbitKm) / 1_000_000.0,
+		PeriodDays:       m.PeriodHours / 24.0,
+		WorldMassEarth:   m.MassEarth,
+	}
+}

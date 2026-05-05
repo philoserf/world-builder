@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"wbh/roller"
+	"wbh/stars"
 )
 
 func TestComputeResidualSeismicStress_Terra(t *testing.T) {
@@ -501,5 +502,174 @@ func TestRollTectonicPlates_NilBody_NoActivity(t *testing.T) {
 	got := RollTectonicPlates(r, nil, 17)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (nil body)", got)
+	}
+}
+
+func TestRunStep5E_Terrestrial_PopulatesGeology(t *testing.T) {
+	// Build a synthetic terrestrial body with full prerequisite state.
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "5"
+	dp.Designation = "Aab III"
+	dp.Eccentricity = 0.05
+	dp.Orbit = 3.0
+	dp.MassEarth = 0.55
+	dp.Period = Period{Hours: 365.25 * 24}
+	dp.Physical = &BodyPhysical{Density: 1.03}
+	dp.Hydrographics = &Hydrographics{Code: 6}
+	dp.TidalEffects = &SurfaceTidalEffects{Total: 30.0}
+	dp.Temperature = &Temperature{MeanK: 300, HighK: 320, LowK: 280}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 4.5, Mass: 1.0}}
+
+	r := roller.NewScripted(8) // tectonic plates 2D
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5E(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Geology == nil {
+		t.Fatal("Geology is nil")
+	}
+	g := detailed[0].Geology
+	if g.TidalStressFactor != 3 {
+		t.Errorf("TidalStressFactor: got %d, want 3", g.TidalStressFactor)
+	}
+	if g.TotalSeismicStress != g.ResidualSeismicStress+g.TidalStressFactor+g.TidalHeatingFactor {
+		t.Error("TotalSeismicStress is not the sum of components")
+	}
+	if g.InherentTemperatureK != float64(g.TotalSeismicStress) {
+		t.Errorf("InherentTemperatureK: got %.2f, want %d (terrestrial = float64(TSS))",
+			g.InherentTemperatureK, g.TotalSeismicStress)
+	}
+}
+
+func TestRunStep5E_GasGiant_OnlyInherentHeat(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyGasGiant
+	dp.GGClass = GasGiantSmall
+	dp.Designation = "Aab IV"
+	dp.MassEarth = 1200
+	dp.Temperature = &Temperature{MeanK: 200}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 6.336, Mass: 1.0}}
+
+	r := roller.NewScripted()
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5E(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Geology == nil {
+		t.Fatal("Geology is nil")
+	}
+	g := detailed[0].Geology
+	if g.ResidualSeismicStress != 0 || g.TidalStressFactor != 0 ||
+		g.TidalHeatingFactor != 0 || g.TotalSeismicStress != 0 ||
+		g.TectonicPlates != 0 {
+		t.Errorf("GG seismic fields should be 0; got %+v", g)
+	}
+	// GG residual heat for MassEarth=1200, Age=6.336 ≈ 187K.
+	if g.InherentTemperatureK < 186 || g.InherentTemperatureK > 188 {
+		t.Errorf("InherentTemperatureK: got %.2f, want ~187", g.InherentTemperatureK)
+	}
+}
+
+func TestRunStep5E_BodyEmpty_NoOp(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyEmpty
+	r := roller.NewScripted()
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5E(r, detailed, stars.System{}); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Geology != nil {
+		t.Error("Empty body should not get Geology")
+	}
+}
+
+func TestRunStep5E_BeltSize0_NoGeology(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyPlanetoidBelt
+	dp.SizeCode = "0"
+	dp.Designation = "Aab Belt"
+	r := roller.NewScripted()
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5E(r, detailed, stars.System{}); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Geology != nil {
+		t.Error("Belt should not get Geology")
+	}
+}
+
+func TestRunStep5E_TempRecomputeApplied(t *testing.T) {
+	// Verify temperature mutated in place by the addition equation.
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "5"
+	dp.Designation = "Aab III"
+	dp.Eccentricity = 0.05
+	dp.Orbit = 3.0
+	dp.MassEarth = 0.55
+	dp.Period = Period{Hours: 365.25 * 24}
+	dp.Physical = &BodyPhysical{Density: 1.03}
+	dp.Hydrographics = &Hydrographics{Code: 6}
+	dp.TidalEffects = &SurfaceTidalEffects{Total: 30.0}
+	preMean := 300.0
+	dp.Temperature = &Temperature{MeanK: preMean}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 4.5, Mass: 1.0}}
+
+	r := roller.NewScripted(8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5E(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	// MeanK should be ≥ preMean (recompute monotonically increases or stays same).
+	if detailed[0].Temperature.MeanK < preMean {
+		t.Errorf("MeanK decreased: pre=%.4f post=%.4f", preMean, detailed[0].Temperature.MeanK)
+	}
+}
+
+func TestRunStep5E_MoonRecursion(t *testing.T) {
+	// Parent body with one moon; moon should also get Geology.
+	dp := DetailedPlacement{}
+	dp.Body = BodyGasGiant
+	dp.GGClass = GasGiantSmall
+	dp.Designation = "Aab IV"
+	dp.MassEarth = 1200
+	dp.Temperature = &Temperature{MeanK: 200}
+	dp.Moons = []Moon{
+		{
+			Designation:   "Aab IV a",
+			SizeCode:      "5",
+			DiameterKm:    5000,
+			MassEarth:     0.55,
+			Eccentricity:  0.1,
+			OrbitKm:       3_920_000,
+			PeriodHours:   48.0,
+			Physical:      &BodyPhysical{Density: 1.03},
+			Hydrographics: &Hydrographics{Code: 6},
+			TidalEffects:  &SurfaceTidalEffects{Total: 30.0},
+			Temperature:   &Temperature{MeanK: 250},
+		},
+	}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 6.336, Mass: 1.0}}
+
+	r := roller.NewScripted(8) // tectonic plates 2D for the moon
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5E(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Geology == nil {
+		t.Fatal("Parent Geology is nil")
+	}
+	if detailed[0].Moons[0].Geology == nil {
+		t.Fatal("Moon Geology is nil")
+	}
+	// Moon is terrestrial (not GG), so should have full seismic profile.
+	moonG := detailed[0].Moons[0].Geology
+	if moonG.TotalSeismicStress != moonG.ResidualSeismicStress+moonG.TidalStressFactor+moonG.TidalHeatingFactor {
+		t.Error("Moon TotalSeismicStress not sum of components")
 	}
 }
