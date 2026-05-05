@@ -102,17 +102,14 @@ type TidalHeatingInputs struct {
 
 // ComputeTidalHeatingFactor per WBH p.126:
 //
-//	(PrimaryMass⊕)² × SizeN⁵ × ecc² ÷ (3 × DistanceMkm⁵ × PeriodDays × WorldMass⊕)
+//	(PrimaryMass⊕)² × SizeN⁵ × ecc²
+//	─────────────────────────────────────────────────────────────────
+//	3,000 × DistanceMkm⁵ × PeriodDays × WorldMass⊕
 //
 // Floor the result; values < 1 are treated as 0. Returns 0 if any divisor
 // component (DistanceMkm, PeriodDays, WorldMassEarth) is zero.
 //
-// NOTE: the formula constant is 3 (not 3000). The task specification doc-comment
-// listed 3000 but the calibration check confirms the constant must be 3:
-// with ZedPrime inputs (PrimaryMass=1200, Size=5, ecc=0.05, d=3.92Mkm,
-// P=7d, worldMass=0.55⊕) the book expects ~1052 → 3000 yields ~1, 3 yields ~1052.
-//
-// Worked references from the book:
+// Worked references from the book (WBH p.126):
 //   - Io ≈ 101 (book's calibration point)
 //   - Enceladus ≈ 11
 //   - Zed Prime ≈ 14
@@ -123,7 +120,7 @@ func ComputeTidalHeatingFactor(in TidalHeatingInputs) int {
 	num := in.PrimaryMassEarth * in.PrimaryMassEarth *
 		math.Pow(float64(in.SizeN), 5) *
 		in.Eccentricity * in.Eccentricity
-	den := 3.0 * math.Pow(in.DistanceMkm, 5) * in.PeriodDays * in.WorldMassEarth
+	den := 3000.0 * math.Pow(in.DistanceMkm, 5) * in.PeriodDays * in.WorldMassEarth
 	v := num / den
 	if v < 1 {
 		return 0
