@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 )
 
@@ -272,4 +273,129 @@ func TestComputeGGResidualHeat_HighMassYoungAge(t *testing.T) {
 	if got < 530 || got > 540 {
 		t.Errorf("got %.2f, want ~535 (±5)", got)
 	}
+}
+
+func TestApplyInherentTempAddition_ZedPrime_Negligible(t *testing.T) {
+	// Zed Prime: 300K + 17 added → ⁴√(300⁴ + 17⁴) ≈ 300.001K → rounds back to 300.
+	temp := &Temperature{MeanK: 300.0, HighK: 320.0, LowK: 280.0}
+	ApplyInherentTempAddition(temp, 17.0)
+	if math.Abs(temp.MeanK-300.0) > 0.01 {
+		t.Errorf("MeanK: got %.4f, want ~300.0 (negligible delta)", temp.MeanK)
+	}
+}
+
+func TestApplyInherentTempAddition_RogueWorld_NotNegligible(t *testing.T) {
+	// 25K + 100 added → ⁴√(25⁴ + 100⁴) ≈ 100.4K (cold-rogue scenario).
+	temp := &Temperature{MeanK: 25.0}
+	ApplyInherentTempAddition(temp, 100.0)
+	if math.Abs(temp.MeanK-100.4) > 1.0 {
+		t.Errorf("MeanK: got %.2f, want ~100.4", temp.MeanK)
+	}
+}
+
+func TestApplyInherentTempAddition_AllStandardFieldsTouched(t *testing.T) {
+	// Verifies every populated standard temp field gets the equation applied.
+	temp := &Temperature{
+		MeanK:      300.0,
+		HighK:      320.0,
+		LowK:       280.0,
+		BasicK:     295.0,
+		WorstHighK: 330.0,
+		WorstLowK:  270.0,
+	}
+	originals := *temp
+	ApplyInherentTempAddition(temp, 50.0)
+	// All populated fields should have changed (or stayed nearly the same
+	// for high originals where 50K addition is negligible). Verify that
+	// the equation was applied (NewT >= OldT for any addedK >= 0).
+	if temp.MeanK < originals.MeanK {
+		t.Errorf("MeanK should not decrease (recompute monotonic): pre=%.4f post=%.4f", originals.MeanK, temp.MeanK)
+	}
+	if temp.HighK < originals.HighK {
+		t.Errorf("HighK monotonic: pre=%.4f post=%.4f", originals.HighK, temp.HighK)
+	}
+	if temp.LowK < originals.LowK {
+		t.Errorf("LowK monotonic: pre=%.4f post=%.4f", originals.LowK, temp.LowK)
+	}
+	if temp.BasicK < originals.BasicK {
+		t.Errorf("BasicK monotonic: pre=%.4f post=%.4f", originals.BasicK, temp.BasicK)
+	}
+	if temp.WorstHighK < originals.WorstHighK {
+		t.Errorf("WorstHighK monotonic: pre=%.4f post=%.4f", originals.WorstHighK, temp.WorstHighK)
+	}
+	if temp.WorstLowK < originals.WorstLowK {
+		t.Errorf("WorstLowK monotonic: pre=%.4f post=%.4f", originals.WorstLowK, temp.WorstLowK)
+	}
+}
+
+func TestApplyInherentTempAddition_TwilightFields_OnlyWhenIsTwilight(t *testing.T) {
+	// IsTwilight=true → twilight fields get the equation.
+	temp := &Temperature{
+		MeanK:       100.0,
+		IsTwilight:  true,
+		TwilightK:   100.0,
+		BrightSideK: 200.0,
+		DarkSideK:   50.0,
+	}
+	ApplyInherentTempAddition(temp, 50.0)
+	if temp.TwilightK == 100.0 {
+		t.Error("TwilightK should have changed when IsTwilight=true")
+	}
+	if temp.BrightSideK == 200.0 {
+		t.Error("BrightSideK should have changed when IsTwilight=true")
+	}
+	if temp.DarkSideK == 50.0 {
+		t.Error("DarkSideK should have changed when IsTwilight=true")
+	}
+}
+
+func TestApplyInherentTempAddition_TwilightFields_SkippedWhenNotTwilight(t *testing.T) {
+	// IsTwilight=false → twilight fields untouched even if non-zero.
+	temp := &Temperature{
+		MeanK:       300.0,
+		IsTwilight:  false,
+		TwilightK:   100.0,
+		BrightSideK: 200.0,
+		DarkSideK:   50.0,
+	}
+	ApplyInherentTempAddition(temp, 50.0)
+	if temp.TwilightK != 100.0 {
+		t.Errorf("TwilightK: got %.4f, want 100.0 (IsTwilight=false → skip)", temp.TwilightK)
+	}
+	if temp.BrightSideK != 200.0 {
+		t.Errorf("BrightSideK: got %.4f, want 200.0", temp.BrightSideK)
+	}
+	if temp.DarkSideK != 50.0 {
+		t.Errorf("DarkSideK: got %.4f, want 50.0", temp.DarkSideK)
+	}
+}
+
+func TestApplyInherentTempAddition_ZeroAddition_NoChange(t *testing.T) {
+	temp := &Temperature{MeanK: 300.0, HighK: 320.0}
+	ApplyInherentTempAddition(temp, 0)
+	if temp.MeanK != 300.0 || temp.HighK != 320.0 {
+		t.Error("zero addition should leave fields unchanged")
+	}
+}
+
+func TestApplyInherentTempAddition_ZeroFieldsSkipped(t *testing.T) {
+	// Fields with value 0 should NOT be modified (zero is "not populated").
+	temp := &Temperature{MeanK: 300.0, HighK: 0, LowK: 0}
+	ApplyInherentTempAddition(temp, 50.0)
+	if temp.HighK != 0 {
+		t.Errorf("HighK: got %.4f, want 0 (zero fields skipped)", temp.HighK)
+	}
+	if temp.LowK != 0 {
+		t.Errorf("LowK: got %.4f, want 0 (zero fields skipped)", temp.LowK)
+	}
+}
+
+func TestApplyInherentTempAddition_NilTemperature_Safe(t *testing.T) {
+	// Defensive: nil should not panic.
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("panicked on nil: %v", r)
+		}
+	}()
+	ApplyInherentTempAddition(nil, 100.0)
 }

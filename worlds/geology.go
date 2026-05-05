@@ -128,6 +128,46 @@ func ComputeTidalHeatingFactor(in TidalHeatingInputs) int {
 	return int(math.Floor(v))
 }
 
+// ApplyInherentTempAddition mutates each populated temperature field on
+// temp via the WBH p.125 addition equation:
+//
+//	NewT = ⁴√(OldT⁴ + addedK⁴)
+//
+// Idempotent in shape — same equation applied to every field. Safe on nil
+// temp or zero addedK (no-op).
+//
+// Fields touched: MeanK, HighK, LowK, BasicK, WorstHighK, WorstLowK.
+// When IsTwilight is true, also: TwilightK, BrightSideK, DarkSideK.
+//
+// Equation inputs (Luminosity, Albedo, GreenhouseFactor, AU, ScaleHeight)
+// and variance components (AxialTiltFactor, RotationFactor, etc.) are
+// NOT touched — those are inputs, not output temperatures.
+//
+// A field with value 0 is treated as "not populated" and skipped.
+func ApplyInherentTempAddition(temp *Temperature, addedK float64) {
+	if temp == nil || addedK == 0 {
+		return
+	}
+	addPow4 := math.Pow(addedK, 4)
+	add := func(v *float64) {
+		if *v == 0 {
+			return
+		}
+		*v = math.Pow(math.Pow(*v, 4)+addPow4, 0.25)
+	}
+	add(&temp.MeanK)
+	add(&temp.HighK)
+	add(&temp.LowK)
+	add(&temp.BasicK)
+	add(&temp.WorstHighK)
+	add(&temp.WorstLowK)
+	if temp.IsTwilight {
+		add(&temp.TwilightK)
+		add(&temp.BrightSideK)
+		add(&temp.DarkSideK)
+	}
+}
+
 // ComputeGGResidualHeat per WBH p.125 sidebar:
 //
 //	T(K) = 80 × ⁴√(MassEarth) ÷ √(AgeGyr)
