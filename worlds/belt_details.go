@@ -120,10 +120,7 @@ func rollComponent(r roller.Roller, base, mult int, isD3 bool) int {
 // s-type; any shortfall below 100% is allocated as "other".
 func RollBeltComposition(r roller.Roller, dms int) (BeltComposition, error) {
 	roll := r.Roll("2D")
-	idx := max(roll+dms, 0)
-	if idx > 12 {
-		idx = 12
-	}
+	idx := min(max(roll+dms, 0), 12)
 	row := beltCompositionTable[idx]
 
 	m := rollComponent(r, row.mBase, row.mMult, row.mIsD3)
@@ -171,10 +168,7 @@ func RollBeltBulk(r roller.Roller, ageGyr float64, comp BeltComposition) (int, e
 // Rating < 2 is treated as 2; rating > 12 is capped at 12.
 func RollResourceRating(r roller.Roller, bulk int, comp BeltComposition) (int, error) {
 	roll := r.Roll("2D")
-	rating := max(roll-7+bulk+comp.MTypePct/10-comp.CTypePct/10, 2)
-	if rating > 12 {
-		rating = 12
-	}
+	rating := min(max(roll-7+bulk+comp.MTypePct/10-comp.CTypePct/10, 2), 12)
 	return rating, nil
 }
 

@@ -49,10 +49,7 @@ func RollHydroDigit(r roller.Roller, atmoCode int, atmoSubtype string, sizeCode 
 		}
 	}
 
-	digit := max(roll-7+atmoCode+dm, 0)
-	if digit > 10 {
-		digit = 10
-	}
+	digit := min(max(roll-7+atmoCode+dm, 0), 10)
 	return digit, nil
 }
 

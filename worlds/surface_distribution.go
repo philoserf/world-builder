@@ -40,10 +40,7 @@ var surfaceDescriptions = [11]string{
 // RollSurfaceDistribution rolls 2D-2 and clamps to [0, 10] per WBH p.100.
 func RollSurfaceDistribution(r roller.Roller) (int, error) {
 	twoD := r.Roll("2D")
-	code := max(twoD-2, 0)
-	if code > 10 {
-		code = 10
-	}
+	code := min(max(twoD-2, 0), 10)
 	return code, nil
 }
 
