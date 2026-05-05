@@ -1316,6 +1316,83 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 		if profilePopulatedCount > 0 {
 			t.Logf("iter %d: %d exotic-atm bodies with populated Atm.Profile.Gases", iter, profilePopulatedCount)
 		}
+
+		// 3B-geology invariants (assertions 25-30).
+
+		// Assertion 25: HasGeology() for all non-empty, non-belt bodies.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyEmpty || dp.SizeCode == "0" {
+				continue
+			}
+			if !dp.HasGeology() {
+				t.Errorf("iter %d: body %s missing Geology", iter, dp.Designation)
+			}
+		}
+
+		// Assertion 26: For terrestrials, TotalSeismicStress is the sum of components.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body != worlds.BodyTerrestrial || !dp.HasGeology() {
+				continue
+			}
+			g := dp.Geology
+			if g.TotalSeismicStress != g.ResidualSeismicStress+g.TidalStressFactor+g.TidalHeatingFactor {
+				t.Errorf("iter %d: body %s: TSS %d != sum of components (%d + %d + %d)",
+					iter, dp.Designation, g.TotalSeismicStress,
+					g.ResidualSeismicStress, g.TidalStressFactor, g.TidalHeatingFactor)
+			}
+		}
+
+		// Assertion 27: For terrestrials, InherentTemperatureK == float64(TotalSeismicStress).
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body != worlds.BodyTerrestrial || !dp.HasGeology() {
+				continue
+			}
+			if dp.Geology.InherentTemperatureK != float64(dp.Geology.TotalSeismicStress) {
+				t.Errorf("iter %d: body %s: InherentTemperatureK %.2f != TSS %d (terrestrial)",
+					iter, dp.Designation, dp.Geology.InherentTemperatureK, dp.Geology.TotalSeismicStress)
+			}
+		}
+
+		// Assertion 28: For gas giants, only InherentTemperatureK is populated; seismic fields are 0.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body != worlds.BodyGasGiant || !dp.HasGeology() {
+				continue
+			}
+			g := dp.Geology
+			if g.ResidualSeismicStress != 0 || g.TidalStressFactor != 0 ||
+				g.TidalHeatingFactor != 0 || g.TotalSeismicStress != 0 ||
+				g.TectonicPlates != 0 {
+				t.Errorf("iter %d: body %s (GG): seismic fields should be 0; got %+v",
+					iter, dp.Designation, g)
+			}
+		}
+
+		// Assertion 29: TectonicPlates within theoretical range [0, 25].
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasGeology() {
+				continue
+			}
+			if dp.Geology.TectonicPlates < 0 || dp.Geology.TectonicPlates > 25 {
+				t.Errorf("iter %d: body %s: TectonicPlates %d out of range [0, 25]",
+					iter, dp.Designation, dp.Geology.TectonicPlates)
+			}
+		}
+
+		// Assertion 30: Temperature.MeanK present and finite after recompute.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyEmpty || !dp.HasTemperature() {
+				continue
+			}
+			if math.IsNaN(dp.Temperature.MeanK) || math.IsInf(dp.Temperature.MeanK, 0) {
+				t.Errorf("iter %d: body %s: MeanK %.4f not finite after 5E", iter, dp.Designation, dp.Temperature.MeanK)
+			}
+		}
 	}
 
 	// Referee-fiat / book-inconsistency logs (informational only).
@@ -1323,4 +1400,5 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 	t.Logf("p.106 tidal lock natural-12 verification implemented per spec; the book's worked example fudges it as a Referee narrative")
 	t.Logf("p.115 sidebar Zed Prime WorstLow=230K (book) vs 219K (consistent Near/Far AU computation) — implementation uses consistent Near/Far AU")
 	t.Logf("3A2b-rederive: tidal-lock re-eval if pressure crosses 2.5 bar deferred (Q5-B); requires dice-capture infrastructure")
+	t.Logf("3B-geology: post-TSS band-cross detection deferred (would require Temperature.PreInherentMeanK snapshot)")
 }
