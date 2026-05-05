@@ -233,6 +233,19 @@ func biocomplexityAgeDM(ageGyr float64) int {
 	return 0
 }
 
+// RollNativeSophont per WBH p.130: extant native sophont exists if
+// 2D + min(Biocomplexity, 9) - 7 ≥ 13.
+//
+// Returns false without consuming dice if biocomplexity < 8.
+func RollNativeSophont(r roller.Roller, biocomplexity int) bool {
+	if biocomplexity < 8 {
+		return false
+	}
+	bx := min(biocomplexity, 9)
+	roll := r.Roll("2D")
+	return roll+bx-7 >= 13
+}
+
 // atmIs4to9 reports whether body.Atmosphere.Code is in [4, 9]. Returns
 // false on nil atmosphere.
 func atmIs4to9(body *DetailedPlacement) bool {

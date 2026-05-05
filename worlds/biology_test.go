@@ -220,3 +220,36 @@ func TestRollBiocomplexity_NilAtmosphere_NoAtmDM(t *testing.T) {
 		t.Errorf("got %d, want 10 (nil atm → DM-2)", got)
 	}
 }
+
+func TestRollNativeSophont_BelowPrerequisite_False(t *testing.T) {
+	// Biocomplexity=7 < 8 → no roll, no dice consumed.
+	r := roller.NewScripted() // empty
+	if got := RollNativeSophont(r, 7); got {
+		t.Error("got true, want false (Biocomplexity<8)")
+	}
+}
+
+func TestRollNativeSophont_Triggers_AtBiocomplexity9(t *testing.T) {
+	// Biocomplexity=9, 2D=11 → 11+9-7=13 ≥ 13 → true.
+	r := roller.NewScripted(11)
+	if got := RollNativeSophont(r, 9); !got {
+		t.Error("got false, want true (mod=13)")
+	}
+}
+
+func TestRollNativeSophont_BelowThreshold(t *testing.T) {
+	// Biocomplexity=8, 2D=11 → 11+8-7=12 < 13 → false.
+	r := roller.NewScripted(11)
+	if got := RollNativeSophont(r, 8); got {
+		t.Error("got true, want false (mod=12)")
+	}
+}
+
+func TestRollNativeSophont_BiocomplexityClamp_Above9(t *testing.T) {
+	// Biocomplexity=15 should be clamped to 9 in the formula.
+	// 2D=11 → 11+9-7=13 ≥ 13 → true.
+	r := roller.NewScripted(11)
+	if got := RollNativeSophont(r, 15); !got {
+		t.Error("got false, want true (Biocomplexity=15 → uses 9)")
+	}
+}
