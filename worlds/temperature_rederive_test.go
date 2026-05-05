@@ -290,7 +290,7 @@ func TestRederive_TerraLike_StableInTemperate(t *testing.T) {
 	preCode := body.Atmosphere.Code
 	preHydro := body.Hydrographics.Code
 
-	r := roller.NewScripted(7) // 1 dice for hydro re-roll (no runaway in Task 6 yet)
+	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -353,7 +353,7 @@ func TestRederive_ScaleHeightUpdate(t *testing.T) {
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
-	r := roller.NewScripted(7)
+	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -382,7 +382,7 @@ func TestRederive_AtmosphereB_NoRunaway_NoSubtypeChange(t *testing.T) {
 
 	// Scripted dice: 1 for hydro re-roll + gas-mix budget for exotic atm B + hydro > 0 (Task 8).
 	// rerollAtmSubtypeAndPressure is not called here (Task 9 wires that).
-	r := roller.NewScripted(7, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
+	r := roller.NewScripted(7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5) // hydro 2D + percent d10 + gas mix
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -414,29 +414,41 @@ func TestRerollAtmSubtypeAndPressure_AtmBDirectCall(t *testing.T) {
 }
 
 func TestRederive_AtmProfile_ExoticC(t *testing.T) {
-	// Atm C (12, insidious) with hydro 4 → RollGasMix should populate Atm.Profile.
+	// Atm C (code 12) with subtype "5" (numeric, the common subtype output) and
+	// hydro 4 → RollGasMix uses column letter "C" (mapped from Code, NOT Subtype).
+	// Profile should be populated with named gases from the C-column of the
+	// gas-mix table — not a fallback "Other"-only profile.
 	body := &DetailedPlacement{}
 	body.Body = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
-	body.Atmosphere = &Atmosphere{Code: 12, Subtype: "C", Pressure: 5.0, ScaleHeight: 8.5}
+	body.Atmosphere = &Atmosphere{Code: 12, Subtype: "5", Pressure: 5.0, ScaleHeight: 8.5}
 	body.Hydrographics = &Hydrographics{Code: 4}
 	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
 	body.Temperature = &Temperature{MeanK: 288}
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
-	// Dice budget for atm 12 (CheckRunawayGreenhouse not wired yet — Task 9):
-	// - 1 dice for hydro re-roll (RollHydroDigit)
-	// - RollGasMix internal: 2-4 iterations × 2D each + d10 variance per gas
-	// Provide a generous scripted budget; exhaustion would panic if insufficient.
-	r := roller.NewScripted(7, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
+	r := roller.NewScripted(7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5) // hydro 2D + percent d10 + gas mix
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(body.Atmosphere.Profile.Gases) == 0 {
 		t.Error("Atm.Profile.Gases should be populated for exotic atm with hydro")
+	}
+	// Regression check: the C1 bug produced a single "Other"-only profile.
+	// A correctly-routed RollGasMix should produce at least one named gas.
+	hasNamed := false
+	for _, g := range body.Atmosphere.Profile.Gases {
+		if g.Name != "Other" {
+			hasNamed = true
+			break
+		}
+	}
+	if !hasNamed {
+		t.Errorf("Atm.Profile.Gases should contain at least one named gas, not just Other; got %+v",
+			body.Atmosphere.Profile.Gases)
 	}
 }
 
@@ -452,7 +464,7 @@ func TestRederive_AtmProfile_StandardAtm_NotMutated(t *testing.T) {
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
-	r := roller.NewScripted(7) // hydro re-roll only
+	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -477,7 +489,7 @@ func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
-	r := roller.NewScripted(1) // hydro re-roll → digit 0; no gas mix dice needed
+	r := roller.NewScripted(1, 5) // hydro 2D=1 → digit 0; percent d10 still consumed; no gas mix
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -514,7 +526,7 @@ func TestRederive_RunawayFires_AtmAndHydroMutate(t *testing.T) {
 	// 4. rerollAtmSubtypeAndPressure pressure: 2 dice (1D + 1D for RollTotalPressure)
 	// 5. RollHydroDigit with TempBoiling: 1 dice (2D)
 	// 6. RollGasMix for new atm B + hydro: ~6-12 dice
-	r := roller.NewScripted(2, 3, 8, 5, 5, 7, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
+	r := roller.NewScripted(2, 3, 8, 7, 5, 5, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8) // trigger + atm code + subtype + hydro 2D + percent d10 + gas mix
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -547,8 +559,8 @@ func TestRederive_RunawayDoesNotFire_NoBoilingDM(t *testing.T) {
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
-	// Scripted: hydro re-roll only (runaway short-circuits without consuming dice when MeanK ≤ 303).
-	r := roller.NewScripted(7)
+	// Scripted: hydro 2D + percent d10 (runaway short-circuits without consuming dice when MeanK ≤ 303).
+	r := roller.NewScripted(7, 5)
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -573,8 +585,8 @@ func TestRederive_NonHZBody_NoRunawayCheck(t *testing.T) {
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 10}}
 
-	// Scripted: hydro re-roll only (no runaway check for non-HZ).
-	r := roller.NewScripted(7)
+	// Scripted: hydro 2D + percent d10 (no runaway check for non-HZ).
+	r := roller.NewScripted(7, 5)
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)

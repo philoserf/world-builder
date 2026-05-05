@@ -90,6 +90,13 @@ func RederiveAtmosphereHydrographics(
 			return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: hydro re-roll: %w", err)
 		}
 		body.Hydrographics.Code = newHydro
+		// Refresh PercentRange + Percent so they stay consistent with the new Code.
+		body.Hydrographics.PercentRange = HydroRange(newHydro)
+		newPct, err := RefineHydroPercent(r, newHydro, body.Hydrographics.PercentRange)
+		if err != nil {
+			return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: hydro percent: %w", err)
+		}
+		body.Hydrographics.Percent = newPct
 	}
 
 	// 3. Hydrographics.Profile: derive from current code + atm + meanK.
@@ -101,18 +108,46 @@ func RederiveAtmosphereHydrographics(
 		body.Hydrographics.Profile = DeriveHydrographicsProfile(meanK, atmCode, body.Hydrographics.Code)
 	}
 
-	// 4. Atm.Profile: re-derive gas mix for exotic atm (A/B/C/F) with hydro > 0.
-	if body.Atmosphere != nil && isExoticAtmCode(body.Atmosphere.Code) &&
-		body.Hydrographics != nil && body.Hydrographics.Code > 0 {
-		newProfile, err := RollGasMix(r, body.Atmosphere.Subtype, "", tempRange, body.SizeCode)
-		if err != nil {
-			return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: gas mix: %w", err)
+	// 4. Atm.Profile: re-derive gas mix for exotic atm (A/B/C) with hydro > 0.
+	// RollGasMix's first parameter is the gas-mix table column letter
+	// ("A"/"B"/"C"), derived from the atm CODE — not from the atm Subtype
+	// (which is a digit/letter from the subtype roll). Atm code 15 (F /
+	// Unusual) has no defined column; Profile stays empty for F per MVP.
+	if body.Atmosphere != nil && body.Hydrographics != nil && body.Hydrographics.Code > 0 {
+		columnLetter := gasMixColumnForAtmCode(body.Atmosphere.Code)
+		if columnLetter != "" {
+			newProfile, err := RollGasMix(r, columnLetter, "", tempRange, body.SizeCode)
+			if err != nil {
+				return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: gas mix: %w", err)
+			}
+			body.Atmosphere.Profile = newProfile
 		}
-		body.Atmosphere.Profile = newProfile
 	}
 
-	_ = parent // parent unused at Task 9; wired in later tasks for moon-specific paths
+	_ = parent // parent reserved for future moon-specific logic (e.g., parent radiance from atm composition)
 	return nil
+}
+
+// gasMixColumnForAtmCode maps an atmosphere code to the column letter used
+// by RollGasMix / GasMixTableLookup (WBH pp.96-98 Gas Mix tables):
+//
+//	10 (A) → "A"
+//	11 (B) → "B"
+//	12 (C) → "C"
+//
+// Atm code 15 (F / Unusual) has no defined column; returns "" (caller skips
+// gas-mix derivation and leaves Atmosphere.Profile empty per MVP).
+func gasMixColumnForAtmCode(code int) string {
+	switch code {
+	case 10:
+		return "A"
+	case 11:
+		return "B"
+	case 12:
+		return "C"
+	default:
+		return ""
+	}
 }
 
 // rerollAtmSubtypeAndPressure re-rolls Atmosphere.Subtype and Atmosphere.Pressure
