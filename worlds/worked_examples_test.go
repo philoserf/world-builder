@@ -2,6 +2,7 @@ package worlds_test
 
 import (
 	"math"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -909,16 +910,11 @@ func TestSol_GenerateSystemPlacement(t *testing.T) {
 	}
 }
 
-// TestZed_FullDetail_3A2b_temp is the 3A2b-temp acceptance gate. Replaces
-// TestZed_FullDetail_3A2a's free-dice shape test; extends with property
-// invariants for 3A2b-temp Temperature fields.
-//
-// Per-phase numeric worked-example values (300K mean, 346K high, 250K low,
-// 0.33 albedo, 0.59 greenhouse) are pinned in worlds/temperature_test.go
-// per-task tests. This test asserts that across 100 randomly-seeded
-// iterations the full DetailSystem pipeline produces structurally-valid
-// output for every body's Temperature.
-func TestZed_FullDetail_3A2b_temp(t *testing.T) {
+// TestZed_FullDetail_3A2b is the 3A2b acceptance gate. Replaces the
+// 3A2b-temp gate; extends with property invariants for Step 5D rederive
+// outputs (Atm.ScaleHeight under real T, Hydrographics.Profile, runaway
+// greenhouse triggers, post-rederive consistency).
+func TestZed_FullDetail_3A2b(t *testing.T) {
 	t.Parallel()
 
 	for iter := 0; iter < 100; iter++ {
@@ -1179,10 +1175,152 @@ func TestZed_FullDetail_3A2b_temp(t *testing.T) {
 					iter, dp.Designation, dp.Temperature.MeanK, dp.Temperature.BasicK)
 			}
 		}
+
+		// 3A2b-rederive invariants (new):
+
+		// Assertion 17: ScaleHeight under real T.
+		// 8.5 × meanK/288 / gravityG ± 20%.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Atmosphere == nil || dp.Atmosphere.Code == 0 || !dp.HasTemperature() {
+				continue
+			}
+			gravity := 0.0
+			if dp.Physical != nil {
+				gravity = dp.Physical.Gravity
+			}
+			if gravity == 0 {
+				continue
+			}
+			expected := 8.5 * dp.Temperature.MeanK / 288 / gravity
+			if math.Abs(dp.Atmosphere.ScaleHeight-expected)/expected > 0.20 {
+				t.Errorf("iter %d: body %s: ScaleHeight %v vs expected ≈ %v (>20%% drift)",
+					iter, dp.Designation, dp.Atmosphere.ScaleHeight, expected)
+			}
+		}
+
+		// Assertion 18: Hydrographics.Profile populated for standard-atm bodies with hydro.
+		// Exotic-atm bodies (codes A/B/C/F = 10/11/12/15) may legitimately have empty
+		// Profile when no liquid candidate fits at the body's mean temperature.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Atmosphere == nil || dp.Atmosphere.Code == 0 ||
+				dp.Hydrographics == nil || dp.Hydrographics.Code == 0 {
+				continue
+			}
+			code := dp.Atmosphere.Code
+			isExotic := code == 10 || code == 11 || code == 12 || code == 15
+			if !isExotic && dp.Hydrographics.Profile == "" {
+				t.Errorf("iter %d: body %s: Hydrographics.Profile empty for standard atm %d",
+					iter, dp.Designation, code)
+			}
+		}
+
+		// Assertion 19: Hydrographics.Profile format `H[0-9A]:[A-Za-z0-9]+-[0-9]+`.
+		profileRegex := regexp.MustCompile(`^H[0-9A]:[A-Za-z0-9]+-[0-9]+$`)
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Hydrographics == nil || dp.Hydrographics.Profile == "" {
+				continue
+			}
+			if !profileRegex.MatchString(dp.Hydrographics.Profile) {
+				t.Errorf("iter %d: body %s: Profile %q doesn't match expected format",
+					iter, dp.Designation, dp.Hydrographics.Profile)
+			}
+		}
+
+		// Assertion 20: Exotic-atm worlds use a recognized liquid in Profile.
+		validLiquids := []string{"F2", "O2", "CH4", "C2H6", "Cl2", "NH3", "SO2", "HF", "HCN", "HCl", "H2O", "CH2O2", "CH3NO", "H2CO3", "H2SO4"}
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Atmosphere == nil {
+				continue
+			}
+			code := dp.Atmosphere.Code
+			if code != 10 && code != 11 && code != 12 && code != 15 {
+				continue
+			}
+			if dp.Hydrographics == nil || dp.Hydrographics.Code == 0 || dp.Hydrographics.Profile == "" {
+				continue
+			}
+			found := false
+			for _, l := range validLiquids {
+				if strings.Contains(dp.Hydrographics.Profile, ":"+l+"-") {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("iter %d: body %s exotic atm %d: Profile %q lacks recognized liquid",
+					iter, dp.Designation, code, dp.Hydrographics.Profile)
+			}
+		}
+
+		// Assertion 21: Pressure sanity (≥ 0; non-gas-giants < 100 bar).
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Atmosphere == nil {
+				continue
+			}
+			if dp.Atmosphere.Pressure < 0 {
+				t.Errorf("iter %d: body %s: negative Pressure %v",
+					iter, dp.Designation, dp.Atmosphere.Pressure)
+			}
+			if dp.GGClass == worlds.NotGasGiant && dp.Atmosphere.Pressure > 100 {
+				t.Errorf("iter %d: body %s (terrestrial): Pressure %v > 100 bar",
+					iter, dp.Designation, dp.Atmosphere.Pressure)
+			}
+		}
+
+		// Assertion 22: Post-5D Temperature non-nil.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyEmpty {
+				continue
+			}
+			if !dp.HasTemperature() {
+				t.Errorf("iter %d: body %s: Temperature nil after 5D", iter, dp.Designation)
+			}
+		}
+
+		// Assertion 23: (Informational) Count of runaway-greenhouse-fired bodies.
+		// Approximation: HZ + atm A/B/C + meanK > 303K → likely post-runaway.
+		runawayCount := 0
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HZ || dp.Atmosphere == nil || !dp.HasTemperature() {
+				continue
+			}
+			c := dp.Atmosphere.Code
+			if (c == 10 || c == 11 || c == 12) && dp.Temperature.MeanK > 303 {
+				runawayCount++
+			}
+		}
+		if runawayCount > 0 {
+			t.Logf("iter %d: %d bodies post-runaway (HZ + atm A/B/C + meanK > 303K)", iter, runawayCount)
+		}
+
+		// Assertion 24: (Informational) Atm.Profile.Gases populated for exotic atm with hydro.
+		profilePopulatedCount := 0
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Atmosphere == nil || dp.Hydrographics == nil {
+				continue
+			}
+			if (dp.Atmosphere.Code == 10 || dp.Atmosphere.Code == 11 ||
+				dp.Atmosphere.Code == 12 || dp.Atmosphere.Code == 15) &&
+				dp.Hydrographics.Code > 0 && len(dp.Atmosphere.Profile.Gases) > 0 {
+				profilePopulatedCount++
+			}
+		}
+		if profilePopulatedCount > 0 {
+			t.Logf("iter %d: %d exotic-atm bodies with populated Atm.Profile.Gases", iter, profilePopulatedCount)
+		}
 	}
 
 	// Referee-fiat / book-inconsistency logs (informational only).
 	t.Logf("p.101 continent counts deferred to Referee fiat per 3A2a Q6 option (b)")
 	t.Logf("p.106 tidal lock natural-12 verification implemented per spec; the book's worked example fudges it as a Referee narrative")
 	t.Logf("p.115 sidebar Zed Prime WorstLow=230K (book) vs 219K (consistent Near/Far AU computation) — implementation uses consistent Near/Far AU")
+	t.Logf("3A2b-rederive: tidal-lock re-eval if pressure crosses 2.5 bar deferred (Q5-B); requires dice-capture infrastructure")
 }
