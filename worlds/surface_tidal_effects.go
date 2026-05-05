@@ -44,7 +44,7 @@ func StarTide(starMassSol float64, planetSizeN int, auFromStar float64) float64 
 //
 // moonMassEarth is the moon's mass in Earth units; planetSizeN is the
 // numeric planet Size (0-15); orbitKm is the moon's orbital distance in km.
-func MoonTideOnPlanet(moonMassEarth float64, planetSizeN int, orbitKm int) float64 {
+func MoonTideOnPlanet(moonMassEarth float64, planetSizeN, orbitKm int) float64 {
 	distMkm := float64(orbitKm) / 1_000_000.0
 	if distMkm == 0 {
 		return 0
@@ -59,7 +59,7 @@ func MoonTideOnPlanet(moonMassEarth float64, planetSizeN int, orbitKm int) float
 //
 // planetMassEarth is the parent planet's mass in Earth units; moonSizeN is
 // the numeric moon Size (0-15); orbitKm is the moon's orbital distance in km.
-func PlanetTideOnMoon(planetMassEarth float64, moonSizeN int, orbitKm int) float64 {
+func PlanetTideOnMoon(planetMassEarth float64, moonSizeN, orbitKm int) float64 {
 	distMkm := float64(orbitKm) / 1_000_000.0
 	if distMkm == 0 {
 		return 0

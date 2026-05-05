@@ -24,7 +24,7 @@ func HillSphere(au, ecc, planetMassEarth, sumStellarMassSolar, planetDiameterKm 
 	cube := math.Cbrt(ratio)
 	auResult = au * (1 - ecc) * cube
 	pd = auResult * auKm / planetDiameterKm
-	return
+	return auResult, pd
 }
 
 // HillSphereMoonLimit returns the prograde-moon outer bound: HillSpherePD ÷ 2,
