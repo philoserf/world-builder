@@ -371,6 +371,9 @@ type DetailedPlacement struct {
 
 	// 3A2b-temp additions
 	Temperature *Temperature
+
+	// 3B-geology additions
+	Geology *Geology
 }
 
 // HasPhysical reports whether body-physical data has been generated for this placement.
@@ -399,6 +402,9 @@ func (dp *DetailedPlacement) HasTidalEffects() bool { return dp.TidalEffects != 
 
 // HasTemperature reports whether 5C ran for this placement.
 func (dp *DetailedPlacement) HasTemperature() bool { return dp.Temperature != nil }
+
+// HasGeology reports whether 5E ran for this placement.
+func (dp *DetailedPlacement) HasGeology() bool { return dp.Geology != nil }
 
 // RenderSAH returns the 3-character SAH triplet for the IISS form.
 // HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".

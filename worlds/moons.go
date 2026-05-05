@@ -38,6 +38,9 @@ type Moon struct {
 
 	// 3A2b-temp additions
 	Temperature *Temperature
+
+	// 3B-geology additions
+	Geology *Geology
 }
 
 // HasSurfaceDistribution reports whether surface-distribution data has been generated for this moon.
