@@ -2,7 +2,11 @@
 // per WBH pp.127-131 (sub-project 3B-biology).
 package worlds
 
-import "wbh/roller"
+import (
+	"math"
+
+	"wbh/roller"
+)
 
 // Biology — native lifeform ratings + resource rating per WBH pp.127-131.
 // Populated by Step 5F for terrestrial bodies (and their HZ-planet moons)
@@ -265,6 +269,27 @@ func RollExtinctSophont(r roller.Roller, biocomplexity int, ageGyr float64) bool
 	bx := min(biocomplexity, 9)
 	roll := r.Roll("2D")
 	return roll+bx-7+dm >= 13
+}
+
+// RollBiodiversity per WBH p.130: ceil(2D - 7 + (Biomass + Biocomplexity) / 2).
+//
+// Returns 0 without consuming dice if biomass <= 0.
+// Result < 1 promoted to 1 (when biomass > 0).
+//
+// The (B + X) / 2 is float division; the final ceil rounds the entire
+// expression. So Biomass=10 + Biocomplexity=5 with 2D=6 produces
+// 6 - 7 + 7.5 = 6.5 → ceil → 7.
+func RollBiodiversity(r roller.Roller, biomass, biocomplexity int) int {
+	if biomass <= 0 {
+		return 0
+	}
+	roll := r.Roll("2D")
+	v := float64(roll) - 7 + float64(biomass+biocomplexity)/2.0
+	result := int(math.Ceil(v))
+	if result < 1 {
+		return 1
+	}
+	return result
 }
 
 // atmIs4to9 reports whether body.Atmosphere.Code is in [4, 9]. Returns

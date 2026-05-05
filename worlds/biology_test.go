@@ -294,3 +294,46 @@ func TestRollExtinctSophont_BiocomplexityClamp_Above9(t *testing.T) {
 		t.Error("got true, want false (Biocomplexity=15 → 9, mod=12)")
 	}
 }
+
+func TestRollBiodiversity_ZedPrime(t *testing.T) {
+	// Biomass=10, Biocomplexity=5 → (10+5)/2 = 7.5. 2D=6 → 6-7+7.5 = 6.5 → ceil → 7.
+	r := roller.NewScripted(6)
+	got := RollBiodiversity(r, 10, 5)
+	if got != 7 {
+		t.Errorf("Zed Prime: got %d, want 7", got)
+	}
+}
+
+func TestRollBiodiversity_BiomassZero_Zero(t *testing.T) {
+	r := roller.NewScripted()
+	if got := RollBiodiversity(r, 0, 5); got != 0 {
+		t.Errorf("got %d, want 0 (biomass=0 prerequisite fails)", got)
+	}
+}
+
+func TestRollBiodiversity_RoundsUp(t *testing.T) {
+	// Biomass=4, Biocomplexity=3 → (4+3)/2 = 3.5. 2D=8 → 8-7+3.5 = 4.5 → ceil → 5.
+	r := roller.NewScripted(8)
+	got := RollBiodiversity(r, 4, 3)
+	if got != 5 {
+		t.Errorf("got %d, want 5 (ceil semantics)", got)
+	}
+}
+
+func TestRollBiodiversity_ResultLessThanOne_PromotedToOne(t *testing.T) {
+	// Biomass=1, Biocomplexity=1 → (1+1)/2 = 1. 2D=2 → 2-7+1 = -4 → < 1 → 1.
+	r := roller.NewScripted(2)
+	got := RollBiodiversity(r, 1, 1)
+	if got != 1 {
+		t.Errorf("got %d, want 1 (result<1 promoted)", got)
+	}
+}
+
+func TestRollBiodiversity_IntegerArithmetic_NoFractional(t *testing.T) {
+	// Biomass=4, Biocomplexity=4 → (4+4)/2 = 4 (integer). 2D=7 → 7-7+4 = 4 (no rounding).
+	r := roller.NewScripted(7)
+	got := RollBiodiversity(r, 4, 4)
+	if got != 4 {
+		t.Errorf("got %d, want 4 (no rounding when integer)", got)
+	}
+}
