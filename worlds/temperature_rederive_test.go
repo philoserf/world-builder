@@ -364,6 +364,54 @@ func TestRederive_ScaleHeightUpdate(t *testing.T) {
 	}
 }
 
+func TestRederive_AtmosphereB_NoRunaway_NoSubtypeChange(t *testing.T) {
+	// Atm B (11) without runaway → subtype stays unchanged.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Atmosphere = &Atmosphere{Code: 11, Subtype: "5", Pressure: 1.5, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 5}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 288}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	preSubtype := body.Atmosphere.Subtype
+	prePressure := body.Atmosphere.Pressure
+
+	// Scripted dice: 1 for hydrographics re-roll only (Task 6 doesn't call rerollAtmSubtypeAndPressure).
+	r := roller.NewScripted(7)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if body.Atmosphere.Subtype != preSubtype {
+		t.Errorf("subtype changed without runaway: pre=%s post=%s", preSubtype, body.Atmosphere.Subtype)
+	}
+	if body.Atmosphere.Pressure != prePressure {
+		t.Errorf("pressure changed without runaway: pre=%v post=%v", prePressure, body.Atmosphere.Pressure)
+	}
+}
+
+func TestRerollAtmSubtypeAndPressure_AtmBDirectCall(t *testing.T) {
+	// Direct call to verify helper exists and runs; full integration tested in Task 9.
+	body := &DetailedPlacement{}
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Atmosphere = &Atmosphere{Code: 11, Subtype: "5", Pressure: 1.5}
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
+
+	r := roller.NewScripted(7, 7, 7) // subtype roll + pressure 2 dice
+	if err := rerollAtmSubtypeAndPressure(r, body, sys, false); err != nil {
+		t.Fatal(err)
+	}
+	// Subtype should now be a valid value (1-9 or A-E).
+	if body.Atmosphere.Subtype == "" {
+		t.Error("expected non-empty Subtype after re-roll")
+	}
+}
+
 // abs is a local int abs helper (no math.Abs for ints in stdlib).
 func abs(x int) int {
 	if x < 0 {

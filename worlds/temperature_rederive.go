@@ -87,3 +87,45 @@ func RederiveAtmosphereHydrographics(
 	_ = sys    // sys unused at Task 6; wired in Task 9 for runaway greenhouse
 	return nil
 }
+
+// rerollAtmSubtypeAndPressure re-rolls Atmosphere.Subtype and Atmosphere.Pressure
+// for codes B (11) and C (12), passing through runawayResult to the existing
+// 3A1 helper. Called by the orchestrator AFTER CheckRunawayGreenhouse fires
+// (Task 9 wiring). For atm codes other than B/C, no-op.
+//
+// Mutates body.Atmosphere.Subtype and body.Atmosphere.Pressure on success.
+func rerollAtmSubtypeAndPressure(
+	r roller.Roller,
+	body *DetailedPlacement,
+	sys stars.System,
+	runawayResult bool,
+) error {
+	if body.Atmosphere == nil {
+		return nil
+	}
+	code := body.Atmosphere.Code
+	if code != 11 && code != 12 { // only B and C have variable subtypes
+		return nil
+	}
+
+	hzco := 0.0
+	if len(body.Group.Members) > 0 {
+		hzco = body.Group.HZCO()
+	} else {
+		hzco = sys.Primary.HZCO()
+	}
+
+	isInsidious := code == 12 // C
+	newSubtype, err := RollCorrosiveInsidiousSubtype(r, body.SizeCode, body.Orbit, hzco, isInsidious, runawayResult)
+	if err != nil {
+		return fmt.Errorf("worlds: rerollAtmSubtypeAndPressure: subtype: %w", err)
+	}
+	body.Atmosphere.Subtype = newSubtype
+
+	newPressure, err := RollTotalPressure(r, code)
+	if err != nil {
+		return fmt.Errorf("worlds: rerollAtmSubtypeAndPressure: pressure: %w", err)
+	}
+	body.Atmosphere.Pressure = newPressure
+	return nil
+}
