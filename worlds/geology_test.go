@@ -3,6 +3,8 @@ package worlds
 import (
 	"math"
 	"testing"
+
+	"wbh/roller"
 )
 
 func TestComputeResidualSeismicStress_Terra(t *testing.T) {
@@ -398,4 +400,106 @@ func TestApplyInherentTempAddition_NilTemperature_Safe(t *testing.T) {
 		}
 	}()
 	ApplyInherentTempAddition(nil, 100.0)
+}
+
+func TestRollTectonicPlates_ZedPrime(t *testing.T) {
+	// Size=5, Hydro=6, TSS=17 (DM+1), 2D=8 → 5 + 6 - 8 + 1 = 4.
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Hydrographics = &Hydrographics{Code: 6}
+	r := roller.NewScripted(8)
+	got := RollTectonicPlates(r, body, 17)
+	if got != 4 {
+		t.Errorf("got %d, want 4", got)
+	}
+}
+
+func TestRollTectonicPlates_TSSZero_NoActivity(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.SizeCode = "8"
+	body.Hydrographics = &Hydrographics{Code: 7}
+	r := roller.NewScripted() // empty — must NOT consume dice
+	got := RollTectonicPlates(r, body, 0)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (TSS=0 → prerequisite fails)", got)
+	}
+}
+
+func TestRollTectonicPlates_HydroZero_NoActivity(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.SizeCode = "8"
+	body.Hydrographics = &Hydrographics{Code: 0}
+	r := roller.NewScripted()
+	got := RollTectonicPlates(r, body, 17)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (Hydro=0 → prerequisite fails)", got)
+	}
+}
+
+func TestRollTectonicPlates_NilHydrographics_NoActivity(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.SizeCode = "8"
+	body.Hydrographics = nil
+	r := roller.NewScripted()
+	got := RollTectonicPlates(r, body, 17)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (nil Hydrographics)", got)
+	}
+}
+
+func TestRollTectonicPlates_ResultLessThanOrEqualOne_NoActivity(t *testing.T) {
+	// Force result ≤ 1: small Size + small Hydro + worst roll.
+	body := &DetailedPlacement{}
+	body.SizeCode = "1"
+	body.Hydrographics = &Hydrographics{Code: 1}
+	// 1 + 1 - 12 + 0 = -10 → ≤ 1 → 0
+	r := roller.NewScripted(12)
+	got := RollTectonicPlates(r, body, 1)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (result ≤ 1)", got)
+	}
+}
+
+func TestRollTectonicPlates_TSS10to100_DM1(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Hydrographics = &Hydrographics{Code: 6}
+	r := roller.NewScripted(8)
+	// TSS=50 falls in [10, 100] → DM+1. 5 + 6 - 8 + 1 = 4.
+	got := RollTectonicPlates(r, body, 50)
+	if got != 4 {
+		t.Errorf("got %d, want 4 (DM+1 for TSS in [10, 100])", got)
+	}
+}
+
+func TestRollTectonicPlates_TSSAbove100_DM2(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Hydrographics = &Hydrographics{Code: 6}
+	r := roller.NewScripted(8)
+	// TSS=150 → DM+2. 5 + 6 - 8 + 2 = 5.
+	got := RollTectonicPlates(r, body, 150)
+	if got != 5 {
+		t.Errorf("got %d, want 5 (DM+2 for TSS > 100)", got)
+	}
+}
+
+func TestRollTectonicPlates_TSSBoundary10_DM1(t *testing.T) {
+	// TSS exactly 10 → DM+1 (boundary inclusive on lower end of [10, 100]).
+	body := &DetailedPlacement{}
+	body.SizeCode = "5"
+	body.Hydrographics = &Hydrographics{Code: 6}
+	r := roller.NewScripted(8)
+	got := RollTectonicPlates(r, body, 10)
+	if got != 4 {
+		t.Errorf("got %d, want 4 (TSS=10 boundary → DM+1)", got)
+	}
+}
+
+func TestRollTectonicPlates_NilBody_NoActivity(t *testing.T) {
+	r := roller.NewScripted()
+	got := RollTectonicPlates(r, nil, 17)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (nil body)", got)
+	}
 }

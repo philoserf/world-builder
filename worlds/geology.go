@@ -2,7 +2,11 @@
 // per WBH pp.125-127 (sub-project 3B-geology).
 package worlds
 
-import "math"
+import (
+	"math"
+
+	"wbh/roller"
+)
 
 // Geology — seismic activity and inherent temperature contribution per
 // WBH pp.125-127. Populated by Step 5E for any non-empty, non-belt body.
@@ -186,4 +190,38 @@ func ComputeGGResidualHeat(massEarth, ageGyr float64) float64 {
 		return 0
 	}
 	return v
+}
+
+// RollTectonicPlates per WBH p.127:
+//
+//	Plates = Size + Hydrographics − 2D + DMs
+//
+// Prerequisites: tss > 0 AND body.Hydrographics.Code ≥ 1. If either
+// fails, returns 0 without consuming dice.
+//
+// DMs: tss in [10, 100] → +1; tss > 100 → +2.
+//
+// If the rolled result ≤ 1, returns 0 (no tectonic activity).
+//
+// Worked: Zed Prime (S=5, Hydro=6, TSS=17, 2D=8) → 5 + 6 − 8 + 1 = 4.
+func RollTectonicPlates(r roller.Roller, body *DetailedPlacement, tss int) int {
+	if body == nil || body.Hydrographics == nil {
+		return 0
+	}
+	if tss <= 0 || body.Hydrographics.Code < 1 {
+		return 0
+	}
+	dm := 0
+	switch {
+	case tss > 100:
+		dm = 2
+	case tss >= 10:
+		dm = 1
+	}
+	roll := r.Roll("2D")
+	result := SizeAsInt(body.SizeCode) + body.Hydrographics.Code - roll + dm
+	if result <= 1 {
+		return 0
+	}
+	return result
 }
