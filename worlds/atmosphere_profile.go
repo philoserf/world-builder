@@ -407,12 +407,17 @@ func tempRangeLabel(t TempRange) string {
 //   - Subsequent rolls: (1D+4)×10% of remaining fraction, up to 4 total iterations.
 //   - Stop when cumulative allocations reach ≥ 95% of 10000 BP; remainder becomes "Other".
 //
-// atmosphereSubtype is "A", "B", or "C" (column selector).
-// exoticSubtypeCode is not used for table selection (it identifies the exotic sub-variant)
-// but is retained in the signature for future profile shorthand decoration.
+// atmosphereColumnLetter is the gas-mix table column selector — "A", "B", or
+// "C" — derived from the atmosphere CODE (10→A, 11→B, 12→C), NOT from the
+// Subtype digit/letter produced by RollCorrosiveInsidiousSubtype.
+// Use gasMixColumnForAtmCode (in temperature_rederive.go) to map atm Code
+// to the correct column letter.
+//
+// The second string parameter (formerly exoticSubtypeCode) is unused; it
+// is retained in the signature for future profile shorthand decoration.
 func RollGasMix(
 	r roller.Roller,
-	atmosphereSubtype, _ string,
+	atmosphereColumnLetter, _ string,
 	tempRange TempRange,
 	sizeCode SizeCode,
 ) (AtmosphereProfile, error) {
@@ -422,7 +427,7 @@ func RollGasMix(
 	remainingBP := 10000
 	for iter := 0; iter < 4 && remainingBP > 500; iter++ {
 		gasRoll := r.Roll("2D") + dm
-		gas := GasMixTableLookup(tempRange, atmosphereSubtype, gasRoll)
+		gas := GasMixTableLookup(tempRange, atmosphereColumnLetter, gasRoll)
 		if gas == "" {
 			gas = "Other"
 		}
@@ -433,16 +438,10 @@ func RollGasMix(
 		// We model this as: base = (1D+4)×1000 BP; variance = (d10-5)×50 BP (±2.5%).
 		baseFrac := (r.Roll("1D") + 4) * 1000
 		variance := (r.Roll("d10") - 5) * 50
-		fracOfRemaining := max(baseFrac+variance, 500)
-		if fracOfRemaining > 10000 {
-			fracOfRemaining = 10000
-		}
+		fracOfRemaining := min(max(baseFrac+variance, 500), 10000)
 
 		// Convert fraction-of-remaining to absolute BP.
-		alloc := max(remainingBP*fracOfRemaining/10000, 100)
-		if alloc > remainingBP {
-			alloc = remainingBP
-		}
+		alloc := min(max(remainingBP*fracOfRemaining/10000, 100), remainingBP)
 
 		// Merge if same gas already present.
 		merged := false
