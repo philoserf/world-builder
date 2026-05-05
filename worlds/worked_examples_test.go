@@ -917,6 +917,7 @@ func TestSol_GenerateSystemPlacement(t *testing.T) {
 func TestZed_FullDetail_3A2b(t *testing.T) {
 	t.Parallel()
 
+	totalTHFNonzero := 0
 	for iter := range 100 {
 		seed := int64(iter)
 		r := roller.NewSeeded(seed)
@@ -1180,9 +1181,16 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 
 		// Assertion 17: ScaleHeight under real T.
 		// 8.5 × meanK/288 / gravityG ± 20%.
+		// Skip bodies where geology added significant heat (InherentTemperatureK > 0):
+		// 5E raises MeanK but does not recompute ScaleHeight; post-geology MeanK no
+		// longer reflects the temperature used for the stored ScaleHeight.
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.Atmosphere == nil || dp.Atmosphere.Code == 0 || !dp.HasTemperature() {
+				continue
+			}
+			// Skip bodies where geology heat addition has moved MeanK past the 5D reference.
+			if dp.HasGeology() && dp.Geology.InherentTemperatureK > 0 {
 				continue
 			}
 			gravity := 0.0
@@ -1393,7 +1401,30 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 				t.Errorf("iter %d: body %s: MeanK %.4f not finite after 5E", iter, dp.Designation, dp.Temperature.MeanK)
 			}
 		}
+
+		// Assertion 31 accumulator: count bodies/moons with non-zero TidalHeatingFactor.
+		// Smoke test for C1 (terrestrial MassEarth=0 silently zeroing THF).
+		// Evaluated post-loop below.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.HasGeology() && dp.Geology.TidalHeatingFactor > 0 {
+				totalTHFNonzero++
+			}
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.HasGeology() && m.Geology.TidalHeatingFactor > 0 {
+					totalTHFNonzero++
+				}
+			}
+		}
 	}
+
+	// Assertion 31: at least one body should have non-zero TidalHeatingFactor
+	// across the 100-iter sweep. Catches C1-style silent-zero regressions.
+	if totalTHFNonzero == 0 {
+		t.Errorf("integration: TidalHeatingFactor was zero for ALL bodies across 100 iterations — likely C1-type silent-zero bug")
+	}
+	t.Logf("3B-geology: %d body-iterations had non-zero TidalHeatingFactor across 100-iter sweep", totalTHFNonzero)
 
 	// Referee-fiat / book-inconsistency logs (informational only).
 	t.Logf("p.101 continent counts deferred to Referee fiat per 3A2a Q6 option (b)")

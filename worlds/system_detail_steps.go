@@ -408,15 +408,13 @@ func computeMoonGeology(r roller.Roller, m *Moon, parent *DetailedPlacement, sys
 func planetTidalHeatingInputs(dp *DetailedPlacement, sys stars.System) TidalHeatingInputs {
 	const auMkm = 149.6 // Mkm per AU
 	const solarMassEarth = 332946.0
-	au := stars.OrbitToAU(dp.Orbit)
-	mass := dp.MassEarth
 	return TidalHeatingInputs{
 		PrimaryMassEarth: sys.Primary.Mass * solarMassEarth,
 		SizeN:            SizeAsInt(dp.SizeCode),
 		Eccentricity:     dp.Eccentricity,
-		DistanceMkm:      au * auMkm,
+		DistanceMkm:      stars.OrbitToAU(dp.Orbit) * auMkm,
 		PeriodDays:       dp.Period.Hours / 24.0,
-		WorldMassEarth:   mass,
+		WorldMassEarth:   bodyMassEarth(dp),
 	}
 }
 
@@ -424,11 +422,48 @@ func planetTidalHeatingInputs(dp *DetailedPlacement, sys stars.System) TidalHeat
 // parent planet. Distance and period are already in km/hours; convert.
 func moonTidalHeatingInputs(m *Moon, parent *DetailedPlacement) TidalHeatingInputs {
 	return TidalHeatingInputs{
-		PrimaryMassEarth: parent.MassEarth,
+		PrimaryMassEarth: bodyMassEarth(parent),
 		SizeN:            SizeAsInt(m.SizeCode),
 		Eccentricity:     m.Eccentricity,
 		DistanceMkm:      float64(m.OrbitKm) / 1_000_000.0,
 		PeriodDays:       m.PeriodHours / 24.0,
-		WorldMassEarth:   m.MassEarth,
+		WorldMassEarth:   moonMassEarth(m),
 	}
+}
+
+// bodyMassEarth returns dp.MassEarth if populated, else falls back to
+// DeriveMass(density, diameter) when Physical is available. Returns 0
+// only when both paths are unavailable.
+//
+// Needed because DetailSystem only populates dp.MassEarth for gas giants;
+// terrestrial bodies leave it 0 and rely on derived mass at call sites.
+// Step 5E's tidal heating computation needs the actual mass for the WBH
+// p.126 formula's WorldMass⊕ term.
+func bodyMassEarth(dp *DetailedPlacement) float64 {
+	if dp == nil {
+		return 0
+	}
+	if dp.MassEarth != 0 {
+		return dp.MassEarth
+	}
+	if dp.Physical != nil {
+		return DeriveMass(dp.Physical.Density, dp.DiameterKm)
+	}
+	return 0
+}
+
+// moonMassEarth returns m.MassEarth if populated, else falls back to
+// DeriveMass(density, diameter). Same rationale as bodyMassEarth but
+// for moons (which use DiameterKm directly, not Earth-relative).
+func moonMassEarth(m *Moon) float64 {
+	if m == nil {
+		return 0
+	}
+	if m.MassEarth != 0 {
+		return m.MassEarth
+	}
+	if m.Physical != nil {
+		return DeriveMass(m.Physical.Density, m.DiameterKm)
+	}
+	return 0
 }
