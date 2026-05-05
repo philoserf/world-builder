@@ -119,6 +119,11 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		return SystemDetail{}, err
 	}
 
+	// Step 5E — 3B-geology pass: seismic + GG residual heat + temp recompute + tectonic plates.
+	if err := runStep5E(r, detailed, sys); err != nil {
+		return SystemDetail{}, err
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)
@@ -371,6 +376,9 @@ type DetailedPlacement struct {
 
 	// 3A2b-temp additions
 	Temperature *Temperature
+
+	// 3B-geology additions
+	Geology *Geology
 }
 
 // HasPhysical reports whether body-physical data has been generated for this placement.
@@ -399,6 +407,9 @@ func (dp *DetailedPlacement) HasTidalEffects() bool { return dp.TidalEffects != 
 
 // HasTemperature reports whether 5C ran for this placement.
 func (dp *DetailedPlacement) HasTemperature() bool { return dp.Temperature != nil }
+
+// HasGeology reports whether 5E ran for this placement.
+func (dp *DetailedPlacement) HasGeology() bool { return dp.Geology != nil }
 
 // RenderSAH returns the 3-character SAH triplet for the IISS form.
 // HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".

@@ -38,6 +38,9 @@ type Moon struct {
 
 	// 3A2b-temp additions
 	Temperature *Temperature
+
+	// 3B-geology additions
+	Geology *Geology
 }
 
 // HasSurfaceDistribution reports whether surface-distribution data has been generated for this moon.
@@ -57,6 +60,9 @@ func (m *Moon) HasTidalEffects() bool { return m.TidalEffects != nil }
 
 // HasTemperature reports whether 5C ran for this moon.
 func (m *Moon) HasTemperature() bool { return m.Temperature != nil }
+
+// HasGeology reports whether geology data has been generated for this moon.
+func (m *Moon) HasGeology() bool { return m.Geology != nil }
 
 // ParentInfo describes a moon's parent body. Only one of (terrestrial
 // SizeCode) or (IsGasGiant + GGClass) should be populated.
