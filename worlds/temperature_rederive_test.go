@@ -65,3 +65,29 @@ func TestSelectExoticLiquid_BoundaryInclusive(t *testing.T) {
 		t.Errorf("meanK=373 (= H2O boiling): got %q, want H2O", got)
 	}
 }
+
+func TestMeanKToTempRange_Boundaries(t *testing.T) {
+	cases := []struct {
+		meanK float64
+		want  TempRange
+	}{
+		{50, TempFrozen},
+		{122, TempFrozen},
+		{123, TempCold},
+		{200, TempCold},
+		{272, TempCold},
+		{273, TempTemperate},
+		{300, TempTemperate},
+		{352, TempTemperate},
+		{353, TempHot},
+		{400, TempHot},
+		{452, TempHot},
+		{453, TempBoiling},
+		{1000, TempBoiling},
+	}
+	for _, c := range cases {
+		if got := MeanKToTempRange(c.meanK); got != c.want {
+			t.Errorf("meanK=%v: got %v, want %v", c.meanK, got, c.want)
+		}
+	}
+}
