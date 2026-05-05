@@ -1,14 +1,23 @@
 package worlds
 
 import (
+	"fmt"
+
 	"wbh/roller"
 )
 
-// Hydrographics holds the UWP hydro digit and percent refinement per WBH p.99.
+// Hydrographics — surface liquid coverage per WBH p.99.
+//
+// Code is populated by 3A1 with HZCO-bucketed provisional temperature; Step 5D
+// (3A2b-rederive) re-derives Code under real Temperature.MeanK and populates
+// Profile (composition tail). Post-5D values are final.
+// Format: "H<code>:<liquid>-100" (e.g., "H6:H2O-100", "H4:CH4-100").
+// Empty for vacuum or zero-hydrographics bodies.
 type Hydrographics struct {
 	Code         int
 	PercentRange [2]int
 	Percent      int
+	Profile      string // 3A2b-rederive composition tail
 }
 
 // RollHydroDigit computes the hydro digit: 2D-7 + atmoCode + DMs, capped [0, 10].
@@ -119,4 +128,39 @@ func GenerateHydrographics(r roller.Roller, atmo Atmosphere, sizeCode SizeCode, 
 		return Hydrographics{}, err
 	}
 	return Hydrographics{Code: digit, PercentRange: rng, Percent: pct}, nil
+}
+
+// hydroCodeChar renders a hydrographics code as its UWP character: 0-9 → "0".."9", 10 → "A".
+func hydroCodeChar(code int) string {
+	if code <= 9 {
+		return fmt.Sprintf("%d", code)
+	}
+	return "A"
+}
+
+// DeriveHydrographicsProfile returns the composition tail for a body with
+// the given mean temperature, atmosphere code, and hydrographics code.
+//
+// Format: "H<code>:<liquid>-100" — single-dominant-liquid form per spec.
+// Empty for vacuum (atmCode=0), zero hydrographics (hydroCode=0), or
+// when no exotic liquid fits at meanK.
+//
+// Selection:
+//   - Atm 2-9, D, E with hydro > 0: liquid is "H2O" (water default)
+//   - Atm A-C, F (10-12, 15) with hydro > 0: SelectExoticLiquid(meanK, atmCode)
+//   - Otherwise: empty
+func DeriveHydrographicsProfile(meanK float64, atmCode, hydroCode int) string {
+	if hydroCode <= 0 || atmCode == 0 {
+		return ""
+	}
+	var liquid string
+	if isExoticAtmCode(atmCode) {
+		liquid = SelectExoticLiquid(meanK, atmCode)
+	} else {
+		liquid = "H2O"
+	}
+	if liquid == "" {
+		return ""
+	}
+	return "H" + hydroCodeChar(hydroCode) + ":" + liquid + "-100"
 }

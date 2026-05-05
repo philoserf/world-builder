@@ -6,9 +6,11 @@ import (
 	"wbh/roller"
 )
 
-// Atmosphere holds the UWP atmosphere code and WBH refinement fields (pp.79-95).
-// Pressure, OxygenPartialPressure, ScaleHeight, Subtype, and Profile are populated
-// by later tasks (T10-T12).
+// Atmosphere — surface atmosphere characteristics per WBH pp.79-91.
+//
+// Pressure, ScaleHeight, Subtype, and Profile are populated by 3A1 with
+// HZCO-bucketed provisional temperature; Step 5D (3A2b-rederive) re-derives
+// these fields under the real Temperature.MeanK. Post-5D values are final.
 type Atmosphere struct {
 	Code                  int
 	Subtype               string
