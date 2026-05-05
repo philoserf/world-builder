@@ -2,6 +2,8 @@
 // per WBH pp.127-131 (sub-project 3B-biology).
 package worlds
 
+import "wbh/roller"
+
 // Biology — native lifeform ratings + resource rating per WBH pp.127-131.
 // Populated by Step 5F for terrestrial bodies (and their HZ-planet moons)
 // that have Atmosphere data.
@@ -44,4 +46,138 @@ type Biology struct {
 	// bodies regardless of biology (biology DMs only apply when applicable).
 	// Range [2, 12] per WBH lower/upper bounds.
 	ResourceRating int
+}
+
+// RollBiomass per WBH p.127-128: 2D + DMs (combined DM sum clamped to
+// [-12, +4]). Includes the exotic-atm bonus (Special Case 2): if the
+// rolled biomass is ≥ 1 AND atm code ∈ {0, 1, 10, 11, 12, 15}, add
+// (|atm DM| − 1) to the result.
+//
+// Returns 0 if body or body.Atmosphere is nil. nil Hydrographics is
+// treated as Hydro 0 (DM-4). nil Temperature contributes no temp DMs.
+//
+// Skipped: Special Case 1 (biologic-taint biomass=0 promotion) requires
+// Atmosphere taint typology not yet modeled — deferred per spec Q3-a.
+func RollBiomass(r roller.Roller, body *DetailedPlacement, ageGyr float64) int {
+	if body == nil || body.Atmosphere == nil {
+		return 0
+	}
+	atmDM := biomassAtmDM(body.Atmosphere.Code)
+	hydroCode := 0
+	if body.Hydrographics != nil {
+		hydroCode = body.Hydrographics.Code
+	}
+	dm := atmDM + biomassHydroDM(hydroCode) + biomassAgeDM(ageGyr)
+	if body.Temperature != nil {
+		dm += biomassTempDM(body.Temperature.MeanK, body.Temperature.HighK)
+	}
+	dm = min(max(dm, -12), 4)
+
+	roll := r.Roll("2D")
+	biomass := max(roll+dm, 0)
+
+	// Exotic-atm bonus (rolled biomass ≥ 1 on atm 0/1/A/B/C/F+).
+	if biomass >= 1 && exoticBiomassBonusApplies(body.Atmosphere.Code) {
+		biomass += exoticBiomassBonus(body.Atmosphere.Code)
+	}
+	return biomass
+}
+
+// biomassAtmDM per WBH p.128 atmosphere-DM table.
+func biomassAtmDM(atmCode int) int {
+	switch atmCode {
+	case 0:
+		return -6
+	case 1:
+		return -4
+	case 2, 3, 14: // E
+		return -3
+	case 4, 5:
+		return -2
+	case 8, 9, 13: // D
+		return +2
+	case 10: // A
+		return -3
+	case 11: // B
+		return -5
+	case 12: // C
+		return -7
+	case 15: // F+
+		return -5
+	}
+	return 0 // atm 6, 7, or unmapped
+}
+
+// biomassHydroDM per WBH p.128 hydrographics-DM table.
+func biomassHydroDM(hydroCode int) int {
+	switch {
+	case hydroCode == 0:
+		return -4
+	case hydroCode >= 1 && hydroCode <= 3:
+		return -2
+	case hydroCode >= 6 && hydroCode <= 8:
+		return +1
+	case hydroCode >= 9:
+		return +2
+	}
+	return 0 // 4-5
+}
+
+// biomassAgeDM per WBH p.128 age-DM table.
+func biomassAgeDM(ageGyr float64) int {
+	switch {
+	case ageGyr < 0.2:
+		return -6
+	case ageGyr < 1:
+		return -2
+	case ageGyr > 4:
+		return +1
+	}
+	return 0
+}
+
+// biomassTempDM per WBH p.128 temperature-DM table. Returns 0 when both
+// MeanK and HighK are 0 (defensive — caller already gated on nil temp).
+func biomassTempDM(meanK, highK float64) int {
+	dm := 0
+	if highK > 353 {
+		dm += -2
+	} else if highK > 0 && highK < 273 {
+		dm += -4
+	}
+	if meanK > 353 {
+		dm += -4
+	} else if meanK > 0 && meanK < 273 {
+		dm += -2
+	}
+	if meanK >= 279 && meanK <= 303 {
+		dm += +2
+	}
+	return dm
+}
+
+// exoticBiomassBonusApplies reports whether atm code is in {0, 1, A, B, C, F+}.
+func exoticBiomassBonusApplies(atmCode int) bool {
+	return atmCode == 0 || atmCode == 1 ||
+		atmCode == 10 || atmCode == 11 || atmCode == 12 || atmCode == 15
+}
+
+// exoticBiomassBonus returns |atmDM| − 1 for the exotic atm codes per WBH
+// Special Case 2: "Add one less than the negative Atmosphere DM".
+func exoticBiomassBonus(atmCode int) int {
+	switch atmCode {
+	case 0:
+		return 5
+	case 1:
+		return 3
+	case 10:
+		return 2
+	case 11:
+		return 4
+	case 12:
+		return 6
+	case 15:
+		return 4
+	}
+	return 0
 }
