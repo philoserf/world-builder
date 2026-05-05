@@ -491,6 +491,100 @@ func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
 	}
 }
 
+func TestRederive_RunawayFires_AtmAndHydroMutate(t *testing.T) {
+	// Atm 6 + meanK=400 + sysAge=10 + size 8 (no size DM) → very easy trigger.
+	// Body must be HZ — set body.HZ=true.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.HZ = true
+	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 400}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 10}}
+
+	// Pre-rederive: atm code 6, hydro 7.
+	// Scripted dice (in order):
+	// 1. CheckRunawayGreenhouse trigger 2D: 2 (mod = 2 + age 10 + boil 4 = 16 → trigger)
+	// 2. CheckRunawayGreenhouse 1D atm code: 3 → atm becomes B (11)
+	// 3. rerollAtmSubtypeAndPressure subtype 2D: 8 (subtype calculation; runawayResult=true → DM+4)
+	// 4. rerollAtmSubtypeAndPressure pressure: 2 dice (1D + 1D for RollTotalPressure)
+	// 5. RollHydroDigit with TempBoiling: 1 dice (2D)
+	// 6. RollGasMix for new atm B + hydro: ~6-12 dice
+	r := roller.NewScripted(2, 3, 8, 5, 5, 7, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Atm code should now be A, B, or C.
+	if body.Atmosphere.Code != 10 && body.Atmosphere.Code != 11 && body.Atmosphere.Code != 12 {
+		t.Errorf("atm code: got %d, want A/B/C (10/11/12)", body.Atmosphere.Code)
+	}
+	// Hydrographics.Code should be reduced because boiling DM-6 was applied
+	// instead of hot DM-2 (relative -4 vs the no-runaway path).
+	// Pre-rederive hydro was 7. With boiling DM-6 and atm B (11):
+	// digit = 7 - 7 + 11 + boilingDM(-6) = 5. Original hot DM would give 9.
+	// So post-rederive hydro should be ≤ 6 (we use a generous bound).
+	if body.Hydrographics.Code > 6 {
+		t.Errorf("hydro code: got %d, expected ≤ 6 (boiling DM-6 applied)", body.Hydrographics.Code)
+	}
+}
+
+func TestRederive_RunawayDoesNotFire_NoBoilingDM(t *testing.T) {
+	// Same body but low dice → runaway doesn't trigger; hydro re-rolled with normal Temperate range.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.HZ = true
+	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 288} // below 303K — runaway can't fire
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	// Scripted: hydro re-roll only (runaway short-circuits without consuming dice when MeanK ≤ 303).
+	r := roller.NewScripted(7)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Atm code unchanged.
+	if body.Atmosphere.Code != 6 {
+		t.Errorf("atm code: got %d, want 6 (unchanged)", body.Atmosphere.Code)
+	}
+}
+
+func TestRederive_NonHZBody_NoRunawayCheck(t *testing.T) {
+	// Non-HZ body → CheckRunawayGreenhouse not called even if temp > 303K.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.HZ = false // explicit non-HZ
+	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 400} // hot but not HZ
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 10}}
+
+	// Scripted: hydro re-roll only (no runaway check for non-HZ).
+	r := roller.NewScripted(7)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Atm code unchanged.
+	if body.Atmosphere.Code != 6 {
+		t.Errorf("atm code: got %d, want 6 (non-HZ skips runaway)", body.Atmosphere.Code)
+	}
+}
+
 // abs is a local int abs helper (no math.Abs for ints in stdlib).
 func abs(x int) int {
 	if x < 0 {

@@ -36,17 +36,18 @@ func MeanKToTempRange(meanK float64) TempRange {
 // Atmosphere/Hydrographics fields under the body's current Temperature.MeanK.
 // Mutates body in place. Called twice as part of Step 5D's 2-pass iteration.
 //
-// Currently mutates (Task 6 baseline; later tasks add more):
+// Currently mutates (Tasks 6-9):
 //   - Atmosphere.ScaleHeight   (re-derived from current MeanK + gravity via DeriveScaleHeight)
-//   - Hydrographics.Code       (re-rolled with current TempRange's Hot/Boiling DMs)
+//   - Atmosphere.Code          (mutated to A/B/C if CheckRunawayGreenhouse fires; HZ bodies only)
+//   - Atmosphere.Subtype+Pressure (re-rolled with DM+4 if runaway fired)
+//   - Hydrographics.Code       (re-rolled with TempBoiling DM-6 if runaway fired, else current TempRange)
 //   - Hydrographics.Profile    (composition tail per p.102)
+//   - Atmosphere.Profile       (gas mix for exotic A/B/C/F atm with hydro > 0)
 //
 // No-op when body.Body == BodyEmpty or body.Temperature == nil.
 //
 // Pending in subsequent tasks of this sub-project:
-//   - Atm.Subtype + .Pressure re-roll for B/C atm (Task 7 helper, Task 9 wiring)
-//   - Atm.Profile re-derive via RollGasMix for exotic atm (Task 8)
-//   - CheckRunawayGreenhouse integration with hydro DM-6 override (Task 9)
+//   - Step 5D pipeline wiring (Task 10)
 func RederiveAtmosphereHydrographics(
 	r roller.Roller,
 	body *DetailedPlacement,
@@ -65,9 +66,26 @@ func RederiveAtmosphereHydrographics(
 		body.Atmosphere.ScaleHeight = DeriveScaleHeight(meanK, body.Physical.Gravity)
 	}
 
+	// 1.5 (HZ-only): CheckRunawayGreenhouse — may mutate atm.Code to A/B/C.
+	runawayFired := false
+	if body.HZ {
+		runawayFired = CheckRunawayGreenhouse(r, body, sys)
+		if runawayFired {
+			// Re-roll subtype + pressure with runawayResult=true (DM+4 to subtype).
+			if err := rerollAtmSubtypeAndPressure(r, body, sys, true); err != nil {
+				return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: post-runaway: %w", err)
+			}
+		}
+	}
+
 	// 2. Hydrographics.Code: re-roll with current TempRange's Hot/Boiling DMs.
+	// If runaway fired, force TempBoiling so the DM-6 (boiling) applies instead of DM-2 (hot).
+	hydroTempRange := tempRange
+	if runawayFired {
+		hydroTempRange = TempBoiling
+	}
 	if body.Atmosphere != nil && body.Hydrographics != nil {
-		newHydro, err := RollHydroDigit(r, body.Atmosphere.Code, body.Atmosphere.Subtype, body.SizeCode, tempRange)
+		newHydro, err := RollHydroDigit(r, body.Atmosphere.Code, body.Atmosphere.Subtype, body.SizeCode, hydroTempRange)
 		if err != nil {
 			return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: hydro re-roll: %w", err)
 		}
@@ -93,8 +111,7 @@ func RederiveAtmosphereHydrographics(
 		body.Atmosphere.Profile = newProfile
 	}
 
-	_ = parent // parent unused at Task 6; wired in Task 9 for moon-specific paths
-	_ = sys    // sys unused at Task 6; wired in Task 9 for runaway greenhouse
+	_ = parent // parent unused at Task 9; wired in later tasks for moon-specific paths
 	return nil
 }
 
