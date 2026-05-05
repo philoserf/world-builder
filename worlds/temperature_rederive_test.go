@@ -54,3 +54,14 @@ func TestSelectExoticLiquid_TieBreakLowerBoiling(t *testing.T) {
 		t.Errorf("got %q, want CH4 (tie-break by lower BoilingK)", got)
 	}
 }
+
+func TestSelectExoticLiquid_BoundaryInclusive(t *testing.T) {
+	// Verify [MeltingK, BoilingK] is inclusive on both ends.
+	// H2O range: melting 273, boiling 373.
+	if got := SelectExoticLiquid(273, 10); got != "H2O" {
+		t.Errorf("meanK=273 (= H2O melting): got %q, want H2O", got)
+	}
+	if got := SelectExoticLiquid(373, 10); got != "H2O" {
+		t.Errorf("meanK=373 (= H2O boiling): got %q, want H2O", got)
+	}
+}

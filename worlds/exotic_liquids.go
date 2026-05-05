@@ -1,5 +1,7 @@
 package worlds
 
+import "math"
+
 // ExoticLiquid is one row of the WBH p.102 Possible Exotic Liquids table.
 type ExoticLiquid struct {
 	Code      string // "H2O", "CH4", "NH3", etc.
@@ -46,7 +48,7 @@ func SelectExoticLiquid(meanK float64, atmCode int) string {
 	}
 	bestCode := ""
 	bestAbundance := -1
-	bestBoiling := 0.0
+	bestBoiling := math.Inf(1) // sentinel makes tie-break direction self-evident
 	for _, l := range PossibleExoticLiquids {
 		if meanK < l.MeltingK || meanK > l.BoilingK {
 			continue
