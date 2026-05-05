@@ -181,3 +181,64 @@ func exoticBiomassBonus(atmCode int) int {
 	}
 	return 0
 }
+
+// RollBiocomplexity per WBH p.129: 2D - 7 + min(Biomass, 9) + DMs.
+// Returns 0 without consuming dice if biomass <= 0.
+//
+// DMs:
+//   - Atmosphere not 4-9: -2
+//   - Age 3-4 Gyrs: -2
+//   - Age 2-3 Gyrs: -4
+//   - Age 1-2 Gyrs: -8
+//   - Age < 1 Gyr: -10
+//
+// At age boundaries (e.g., age=2.0), uses the worst (more negative) DM
+// per WBH "If the system age is exactly at a limit between two DMs, use
+// the worst DM." Implemented via ordered-case switch with inclusive
+// upper bounds.
+//
+// Result < 1 promoted to 1 (when biomass > 0).
+//
+// Skipped: low-oxygen-taint DM-2 deferred per spec Q3-a (taint typology
+// not yet modeled).
+func RollBiocomplexity(r roller.Roller, body *DetailedPlacement, biomass int, ageGyr float64) int {
+	if biomass <= 0 {
+		return 0
+	}
+	dm := biocomplexityAgeDM(ageGyr)
+	if !atmIs4to9(body) {
+		dm += -2
+	}
+	roll := r.Roll("2D")
+	bx := min(biomass, 9)
+	result := roll - 7 + bx + dm
+	if result < 1 {
+		return 1
+	}
+	return result
+}
+
+// biocomplexityAgeDM per WBH p.129. Uses the worst DM at boundaries.
+func biocomplexityAgeDM(ageGyr float64) int {
+	switch {
+	case ageGyr <= 1:
+		return -10
+	case ageGyr <= 2:
+		return -8
+	case ageGyr <= 3:
+		return -4
+	case ageGyr <= 4:
+		return -2
+	}
+	return 0
+}
+
+// atmIs4to9 reports whether body.Atmosphere.Code is in [4, 9]. Returns
+// false on nil atmosphere.
+func atmIs4to9(body *DetailedPlacement) bool {
+	if body == nil || body.Atmosphere == nil {
+		return false
+	}
+	c := body.Atmosphere.Code
+	return c >= 4 && c <= 9
+}

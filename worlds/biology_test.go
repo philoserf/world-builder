@@ -126,3 +126,97 @@ func TestRollBiomass_NilTemperature_NoTempDMs(t *testing.T) {
 		t.Errorf("got %d, want 9 (nil temp, no temp DMs)", got)
 	}
 }
+
+func TestRollBiocomplexity_ZedPrime(t *testing.T) {
+	// Biomass=10 (clamped to 9), Atm 6 (in 4-9 → no DM), Age 6.3 (no age DM since > 4).
+	// 2D=3 → 3 - 7 + 9 = 5.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(3)
+	got := RollBiocomplexity(r, body, 10, 6.3)
+	if got != 5 {
+		t.Errorf("Zed Prime: got %d, want 5", got)
+	}
+}
+
+func TestRollBiocomplexity_BiomassZero_Zero(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted() // empty — must NOT consume dice
+	got := RollBiocomplexity(r, body, 0, 6.3)
+	if got != 0 {
+		t.Errorf("got %d, want 0 (Biomass=0 prerequisite fails)", got)
+	}
+}
+
+func TestRollBiocomplexity_BiomassClamp_Above9(t *testing.T) {
+	// Biomass=15 should be clamped to 9 in the formula.
+	// 2D=2, Atm 6, Age > 4 → 2 - 7 + 9 + 0 = 4.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(2)
+	got := RollBiocomplexity(r, body, 15, 5.0)
+	if got != 4 {
+		t.Errorf("got %d, want 4 (Biomass=15 → uses 9)", got)
+	}
+}
+
+func TestRollBiocomplexity_AgeBoundary_Exactly4_UsesWorseDM(t *testing.T) {
+	// Age = 4.0 exactly → 3-4 band → DM-2 (the worst at the boundary).
+	// Biomass=9, Atm 6, 2D=10 → 10 - 7 + 9 - 2 = 10.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(10)
+	got := RollBiocomplexity(r, body, 9, 4.0)
+	if got != 10 {
+		t.Errorf("age=4 boundary: got %d, want 10 (DM-2 worst)", got)
+	}
+}
+
+func TestRollBiocomplexity_AgeBoundary_Exactly1_UsesWorseDM(t *testing.T) {
+	// Age = 1.0 exactly → < 1 band → DM-10 (the worst at the boundary).
+	// Biomass=9, Atm 6, 2D=12 → 12 - 7 + 9 - 10 = 4.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 6}
+	r := roller.NewScripted(12)
+	got := RollBiocomplexity(r, body, 9, 1.0)
+	if got != 4 {
+		t.Errorf("age=1 boundary: got %d, want 4 (DM-10 worst)", got)
+	}
+}
+
+func TestRollBiocomplexity_AtmNotIn4to9_DMMinus2(t *testing.T) {
+	// Atm 11 (B) → not in 4-9 → DM-2. Biomass=9, Age 5.
+	// 2D=10 → 10 - 7 + 9 - 2 = 10.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 11}
+	r := roller.NewScripted(10)
+	got := RollBiocomplexity(r, body, 9, 5.0)
+	if got != 10 {
+		t.Errorf("got %d, want 10 (atm not 4-9 → DM-2)", got)
+	}
+}
+
+func TestRollBiocomplexity_ResultLessThanOne_PromotedToOne(t *testing.T) {
+	// Force a result < 1 with biomass > 0: 2D=2, Biomass=1, Atm 11 (DM-2), Age 0.5 (DM-10 from biocomplexity table).
+	// 2 - 7 + 1 - 2 - 10 = -16 → < 1 → 1.
+	body := &DetailedPlacement{}
+	body.Atmosphere = &Atmosphere{Code: 11}
+	r := roller.NewScripted(2)
+	got := RollBiocomplexity(r, body, 1, 0.5)
+	if got != 1 {
+		t.Errorf("got %d, want 1 (result < 1 → promoted)", got)
+	}
+}
+
+func TestRollBiocomplexity_NilAtmosphere_NoAtmDM(t *testing.T) {
+	// Defensive: nil atmosphere is not in 4-9, so still gets DM-2.
+	body := &DetailedPlacement{}
+	body.Atmosphere = nil
+	r := roller.NewScripted(10)
+	got := RollBiocomplexity(r, body, 9, 5.0)
+	// 10 - 7 + 9 - 2 = 10
+	if got != 10 {
+		t.Errorf("got %d, want 10 (nil atm → DM-2)", got)
+	}
+}
