@@ -346,6 +346,54 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		}
 	}
 
+	// Step 5D — 3A2b-rederive pass: re-derive 3A1 atm/hydro under real T (2-pass iteration).
+	for i := range detailed {
+		dp := &detailed[i]
+		if dp.Body == BodyEmpty || !dp.HasTemperature() {
+			continue
+		}
+		// Pass 1: rederive using 3A2b-temp's MeanK
+		if err := RederiveAtmosphereHydrographics(r, dp, sys, nil); err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: rederive %s pass 1: %w", dp.Designation, err)
+		}
+		// Re-run temperature with corrected atm/hydro
+		temp, err := GenerateTemperature(r, dp, sys, nil)
+		if err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: temperature %s pass 2: %w", dp.Designation, err)
+		}
+		dp.Temperature = temp
+		// Pass 2: rederive using corrected MeanK (final)
+		if err := RederiveAtmosphereHydrographics(r, dp, sys, nil); err != nil {
+			return SystemDetail{}, fmt.Errorf("worlds: rederive %s pass 2: %w", dp.Designation, err)
+		}
+
+		// Same 2-pass for moons.
+		// buildMoonPlacementView copies Atmosphere, Hydrographics, and Physical as
+		// pointer aliases — mutations through moonDP propagate directly to m without
+		// any explicit write-back for those fields.
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			if !m.HasTemperature() {
+				continue
+			}
+			moonDP := buildMoonPlacementView(m, dp)
+			// Pass 1
+			if err := RederiveAtmosphereHydrographics(r, moonDP, sys, dp); err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon rederive %s pass 1: %w", m.Designation, err)
+			}
+			// Re-run moon temperature
+			moonTemp, err := GenerateTemperature(r, moonDP, sys, dp)
+			if err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon temperature %s pass 2: %w", m.Designation, err)
+			}
+			m.Temperature = moonTemp
+			// Pass 2
+			if err := RederiveAtmosphereHydrographics(r, moonDP, sys, dp); err != nil {
+				return SystemDetail{}, fmt.Errorf("worlds: moon rederive %s pass 2: %w", m.Designation, err)
+			}
+		}
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)

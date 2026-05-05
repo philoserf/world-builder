@@ -116,9 +116,18 @@ func RederiveAtmosphereHydrographics(
 }
 
 // rerollAtmSubtypeAndPressure re-rolls Atmosphere.Subtype and Atmosphere.Pressure
-// for codes B (11) and C (12), passing through runawayResult to the existing
-// 3A1 helper. Called by the orchestrator AFTER CheckRunawayGreenhouse fires
-// (Task 9 wiring). For atm codes other than B/C, no-op.
+// for codes A (10), B (11), and C (12) after CheckRunawayGreenhouse fires.
+//
+//   - A (10): pressure reset to 0 (WBH "Varies" → no fixed range); subtype unchanged.
+//   - B (11), C (12): subtype re-rolled with runawayResult DM; pressure set to 0
+//     (span = 0 in AtmospherePressureRange for both codes).
+//
+// Resetting the pressure for code A is critical: when runaway mutates a body
+// from a high-pressure code (e.g., D/13 at 10 bar) to A (10), the original
+// pressure must be cleared so that pass-2 GenerateTemperature does not inherit
+// an implausibly high value and produce GreenhouseFactor ≥ 5.
+//
+// For atm codes other than A/B/C, no-op.
 //
 // Mutates body.Atmosphere.Subtype and body.Atmosphere.Pressure on success.
 func rerollAtmSubtypeAndPressure(
@@ -131,6 +140,13 @@ func rerollAtmSubtypeAndPressure(
 		return nil
 	}
 	code := body.Atmosphere.Code
+
+	// Code A (10): "Varies" pressure — clear it; no subtype to re-roll.
+	if code == 10 {
+		body.Atmosphere.Pressure = 0
+		return nil
+	}
+
 	if code != 11 && code != 12 { // only B and C have variable subtypes
 		return nil
 	}

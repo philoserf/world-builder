@@ -7,7 +7,10 @@ import (
 	"wbh/roller"
 )
 
-// BodyPhysical — terrestrial body or moon body physical characteristics, WBH pp. 69–72.
+// BodyPhysical — physical characteristics per WBH pp.71-78.
+//
+// Density, Gravity, Mass, DiameterKm are 3A1 outputs and are NOT
+// temperature-sensitive; they remain stable across the 5D rederive pass.
 type BodyPhysical struct {
 	Composition     string  // "Exotic Ice"|"Mostly Ice"|"Mostly Rock"|"Rock and Metal"|"Mostly Metal"|"Compressed Metal"
 	Density         float64 // relative to Terra (1.0 = 5.514 g/cm³)

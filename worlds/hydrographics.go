@@ -6,11 +6,13 @@ import (
 	"wbh/roller"
 )
 
-// Hydrographics holds the UWP hydro digit and percent refinement per WBH p.99.
+// Hydrographics — surface liquid coverage per WBH p.99.
 //
-// Profile is populated by 3A2b-rederive (Step 5D); pre-5D consumers see
-// the zero value. Format: "H<code>:<liquid>-100" (e.g., "H6:H2O-100",
-// "H4:CH4-100"). Empty for vacuum or zero-hydrographics bodies.
+// Code is populated by 3A1 with HZCO-bucketed provisional temperature; Step 5D
+// (3A2b-rederive) re-derives Code under real Temperature.MeanK and populates
+// Profile (composition tail). Post-5D values are final.
+// Format: "H<code>:<liquid>-100" (e.g., "H6:H2O-100", "H4:CH4-100").
+// Empty for vacuum or zero-hydrographics bodies.
 type Hydrographics struct {
 	Code         int
 	PercentRange [2]int
