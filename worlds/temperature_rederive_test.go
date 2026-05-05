@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 
 	"wbh/roller"
@@ -272,4 +273,101 @@ func TestDeriveHydrographicsProfile_ExoticAtm_NoCandidate(t *testing.T) {
 	if got != "" {
 		t.Errorf("got %q, want empty (no liquid candidate at meanK 2000)", got)
 	}
+}
+
+func TestRederive_TerraLike_StableInTemperate(t *testing.T) {
+	// Terra-like body; rederive doesn't dramatically shift atm/hydro.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 288}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	preCode := body.Atmosphere.Code
+	preHydro := body.Hydrographics.Code
+
+	r := roller.NewScripted(7) // 1 dice for hydro re-roll (no runaway in Task 6 yet)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Atm code should NOT change in Task 6 (runaway not wired yet).
+	if body.Atmosphere.Code != preCode {
+		t.Errorf("atm code changed without runaway: pre=%d post=%d", preCode, body.Atmosphere.Code)
+	}
+	// Hydro code may shift slightly; pin to plausible range.
+	if abs(body.Hydrographics.Code-preHydro) > 3 {
+		t.Errorf("hydro code shifted too much: pre=%d post=%d", preHydro, body.Hydrographics.Code)
+	}
+	// Hydrographics.Profile populated.
+	if body.Hydrographics.Profile == "" {
+		t.Error("Hydrographics.Profile should be populated")
+	}
+}
+
+func TestRederive_NilTemperature_NoOp(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Atmosphere = &Atmosphere{Code: 6}
+	// body.Temperature is nil
+	sys := stars.System{Primary: stars.Star{}}
+
+	r := roller.NewScripted()
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// No mutations: Hydrographics is nil so Profile can't be set.
+	if body.Hydrographics != nil && body.Hydrographics.Profile != "" {
+		t.Error("expected no Profile when Temperature is nil")
+	}
+}
+
+func TestRederive_BodyEmpty_NoOp(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyEmpty
+	body.Temperature = &Temperature{MeanK: 288}
+	sys := stars.System{Primary: stars.Star{}}
+
+	r := roller.NewScripted()
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRederive_ScaleHeightUpdate(t *testing.T) {
+	// Cold body: meanK=200 → ScaleHeight should scale lower than at 288K.
+	// 8.5 × 200/288 / 1.0 ≈ 5.9 km.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 7}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 200}
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	r := roller.NewScripted(7)
+	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantApprox := 8.5 * 200 / 288 / 1.0
+	if math.Abs(body.Atmosphere.ScaleHeight-wantApprox) > 0.5 {
+		t.Errorf("ScaleHeight: got %v, want ≈%v", body.Atmosphere.ScaleHeight, wantApprox)
+	}
+}
+
+// abs is a local int abs helper (no math.Abs for ints in stdlib).
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
