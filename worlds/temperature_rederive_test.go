@@ -463,7 +463,10 @@ func TestRederive_AtmProfile_StandardAtm_NotMutated(t *testing.T) {
 }
 
 func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
-	// Atm A (10) with hydro 0 → no liquid → no point computing gas mix → leave Profile alone.
+	// Atm A (10) with hydro 0 → no liquid → no gas mix → leave Profile alone.
+	// Construct dice so post-rederive hydro stays 0 (genuine "no hydro" scenario).
+	// With atm A (code 10), size 8, Temperate, no atm taint: digit = roll-7+10-4 = roll-1.
+	// Need digit ≤ 0, so roll ≤ 1. NewScripted(1) → digit = 0, hydrographics stays 0.
 	body := &DetailedPlacement{}
 	body.Body = BodyTerrestrial
 	body.SizeCode = "8"
@@ -474,18 +477,17 @@ func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
-	// Dice budget: 1 for hydro re-roll; with atm A (code 10), size 8, Temperate:
-	// digit = roll-7+10-4 = roll-1. Roll=2 → digit=1 > 0, so RollGasMix fires.
-	// Provide a full gas-mix budget to avoid panic; conditional assertion below handles both outcomes.
-	r := roller.NewScripted(2, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5)
+	r := roller.NewScripted(1) // hydro re-roll → digit 0; no gas mix dice needed
 	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// If post-rederive hydro is still 0, gas mix must not have been called.
-	// (With these dice hydro re-rolls to 1, so gas mix fires — assertion is vacuously true.)
-	if body.Hydrographics.Code == 0 && len(body.Atmosphere.Profile.Gases) > 0 {
-		t.Error("Atm.Profile.Gases should not be populated when post-rederive hydro is 0")
+	if body.Hydrographics.Code != 0 {
+		t.Fatalf("test setup wrong: post-rederive hydro should be 0, got %d", body.Hydrographics.Code)
+	}
+	if len(body.Atmosphere.Profile.Gases) != 0 {
+		t.Errorf("Atm.Profile.Gases should not be populated when hydro is 0; got %d gases",
+			len(body.Atmosphere.Profile.Gases))
 	}
 }
 
