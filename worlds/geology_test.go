@@ -91,3 +91,55 @@ func TestComputeResidualSeismicStress_NilBody_Zero(t *testing.T) {
 		t.Errorf("got %d, want 0 (nil body)", got)
 	}
 }
+
+func TestComputeTidalStressFactor_ZedPrime(t *testing.T) {
+	// Zed Prime: TidalEffects.Total ≈ 30m → 30/10 = 3.
+	body := &DetailedPlacement{}
+	body.TidalEffects = &SurfaceTidalEffects{Total: 30.0}
+	got := ComputeTidalStressFactor(body)
+	if got != 3 {
+		t.Errorf("got %d, want 3", got)
+	}
+}
+
+func TestComputeTidalStressFactor_FloorRounding(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.TidalEffects = &SurfaceTidalEffects{Total: 39.9}
+	got := ComputeTidalStressFactor(body)
+	// 39.9 / 10 = 3.99 → floor → 3
+	if got != 3 {
+		t.Errorf("got %d, want 3 (floor)", got)
+	}
+}
+
+func TestComputeTidalStressFactor_NilTidalEffects_Zero(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.TidalEffects = nil
+	if got := ComputeTidalStressFactor(body); got != 0 {
+		t.Errorf("got %d, want 0 (nil TidalEffects)", got)
+	}
+}
+
+func TestComputeTidalStressFactor_LessThanTen_Zero(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.TidalEffects = &SurfaceTidalEffects{Total: 9.5}
+	// 9.5 / 10 = 0.95 → floor → 0
+	if got := ComputeTidalStressFactor(body); got != 0 {
+		t.Errorf("got %d, want 0", got)
+	}
+}
+
+func TestComputeTidalStressFactor_NilBody_Zero(t *testing.T) {
+	if got := ComputeTidalStressFactor(nil); got != 0 {
+		t.Errorf("got %d, want 0 (nil body)", got)
+	}
+}
+
+func TestComputeTidalStressFactor_HighTotal(t *testing.T) {
+	// 1000m total → 100 (high TSS, near volcanic territory).
+	body := &DetailedPlacement{}
+	body.TidalEffects = &SurfaceTidalEffects{Total: 1000.0}
+	if got := ComputeTidalStressFactor(body); got != 100 {
+		t.Errorf("got %d, want 100", got)
+	}
+}

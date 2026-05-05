@@ -74,3 +74,13 @@ func ComputeResidualSeismicStress(body *DetailedPlacement, ageGyr float64, isMoo
 	}
 	return int(inner) * int(inner)
 }
+
+// ComputeTidalStressFactor per WBH p.126: floor(ΣTidalEffects / 10).
+// Reads body.TidalEffects.Total (metres, populated in Step 5B.5).
+// Returns 0 if body or TidalEffects is nil.
+func ComputeTidalStressFactor(body *DetailedPlacement) int {
+	if body == nil || body.TidalEffects == nil {
+		return 0
+	}
+	return int(math.Floor(body.TidalEffects.Total / 10.0))
+}
