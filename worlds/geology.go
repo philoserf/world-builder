@@ -127,3 +127,23 @@ func ComputeTidalHeatingFactor(in TidalHeatingInputs) int {
 	}
 	return int(math.Floor(v))
 }
+
+// ComputeGGResidualHeat per WBH p.125 sidebar:
+//
+//	T(K) = 80 × ⁴√(MassEarth) ÷ √(AgeGyr)
+//
+// Returns 0 if mass ≤ 0 or age ≤ 0; returns 0 if the formula produces < 1K
+// (negligible). Used for gas giants only — terrestrial bodies do not
+// receive this contribution.
+//
+// Worked: Zed Prime's GG (MassEarth=1200, AgeGyr=6.336) ≈ 187K.
+func ComputeGGResidualHeat(massEarth, ageGyr float64) float64 {
+	if massEarth <= 0 || ageGyr <= 0 {
+		return 0
+	}
+	v := 80.0 * math.Pow(massEarth, 0.25) / math.Sqrt(ageGyr)
+	if v < 1 {
+		return 0
+	}
+	return v
+}

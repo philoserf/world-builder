@@ -226,3 +226,50 @@ func TestComputeTidalHeatingFactor_FloorRounding(t *testing.T) {
 		t.Errorf("got %d, want non-negative", got)
 	}
 }
+
+func TestComputeGGResidualHeat_ZedPrimeGG(t *testing.T) {
+	// MassEarth=1200, AgeGyr=6.336 → 80 × ⁴√1200 / √6.336 ≈ 187.0
+	got := ComputeGGResidualHeat(1200.0, 6.336)
+	if got < 186 || got > 188 {
+		t.Errorf("got %.2f, want ~187 (±1)", got)
+	}
+}
+
+func TestComputeGGResidualHeat_OldOrLowMass_Zero(t *testing.T) {
+	// Very low mass + very old age → formula < 1K → 0.
+	// 80 × ⁴√0.0001 / √100 = 80 × 0.1 / 10 = 0.8 → < 1 → 0.
+	got := ComputeGGResidualHeat(0.0001, 100.0)
+	if got != 0 {
+		t.Errorf("got %.2f, want 0 (formula < 1K)", got)
+	}
+}
+
+func TestComputeGGResidualHeat_ZeroAge_Safe(t *testing.T) {
+	// AgeGyr 0 would be √0 in denominator → divide-by-zero. Guard returns 0.
+	got := ComputeGGResidualHeat(1000.0, 0)
+	if got != 0 {
+		t.Errorf("got %.2f, want 0 (zero age must not divide by zero)", got)
+	}
+}
+
+func TestComputeGGResidualHeat_NegativeMass_Zero(t *testing.T) {
+	// Negative mass shouldn't happen but is defensive.
+	if got := ComputeGGResidualHeat(-1.0, 5.0); got != 0 {
+		t.Errorf("got %.2f, want 0 (negative mass)", got)
+	}
+}
+
+func TestComputeGGResidualHeat_NegativeAge_Zero(t *testing.T) {
+	if got := ComputeGGResidualHeat(1000.0, -1.0); got != 0 {
+		t.Errorf("got %.2f, want 0 (negative age)", got)
+	}
+}
+
+func TestComputeGGResidualHeat_HighMassYoungAge(t *testing.T) {
+	// Massive young GG → large inherent heat.
+	// MassEarth=2000, AgeGyr=1.0 → 80 × ⁴√2000 / √1 = 80 × 6.687 / 1 ≈ 535
+	got := ComputeGGResidualHeat(2000.0, 1.0)
+	if got < 530 || got > 540 {
+		t.Errorf("got %.2f, want ~535 (±5)", got)
+	}
+}
