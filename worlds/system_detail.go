@@ -15,122 +15,19 @@ import (
 //
 // Pipeline:
 //
-//  1. Per placement: roll Size (terrestrial or gas giant); attach diameter/mass.
-//  2. Per non-belt non-empty placement: roll moon count + per-moon sizes.
-//  3. AssignPlanetDesignations + AssignMoonDesignations.
-//  4. Compute Period per placement.
-//  5. MarkHZ.
-//  6. Backfill StarAllocation.BaselineN.
-//  7. ShortProfile + LongProfile.
-//  8. RenderIISSClass23.
+//  1. runDetailPipeline: per-body Steps 1-5 + 5A-5G (sizing, moons,
+//     designations, periods, HZ, then 3A1/3A2/3B passes).
+//  2. Backfill StarAllocation.BaselineN.
+//  3. ShortProfile + LongProfile.
+//  4. RenderIISSClass23.
+//  5. pickMainworld.
 func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSClass23Header) (SystemDetail, error) {
 	detailed := make([]DetailedPlacement, len(sp.Placements))
 	for i := range sp.Placements {
 		detailed[i] = DetailedPlacement{Placement: sp.Placements[i]}
 	}
 
-	// Step 1 — sizing
-	gasGiantDM := gasGiantSizingDM(sys, sp)
-	for i := range detailed {
-		switch detailed[i].Body {
-		case BodyTerrestrial:
-			ts, err := RollTerrestrialSize(r)
-			if err != nil {
-				return SystemDetail{}, fmt.Errorf("worlds: detail size terrestrial[%d]: %w", i, err)
-			}
-			detailed[i].SizeCode = ts.SizeCode
-			detailed[i].DiameterKm = ts.DiameterKm
-		case BodyGasGiant:
-			gs, err := RollGasGiantSize(r, gasGiantDM)
-			if err != nil {
-				return SystemDetail{}, fmt.Errorf("worlds: detail size gas-giant[%d]: %w", i, err)
-			}
-			detailed[i].GGClass = gs.Class
-			detailed[i].GGDiameterCode = gs.DiameterCode
-			detailed[i].DiameterEarth = gs.DiameterEarth
-			detailed[i].MassEarth = gs.MassEarth
-		}
-	}
-
-	// Step 2 — moons (skip belts and empty)
-	for i := range detailed {
-		if detailed[i].Body == BodyEmpty || detailed[i].Body == BodyPlanetoidBelt {
-			continue
-		}
-		parent := parentInfoOf(detailed[i])
-		moonDM := moonCountDM(detailed[i], sp)
-		count, err := CountMoons(r, parent, moonDM)
-		if err != nil {
-			return SystemDetail{}, fmt.Errorf("worlds: detail moon-count[%d]: %w", i, err)
-		}
-		moons := make([]Moon, 0, count)
-		for j := range count {
-			m, err := SizeMoon(r, parent)
-			if err != nil {
-				return SystemDetail{}, fmt.Errorf("worlds: detail moon-size[%d/%d]: %w", i, j, err)
-			}
-			moons = append(moons, m)
-		}
-		detailed[i].Moons = moons
-	}
-
-	// Step 3 — designations
-	AssignPlanetDesignations(detailed)
-	AssignMoonDesignations(detailed)
-
-	// Step 4 — periods
-	for i := range detailed {
-		if detailed[i].Body == BodyEmpty {
-			continue
-		}
-		au := stars.OrbitToAU(detailed[i].Orbit)
-		sumMass := sumStellarMassInterior(detailed[i])
-		bodyMassEarth := 0.0
-		if detailed[i].Body == BodyGasGiant && detailed[i].MassEarth >= 100 {
-			bodyMassEarth = detailed[i].MassEarth
-		}
-		detailed[i].Period = PeriodFor(au, sumMass, bodyMassEarth)
-	}
-
-	// Step 5 — HZ tagging
-	if err := MarkHZ(detailed); err != nil {
-		return SystemDetail{}, fmt.Errorf("worlds: detail mark-hz: %w", err)
-	}
-
-	// Step 5A — 3A1 passes (body physical, belt, atmosphere, hydrographics,
-	// moon refinement). Implemented in system_detail_steps.go.
-	if err := runStep5A(r, detailed, sys, sp); err != nil {
-		return SystemDetail{}, err
-	}
-
-	// Step 5B — 3A2a passes (surface distribution, day length, axial tilt,
-	// tidal lock, surface tidal effects). Implemented in system_detail_steps.go.
-	if err := runStep5B(r, detailed, sys); err != nil {
-		return SystemDetail{}, err
-	}
-
-	// Step 5C — 3A2b-temp temperature pass. Implemented in system_detail_steps.go.
-	if err := runStep5C(r, detailed, sys); err != nil {
-		return SystemDetail{}, err
-	}
-
-	// Step 5D — 3A2b-rederive 2-pass iteration. Implemented in system_detail_steps.go.
-	if err := runStep5D(r, detailed, sys); err != nil {
-		return SystemDetail{}, err
-	}
-
-	// Step 5E — 3B-geology pass: seismic + GG residual heat + temp recompute + tectonic plates.
-	if err := runStep5E(r, detailed, sys); err != nil {
-		return SystemDetail{}, err
-	}
-
-	// Step 5F — 3B-biology pass: native lifeform ratings + resource rating.
-	if err := runStep5F(r, detailed, sys); err != nil {
-		return SystemDetail{}, err
-	}
-
-	// Step 5G — 3B-final pass: per-body habitability rating.
-	if err := runStep5G(r, detailed, sys); err != nil {
+	if err := runDetailPipeline(r, detailed, sys, sp); err != nil {
 		return SystemDetail{}, err
 	}
 
