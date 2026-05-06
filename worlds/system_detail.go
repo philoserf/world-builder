@@ -124,6 +124,11 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		return SystemDetail{}, err
 	}
 
+	// Step 5F — 3B-biology pass: native lifeform ratings + resource rating.
+	if err := runStep5F(r, detailed, sys); err != nil {
+		return SystemDetail{}, err
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)
@@ -379,6 +384,9 @@ type DetailedPlacement struct {
 
 	// 3B-geology additions
 	Geology *Geology
+
+	// 3B-biology additions
+	Biology *Biology
 }
 
 // HasPhysical reports whether body-physical data has been generated for this placement.
@@ -410,6 +418,9 @@ func (dp *DetailedPlacement) HasTemperature() bool { return dp.Temperature != ni
 
 // HasGeology reports whether 5E ran for this placement.
 func (dp *DetailedPlacement) HasGeology() bool { return dp.Geology != nil }
+
+// HasBiology reports whether biology data has been generated for this placement.
+func (dp *DetailedPlacement) HasBiology() bool { return dp.Biology != nil }
 
 // RenderSAH returns the 3-character SAH triplet for the IISS form.
 // HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".

@@ -918,6 +918,7 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 	t.Parallel()
 
 	totalTHFNonzero := 0
+	totalBiomassNonzero := 0
 	for iter := range 100 {
 		seed := int64(iter)
 		r := roller.NewSeeded(seed)
@@ -1417,6 +1418,123 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 				}
 			}
 		}
+
+		// 3B-biology invariants (assertions 32-38).
+
+		// Assertion 32: HasBiology() for terrestrial bodies with Atmosphere
+		// (and HZ-planet moons with Atmosphere). Skip belts, GGs, empty.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyTerrestrial && dp.Atmosphere != nil && dp.SizeCode != "0" {
+				if !dp.HasBiology() {
+					t.Errorf("iter %d: body %s missing Biology", iter, dp.Designation)
+				}
+			}
+			// Per-moon coverage: HZ-planet moons with atmosphere also get Biology.
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.Atmosphere != nil && !m.HasBiology() {
+					t.Errorf("iter %d: moon %s has atmosphere but missing Biology", iter, m.Designation)
+				}
+			}
+		}
+
+		// Assertion 33: When Biomass > 0, all biology fields populated.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasBiology() {
+				continue
+			}
+			b := dp.Biology
+			if b.Biomass > 0 {
+				if b.Biocomplexity <= 0 {
+					t.Errorf("iter %d: body %s: Biomass=%d but Biocomplexity=%d",
+						iter, dp.Designation, b.Biomass, b.Biocomplexity)
+				}
+				if b.Biodiversity <= 0 {
+					t.Errorf("iter %d: body %s: Biomass=%d but Biodiversity=%d",
+						iter, dp.Designation, b.Biomass, b.Biodiversity)
+				}
+				// Compatibility >= 0 is the floor; 0 is valid (incompatible).
+				if b.Compatibility < 0 {
+					t.Errorf("iter %d: body %s: Compatibility=%d should be >= 0",
+						iter, dp.Designation, b.Compatibility)
+				}
+			}
+		}
+
+		// Assertion 34: When Biomass == 0, biology rating fields are 0; sophont bools false.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasBiology() {
+				continue
+			}
+			b := dp.Biology
+			if b.Biomass == 0 {
+				if b.Biocomplexity != 0 || b.Biodiversity != 0 || b.Compatibility != 0 {
+					t.Errorf("iter %d: body %s: Biomass=0 but ratings non-zero (X=%d D=%d C=%d)",
+						iter, dp.Designation, b.Biocomplexity, b.Biodiversity, b.Compatibility)
+				}
+				if b.HasNativeSophont || b.HadExtinctSophont {
+					t.Errorf("iter %d: body %s: Biomass=0 but sophont bool true",
+						iter, dp.Designation)
+				}
+			}
+		}
+
+		// Assertion 35: ResourceRating in [2, 12] for all bodies with Biology.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasBiology() {
+				continue
+			}
+			rr := dp.Biology.ResourceRating
+			if rr < 2 || rr > 12 {
+				t.Errorf("iter %d: body %s: ResourceRating=%d out of [2,12]",
+					iter, dp.Designation, rr)
+			}
+		}
+
+		// Assertion 36: Sophont bools only true when Biocomplexity >= 8.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasBiology() {
+				continue
+			}
+			b := dp.Biology
+			if (b.HasNativeSophont || b.HadExtinctSophont) && b.Biocomplexity < 8 {
+				t.Errorf("iter %d: body %s: sophont bool true but Biocomplexity=%d < 8",
+					iter, dp.Designation, b.Biocomplexity)
+			}
+		}
+
+		// Assertion 37: Profile() returns "" or 4-char eHex string.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HasBiology() {
+				continue
+			}
+			p := dp.Biology.Profile()
+			if p != "" && len(p) != 4 {
+				t.Errorf("iter %d: body %s: Profile()=%q, want \"\" or 4-char string",
+					iter, dp.Designation, p)
+			}
+		}
+
+		// Assertion 38: smoke test against silent-zero — count bodies with Biomass >= 1.
+		// Accumulator declared before iter loop; assertion reported after loop.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.HasBiology() && dp.Biology.Biomass >= 1 {
+				totalBiomassNonzero++
+			}
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.HasBiology() && m.Biology.Biomass >= 1 {
+					totalBiomassNonzero++
+				}
+			}
+		}
 	}
 
 	// Assertion 31: at least one body should have non-zero TidalHeatingFactor
@@ -1426,10 +1544,16 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 	}
 	t.Logf("3B-geology: %d body-iterations had non-zero TidalHeatingFactor across 100-iter sweep", totalTHFNonzero)
 
+	if totalBiomassNonzero == 0 {
+		t.Errorf("integration: Biomass was zero for ALL bodies across 100 iterations — likely a silent-zero bug")
+	}
+	t.Logf("3B-biology: %d body-iterations had non-zero Biomass across 100-iter sweep", totalBiomassNonzero)
+
 	// Referee-fiat / book-inconsistency logs (informational only).
 	t.Logf("p.101 continent counts deferred to Referee fiat per 3A2a Q6 option (b)")
 	t.Logf("p.106 tidal lock natural-12 verification implemented per spec; the book's worked example fudges it as a Referee narrative")
 	t.Logf("p.115 sidebar Zed Prime WorstLow=230K (book) vs 219K (consistent Near/Far AU computation) — implementation uses consistent Near/Far AU")
 	t.Logf("3A2b-rederive: tidal-lock re-eval if pressure crosses 2.5 bar deferred (Q5-B); requires dice-capture infrastructure")
 	t.Logf("3B-geology: post-TSS band-cross detection deferred (would require Temperature.PreInherentMeanK snapshot)")
+	t.Logf("3B-biology: Compatibility formula follows WBH p.131 formula box; book worked example shows 9.5 for Zed Prime but lacks a source for the +3 — implementation gives 6")
 }
