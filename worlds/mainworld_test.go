@@ -209,18 +209,6 @@ func TestPickMainworld_AllZero_FirstTerrestrialFallback(t *testing.T) {
 	}
 }
 
-func TestPickMainworld_BeltsAndGGsOnly_EmptyString(t *testing.T) {
-	belt := DetailedPlacement{Designation: "Belt", SizeCode: "0"}
-	belt.Body = BodyPlanetoidBelt
-	gg := DetailedPlacement{Designation: "GG"}
-	gg.Body = BodyGasGiant
-	detailed := []DetailedPlacement{belt, gg}
-	got := pickMainworld(detailed)
-	if got != "" {
-		t.Errorf("got %q, want empty", got)
-	}
-}
-
 func TestPickMainworld_MoonAsMainworld(t *testing.T) {
 	// Planet has habitability 4; moon has habitability 9 → moon wins.
 	dp := DetailedPlacement{
@@ -275,5 +263,51 @@ func TestPickMainworld_ExtinctSophont_Counts(t *testing.T) {
 	// A and B both qualify as "sophont"; B has higher habitability → B.
 	if got != "B" {
 		t.Errorf("got %q, want B (extinct sophont with higher habitability)", got)
+	}
+}
+
+func TestPickMainworld_BeltOnlySystem_ReturnsBeltWithHighestResource(t *testing.T) {
+	belt1 := DetailedPlacement{Designation: "Belt A", SizeCode: "0", Belt: &BeltDetails{ResourceRating: 6}}
+	belt1.Body = BodyPlanetoidBelt
+	belt2 := DetailedPlacement{Designation: "Belt B", SizeCode: "0", Belt: &BeltDetails{ResourceRating: 9}}
+	belt2.Body = BodyPlanetoidBelt
+	gg := DetailedPlacement{Designation: "GG"}
+	gg.Body = BodyGasGiant
+	detailed := []DetailedPlacement{belt1, belt2, gg}
+	got := pickMainworld(detailed)
+	if got != "Belt B" {
+		t.Errorf("got %q, want Belt B (highest resource)", got)
+	}
+}
+
+func TestPickMainworld_TerrestrialBeatsBelt_OnHabitability(t *testing.T) {
+	terr := DetailedPlacement{
+		Designation:  "Terr",
+		Habitability: &Habitability{Rating: 1},
+	}
+	terr.Body = BodyTerrestrial
+	belt := DetailedPlacement{Designation: "Belt", SizeCode: "0", Belt: &BeltDetails{ResourceRating: 12}}
+	belt.Body = BodyPlanetoidBelt
+	detailed := []DetailedPlacement{terr, belt}
+	got := pickMainworld(detailed)
+	if got != "Terr" {
+		t.Errorf("got %q, want Terr (habitability beats belt resource)", got)
+	}
+}
+
+func TestPickMainworld_TerrestrialAndBelt_TieOnResource_IterationOrder(t *testing.T) {
+	// No habitability on either; equal resource → first iteration wins.
+	terr := DetailedPlacement{
+		Designation:  "Terr",
+		Habitability: &Habitability{Rating: 0},
+		Biology:      &Biology{ResourceRating: 8},
+	}
+	terr.Body = BodyTerrestrial
+	belt := DetailedPlacement{Designation: "Belt", SizeCode: "0", Belt: &BeltDetails{ResourceRating: 8}}
+	belt.Body = BodyPlanetoidBelt
+	detailed := []DetailedPlacement{belt, terr} // belt first
+	got := pickMainworld(detailed)
+	if got != "Belt" {
+		t.Errorf("got %q, want Belt (first iteration order)", got)
 	}
 }
