@@ -20,5 +20,3 @@ linters:
     - unconvert
     - unparam
 
-issues:
-  exclude-use-default: false
