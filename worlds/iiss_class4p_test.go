@@ -78,3 +78,70 @@ func TestRenderIISSClass4P_AtmosphereSection_Present(t *testing.T) {
 		t.Errorf("missing ATMOSPHERE section: got %q", got)
 	}
 }
+
+func TestRenderIISSClass4P_HydrographicsSection_Present(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	body.Hydrographics = &Hydrographics{Code: 6, Percent: 62, Profile: "H6:H2O-100"}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "HYDROGRAPHICS") {
+		t.Errorf("missing HYDROGRAPHICS section: got %q", got)
+	}
+	if !strings.Contains(got, "62") {
+		t.Errorf("missing coverage 62: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_RotationSection_Present(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24, YearDays: 365}
+	body.AxialTilt = &AxialTilt{Degrees: 23.5}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "ROTATION") {
+		t.Errorf("missing ROTATION section: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_TemperatureSection_Present(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	body.Temperature = &Temperature{
+		MeanK: 300, HighK: 346, LowK: 262,
+		Luminosity: 1.419, Albedo: 0.33, GreenhouseFactor: 0.59,
+	}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "TEMPERATURE") {
+		t.Errorf("missing TEMPERATURE section: got %q", got)
+	}
+	if !strings.Contains(got, "300") {
+		t.Errorf("missing MeanK 300: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_SeismicSection_Present(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	body.Geology = &Geology{
+		ResidualSeismicStress: 0,
+		TidalStressFactor:     3,
+		TidalHeatingFactor:    14,
+		TotalSeismicStress:    17,
+		TectonicPlates:        4,
+	}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "SEISMIC") {
+		t.Errorf("missing SEISMIC section: got %q", got)
+	}
+	if !strings.Contains(got, "17") {
+		t.Errorf("missing TSS 17: got %q", got)
+	}
+}

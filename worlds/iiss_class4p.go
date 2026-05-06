@@ -35,8 +35,12 @@ func RenderIISSClass4P(body *DetailedPlacement, sys stars.System, _ string) stri
 	renderIISS4POrbit(&sb, body)
 	renderIISS4PSize(&sb, body)
 	renderIISS4PAtmosphere(&sb, body)
+	renderIISS4PHydrographics(&sb, body)
+	renderIISS4PRotation(&sb, body)
+	renderIISS4PTemperature(&sb, body)
+	renderIISS4PSeismic(&sb, body)
 
-	// Tasks 7 and 8 append the remaining sections + Comments.
+	// Task 8 appends the remaining sections + Comments.
 	return sb.String()
 }
 
@@ -82,4 +86,59 @@ func renderIISS4PAtmosphere(sb *strings.Builder, body *DetailedPlacement) {
 	atm := body.Atmosphere
 	fmt.Fprintf(sb, "  Code: %d   Pressure (bar): %.3f   O2 (bar): %.3f   Scale Height: %.2f\n\n",
 		atm.Code, atm.Pressure, atm.OxygenPartialPressure, atm.ScaleHeight)
+}
+
+func renderIISS4PHydrographics(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("HYDROGRAPHICS\n")
+	if body.Hydrographics == nil {
+		sb.WriteString("  (none)\n\n")
+		return
+	}
+	hydro := body.Hydrographics
+	fmt.Fprintf(sb, "  Code: %d   Coverage (%%): %d   Profile: %s\n\n",
+		hydro.Code, hydro.Percent, hydro.Profile)
+}
+
+func renderIISS4PRotation(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("ROTATION\n")
+	if body.DayLength != nil {
+		fmt.Fprintf(sb, "  Sidereal (h): %.2f   Solar (h): %.2f   Solar days/year: %.2f\n",
+			body.DayLength.SiderealHours, body.DayLength.SolarHours, body.DayLength.YearDays)
+	}
+	if body.AxialTilt != nil {
+		fmt.Fprintf(sb, "  Axial Tilt: %.2f°\n", body.AxialTilt.Degrees)
+	}
+	tidalLockText := "no"
+	if body.TidalLock != nil && body.TidalLock.LockRatio != "" {
+		tidalLockText = body.TidalLock.LockRatio
+	}
+	tidesM := 0.0
+	if body.TidalEffects != nil {
+		tidesM = body.TidalEffects.Total
+	}
+	fmt.Fprintf(sb, "  Tidal lock: %s   Tides (m): %.2f\n\n", tidalLockText, tidesM)
+}
+
+func renderIISS4PTemperature(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("TEMPERATURE\n")
+	if body.Temperature == nil {
+		sb.WriteString("  (not computed)\n\n")
+		return
+	}
+	t := body.Temperature
+	fmt.Fprintf(sb, "  High (K): %.1f   Mean (K): %.1f   Low (K): %.1f\n",
+		t.HighK, t.MeanK, t.LowK)
+	fmt.Fprintf(sb, "  Luminosity: %.3f   Albedo: %.2f   Greenhouse: %.2f\n\n",
+		t.Luminosity, t.Albedo, t.GreenhouseFactor)
+}
+
+func renderIISS4PSeismic(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("SEISMIC\n")
+	if body.Geology == nil {
+		sb.WriteString("  (not computed)\n\n")
+		return
+	}
+	g := body.Geology
+	fmt.Fprintf(sb, "  TSS: %d   Residual: %d   TidalStress: %d   TidalHeating: %d   Plates: %d\n\n",
+		g.TotalSeismicStress, g.ResidualSeismicStress, g.TidalStressFactor, g.TidalHeatingFactor, g.TectonicPlates)
 }
