@@ -10,5 +10,8 @@ just fmt      # apply formatting
 ```
 
 The library is the artifact; the CLI is a thin wrapper. See
-`docs/superpowers/specs/2026-05-02-world-builder-design.md` at the repo
+`tools/world-builder/docs/specs/2026-05-02-world-builder-design.md` at the repo
 root for design rationale.
+
+`docs/World Builders Handbook.pdf` is a symlink to the source PDF in the
+collection — the canonical authority for every spec and plan in this tree.
