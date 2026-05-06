@@ -20,22 +20,24 @@ This satisfies the second half of the project's "done" criteria from `CLAUDE.md`
 
 ## Architecture
 
-### Independent Markdown formatters
+### Markdown formatters consume existing structs (where they exist)
 
-Each form has its own Markdown formatter that reads from source data directly (`stars.System`, `worlds.SystemDetail`, `worlds.DetailedPlacement`). Formatters do not consume the existing `SurveyForm` / `IISSClass23Form` structs and do not parse the existing plain-text `RenderIISSClass4P` output.
+For Class 0/I and Class II/III, the existing `stars.SurveyForm` and `worlds.IISSClass23Form` structs are already the right shape for any rendering target — they're plain Go structs with native types, not transport-encoded. `BuildSurveyForm` and `RenderIISSClass23` already do the heavy work of flattening `stars.System` and `worlds.SystemDetail` into per-row tables (with all the barycentre-composite, HZCO-source-row, MAO-post-fill, Objects-table-assembly logic that's expensive to re-derive). Markdown formatters consume these structs directly — no duplication, no new intermediate type.
 
-Rationale: the existing structs are shaped for JSON serialization. The Markdown layer wants different framing (column-major tables, section grouping, em-dash placeholders). Going through the structs would force one to adapt to the other; reading source data is decoupled and easy to test.
+For Class IV-P, no struct exists today; `RenderIISSClass4P` returns plain text. The Markdown formatter reads from `*DetailedPlacement` and `stars.System` directly (same inputs as the existing plain-text renderer), since there's no per-body flattening logic to share.
 
 Existing renderers stay untouched. The plain-text `RenderIISSClass4P` becomes effectively dead production code (still tested) once Markdown is the CLI default — accept that, revisit when JSON parity matters.
 
+The Markdown formatters do not parse the existing plain-text `RenderIISSClass4P` output — they read source data fresh.
+
 ### File layout
 
-| File                        | Responsibility                                                                                                                                                                                                                                   |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `stars/markdown.go`         | `RenderClass0IMarkdown(stars.System) string` — Form 0421B-0I (system stars + companions only)                                                                                                                                                    |
-| `worlds/markdown.go`        | `RenderClass23Markdown(SystemDetail, stars.System) string` — Form 0421D-II.III. Plus `RenderClass4PMarkdown(*DetailedPlacement, stars.System, mainworldDesignation) string` — Form 0407F-IV PART P or PART P.B, dispatched on `SizeCode == "0"`. |
-| `worlds/markdown_system.go` | Top-level orchestrator: `RenderSystemMarkdown(SystemDetail, stars.System) string`. Emits H1 system title + Class 0/I H2 + Class II/III H2 + Class IV-P H2 (skipped when `MainworldDesignation == ""`).                                           |
-| `cmd/wbh/main.go`           | New `case "markdown":` calling `worlds.RenderSystemMarkdown(...)`. Becomes the new default `-format`. JSON and short formats remain available.                                                                                                   |
+| File                        | Responsibility                                                                                                                                                                                                                                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stars/markdown.go`         | `RenderClass0IMarkdown(SurveyForm) string` — Form 0421B-0I (consumes existing struct).                                                                                                                                                                                                                                       |
+| `worlds/markdown.go`        | `RenderClass23Markdown(IISSClass23Form) string` — Form 0421D-II.III (consumes existing struct). Plus `RenderClass4PMarkdown(*DetailedPlacement, stars.System, mainworldDesignation) string` — Form 0407F-IV PART P or PART P.B, dispatched on `SizeCode == "0"` (reads source data; no struct exists for Class IV-P).        |
+| `worlds/markdown_system.go` | Top-level orchestrator: `RenderSystemMarkdown(SystemDetail, stars.System, IISSClass23Header) string`. Calls `BuildSurveyForm`, `RenderIISSClass23`, then the three Markdown formatters in book order. Emits H1 system title + Class 0/I H2 + Class II/III H2 + Class IV-P H2 (skipped when `sd.MainworldDesignation == ""`). |
+| `cmd/wbh/main.go`           | New `case "markdown":` calling `worlds.RenderSystemMarkdown(...)`. Becomes the new default `-format`. JSON and short formats remain available.                                                                                                                                                                               |
 
 ### Hybrid Markdown layout
 
