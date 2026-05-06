@@ -129,6 +129,11 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		return SystemDetail{}, err
 	}
 
+	// Step 5G — 3B-final pass: per-body habitability rating.
+	if err := runStep5G(r, detailed, sys); err != nil {
+		return SystemDetail{}, err
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)
@@ -154,6 +159,8 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 
 	// Step 8 — IISS Class II/III form
 	sd.Survey = RenderIISSClass23(sd, sys, h)
+
+	sd.MainworldDesignation = pickMainworld(detailed)
 
 	return sd, nil
 }
