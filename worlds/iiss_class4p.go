@@ -18,15 +18,15 @@ import (
 //
 // Returns "" if body is nil or body.Body == BodyEmpty.
 //
-// Belt bodies (Size 0) get a placeholder stub; full Form 0407K-IV PART P.B
-// rendering is deferred (see spec carry-forwards).
+// Belt bodies (Size 0) dispatch to renderIISS4PBelt for Form 0407K-IV
+// PART P.B (WBH p.139).
 func RenderIISSClass4P(body *DetailedPlacement, sys stars.System, mainworldDesignation string) string {
 	if body == nil || body.Body == BodyEmpty {
 		return ""
 	}
-	// Belt stub.
+	// Belt path — Form 0407K-IV PART P.B.
 	if body.SizeCode == "0" {
-		return renderBeltStub(body)
+		return renderIISS4PBelt(body, sys, mainworldDesignation)
 	}
 
 	var sb strings.Builder
@@ -46,14 +46,6 @@ func RenderIISSClass4P(body *DetailedPlacement, sys stars.System, mainworldDesig
 	renderIISS4PComments(&sb, body, mainworldDesignation)
 
 	return sb.String()
-}
-
-func renderBeltStub(body *DetailedPlacement) string {
-	return fmt.Sprintf(`IISS CLASS IV SURVEY — FORM 0407K-IV PART P.B (NOT YET IMPLEMENTED)
-
-WORLD: %s   (Belt)
-Use BeltDetails for resource/composition data.
-`, body.Designation)
 }
 
 func renderIISS4PWorld(sb *strings.Builder, body *DetailedPlacement, sys stars.System) {
