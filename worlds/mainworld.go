@@ -84,3 +84,108 @@ func MainworldCandidates(sd SystemDetail) []MainworldCandidate {
 	}
 	return out
 }
+
+// pickMainworld returns the designation of the auto-picked mainworld per
+// WBH p.134. Priority chain (first match wins):
+//
+//  1. Bodies with native sophonts (extant or extinct); among these,
+//     highest Habitability; tiebreaker: highest ResourceRating;
+//     final tiebreaker: iteration order.
+//  2. Highest Habitability among non-sophont bodies; tiebreakers same.
+//  3. Highest ResourceRating if no body has Habitability > 0.
+//  4. First terrestrial body in iteration order.
+//
+// Iterates both detailed[i] (planets) and dp.Moons[j] (moons). Returns ""
+// if no terrestrial body qualifies.
+//
+// "Best refuelling location" criterion (WBH p.134) deferred — depends on
+// starport infrastructure from pp.147-234.
+func pickMainworld(detailed []DetailedPlacement) string {
+	type candidate struct {
+		designation  string
+		habitability int
+		resource     int
+		hasSophont   bool
+	}
+
+	var candidates []candidate
+
+	collect := func(designation string, bodyType BodyType, h *Habitability, b *Biology) {
+		if bodyType != BodyTerrestrial {
+			return
+		}
+		c := candidate{designation: designation}
+		if h != nil {
+			c.habitability = h.Rating
+		}
+		if b != nil {
+			c.resource = b.ResourceRating
+			c.hasSophont = b.HasNativeSophont || b.HadExtinctSophont
+		}
+		candidates = append(candidates, c)
+	}
+
+	for i := range detailed {
+		dp := &detailed[i]
+		collect(dp.Designation, dp.Body, dp.Habitability, dp.Biology)
+		// Moons are treated as terrestrials for mainworld-pick purposes;
+		// Zed Prime (WBH worked example) is itself a moon.
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			collect(m.Designation, BodyTerrestrial, m.Habitability, m.Biology)
+		}
+	}
+
+	if len(candidates) == 0 {
+		return ""
+	}
+
+	better := func(i, best int) bool {
+		return candidates[i].habitability > candidates[best].habitability ||
+			(candidates[i].habitability == candidates[best].habitability &&
+				candidates[i].resource > candidates[best].resource)
+	}
+
+	// Priority 1: sophont present (extant or extinct).
+	best := -1
+	for i, c := range candidates {
+		if !c.hasSophont {
+			continue
+		}
+		if best == -1 || better(i, best) {
+			best = i
+		}
+	}
+	if best != -1 {
+		return candidates[best].designation
+	}
+
+	// Priority 2: highest Habitability > 0.
+	for i, c := range candidates {
+		if c.habitability == 0 {
+			continue
+		}
+		if best == -1 || better(i, best) {
+			best = i
+		}
+	}
+	if best != -1 {
+		return candidates[best].designation
+	}
+
+	// Priority 3: highest ResourceRating > 0.
+	for i, c := range candidates {
+		if c.resource == 0 {
+			continue
+		}
+		if best == -1 || candidates[i].resource > candidates[best].resource {
+			best = i
+		}
+	}
+	if best != -1 {
+		return candidates[best].designation
+	}
+
+	// Priority 4: first terrestrial in iteration order.
+	return candidates[0].designation
+}
