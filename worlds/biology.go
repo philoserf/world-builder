@@ -404,7 +404,7 @@ func RollTerrestrialResourceRating(r roller.Roller, body *DetailedPlacement, bio
 		case bio.Biodiversity >= 8:
 			dm++
 		}
-		if bio.Compatibility >= 1 && bio.Compatibility <= 3 && bio.Biomass >= 1 {
+		if bio.Compatibility >= 0 && bio.Compatibility <= 3 && bio.Biomass >= 1 {
 			dm += -1
 		}
 		if bio.Compatibility >= 8 {
