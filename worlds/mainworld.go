@@ -92,14 +92,15 @@ func MainworldCandidates(sd SystemDetail) []MainworldCandidate {
 //     highest Habitability; tiebreaker: highest ResourceRating;
 //     final tiebreaker: iteration order.
 //  2. Highest Habitability among non-sophont bodies; tiebreakers same.
-//  3. Highest ResourceRating if no body has Habitability > 0.
-//  4. First terrestrial body in iteration order.
+//  3. Highest ResourceRating across terrestrials, moons, and belts if no
+//     body has Habitability > 0.
+//  4. First terrestrial-or-belt body in iteration order.
 //
-// Iterates both detailed[i] (planets) and dp.Moons[j] (moons). Returns ""
-// if no terrestrial body qualifies.
-//
-// "Best refuelling location" criterion (WBH p.134) deferred — depends on
-// starport infrastructure from pp.147-234.
+// Iterates detailed[i] (planets and belts), dp.Moons[j] (moons). Returns ""
+// if no eligible body exists. Belts contribute resource only (no
+// habitability, no sophonts) — they win priorities 3 or 4 when
+// terrestrials don't qualify, satisfying WBH p.134's "best refuelling
+// location" criterion.
 func pickMainworld(detailed []DetailedPlacement) string {
 	type candidate struct {
 		designation  string
@@ -110,8 +111,8 @@ func pickMainworld(detailed []DetailedPlacement) string {
 
 	var candidates []candidate
 
-	collect := func(designation string, bodyType BodyType, h *Habitability, b *Biology) {
-		if bodyType != BodyTerrestrial {
+	collect := func(designation string, bodyType BodyType, h *Habitability, b *Biology, belt *BeltDetails) {
+		if bodyType != BodyTerrestrial && bodyType != BodyPlanetoidBelt {
 			return
 		}
 		c := candidate{designation: designation}
@@ -122,17 +123,20 @@ func pickMainworld(detailed []DetailedPlacement) string {
 			c.resource = b.ResourceRating
 			c.hasSophont = b.HasNativeSophont || b.HadExtinctSophont
 		}
+		if bodyType == BodyPlanetoidBelt && belt != nil {
+			c.resource = belt.ResourceRating
+		}
 		candidates = append(candidates, c)
 	}
 
 	for i := range detailed {
 		dp := &detailed[i]
-		collect(dp.Designation, dp.Body, dp.Habitability, dp.Biology)
+		collect(dp.Designation, dp.Body, dp.Habitability, dp.Biology, dp.Belt)
 		// Moons are treated as terrestrials for mainworld-pick purposes;
 		// Zed Prime (WBH worked example) is itself a moon.
 		for j := range dp.Moons {
 			m := &dp.Moons[j]
-			collect(m.Designation, BodyTerrestrial, m.Habitability, m.Biology)
+			collect(m.Designation, BodyTerrestrial, m.Habitability, m.Biology, nil)
 		}
 	}
 
@@ -186,6 +190,6 @@ func pickMainworld(detailed []DetailedPlacement) string {
 		return candidates[best].designation
 	}
 
-	// Priority 4: first terrestrial in iteration order.
+	// Priority 4: first terrestrial-or-belt body in iteration order.
 	return candidates[0].designation
 }

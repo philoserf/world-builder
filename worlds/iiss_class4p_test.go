@@ -229,16 +229,23 @@ func TestRenderIISSClass4P_NotMainworld_NoAnnotation(t *testing.T) {
 	}
 }
 
-func TestRenderIISSClass4P_Belt_StubRendering(t *testing.T) {
+func TestRenderIISSClass4P_Belt_DispatchesToBeltRenderer(t *testing.T) {
 	body := &DetailedPlacement{}
 	body.Body = BodyPlanetoidBelt
 	body.Designation = "Aab Belt"
 	body.SizeCode = "0"
+	body.Belt = &BeltDetails{}
 	got := RenderIISSClass4P(body, stars.System{}, "")
-	if !strings.Contains(got, "NOT YET IMPLEMENTED") {
-		t.Errorf("missing belt stub marker: got %q", got)
+	if !strings.Contains(got, "FORM 0407K-IV PART P.B") {
+		t.Errorf("expected belt form header, got %q", got)
+	}
+	if !strings.Contains(got, "COMPOSITION") {
+		t.Errorf("expected COMPOSITION section, got %q", got)
 	}
 	if !strings.Contains(got, "Aab Belt") {
 		t.Errorf("missing belt designation: got %q", got)
+	}
+	if strings.Contains(got, "NOT YET IMPLEMENTED") {
+		t.Errorf("stub marker still present: got %q", got)
 	}
 }
