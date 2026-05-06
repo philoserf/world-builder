@@ -1535,6 +1535,107 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 				}
 			}
 		}
+
+		// 3B-final invariants (assertions 39-43).
+
+		// Assertion 39: HasHabitability() for terrestrial bodies (and all
+		// non-GG, non-empty moons regardless of parent type). The critical
+		// fix: moons of GG parents (e.g. Zed Prime, moon of Aab IV) must
+		// receive Habitability. Skip parent-level GGs, belts, and empty.
+		// For moons: skip GG-cascade moons (GGClass != NotGasGiant) and
+		// empty/rock moons (SizeCode "0" or "R").
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Body == worlds.BodyTerrestrial && dp.SizeCode != "0" {
+				if !dp.HasHabitability() {
+					t.Errorf("iter %d: terrestrial body %s missing Habitability", iter, dp.Designation)
+				}
+			}
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				// Skip GG-cascade moons and empty/rock moons — they don't
+				// get Habitability (habitabilityApplies returns false).
+				if m.GGClass != worlds.NotGasGiant || m.SizeCode == "0" || m.SizeCode == "R" || m.SizeCode == "" {
+					continue
+				}
+				if !m.HasHabitability() {
+					t.Errorf("iter %d: moon %s (parent %s) missing Habitability",
+						iter, m.Designation, dp.Designation)
+				}
+			}
+		}
+
+		// Assertion 40: Habitability.Rating in [0, 12] for all bodies with Habitability.
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.HasHabitability() {
+				r := dp.Habitability.Rating
+				if r < 0 || r > 12 {
+					t.Errorf("iter %d: body %s: Habitability.Rating=%d out of [0, 12]",
+						iter, dp.Designation, r)
+				}
+			}
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.HasHabitability() {
+					r := m.Habitability.Rating
+					if r < 0 || r > 12 {
+						t.Errorf("iter %d: moon %s: Habitability.Rating=%d out of [0, 12]",
+							iter, m.Designation, r)
+					}
+				}
+			}
+		}
+
+		// Assertion 41: sd.MainworldDesignation != "" (Zed system has at least
+		// one terrestrial body).
+		if sd.MainworldDesignation == "" {
+			t.Errorf("iter %d: MainworldDesignation is empty", iter)
+		}
+
+		// Assertion 42: MainworldDesignation matches an existing body or moon.
+		found := false
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Designation == sd.MainworldDesignation {
+				found = true
+				break
+			}
+			for j := range dp.Moons {
+				if dp.Moons[j].Designation == sd.MainworldDesignation {
+					found = true
+					break
+				}
+			}
+			if found {
+				break
+			}
+		}
+		if !found {
+			t.Errorf("iter %d: MainworldDesignation %q matches no body or moon",
+				iter, sd.MainworldDesignation)
+		}
+
+		// Assertion 43: RenderIISSClass4P for the mainworld produces non-empty
+		// output containing "HABITABILITY".
+		var mainworldBody *worlds.DetailedPlacement
+		for i := range sd.Detailed {
+			if sd.Detailed[i].Designation == sd.MainworldDesignation {
+				mainworldBody = &sd.Detailed[i]
+				break
+			}
+		}
+		if mainworldBody != nil {
+			out := worlds.RenderIISSClass4P(mainworldBody, sys, sd.MainworldDesignation)
+			if out == "" {
+				t.Errorf("iter %d: RenderIISSClass4P returned empty string for mainworld %s",
+					iter, sd.MainworldDesignation)
+			}
+			if out != "" && !strings.Contains(out, "HABITABILITY") {
+				t.Errorf("iter %d: RenderIISSClass4P for %s missing HABITABILITY section",
+					iter, sd.MainworldDesignation)
+			}
+		}
 	}
 
 	// Assertion 31: at least one body should have non-zero TidalHeatingFactor
@@ -1556,4 +1657,5 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 	t.Logf("3A2b-rederive: tidal-lock re-eval if pressure crosses 2.5 bar deferred (Q5-B); requires dice-capture infrastructure")
 	t.Logf("3B-geology: post-TSS band-cross detection deferred (would require Temperature.PreInherentMeanK snapshot)")
 	t.Logf("3B-biology: Compatibility formula follows WBH p.131 formula box; book worked example shows 9.5 for Zed Prime but lacks a source for the +3 — implementation gives 6")
+	t.Logf("3B-final: Form 0407K-IV PART P.B (belt rendering) and World Maps (pp.135-137) deferred; miscellaneous habitability D3-1 referee adjustment skipped per YAGNI")
 }
