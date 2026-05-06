@@ -12,6 +12,7 @@ import (
 
 	"wbh/roller"
 	"wbh/stars"
+	"wbh/worlds"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	fs := flag.NewFlagSet("wbh", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	seed := fs.Int64("seed", 0, "random seed (0 = time-based)")
-	format := fs.String("format", "json", "output format: json | short")
+	format := fs.String("format", "markdown", "output format: markdown | json | short")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -44,6 +45,17 @@ func run(args []string, stdout, stderr io.Writer) error {
 	}
 
 	switch *format {
+	case "markdown":
+		sp, err := worlds.GenerateSystemPlacement(r, sys)
+		if err != nil {
+			return fmt.Errorf("system placement: %w", err)
+		}
+		sd, err := worlds.DetailSystem(r, sys, sp, worlds.IISSClass23Header{})
+		if err != nil {
+			return fmt.Errorf("detail system: %w", err)
+		}
+		_, err = fmt.Fprint(stdout, worlds.RenderSystemMarkdown(sd, sys))
+		return err
 	case "json":
 		form := stars.BuildSurveyForm(sys, stars.SurveyMetadata{})
 		enc := json.NewEncoder(stdout)
@@ -53,6 +65,6 @@ func run(args []string, stdout, stderr io.Writer) error {
 		_, err := fmt.Fprintln(stdout, stars.ShortProfile(sys))
 		return err
 	default:
-		return fmt.Errorf("unknown format: %q (want json or short)", *format)
+		return fmt.Errorf("unknown format: %q (want markdown, json, or short)", *format)
 	}
 }

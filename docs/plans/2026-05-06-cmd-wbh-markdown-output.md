@@ -6,7 +6,7 @@
 
 **Architecture:** Three Markdown formatters sit beside the existing form renderers. Class 0/I and Class II/III formatters consume the existing `stars.SurveyForm` and `worlds.IISSClass23Form` structs (no duplication of `BuildSurveyForm`/`RenderIISSClass23` logic). Class IV-P reads from `*DetailedPlacement` directly (no struct exists there). A top-level `RenderSystemMarkdown` orchestrator chains the three under H2 sections. `cmd/wbh` wires the new path and flips the default `-format`.
 
-**Tech Stack:** Go 1.26, `strings.Builder` for rendering, `go test -race ./...` via `just test`, `gofumpt` formatting.
+**Tech Stack:** Go 1.26, `strings.Builder` for rendering, `go test -race ./...` via `task test`, `gofumpt` formatting.
 
 **Spec:** `docs/specs/2026-05-06-cmd-wbh-markdown-output-design.md`
 
@@ -229,13 +229,13 @@ go test ./stars/ -run TestRenderClass0IMarkdown -v
 
 Expected: both tests PASS.
 
-- [ ] **Step 1.5: Run `just check && just test` for the full project**
+- [ ] **Step 1.5: Run `task check && task test` for the full project**
 
 ```bash
-just check && just test
+task check && task test
 ```
 
-Expected: clean. If `just check` reports modernizer drift, stage and re-run.
+Expected: clean. If `task check` reports modernizer drift, stage and re-run.
 
 - [ ] **Step 1.6: Commit**
 
@@ -744,10 +744,10 @@ go test ./worlds/ -run TestRenderClass4PMarkdown -v
 
 Expected: all four tests PASS.
 
-- [ ] **Step 2.5: Run `just check && just test`**
+- [ ] **Step 2.5: Run `task check && task test`**
 
 ```bash
-just check && just test
+task check && task test
 ```
 
 Expected: clean.
@@ -981,10 +981,10 @@ go test ./worlds/ -run TestRenderClass23Markdown -v
 
 Expected: both new tests PASS. The Task 2 tests should still pass.
 
-- [ ] **Step 3.5: Run `just check && just test`**
+- [ ] **Step 3.5: Run `task check && task test`**
 
 ```bash
-just check && just test
+task check && task test
 ```
 
 Expected: clean.
@@ -1221,10 +1221,10 @@ go test ./worlds/ -run TestRenderSystemMarkdown -v
 
 Expected: all three tests PASS.
 
-- [ ] **Step 4.5: Run `just check && just test`**
+- [ ] **Step 4.5: Run `task check && task test`**
 
 ```bash
-just check && just test
+task check && task test
 ```
 
 Expected: clean.
@@ -1399,10 +1399,10 @@ go test ./cmd/wbh/ -v
 
 Expected: all four tests PASS.
 
-- [ ] **Step 5.6: Run `just check && just test`**
+- [ ] **Step 5.6: Run `task check && task test`**
 
 ```bash
-just check && just test
+task check && task test
 ```
 
 Expected: clean.
@@ -1533,10 +1533,10 @@ go test ./worlds/ -run TestRenderSystemMarkdown_ZedGolden -v
 
 Expected: PASS.
 
-- [ ] **Step 6.6: Run `just check && just test`**
+- [ ] **Step 6.6: Run `task check && task test`**
 
 ```bash
-just check && just test
+task check && task test
 ```
 
 Expected: clean.
@@ -1573,7 +1573,7 @@ EOF
 - [ ] **Step F.1: Run the full project gate**
 
 ```bash
-just check && just test
+task check && task test
 ```
 
 Expected: clean.
@@ -1605,6 +1605,6 @@ Manually confirm against the spec's success-criteria list:
 - `go run ./cmd/wbh -seed 42` (no `-format`) emits Markdown to stdout starting with `# Star System: ...` ✓
 - The Zed seed pipeline produces a stable, golden-matched Markdown rendering ✓
 - `cmd/wbh -format json` and `-format short` continue to produce their existing output ✓
-- `just check && just test` clean ✓
+- `task check && task test` clean ✓
 
 Done.

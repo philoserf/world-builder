@@ -1,0 +1,198 @@
+# Star System: Zed (system)
+
+## IISS Class 0/I Survey — Form 0421B-0I
+
+### Header
+
+| Field | Value |
+|---|---|
+| Sector | Storr |
+| Location | 0602 |
+| IISS Designation | Zed (system) |
+| Initial Survey | 207-568 |
+| Last Updated | 218-1061 |
+| System Age (Gyr) | 0.000 |
+| Stellar Count | 5 |
+
+### Stars
+
+| Component | Class | Mass | Temperature | Diameter | Luminosity | Orbit | AU | Eccentricity | Period (y) | HZCO |
+|---|---|---|---|---|---|---|---|---|---|---|
+| A | G7 V | 0.929 | 5440 | 0.967 | 0.738 | — | — | — | — | — |
+| — | G8 V | 0.907 | 5360 | 0.957 | 0.681 | 0.09 | — | 0.11 | — | — |
+| A (A) | — | 1.836 | — | — | 1.419 | 0.09 | — | 0.11 | — | 3.32 |
+| — | K8 V | 0.626 | 3980 | 0.777 | 0.136 | 6.10 | — | 0.08 | — | 0.92 |
+| A | — | 2.462 | — | — | 1.555 | 6.10 | — | 0.08 | — | — |
+| — | M0 V | 0.510 | 3700 | 0.728 | 0.089 | 12.10 | — | 0.47 | — | — |
+| — | D | 0.490 | 6700 | 0.017 | 0.001 | 0.21 | — | 0.24 | — | — |
+|  () | — | 1.000 | — | — | 0.090 | 0.21 | — | 0.24 | — | 0.75 |
+| A | — | 3.462 | — | — | 1.645 | 12.10 | — | 0.47 | — | — |
+
+## IISS Class II/III Survey — Form 0421D-II.III
+
+### Header
+
+| Field | Value |
+|---|---|
+| Sector | Storr |
+| Location | 0602 |
+| IISS Designation | Zed (system) |
+| Initial Survey | 207-568 |
+| Last Updated | 218-1061 |
+| System Age (Gyr) | 0.000 |
+| Class III Status | no |
+
+### Object Counts
+
+| Field | Value |
+|---|---|
+| Stellar | 5 |
+| Gas Giants | 2 |
+| Planetoid Belts | 2 |
+| Terrestrials | 3 |
+
+### Stars
+
+| Component | Class | Mass | Temperature | Diameter | Luminosity | Orbit | AU | Eccentricity | Period (y) | HZCO | MAO |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| A | G7 V | 0.929 | 5440 | 0.967 | 0.738 | — | — | — | — | — | — |
+| — | G8 V | 0.907 | 5360 | 0.957 | 0.681 | 0.09 | — | 0.11 | — | — | — |
+| A (A) | — | 1.836 | — | — | 1.419 | 0.09 | — | 0.11 | — | 3.32 | — |
+| — | K8 V | 0.626 | 3980 | 0.777 | 0.136 | 6.10 | — | 0.08 | — | 0.92 | — |
+| A | — | 2.462 | — | — | 1.555 | 6.10 | — | 0.08 | — | — | — |
+| — | M0 V | 0.510 | 3700 | 0.728 | 0.089 | 12.10 | — | 0.47 | — | — | — |
+| — | D | 0.490 | 6700 | 0.017 | 0.001 | 0.21 | — | 0.24 | — | — | — |
+|  () | — | 1.000 | — | — | 0.090 | 0.21 | — | 0.24 | — | 0.75 | — |
+| A | — | 3.462 | — | — | 1.645 | 12.10 | — | 0.47 | — | — | — |
+
+### Objects
+
+| Primary | Designation | Orbit | AU | Eccentricity | Period | SAH/UWP | Subs | Notes |
+|---|---|---|---|---|---|---|---|---|
+| Aab | Aab I | 1.10 | 0.429 | 0.003 | 0.207y | 8?? | 0 | — |
+| Aab | Aab PI | 1.54 | 0.561 | — | 0.310y | 000 | ? | — |
+| Aab | Aab II | 1.85 | 0.654 | 0.040 | 0.390y | GLB | 5 | 1,650⊕, S, S, S, S, 1 |
+| Aab | Aab II a | — | — | — | — | S | — | — |
+| Aab | Aab II b | — | — | — | — | S | — | — |
+| Aab | Aab II c | — | — | — | — | S | — | — |
+| Aab | Aab II d | — | — | — | — | S | — | — |
+| Aab | Aab II e | — | — | — | — | 1 | — | — |
+| Aab | Aab III | 2.29 | 0.787 | 0.005 | 0.515y | 9?? | 0 | — |
+| Aab | Aab IV | 2.82 | 0.946 | 0.015 | 0.679y | AA6 | 0 | HZ |
+| Cab | Cab I | 1.14 | 0.441 | 0.005 | 0.293y | GMA | 10 | 80⊕, HZ, 4??, 1??, 2??, 1??, S??, R??, R??, S??, S??, R?? |
+| Cab | Cab I a | — | — | — | — | 4?? | — | — |
+| Cab | Cab I b | — | — | — | — | 1?? | — | — |
+| Cab | Cab I c | — | — | — | — | 2?? | — | — |
+| Cab | Cab I d | — | — | — | — | 1?? | — | — |
+| Cab | Cab I e | — | — | — | — | S?? | — | — |
+| Cab | Cab I f | — | — | — | — | R?? | — | — |
+| Cab | Cab I g | — | — | — | — | R?? | — | — |
+| Cab | Cab I h | — | — | — | — | S?? | — | — |
+| Cab | Cab I i | — | — | — | — | S?? | — | — |
+| Cab | Cab I j | — | — | — | — | R?? | — | — |
+| Cab | Cab PI | 1.40 | 0.521 | — | 0.376y | 000 | ? | HZ |
+
+## IISS Class IV-P Survey — Form 0407F-IV PART P
+
+### Header
+
+| Field | Value |
+|---|---|
+| World | Aab IV |
+| Primary Object(s) | Aab |
+| System Age (Gyr) | 0.000 |
+
+### Orbit
+
+| Field | Value |
+|---|---|
+| O# | 2.82 |
+| AU | 0.95 |
+| Eccentricity | 0.015 |
+| Period (h) | 5948.56 |
+
+### Size
+
+| Field | Value |
+|---|---|
+| Size Code | A |
+| Diameter (km) | 16000 |
+| Density | 0.940 |
+| Gravity | 1.180 |
+| Mass | 0.000 |
+
+### Atmosphere
+
+| Field | Value |
+|---|---|
+| Code | 10 |
+| Pressure (bar) | 0.000 |
+| O₂ (bar) | 0.000 |
+| Scale Height | 6.11 |
+
+### Hydrographics
+
+| Field | Value |
+|---|---|
+| Code | 6 |
+| Coverage (%) | 60 |
+| Profile | H6:SO2-100 |
+
+### Rotation
+
+| Field | Value |
+|---|---|
+| Sidereal (h) | 19.80 |
+| Solar (h) | 19.87 |
+| Solar days/year | 299.40 |
+| Axial Tilt (°) | 0.40 |
+| Tidal lock | no |
+| Tides (m) | 0.05 |
+
+### Temperature
+
+| Field | Value |
+|---|---|
+| High (K) | 259 |
+| Mean (K) | 246 |
+| Low (K) | 232 |
+| Luminosity | 1.419 |
+| Albedo | 0.63 |
+| Greenhouse | 0.00 |
+
+### Seismic
+
+| Field | Value |
+|---|---|
+| Total Seismic Stress | 100 |
+| Residual Stress | 100 |
+| Tidal Stress | 0 |
+| Tidal Heating | 0 |
+| Tectonic Plates | 15 |
+
+### Life
+
+| Field | Value |
+|---|---|
+| Biomass | 0 |
+| Biocomplexity | 0 |
+| Sophonts? | no |
+| Biodiversity | 0 |
+| Compatibility | 0 |
+
+### Resources
+
+| Field | Value |
+|---|---|
+| Rating | 9 |
+
+### Habitability
+
+| Field | Value |
+|---|---|
+| Rating | 0 |
+
+### Comments
+
+This is the system mainworld.
+

@@ -149,7 +149,7 @@ Each step lands its own tests + commit. The plan will decompose into TDD-shaped 
 - `go run ./cmd/wbh -seed 42` (no `-format`) emits Markdown to stdout starting with `# Star System: ...` and containing three H2 form sections (or two when no mainworld).
 - The Zed seed pipeline produces a stable, golden-matched Markdown rendering across all three IISS forms.
 - `cmd/wbh -format json` and `-format short` continue to produce their existing output.
-- `just check && just test` clean.
+- `task check && task test` clean.
 - A reader of the printed output can match every field to a labeled cell on the corresponding WBH form.
 
 ## Carry-forwards
