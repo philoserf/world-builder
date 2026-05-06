@@ -140,3 +140,56 @@ func TestRenderClass4PMarkdown_MainworldMarker(t *testing.T) {
 		t.Errorf("unexpected mainworld marker in:\n%s", withoutMarker)
 	}
 }
+
+func TestRenderClass4PMarkdown_SubordinatesTableRendersMoons(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab IV"
+	body.SizeCode = "8"
+	body.Group = Group{Designation: "Aab"}
+	body.Moons = []Moon{
+		{Designation: "Aab IV a", SizeCode: "2", DiameterKm: 3200, OrbitKm: 22000, Eccentricity: 0.015, PeriodHours: 28.5},
+		{Designation: "Aab IV d", SizeCode: "5", DiameterKm: 8163, OrbitKm: 3942400, Eccentricity: 0.25, PeriodHours: 624.69},
+	}
+	sys := stars.System{Primary: stars.Star{AgeGyr: 6.336}}
+
+	got := RenderClass4PMarkdown(body, sys, "")
+
+	expected := []string{
+		"### Subordinates",
+		"| Designation | Size | Diameter (km) | Orbit (km) | Eccentricity | Period (h) |",
+		"| Aab IV a | 2 | 3200 | 22000 | 0.015 | 28.50 |",
+		"| Aab IV d | 5 | 8163 | 3942400 | 0.250 | 624.69 |",
+	}
+	for _, want := range expected {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in output:\n%s", want, got)
+		}
+	}
+}
+
+func TestRenderClass4PMarkdown_NoMoons_OmitsSubordinatesSection(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab IV"
+	body.SizeCode = "8"
+	body.Group = Group{Designation: "Aab"}
+	// No moons.
+	sys := stars.System{Primary: stars.Star{AgeGyr: 4.5}}
+
+	got := RenderClass4PMarkdown(body, sys, "")
+	if strings.Contains(got, "### Subordinates") {
+		t.Errorf("Subordinates section should be absent for body with no moons; got:\n%s", got)
+	}
+}
+
+func TestRenderClass4PMarkdown_BodyEmpty_ReturnsEmpty(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyEmpty
+	body.Designation = "Empty Slot"
+
+	got := RenderClass4PMarkdown(body, stars.System{}, "")
+	if got != "" {
+		t.Errorf("BodyEmpty should return empty string; got %q", got)
+	}
+}

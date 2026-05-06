@@ -15,7 +15,7 @@ import (
 // Returns "" if body is nil. mainworldDesignation is used only for the
 // "this is the mainworld" marker in the Comments section.
 func RenderClass4PMarkdown(body *DetailedPlacement, sys stars.System, mainworldDesignation string) string {
-	if body == nil {
+	if body == nil || body.Body == BodyEmpty {
 		return ""
 	}
 	if body.SizeCode == "0" {
