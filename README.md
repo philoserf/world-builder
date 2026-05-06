@@ -4,9 +4,9 @@ Go reference implementation of star-system generation procedures from
 Mongoose Publishing's _World Builder's Handbook_ (Geir Lanesskog, 2023).
 
 ```bash
-just test     # run tests
-just check    # vet + lint + fmt check
-just fmt      # apply formatting
+task test     # run tests
+task check    # vet + lint + fmt check
+task fmt      # apply formatting
 ```
 
 The library is the artifact; the CLI is a thin wrapper. See

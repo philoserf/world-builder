@@ -11,18 +11,18 @@ When the book contradicts itself (worked example vs formula box, table A vs tabl
 ## Common commands
 
 ```bash
-just              # default → check + test
-just check        # modernize gate → gofumpt + go vet + golangci-lint
-just test         # go test -race ./...
-just fmt          # gofumpt -l -w -extra .
-just tidy         # go mod tidy
+task              # default → check + test
+task check        # modernize gate → gofumpt + go vet + golangci-lint
+task test         # go test -race ./...
+task fmt          # gofumpt -l -w -extra .
+task tidy         # go mod tidy
 
 go test ./worlds/ -run TestZed_FullDetail_3A2b   # single test
 go test ./stars/ -run TestSolTerra_p35           # worked-example test
 go run ./cmd/wbh -seed 42 -format short          # run the CLI
 ```
 
-`just check` runs `go fix ./...` first (modernizer pass) and **fails if it produces any diff** — modernizer hints are mandatory, not advisory. If `just check` complains, review the diff with `git diff` and commit it before continuing.
+`task check` runs `go fix ./...` first (modernizer pass) and **fails if it produces any diff** — modernizer hints are mandatory, not advisory. If `task check` complains, review the diff with `git diff` and commit it before continuing.
 
 `gofumpt` is enforced via the CLI (not via golangci-lint's bundled copy) because the two disagreed on import grouping. Use `gofumpt -l -w -extra .` for formatting; do not enable golangci-lint's gofumpt linter.
 
@@ -95,7 +95,7 @@ When the book is inconsistent, the test asserts the implementation's chosen inte
 - Go 1.26.2 (`go.mod`). Modernizer hints (`go fix`) reflect Go 1.21+/1.22+ idioms (`min`/`max`, range-over-int, `new(value)`) and are enforced.
 - Doc-comments cite WBH page numbers next to procedures and tables — that's the project's traceability mechanism (no runtime metadata wrapper).
 - The library is the artifact; `cmd/wbh` is one screen of code and stays that way.
-- No CI. Local `just check && just test` is the gate.
+- No CI. Local `task` (or `task check && task test`) is the gate.
 
 ## Scope
 
