@@ -1,0 +1,305 @@
+package worlds
+
+import (
+	"fmt"
+	"strings"
+
+	"wbh/stars"
+)
+
+// RenderClass4PMarkdown renders the IISS Class IV-P Survey form for a
+// single body (the system mainworld). Dispatches on SizeCode:
+//   - "0"  → Form 0407K-IV PART P.B (belt variant, WBH p.139)
+//   - else → Form 0407F-IV PART P (terrestrial/moon variant, WBH p.138)
+//
+// Returns "" if body is nil. mainworldDesignation is used only for the
+// "this is the mainworld" marker in the Comments section.
+func RenderClass4PMarkdown(body *DetailedPlacement, sys stars.System, mainworldDesignation string) string {
+	if body == nil {
+		return ""
+	}
+	if body.SizeCode == "0" {
+		return renderClass4PBeltMarkdown(body, sys, mainworldDesignation)
+	}
+	return renderClass4PTerrestrialMarkdown(body, sys, mainworldDesignation)
+}
+
+func renderClass4PTerrestrialMarkdown(body *DetailedPlacement, sys stars.System, mainworldDesignation string) string {
+	var sb strings.Builder
+	sb.WriteString("## IISS Class IV-P Survey — Form 0407F-IV PART P\n\n")
+	writeClass4PHeader(&sb, body, sys)
+	writeClass4POrbit(&sb, body)
+	writeClass4PSize(&sb, body)
+	writeClass4PAtmosphere(&sb, body)
+	writeClass4PHydrographics(&sb, body)
+	writeClass4PRotation(&sb, body)
+	writeClass4PTemperature(&sb, body)
+	writeClass4PSeismic(&sb, body)
+	writeClass4PLife(&sb, body)
+	writeClass4PResources(&sb, body)
+	writeClass4PHabitability(&sb, body)
+	writeClass4PSubordinates(&sb, body)
+	writeClass4PComments(&sb, body, mainworldDesignation)
+	return sb.String()
+}
+
+func renderClass4PBeltMarkdown(body *DetailedPlacement, sys stars.System, mainworldDesignation string) string {
+	var sb strings.Builder
+	sb.WriteString("## IISS Class IV-P Survey — Form 0407K-IV PART P.B\n\n")
+	writeClass4PBeltHeader(&sb, body, sys)
+	writeClass4PBeltOrbit(&sb, body)
+	writeClass4PBeltComposition(&sb, body)
+	writeClass4PBeltResources(&sb, body)
+	writeClass4PBeltMajorBodies(&sb, body)
+	writeClass4PComments(&sb, body, mainworldDesignation)
+	return sb.String()
+}
+
+// --- Terrestrial/moon helpers ---
+
+func writeClass4PHeader(sb *strings.Builder, body *DetailedPlacement, sys stars.System) {
+	sb.WriteString("### Header\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| World | %s |\n", body.Designation)
+	fmt.Fprintf(sb, "| Primary Object(s) | %s |\n", body.Group.Designation)
+	fmt.Fprintf(sb, "| System Age (Gyr) | %.3f |\n\n", sys.Primary.AgeGyr)
+}
+
+func writeClass4POrbit(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Orbit\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| O# | %.2f |\n", body.Orbit)
+	fmt.Fprintf(sb, "| AU | %.2f |\n", stars.OrbitToAU(body.Orbit))
+	fmt.Fprintf(sb, "| Eccentricity | %.3f |\n", body.Eccentricity)
+	fmt.Fprintf(sb, "| Period (h) | %.2f |\n\n", body.Period.Hours)
+}
+
+func writeClass4PSize(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Size\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Size Code | %s |\n", body.SizeCode)
+	fmt.Fprintf(sb, "| Diameter (km) | %.0f |\n", body.DiameterKm)
+	density, gravity := 0.0, 0.0
+	if body.Physical != nil {
+		density = body.Physical.Density
+		gravity = body.Physical.Gravity
+	}
+	fmt.Fprintf(sb, "| Density | %.3f |\n", density)
+	fmt.Fprintf(sb, "| Gravity | %.3f |\n", gravity)
+	fmt.Fprintf(sb, "| Mass | %.3f |\n\n", body.MassEarth)
+}
+
+func writeClass4PAtmosphere(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Atmosphere\n\n")
+	if body.Atmosphere == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	a := body.Atmosphere
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Code | %d |\n", a.Code)
+	fmt.Fprintf(sb, "| Pressure (bar) | %.3f |\n", a.Pressure)
+	fmt.Fprintf(sb, "| O₂ (bar) | %.3f |\n", a.OxygenPartialPressure)
+	fmt.Fprintf(sb, "| Scale Height | %.2f |\n\n", a.ScaleHeight)
+}
+
+func writeClass4PHydrographics(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Hydrographics\n\n")
+	if body.Hydrographics == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	h := body.Hydrographics
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Code | %d |\n", h.Code)
+	fmt.Fprintf(sb, "| Coverage (%%) | %d |\n", h.Percent)
+	fmt.Fprintf(sb, "| Profile | %s |\n\n", h.Profile)
+}
+
+func writeClass4PRotation(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Rotation\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	if body.DayLength != nil {
+		fmt.Fprintf(sb, "| Sidereal (h) | %.2f |\n", body.DayLength.SiderealHours)
+		fmt.Fprintf(sb, "| Solar (h) | %.2f |\n", body.DayLength.SolarHours)
+		fmt.Fprintf(sb, "| Solar days/year | %.2f |\n", body.DayLength.YearDays)
+	} else {
+		sb.WriteString("| Day length | (not generated) |\n")
+	}
+	if body.AxialTilt != nil {
+		fmt.Fprintf(sb, "| Axial Tilt (°) | %.2f |\n", body.AxialTilt.Degrees)
+	} else {
+		sb.WriteString("| Axial Tilt | (not generated) |\n")
+	}
+	tidalLockText := "no"
+	if body.TidalLock != nil && body.TidalLock.LockRatio != "" {
+		tidalLockText = body.TidalLock.LockRatio
+	}
+	fmt.Fprintf(sb, "| Tidal lock | %s |\n", tidalLockText)
+	tidesM := 0.0
+	if body.TidalEffects != nil {
+		tidesM = body.TidalEffects.Total
+	}
+	fmt.Fprintf(sb, "| Tides (m) | %.2f |\n\n", tidesM)
+}
+
+func writeClass4PTemperature(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Temperature\n\n")
+	if body.Temperature == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	t := body.Temperature
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| High (K) | %.0f |\n", t.HighK)
+	fmt.Fprintf(sb, "| Mean (K) | %.0f |\n", t.MeanK)
+	fmt.Fprintf(sb, "| Low (K) | %.0f |\n", t.LowK)
+	fmt.Fprintf(sb, "| Luminosity | %.3f |\n", t.Luminosity)
+	fmt.Fprintf(sb, "| Albedo | %.2f |\n", t.Albedo)
+	fmt.Fprintf(sb, "| Greenhouse | %.2f |\n\n", t.GreenhouseFactor)
+}
+
+func writeClass4PSeismic(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Seismic\n\n")
+	if body.Geology == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	g := body.Geology
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Total Seismic Stress | %d |\n", g.TotalSeismicStress)
+	fmt.Fprintf(sb, "| Residual Stress | %d |\n", g.ResidualSeismicStress)
+	fmt.Fprintf(sb, "| Tidal Stress | %d |\n", g.TidalStressFactor)
+	fmt.Fprintf(sb, "| Tidal Heating | %d |\n", g.TidalHeatingFactor)
+	fmt.Fprintf(sb, "| Tectonic Plates | %d |\n\n", g.TectonicPlates)
+}
+
+func writeClass4PLife(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Life\n\n")
+	if body.Biology == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	b := body.Biology
+	sophontStr := "no"
+	if b.HasNativeSophont {
+		sophontStr = "yes"
+	} else if b.HadExtinctSophont {
+		sophontStr = "extinct"
+	}
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Biomass | %s |\n", string(eHexDigit(b.Biomass)))
+	fmt.Fprintf(sb, "| Biocomplexity | %d |\n", b.Biocomplexity)
+	fmt.Fprintf(sb, "| Sophonts? | %s |\n", sophontStr)
+	fmt.Fprintf(sb, "| Biodiversity | %d |\n", b.Biodiversity)
+	fmt.Fprintf(sb, "| Compatibility | %d |\n\n", b.Compatibility)
+}
+
+func writeClass4PResources(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Resources\n\n")
+	if body.Biology == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Rating | %s |\n\n", string(eHexDigit(body.Biology.ResourceRating)))
+}
+
+func writeClass4PHabitability(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Habitability\n\n")
+	if body.Habitability == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Rating | %d |\n\n", body.Habitability.Rating)
+}
+
+func writeClass4PSubordinates(sb *strings.Builder, body *DetailedPlacement) {
+	if len(body.Moons) == 0 {
+		return
+	}
+	sb.WriteString("### Subordinates\n\n")
+	sb.WriteString("| Designation | Size | Diameter (km) | Orbit (km) | Eccentricity | Period (h) |\n")
+	sb.WriteString("|---|---|---|---|---|---|\n")
+	for _, m := range body.Moons {
+		fmt.Fprintf(sb, "| %s | %s | %.0f | %d | %.3f | %.2f |\n",
+			m.Designation, m.SizeCode, m.DiameterKm, m.OrbitKm, m.Eccentricity, m.PeriodHours)
+	}
+	sb.WriteString("\n")
+}
+
+// --- Belt helpers ---
+
+func writeClass4PBeltHeader(sb *strings.Builder, body *DetailedPlacement, sys stars.System) {
+	sb.WriteString("### Header\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| World | %s |\n", body.Designation)
+	sb.WriteString("| SAH/UWP | 000 |\n")
+	fmt.Fprintf(sb, "| Primary Object(s) | %s |\n", body.Group.Designation)
+	fmt.Fprintf(sb, "| System Age (Gyr) | %.3f |\n\n", sys.Primary.AgeGyr)
+}
+
+func writeClass4PBeltOrbit(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Orbit\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| O# | %.2f |\n", body.Orbit)
+	fmt.Fprintf(sb, "| AU | %.2f |\n", stars.OrbitToAU(body.Orbit))
+	if body.Belt != nil {
+		fmt.Fprintf(sb, "| Span (Orbit#s) | %.3f |\n", body.Belt.Span)
+	} else {
+		sb.WriteString("| Span | (not available) |\n")
+	}
+	fmt.Fprintf(sb, "| Period (h) | %.2f |\n\n", body.Period.Hours)
+}
+
+func writeClass4PBeltComposition(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Composition\n\n")
+	if body.Belt == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	c := body.Belt.Composition
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| m-type (%%) | %d |\n", c.MTypePct)
+	fmt.Fprintf(sb, "| s-type (%%) | %d |\n", c.STypePct)
+	fmt.Fprintf(sb, "| c-type (%%) | %d |\n", c.CTypePct)
+	fmt.Fprintf(sb, "| other (%%) | %d |\n", c.OtherPct)
+	fmt.Fprintf(sb, "| Bulk | %d |\n", body.Belt.Bulk)
+	fmt.Fprintf(sb, "| Major Bodies (Size 1) | %d |\n", body.Belt.SigSize1Bodies)
+	fmt.Fprintf(sb, "| Major Bodies (Size S) | %d |\n\n", body.Belt.SigSizeSBodies)
+}
+
+func writeClass4PBeltResources(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Resources\n\n")
+	if body.Belt == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Rating | %d |\n\n", body.Belt.ResourceRating)
+}
+
+func writeClass4PBeltMajorBodies(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("### Major Bodies\n\n")
+	if body.Belt == nil {
+		writeNotGenerated(sb)
+		return
+	}
+	fmt.Fprintf(sb, "_Counts only: %d size-1 + %d size-S; per-body detail not generated._\n\n",
+		body.Belt.SigSize1Bodies, body.Belt.SigSizeSBodies)
+}
+
+// --- Shared helpers ---
+
+func writeClass4PComments(sb *strings.Builder, body *DetailedPlacement, mainworldDesignation string) {
+	sb.WriteString("### Comments\n\n")
+	if mainworldDesignation != "" && body.Designation == mainworldDesignation {
+		sb.WriteString("This is the system mainworld.\n\n")
+	}
+}
+
+func writeNotGenerated(sb *strings.Builder) {
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	sb.WriteString("| Status | (not generated) |\n\n")
+}
