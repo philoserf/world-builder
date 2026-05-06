@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"wbh/roller"
+	"wbh/stars"
 )
 
 func TestRollBiomass_ZedPrime(t *testing.T) {
@@ -583,5 +584,287 @@ func TestRollTerrestrialResourceRating_ResultAboveTwelve_ClampedToTwelve(t *test
 	got := RollTerrestrialResourceRating(r, body, bio)
 	if got != 12 {
 		t.Errorf("got %d, want 12 (clamp to ≤12)", got)
+	}
+}
+
+// ---- Biology.Profile() tests ------------------------------------------------
+
+func TestBiology_Profile_ZedPrime_A576(t *testing.T) {
+	// Biomass=10/A, Biocomplexity=5, Biodiversity=7, Compatibility=6.
+	// Per formula (not book worked example "A579"): "A576".
+	bio := &Biology{Biomass: 10, Biocomplexity: 5, Biodiversity: 7, Compatibility: 6}
+	got := bio.Profile()
+	if got != "A576" {
+		t.Errorf("got %q, want A576", got)
+	}
+}
+
+func TestBiology_Profile_NoLife_Empty(t *testing.T) {
+	bio := &Biology{Biomass: 0, Biocomplexity: 0, Biodiversity: 0, Compatibility: 0}
+	got := bio.Profile()
+	if got != "" {
+		t.Errorf("got %q, want empty", got)
+	}
+}
+
+func TestBiology_Profile_eHexEncoding_AboveNine(t *testing.T) {
+	// Biomass=15 → F, Biocomplexity=10 → A, Biodiversity=11 → B, Compatibility=14 → E.
+	bio := &Biology{Biomass: 15, Biocomplexity: 10, Biodiversity: 11, Compatibility: 14}
+	got := bio.Profile()
+	if got != "FABE" {
+		t.Errorf("got %q, want FABE", got)
+	}
+}
+
+func TestBiology_Profile_AboveFifteen_SaturatesToF(t *testing.T) {
+	// Defensive: values > 15 saturate to "F".
+	bio := &Biology{Biomass: 20, Biocomplexity: 16, Biodiversity: 100, Compatibility: 999}
+	got := bio.Profile()
+	if got != "FFFF" {
+		t.Errorf("got %q, want FFFF (saturate)", got)
+	}
+}
+
+func TestBiology_Profile_NilReceiver_Empty(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("panicked on nil: %v", r)
+		}
+	}()
+	var bio *Biology
+	got := bio.Profile()
+	if got != "" {
+		t.Errorf("got %q, want empty (nil receiver)", got)
+	}
+}
+
+// ---- runStep5F orchestrator tests -------------------------------------------
+
+func TestRunStep5F_TerrestrialWithLife_PopulatesAll(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "5"
+	dp.Designation = "Aab III"
+	dp.Atmosphere = &Atmosphere{Code: 6}
+	dp.Hydrographics = &Hydrographics{Code: 6}
+	dp.Physical = &BodyPhysical{Density: 1.0}
+	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
+
+	// Dice budget for biomass > 0 + biocomplexity ≥ 8 path:
+	// Biomass + Biocomplexity + 2 sophont + Biodiversity + Compatibility + Resource = 7 dice.
+	r := roller.NewScripted(10, 10, 11, 11, 8, 7, 8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Biology == nil {
+		t.Fatal("Biology is nil")
+	}
+	bio := detailed[0].Biology
+	if bio.Biomass <= 0 {
+		t.Errorf("Biomass: got %d, want > 0", bio.Biomass)
+	}
+	if bio.ResourceRating < 2 || bio.ResourceRating > 12 {
+		t.Errorf("ResourceRating: got %d, want in [2, 12]", bio.ResourceRating)
+	}
+}
+
+func TestRunStep5F_TerrestrialNoLife_OnlyResource(t *testing.T) {
+	// Atm 0 + Hydro 0 + young → biomass should be 0.
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "5"
+	dp.Designation = "Aab III"
+	dp.Atmosphere = &Atmosphere{Code: 0}
+	dp.Hydrographics = &Hydrographics{Code: 0}
+	dp.Physical = &BodyPhysical{Density: 1.0}
+	dp.Temperature = &Temperature{MeanK: 100, HighK: 100}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 0.1}}
+
+	// Biomass roll (2D=2) + Resource roll (2D=8) = 2 dice when biomass=0.
+	r := roller.NewScripted(2, 8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Biology == nil {
+		t.Fatal("Biology is nil")
+	}
+	bio := detailed[0].Biology
+	if bio.Biomass != 0 {
+		t.Errorf("Biomass: got %d, want 0", bio.Biomass)
+	}
+	if bio.Biocomplexity != 0 || bio.Biodiversity != 0 || bio.Compatibility != 0 {
+		t.Errorf("non-Biomass biology fields should be 0; got %+v", bio)
+	}
+	if bio.HasNativeSophont || bio.HadExtinctSophont {
+		t.Error("sophont bools should be false")
+	}
+	if bio.ResourceRating < 2 || bio.ResourceRating > 12 {
+		t.Errorf("ResourceRating should still be computed; got %d", bio.ResourceRating)
+	}
+}
+
+func TestRunStep5F_GasGiant_NoBiology(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyGasGiant
+	dp.GGClass = GasGiantSmall
+	dp.Designation = "Aab IV"
+	r := roller.NewScripted()
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Biology != nil {
+		t.Error("GG should not get Biology")
+	}
+}
+
+func TestRunStep5F_BeltSize0_NoBiology(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyPlanetoidBelt
+	dp.SizeCode = "0"
+	dp.Designation = "Aab Belt"
+	r := roller.NewScripted()
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Biology != nil {
+		t.Error("Belt should not get Biology")
+	}
+}
+
+func TestRunStep5F_BodyEmpty_NoOp(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyEmpty
+	r := roller.NewScripted()
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Biology != nil {
+		t.Error("Empty body should not get Biology")
+	}
+}
+
+func TestRunStep5F_TerrestrialNoAtmosphere_NoBiology(t *testing.T) {
+	// Terrestrial without atmosphere → skipped (atm DM lookup needs atm code).
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "5"
+	dp.Designation = "Aab III"
+	dp.Atmosphere = nil
+	r := roller.NewScripted()
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Biology != nil {
+		t.Error("Terrestrial without atmosphere should not get Biology")
+	}
+}
+
+func TestRunStep5F_MoonWithAtmosphere_GetsBiology(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "8"
+	dp.Designation = "Aab III"
+	dp.Atmosphere = &Atmosphere{Code: 6}
+	dp.Hydrographics = &Hydrographics{Code: 6}
+	dp.Physical = &BodyPhysical{Density: 1.0}
+	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
+	dp.Moons = []Moon{
+		{
+			Designation:   "Aab III a",
+			SizeCode:      "5",
+			Atmosphere:    &Atmosphere{Code: 6},
+			Hydrographics: &Hydrographics{Code: 5},
+			Physical:      &BodyPhysical{Density: 1.0},
+			Temperature:   &Temperature{MeanK: 290, HighK: 310},
+		},
+	}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
+
+	// Generous dice budget for parent (up to 7) + moon (up to 7).
+	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Biology == nil {
+		t.Fatal("Parent Biology is nil")
+	}
+	if detailed[0].Moons[0].Biology == nil {
+		t.Fatal("Moon Biology is nil")
+	}
+}
+
+func TestRunStep5F_MoonNoAtmosphere_NoBiology(t *testing.T) {
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "8"
+	dp.Designation = "Aab III"
+	dp.Atmosphere = &Atmosphere{Code: 6}
+	dp.Hydrographics = &Hydrographics{Code: 6}
+	dp.Physical = &BodyPhysical{Density: 1.0}
+	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
+	dp.Moons = []Moon{
+		{
+			Designation: "Aab III a",
+			SizeCode:    "2",
+			Atmosphere:  nil, // no atmosphere
+		},
+	}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
+
+	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Moons[0].Biology != nil {
+		t.Error("Moon without atmosphere should not get Biology")
+	}
+}
+
+func TestRunStep5F_BiocomplexityBelowEight_NoSophontRolls(t *testing.T) {
+	// Construct a body where biomass>0 but biocomplexity<8.
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "5"
+	dp.Designation = "Aab III"
+	dp.Atmosphere = &Atmosphere{Code: 11} // atm B → DM-2 for biocomplexity (not 4-9)
+	dp.Hydrographics = &Hydrographics{Code: 6}
+	dp.Physical = &BodyPhysical{Density: 1.0}
+	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
+
+	// Dice: Biomass + Biocomplexity (small) + Biodiversity + Compatibility + Resource = 5 dice.
+	// (NO sophont rolls if biocomplexity < 8.)
+	r := roller.NewScripted(8, 2, 6, 6, 8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	bio := detailed[0].Biology
+	if bio == nil {
+		t.Fatal("Biology is nil")
+	}
+	if bio.Biomass == 0 {
+		t.Skip("biomass came out 0; test only meaningful with biomass>0")
+	}
+	if bio.Biocomplexity >= 8 {
+		t.Skip("biocomplexity came out >=8; test only meaningful when <8")
+	}
+	if bio.HasNativeSophont || bio.HadExtinctSophont {
+		t.Errorf("sophont bools should be false when biocomplexity<8; got native=%v extinct=%v",
+			bio.HasNativeSophont, bio.HadExtinctSophont)
 	}
 }

@@ -367,6 +367,38 @@ func atmIs4to9(body *DetailedPlacement) bool {
 	return c >= 4 && c <= 9
 }
 
+// Profile returns the WBH p.131 native-lifeform-profile MXDC eHex string
+// (Biomass / Biocomplexity / Biodiversity / Compatibility). Returns ""
+// when receiver is nil or Biomass is 0 (no native life to profile).
+//
+// eHex encoding: 0-9 → "0"-"9"; 10-15 → "A"-"F"; values > 15 saturate to "F".
+func (b *Biology) Profile() string {
+	if b == nil || b.Biomass == 0 {
+		return ""
+	}
+	return string([]byte{
+		eHexDigit(b.Biomass),
+		eHexDigit(b.Biocomplexity),
+		eHexDigit(b.Biodiversity),
+		eHexDigit(b.Compatibility),
+	})
+}
+
+// eHexDigit converts an int to a single eHex character byte. 0-9 → '0'-'9';
+// 10-15 → 'A'-'F'; values > 15 saturate to 'F'; negative values clamp to '0'.
+func eHexDigit(n int) byte {
+	if n < 0 {
+		return '0'
+	}
+	if n > 15 {
+		return 'F'
+	}
+	if n < 10 {
+		return byte('0' + n)
+	}
+	return byte('A' + (n - 10))
+}
+
 // RollTerrestrialResourceRating per WBH p.131:
 //
 //	2D - 7 + Size + DMs, clamped to [2, 12]

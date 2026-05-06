@@ -124,6 +124,11 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 		return SystemDetail{}, err
 	}
 
+	// Step 5F — 3B-biology pass: native lifeform ratings + resource rating.
+	if err := runStep5F(r, detailed, sys); err != nil {
+		return SystemDetail{}, err
+	}
+
 	// Step 6 — backfill StarAllocation.BaselineN
 	allocs := make([]StarAllocation, len(sp.Allocations))
 	copy(allocs, sp.Allocations)
