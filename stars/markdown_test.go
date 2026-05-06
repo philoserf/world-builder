@@ -36,6 +36,7 @@ func TestRenderClass0IMarkdown_PopulatedFields(t *testing.T) {
 		"| Component | Class | Mass | Temperature | Diameter | Luminosity | Orbit | AU | Eccentricity | Period (y) | HZCO |",
 		"| Aa | G7 V | 0.929 |",
 		"| Aab (A) | — | 1.836 |",
+		"| Aab (A) | — | 1.836 | — | — | 1.419 |",
 	}
 	for _, want := range expected {
 		if !strings.Contains(got, want) {

@@ -42,6 +42,8 @@ func writeClass0IStars(sb *strings.Builder, stars []SurveyComponent) {
 	sb.WriteString("| Component | Class | Mass | Temperature | Diameter | Luminosity | Orbit | AU | Eccentricity | Period (y) | HZCO |\n")
 	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|\n")
 	for _, c := range stars {
+		// Mass and Luminosity always render with a value (composites sum to non-zero);
+		// other numerics use formatFloatNonZero so 0 → em-dash for "not applicable".
 		fmt.Fprintf(
 			sb, "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
 			emDashIfEmpty(c.Component),
