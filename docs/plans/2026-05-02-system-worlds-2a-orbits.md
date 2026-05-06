@@ -8,13 +8,13 @@
 
 **Tech Stack:** Same as Stars Plan 2. Go 1.22+, gofumpt CLI as canonical formatter (not golangci-lint's bundled gofumpt), golangci-lint v2.12.1, `just` recipes.
 
-**Spec:** `tools/world-builder/docs/specs/2026-05-02-system-worlds-2a-orbits-design.md`
+**Spec:** `docs/specs/2026-05-02-system-worlds-2a-orbits-design.md`
 
 **Source pages:** WBH pp. 38–43.
 
 **Conventions:** Same as Stars Plan 2. Briefly:
 
-- Working directory: `/Users/markayers/Documents/Traveller/tools/world-builder/`.
+- Working directory: `/Users/markayers/Documents/Traveller/`.
 - TDD per task: write test → run-fail → implement → run-pass → format → lint → commit.
 - `gofumpt -w` before commit. `gofumpt` CLI is the formatter source of truth (not golangci-lint).
 - Test files live in the same package (white-box) except `worked_examples_test.go` (black-box `package worlds_test`).
@@ -1366,7 +1366,7 @@ Expected: FAIL — `identifyGroups undefined`.
 - [ ] **Step 3: Inspect the System / CompanionStar structure**
 
 ```bash
-grep -n "type CompanionStar\|type System\|OrbitClass" /Users/markayers/Documents/Traveller/tools/world-builder/stars/system.go | head
+grep -n "type CompanionStar\|type System\|OrbitClass" /Users/markayers/Documents/Traveller/stars/system.go | head
 ```
 
 Read what's actually there before writing the implementation. The pairing semantics may not be position-based.
@@ -2641,7 +2641,7 @@ Expected: zero matches.
 
 - [ ] **Step 3: Verify spec success criteria one by one**
 
-Read `tools/world-builder/docs/specs/2026-05-02-system-worlds-2a-orbits-design.md` § Success criteria. For each bullet:
+Read `docs/specs/2026-05-02-system-worlds-2a-orbits-design.md` § Success criteria. For each bullet:
 
 - HZCO worked examples within ±0.05: covered by Task 1 + Task 2.
 - p. 42 HZCO table reproduction within ±5%: covered by Task 3.

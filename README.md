@@ -10,8 +10,16 @@ just fmt      # apply formatting
 ```
 
 The library is the artifact; the CLI is a thin wrapper. See
-`tools/world-builder/docs/specs/2026-05-02-world-builder-design.md` at the repo
-root for design rationale.
+`docs/specs/2026-05-02-world-builder-design.md` for design rationale.
 
-`docs/World Builders Handbook.pdf` is a symlink to the source PDF in the
-collection — the canonical authority for every spec and plan in this tree.
+## Source
+
+Every spec and plan in `docs/` references Mongoose Publishing's _World
+Builder's Handbook_ (Geir Lanesskog, 2023) as the canonical authority.
+To work with this repo locally, place a copy of the handbook PDF at
+`docs/World Builders Handbook.pdf` (gitignored).
+
+## License
+
+MIT — see `LICENSE`. The code is licensed for reuse; the World Builder's
+Handbook itself is © Mongoose Publishing and is not redistributed here.

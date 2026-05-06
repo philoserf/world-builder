@@ -4,8 +4,8 @@
 **Status:** approved through brainstorming; pending user review of written spec
 **Source material:** Mongoose Publishing, _World Builder's Handbook_ (Geir Lanesskog, 2023). PDF at `Mongoose/Core Rules/World Builders Handbook.pdf`.
 **Source pages:** WBH pp. 100–108.
-**Parent spec:** `tools/world-builder/docs/specs/2026-05-02-world-builder-design.md`.
-**Predecessor:** `tools/world-builder/docs/specs/2026-05-03-world-physical-3a1-design.md` (3A1 — Body Physical + Atmosphere + Hydrographics).
+**Parent spec:** `docs/specs/2026-05-02-world-builder-design.md`.
+**Predecessor:** `docs/specs/2026-05-03-world-physical-3a1-design.md` (3A1 — Body Physical + Atmosphere + Hydrographics).
 
 ## Purpose
 

@@ -23,7 +23,7 @@
 
 ## Reference
 
-- **Spec:** `tools/world-builder/docs/specs/2026-05-05-world-physical-3b-geology-design.md` (commit `bae29b3`)
+- **Spec:** `docs/specs/2026-05-05-world-physical-3b-geology-design.md` (commit `bae29b3`)
 - **WBH source:** pp.125-127
 - **Predecessor:** 3A2b-rederive merged on `main` as `11f9928`
 
@@ -44,9 +44,9 @@
 
 **Files:**
 
-- Create: `tools/world-builder/worlds/geology.go`
-- Modify: `tools/world-builder/worlds/system_detail.go` (DetailedPlacement struct + HasGeology accessor)
-- Modify: `tools/world-builder/worlds/moons.go` (Moon struct)
+- Create: `worlds/geology.go`
+- Modify: `worlds/system_detail.go` (DetailedPlacement struct + HasGeology accessor)
+- Modify: `worlds/moons.go` (Moon struct)
 
 - [ ] **Step 1: Create the branch from main**
 
@@ -133,9 +133,9 @@ Expected: 0 issues; all packages pass.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology.go \
-        tools/world-builder/worlds/system_detail.go \
-        tools/world-builder/worlds/moons.go
+git add worlds/geology.go \
+        worlds/system_detail.go \
+        worlds/moons.go
 git commit -m "feat(worlds): Geology struct + DetailedPlacement.Geology + Moon.Geology"
 ```
 
@@ -145,8 +145,8 @@ git commit -m "feat(worlds): Geology struct + DetailedPlacement.Geology + Moon.G
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/geology.go`
-- Create: `tools/world-builder/worlds/geology_test.go`
+- Modify: `worlds/geology.go`
+- Create: `worlds/geology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -343,8 +343,8 @@ Expected: 0 issues, all green.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology.go \
-        tools/world-builder/worlds/geology_test.go
+git add worlds/geology.go \
+        worlds/geology_test.go
 git commit -m "feat(worlds): ComputeResidualSeismicStress (WBH p.125)"
 ```
 
@@ -354,8 +354,8 @@ git commit -m "feat(worlds): ComputeResidualSeismicStress (WBH p.125)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/geology.go`
-- Modify: `tools/world-builder/worlds/geology_test.go`
+- Modify: `worlds/geology.go`
+- Modify: `worlds/geology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -437,8 +437,8 @@ Expected: all 4 tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology.go \
-        tools/world-builder/worlds/geology_test.go
+git add worlds/geology.go \
+        worlds/geology_test.go
 git commit -m "feat(worlds): ComputeTidalStressFactor (WBH p.126)"
 ```
 
@@ -448,8 +448,8 @@ git commit -m "feat(worlds): ComputeTidalStressFactor (WBH p.126)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/geology.go`
-- Modify: `tools/world-builder/worlds/geology_test.go`
+- Modify: `worlds/geology.go`
+- Modify: `worlds/geology_test.go`
 
 The formula's signature must support both planet path (around star) and moon path (around planet). Use a small `TidalHeatingInputs` struct rather than five-arg overload.
 
@@ -582,8 +582,8 @@ Expected: all 5 tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology.go \
-        tools/world-builder/worlds/geology_test.go
+git add worlds/geology.go \
+        worlds/geology_test.go
 git commit -m "feat(worlds): ComputeTidalHeatingFactor (WBH p.126)"
 ```
 
@@ -593,8 +593,8 @@ git commit -m "feat(worlds): ComputeTidalHeatingFactor (WBH p.126)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/geology.go`
-- Modify: `tools/world-builder/worlds/geology_test.go`
+- Modify: `worlds/geology.go`
+- Modify: `worlds/geology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -678,8 +678,8 @@ Expected: all 4 tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology.go \
-        tools/world-builder/worlds/geology_test.go
+git add worlds/geology.go \
+        worlds/geology_test.go
 git commit -m "feat(worlds): ComputeGGResidualHeat (WBH p.125)"
 ```
 
@@ -689,8 +689,8 @@ git commit -m "feat(worlds): ComputeGGResidualHeat (WBH p.125)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/geology.go`
-- Modify: `tools/world-builder/worlds/geology_test.go`
+- Modify: `worlds/geology.go`
+- Modify: `worlds/geology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -841,8 +841,8 @@ Expected: all 5 tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology.go \
-        tools/world-builder/worlds/geology_test.go
+git add worlds/geology.go \
+        worlds/geology_test.go
 git commit -m "feat(worlds): ApplyInherentTempAddition (WBH p.125)"
 ```
 
@@ -852,8 +852,8 @@ git commit -m "feat(worlds): ApplyInherentTempAddition (WBH p.125)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/geology.go`
-- Modify: `tools/world-builder/worlds/geology_test.go`
+- Modify: `worlds/geology.go`
+- Modify: `worlds/geology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1005,8 +1005,8 @@ Expected: all 7 tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology.go \
-        tools/world-builder/worlds/geology_test.go
+git add worlds/geology.go \
+        worlds/geology_test.go
 git commit -m "feat(worlds): RollTectonicPlates (WBH p.127)"
 ```
 
@@ -1016,9 +1016,9 @@ git commit -m "feat(worlds): RollTectonicPlates (WBH p.127)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/system_detail_steps.go`
-- Modify: `tools/world-builder/worlds/system_detail.go`
-- Modify: `tools/world-builder/worlds/geology_test.go`
+- Modify: `worlds/system_detail_steps.go`
+- Modify: `worlds/system_detail.go`
+- Modify: `worlds/geology_test.go`
 
 - [ ] **Step 1: Write failing orchestrator tests**
 
@@ -1305,9 +1305,9 @@ Expected: 0 issues, all packages pass. The existing 100-iteration `TestZed_FullD
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/geology_test.go \
-        tools/world-builder/worlds/system_detail_steps.go \
-        tools/world-builder/worlds/system_detail.go
+git add worlds/geology_test.go \
+        worlds/system_detail_steps.go \
+        worlds/system_detail.go
 git commit -m "feat(worlds): runStep5E orchestrator + DetailSystem wiring (WBH pp.125-127)"
 ```
 
@@ -1317,12 +1317,12 @@ git commit -m "feat(worlds): runStep5E orchestrator + DetailSystem wiring (WBH p
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/worked_examples_test.go`
+- Modify: `worlds/worked_examples_test.go`
 
 - [ ] **Step 1: Locate `TestZed_FullDetail_3A2b` and read its trailing assertions**
 
 ```bash
-grep -n "TestZed_FullDetail_3A2b\b" tools/world-builder/worlds/worked_examples_test.go
+grep -n "TestZed_FullDetail_3A2b\b" worlds/worked_examples_test.go
 ```
 
 The test runs 100 iterations with a free-dice roller. New assertions go inside the iter loop (similar shape to the existing assertions 1-24).
@@ -1445,7 +1445,7 @@ Expected: 0 issues, all green.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add tools/world-builder/worlds/worked_examples_test.go
+git add worlds/worked_examples_test.go
 git commit -m "test(worlds): extend TestZed_FullDetail_3A2b with 3B-geology assertions"
 ```
 
@@ -1469,9 +1469,9 @@ Expected: 9 commits (one per Task 1-9).
 Dispatch `superpowers:code-reviewer` (or `code-reviewer` agent) on the entire branch with model=opus. Provide:
 
 - Branch name: `feat/wbh-world-physical-3b-geology`
-- Spec path: `tools/world-builder/docs/specs/2026-05-05-world-physical-3b-geology-design.md`
-- Plan path: `tools/world-builder/docs/plans/2026-05-05-world-physical-3b-geology.md`
-- Diff command: `git -C /Users/markayers/Documents/Traveller diff main..feat/wbh-world-physical-3b-geology -- tools/world-builder/`
+- Spec path: `docs/specs/2026-05-05-world-physical-3b-geology-design.md`
+- Plan path: `docs/plans/2026-05-05-world-physical-3b-geology.md`
+- Diff command: `git -C /Users/markayers/Documents/Traveller diff main..feat/wbh-world-physical-3b-geology -- `
 
 Reviewer should report: spec-compliance issues, code-quality issues, cross-cutting concerns, merge readiness assessment.
 

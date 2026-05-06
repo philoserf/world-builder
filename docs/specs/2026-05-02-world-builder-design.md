@@ -34,11 +34,11 @@ Chapters depend strictly downstream: orbits consumes stars, physical consumes or
 
 ## Project location and packaging
 
-- **Location:** `Traveller/tools/world-builder/` inside the existing Traveller repo. The repo is local-only (no remote) and already ignores PDFs/epubs; adding a Go subproject does not disrupt that.
+- **Location:** `Traveller/` inside the existing Traveller repo. The repo is local-only (no remote) and already ignores PDFs/epubs; adding a Go subproject does not disrupt that.
 - **Module path:** `wbh` (local-only module; no public hosting). Each chapter is its own package: `wbh/dice`, `wbh/roller`, `wbh/stars`, etc.
 - **Toolchain:** `go` (1.22+) for build/test, `gofumpt` for formatting (stricter superset of `gofmt`), `golangci-lint` for linting, `go test ./...` for tests, `go test -race ./...` before commits. No CI.
 - **Entry points:** importable packages (`import "wbh/stars"`) plus a thin `cmd/wbh/main.go` CLI that emits JSON or a text summary. The CLI is one screen of code.
-- **Spec location:** this file lives at `Traveller/tools/world-builder/docs/specs/`, not inside `tools/world-builder/`, because it predates and outlives any single sub-project.
+- **Spec location:** this file lives at `Traveller/docs/specs/`, not inside ``, because it predates and outlives any single sub-project.
 
 ## Architecture
 
@@ -60,7 +60,7 @@ Each `Generate*` takes upstream results and a `roller.Roller`, returns immutable
 ### Package layout
 
 ```text
-tools/world-builder/
+
 ├── go.mod
 ├── go.sum
 ├── README.md

@@ -8,13 +8,13 @@
 
 **Tech Stack:** Same as Plan 1. Go 1.22+, gofumpt CLI as canonical formatter (not golangci-lint's bundled gofumpt), golangci-lint v2.12.1 schema, `just` recipes.
 
-**Spec:** `tools/world-builder/docs/specs/2026-05-02-world-builder-design.md`
+**Spec:** `docs/specs/2026-05-02-world-builder-design.md`
 
 **Source pages:** WBH pp. 22–35.
 
-**Conventions:** Same as Plan 1 — see `tools/world-builder/docs/plans/2026-05-02-stars-single-star-generation.md`. Briefly:
+**Conventions:** Same as Plan 1 — see `docs/plans/2026-05-02-stars-single-star-generation.md`. Briefly:
 
-- Working directory `/Users/markayers/Documents/Traveller/tools/world-builder/`.
+- Working directory `/Users/markayers/Documents/Traveller/`.
 - TDD per task (write test → fail → implement → pass → format → lint → commit).
 - `gofumpt -w` before commit; `gofumpt CLI` is the formatter source of truth (not golangci-lint).
 - Test files live in the same package (white-box) except `worked_examples_test.go` (black-box `package stars_test`).

@@ -12,7 +12,7 @@
 
 ## Spec reference
 
-`tools/world-builder/docs/specs/2026-05-04-world-physical-3a2a-design.md` (committed `3903821`) — read first if unfamiliar.
+`docs/specs/2026-05-04-world-physical-3a2a-design.md` (committed `3903821`) — read first if unfamiliar.
 
 ## Dice convention (CRITICAL — caused 4 bugs in 2C and 6+ in 3A1)
 

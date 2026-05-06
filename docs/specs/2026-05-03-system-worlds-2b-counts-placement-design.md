@@ -4,8 +4,8 @@
 **Status:** approved through brainstorming; pending user review of written spec
 **Source material:** Mongoose Publishing, _World Builder's Handbook_ (Geir Lanesskog, 2023). PDF in repo at `Mongoose/Core Rules/World Builders Handbook.pdf`.
 **Source pages:** WBH pp. 36–38 (World Types and Quantities) and pp. 43–52 (Placement of Worlds, Steps 1–9).
-**Parent spec:** `tools/world-builder/docs/specs/2026-05-02-world-builder-design.md`.
-**Predecessor:** `tools/world-builder/docs/specs/2026-05-02-system-worlds-2a-orbits-design.md` (Available Orbits + HZCO).
+**Parent spec:** `docs/specs/2026-05-02-world-builder-design.md`.
+**Predecessor:** `docs/specs/2026-05-02-system-worlds-2a-orbits-design.md` (Available Orbits + HZCO).
 
 ## Purpose
 
@@ -254,7 +254,7 @@ func (g Group) HZCO() float64
 ## File layout
 
 ```text
-tools/world-builder/
+
 ├── stars/
 │   └── (no changes)
 ├── worlds/
@@ -351,5 +351,5 @@ Single-star integration test is dropped (Sol has no complete book-narrated roll 
 - `TestZed_FullPlacement` reproduces the book's Zed walkthrough across Steps 1–9 with the single documented C1/C2 empty-orbit divergence.
 - The 2A carry-forward refactor is complete: `Group` carries `sourceCompanion`; rules 9–11 in `available_orbits.go` use it directly; the existing 2A Zed available-orbits acceptance test still passes unchanged.
 - `worlds.ErrContinuationMethodUnsupported` exists and is returned when a `stars.System` carrying pre-existing mainworld data is passed in (the field doesn't exist yet, so this is a placeholder return path until a future sub-project adds the field).
-- A fresh checkout of `tools/world-builder/` runs `just check && just test` clean (`gofumpt` + `golangci-lint v2.12.1` + `go test -race ./...`).
+- A fresh checkout of `` runs `just check && just test` clean (`gofumpt` + `golangci-lint v2.12.1` + `go test -race ./...`).
 - A reader with the WBH open can match every exported symbol in the new files to a specific page or step in WBH pp. 36–52.

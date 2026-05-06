@@ -8,13 +8,13 @@
 
 **Tech Stack:** Go 1.22+, `gofumpt` CLI as canonical formatter (not golangci-lint's bundled gofumpt), golangci-lint v2.12.1, `just` recipes.
 
-**Spec:** `tools/world-builder/docs/specs/2026-05-03-system-worlds-2c-sizing-design.md`
+**Spec:** `docs/specs/2026-05-03-system-worlds-2c-sizing-design.md`
 
 **Source pages:** WBH pp. 53–67 (Planetary Orbital Periods, Sizing, Moons, Profile, Mainworld, IISS Class II/III form).
 
 **Conventions:**
 
-- Working directory: `/Users/markayers/Documents/Traveller/tools/world-builder/`.
+- Working directory: `/Users/markayers/Documents/Traveller/`.
 - TDD per task: write test → run-fail → implement → run-pass → format → lint → commit.
 - `gofumpt -w` before commit. `gofumpt` CLI is the formatter source of truth (not golangci-lint).
 - Test files live in the same package (white-box) except `worked_examples_test.go` (black-box `package worlds_test`).
@@ -89,7 +89,7 @@ Expected: clean working tree on `main`; all tests green; new branch `feat/wbh-sy
 - [ ] **Step 1: Read the current file to confirm five callsites**
 
 ```bash
-grep -n "return SystemPlacement{}, err" /Users/markayers/Documents/Traveller/tools/world-builder/worlds/system_placement.go
+grep -n "return SystemPlacement{}, err" /Users/markayers/Documents/Traveller/worlds/system_placement.go
 ```
 
 Expected: eight occurrences (one per pipeline step that can return an error). Note: the spec said "five callsites" — the actual count is eight (`GenerateCounts`, `AvailableOrbits`, `AllocateOrbitsByStar`, `RollBaselineNumber`, `BaselineOrbit`, `RollEmptyOrbits`, `PlaceOrbitSlots`, `AddAnomalous`, `PlaceWorlds`, `RollPlanetEccentricities` — actually nine). Wrap whatever count the file shows.
@@ -99,7 +99,7 @@ Expected: eight occurrences (one per pipeline step that can return an error). No
 Add to `worlds/system_placement_test.go` (create the file if it doesn't exist; check first):
 
 ```bash
-ls /Users/markayers/Documents/Traveller/tools/world-builder/worlds/system_placement_test.go 2>&1
+ls /Users/markayers/Documents/Traveller/worlds/system_placement_test.go 2>&1
 ```
 
 If absent, create `worlds/system_placement_test.go`:
@@ -267,7 +267,7 @@ Carry-forward item #2 from 2B post-mortem."
 - [ ] **Step 1: Read existing `composeSol()` helper to confirm its shape**
 
 ```bash
-grep -n "func composeSol\|func composeZed\|func composeCorella" /Users/markayers/Documents/Traveller/tools/world-builder/worlds/worked_examples_test.go
+grep -n "func composeSol\|func composeZed\|func composeCorella" /Users/markayers/Documents/Traveller/worlds/worked_examples_test.go
 ```
 
 Expected: one or more `compose*()` helpers defined in the file.
@@ -492,7 +492,7 @@ func RollPlanetEccentricities(r roller.Roller, ps []Placement, ageGyr float64) (
 For each existing call to `RollPlanetEccentricities(r, ps)`, append `, 0.0`:
 
 ```bash
-grep -n "RollPlanetEccentricities(" /Users/markayers/Documents/Traveller/tools/world-builder/worlds/planet_eccentricity_test.go
+grep -n "RollPlanetEccentricities(" /Users/markayers/Documents/Traveller/worlds/planet_eccentricity_test.go
 ```
 
 For each matching line, edit to pass ageGyr=0.0 (preserves pre-CF behavior — DM doesn't apply when ageGyr is 0):
@@ -555,7 +555,7 @@ If 2B's existing test happens to have asserted with the post-DM value already (b
 Locate these two tests in `worlds/planet_eccentricity_test.go`:
 
 ```bash
-grep -n "TestRollEccentricity_ExtraDM\|TestRollPlanetEccentricities_AppliesAnomalyDM" /Users/markayers/Documents/Traveller/tools/world-builder/worlds/planet_eccentricity_test.go
+grep -n "TestRollEccentricity_ExtraDM\|TestRollPlanetEccentricities_AppliesAnomalyDM" /Users/markayers/Documents/Traveller/worlds/planet_eccentricity_test.go
 ```
 
 For each, replace the "DM had some effect" assertion (typically `result != noDMResult`) with a specific expected value derived from `stars.EccentricityValues[row]` lookup. Pattern:
@@ -2808,7 +2808,7 @@ func TestLongProfile_Zed(t *testing.T) {
 **Note:** The test references `StarAllocation.BaselineN` — a per-star baseline number. 2B's `StarAllocation` has `AllocatedWorlds` but not `BaselineN`. Inspect the struct:
 
 ```bash
-grep -A 10 "^type StarAllocation" /Users/markayers/Documents/Traveller/tools/world-builder/worlds/allocations.go
+grep -A 10 "^type StarAllocation" /Users/markayers/Documents/Traveller/worlds/allocations.go
 ```
 
 If `BaselineN` doesn't exist, the per-star baseline is **derivable** from the slot positions: it's the index (1-based) of the slot whose orbit matches the system's baseline orbit, or 0 if the system's baseline orbit is beyond all of this group's slots. For Zed: Aab's baseline orbit 3.1 lands on slot 5 of Aab (the GLE gas giant) → N=5. B's slot at 1.0 is the second of two slots → N=2. AB and Cab have no slot at the system baseline orbit → N=0.
@@ -3299,7 +3299,7 @@ This task has two phases: (a) extend `stars.SurveyComponent` with `MAO` (small, 
 - [ ] **Step 1: Read existing `BuildSurveyForm` to identify MAO-eligible rows**
 
 ```bash
-grep -n "HZCO\|buildBarycentre\|componentFrom" /Users/markayers/Documents/Traveller/tools/world-builder/stars/survey.go
+grep -n "HZCO\|buildBarycentre\|componentFrom" /Users/markayers/Documents/Traveller/stars/survey.go
 ```
 
 Expected output: rows that today carry `HZCO` will also carry `MAO`. These are: solo primary (no companion), each `Aab`/`Cab`/etc. composite, and each solo orbit-class secondary.
@@ -3414,7 +3414,7 @@ Edit `stars/survey.go` to add the MAO field as shown above. No other change in s
 
 ```bash
 # Confirm the field is added; no other survey.go changes needed.
-grep -n "MAO " /Users/markayers/Documents/Traveller/tools/world-builder/stars/survey.go
+grep -n "MAO " /Users/markayers/Documents/Traveller/stars/survey.go
 ```
 
 Expected: one match on the new field.
@@ -4394,7 +4394,7 @@ This task will be implemented in two phases: (a) extend the existing `composeZed
 - [ ] **Step 1: Read the existing `TestZed_FullPlacement` to understand the dice-script structure**
 
 ```bash
-grep -n "TestZed_FullPlacement\|composeZedScripted\|roller.NewScripted" /Users/markayers/Documents/Traveller/tools/world-builder/worlds/worked_examples_test.go
+grep -n "TestZed_FullPlacement\|composeZedScripted\|roller.NewScripted" /Users/markayers/Documents/Traveller/worlds/worked_examples_test.go
 ```
 
 Expected: identify the dice-construction helper. Note the exact slice of ints currently used for 2B's pipeline.
@@ -5020,7 +5020,7 @@ After all 16 tasks complete, verify against the spec one more time:
 
 ## Plan complete
 
-This plan implements sub-project 2C end-to-end against `tools/world-builder/docs/specs/2026-05-03-system-worlds-2c-sizing-design.md`. **15 numbered tasks + Pre-flight + final hygiene** = the full 2C delivery.
+This plan implements sub-project 2C end-to-end against `docs/specs/2026-05-03-system-worlds-2c-sizing-design.md`. **15 numbered tasks + Pre-flight + final hygiene** = the full 2C delivery.
 
 Per the writing-plans skill, the next step is your choice of execution mode:
 

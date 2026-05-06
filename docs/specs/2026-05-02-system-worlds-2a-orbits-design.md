@@ -4,7 +4,7 @@
 **Status:** approved through brainstorming; pending user review of written spec
 **Source material:** Mongoose Publishing, _World Builder's Handbook_ (Geir Lanesskog, 2023). PDF in repo at `Mongoose/Core Rules/World Builders Handbook.pdf`.
 **Source pages:** WBH pp. 38–43.
-**Parent spec:** `tools/world-builder/docs/specs/2026-05-02-world-builder-design.md`.
+**Parent spec:** `docs/specs/2026-05-02-world-builder-design.md`.
 
 ## Purpose
 
@@ -141,7 +141,7 @@ The unrelated `Other`-descriptor wart in `stars.GenerateCompanionStar` is **not*
 ## File layout
 
 ```text
-tools/world-builder/
+
 ├── stars/
 │   ├── hzco.go                    NEW   Star.HZCO(), CompositeHZCO()
 │   ├── hzco_test.go               NEW   p.42 table fixture + worked examples
@@ -218,5 +218,5 @@ Both tests construct stars via `stars.Compose` (no rolls; this is a pure constra
 - The p. 42 HZCO table is reproduced by the formula within ±5% across all populated cells.
 - `worlds.AvailableOrbits(sys)` reproduces the Sol single-star case (`[[0.03, 20.00]]`) and the Zed quintuple's three groups exactly to the book's two-digit precision.
 - `ErrSpecialPrimaryClassRedirect` is removed from the codebase. `RollSpecialPrimary` returns a fully-resolved `Star`.
-- A fresh checkout of `tools/world-builder/` runs `just check && just test` clean (gofumpt + golangci-lint v2.12.1 + `go test -race ./...`).
+- A fresh checkout of `` runs `just check && just test` clean (gofumpt + golangci-lint v2.12.1 + `go test -race ./...`).
 - A reader with the book open can match every exported function in `stars/hzco.go` and `worlds/available_orbits.go` to a specific page or rule in WBH pp. 38–43.

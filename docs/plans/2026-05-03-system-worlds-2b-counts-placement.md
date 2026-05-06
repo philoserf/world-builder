@@ -8,13 +8,13 @@
 
 **Tech Stack:** Go 1.22+, `gofumpt` CLI as canonical formatter (not golangci-lint's bundled gofumpt), golangci-lint v2.12.1, `just` recipes.
 
-**Spec:** `tools/world-builder/docs/specs/2026-05-03-system-worlds-2b-counts-placement-design.md`
+**Spec:** `docs/specs/2026-05-03-system-worlds-2b-counts-placement-design.md`
 
 **Source pages:** WBH pp. 36–38 (World Types and Quantities) + pp. 43–52 (Placement of Worlds Steps 1–9).
 
 **Conventions:**
 
-- Working directory: `/Users/markayers/Documents/Traveller/tools/world-builder/`.
+- Working directory: `/Users/markayers/Documents/Traveller/`.
 - TDD per task: write test → run-fail → implement → run-pass → format → lint → commit.
 - `gofumpt -w` before commit. `gofumpt` CLI is the formatter source of truth (not golangci-lint).
 - Test files live in the same package (white-box) except `worked_examples_test.go` (black-box `package worlds_test`).

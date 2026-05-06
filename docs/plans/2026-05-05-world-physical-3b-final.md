@@ -28,7 +28,7 @@
 
 ## Reference
 
-- **Spec:** `tools/world-builder/docs/specs/2026-05-05-world-physical-3b-final-design.md` (commit `aa327d3`)
+- **Spec:** `docs/specs/2026-05-05-world-physical-3b-final-design.md` (commit `aa327d3`)
 - **WBH source:** pp.132-146
 - **Predecessor:** 3B-biology merged on `main` as `b89d09b`; pre-3B-final cleanup at `3948b82`
 
@@ -59,9 +59,9 @@ The Opus final-gate review has caught a Critical integration-level bug in EVERY 
 
 **Files:**
 
-- Create: `tools/world-builder/worlds/habitability.go`
-- Modify: `tools/world-builder/worlds/system_detail.go` (DetailedPlacement struct + SystemDetail struct + HasHabitability accessor)
-- Modify: `tools/world-builder/worlds/moons.go` (Moon struct + HasHabitability accessor)
+- Create: `worlds/habitability.go`
+- Modify: `worlds/system_detail.go` (DetailedPlacement struct + SystemDetail struct + HasHabitability accessor)
+- Modify: `worlds/moons.go` (Moon struct + HasHabitability accessor)
 
 - [ ] **Step 1: Create the branch from main**
 
@@ -166,9 +166,9 @@ Expected: 0 issues; all packages pass.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/habitability.go \
-        tools/world-builder/worlds/system_detail.go \
-        tools/world-builder/worlds/moons.go
+git add worlds/habitability.go \
+        worlds/system_detail.go \
+        worlds/moons.go
 git commit -m "feat(worlds): Habitability struct + MainworldDesignation field + accessors"
 ```
 
@@ -178,8 +178,8 @@ git commit -m "feat(worlds): Habitability struct + MainworldDesignation field + 
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/habitability.go`
-- Create: `tools/world-builder/worlds/habitability_test.go`
+- Modify: `worlds/habitability.go`
+- Create: `worlds/habitability_test.go`
 
 This task implements the formula skeleton + the four "easy" DM categories. Task 3 finishes with Temperature + Gravity DMs and the final clamp.
 
@@ -477,8 +477,8 @@ Expected: 0 issues; all packages pass.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/habitability.go \
-        tools/world-builder/worlds/habitability_test.go
+git add worlds/habitability.go \
+        worlds/habitability_test.go
 git commit -m "feat(worlds): ComputeHabitability — Size + Atm + Hydro + TidalLock DMs (WBH p.132)"
 ```
 
@@ -488,8 +488,8 @@ git commit -m "feat(worlds): ComputeHabitability — Size + Atm + Hydro + TidalL
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/habitability.go`
-- Modify: `tools/world-builder/worlds/habitability_test.go`
+- Modify: `worlds/habitability.go`
+- Modify: `worlds/habitability_test.go`
 
 This task adds the remaining DM categories (Temperature + Gravity, including the WBH p.132 gravity-bands ambiguity per spec Q3-a) and verifies the Zed Prime worked example.
 
@@ -872,8 +872,8 @@ Expected: all 30 tests PASS (12 from Task 2 + 18 from Task 3).
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/habitability.go \
-        tools/world-builder/worlds/habitability_test.go
+git add worlds/habitability.go \
+        worlds/habitability_test.go
 git commit -m "feat(worlds): ComputeHabitability — Temperature + Gravity DMs (WBH p.132)"
 ```
 
@@ -883,8 +883,8 @@ git commit -m "feat(worlds): ComputeHabitability — Temperature + Gravity DMs (
 
 **Files:**
 
-- Create: `tools/world-builder/worlds/mainworld.go`
-- Create: `tools/world-builder/worlds/mainworld_test.go`
+- Create: `worlds/mainworld.go`
+- Create: `worlds/mainworld_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1179,8 +1179,8 @@ Expected: all 10 tests PASS.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/mainworld.go \
-        tools/world-builder/worlds/mainworld_test.go
+git add worlds/mainworld.go \
+        worlds/mainworld_test.go
 git commit -m "feat(worlds): pickMainworld auto-pick with priority chain (WBH p.134)"
 ```
 
@@ -1190,9 +1190,9 @@ git commit -m "feat(worlds): pickMainworld auto-pick with priority chain (WBH p.
 
 **Files:**
 
-- Create: `tools/world-builder/worlds/system_detail_step5g.go`
-- Create: `tools/world-builder/worlds/system_detail_step5g_test.go`
-- Modify: `tools/world-builder/worlds/system_detail.go`
+- Create: `worlds/system_detail_step5g.go`
+- Create: `worlds/system_detail_step5g_test.go`
+- Modify: `worlds/system_detail.go`
 
 - [ ] **Step 1: Write failing orchestrator tests**
 
@@ -1448,9 +1448,9 @@ Expected: 0 issues; all packages pass. The existing `TestZed_FullDetail_3A2b` sh
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/system_detail_step5g.go \
-        tools/world-builder/worlds/system_detail_step5g_test.go \
-        tools/world-builder/worlds/system_detail.go
+git add worlds/system_detail_step5g.go \
+        worlds/system_detail_step5g_test.go \
+        worlds/system_detail.go
 git commit -m "feat(worlds): runStep5G orchestrator + mainworld pick + DetailSystem wiring (WBH pp.132-134)"
 ```
 
@@ -1460,8 +1460,8 @@ git commit -m "feat(worlds): runStep5G orchestrator + mainworld pick + DetailSys
 
 **Files:**
 
-- Create: `tools/world-builder/worlds/iiss_class4p.go`
-- Create: `tools/world-builder/worlds/iiss_class4p_test.go`
+- Create: `worlds/iiss_class4p.go`
+- Create: `worlds/iiss_class4p_test.go`
 
 This task implements the renderer's first 5 sections plus the function skeleton (nil-handling, body type check, header). Tasks 7 and 8 add the remaining sections.
 
@@ -1666,8 +1666,8 @@ Expected: all 6 tests PASS (the four section presence tests + the nil/empty defe
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/iiss_class4p.go \
-        tools/world-builder/worlds/iiss_class4p_test.go
+git add worlds/iiss_class4p.go \
+        worlds/iiss_class4p_test.go
 git commit -m "feat(worlds): RenderIISSClass4P — World/Orbit/Size/Atmosphere sections (WBH p.138)"
 ```
 
@@ -1677,8 +1677,8 @@ git commit -m "feat(worlds): RenderIISSClass4P — World/Orbit/Size/Atmosphere s
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/iiss_class4p.go`
-- Modify: `tools/world-builder/worlds/iiss_class4p_test.go`
+- Modify: `worlds/iiss_class4p.go`
+- Modify: `worlds/iiss_class4p_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1845,8 +1845,8 @@ Expected: all 10 tests PASS (6 from Task 6 + 4 new).
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/iiss_class4p.go \
-        tools/world-builder/worlds/iiss_class4p_test.go
+git add worlds/iiss_class4p.go \
+        worlds/iiss_class4p_test.go
 git commit -m "feat(worlds): RenderIISSClass4P — Hydro/Rotation/Temperature/Seismic sections"
 ```
 
@@ -1856,8 +1856,8 @@ git commit -m "feat(worlds): RenderIISSClass4P — Hydro/Rotation/Temperature/Se
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/iiss_class4p.go`
-- Modify: `tools/world-builder/worlds/iiss_class4p_test.go`
+- Modify: `worlds/iiss_class4p.go`
+- Modify: `worlds/iiss_class4p_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -2055,8 +2055,8 @@ Expected: all 17 tests PASS (10 prior + 7 new).
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/iiss_class4p.go \
-        tools/world-builder/worlds/iiss_class4p_test.go
+git add worlds/iiss_class4p.go \
+        worlds/iiss_class4p_test.go
 git commit -m "feat(worlds): RenderIISSClass4P — Life/Resources/Habitability/Subordinates/Comments + belt stub"
 ```
 
@@ -2066,12 +2066,12 @@ git commit -m "feat(worlds): RenderIISSClass4P — Life/Resources/Habitability/S
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/worked_examples_test.go`
+- Modify: `worlds/worked_examples_test.go`
 
 - [ ] **Step 1: Locate existing assertions and accumulator**
 
 ```bash
-grep -n "Assertion 38\|totalBiomassNonzero\|3B-biology: %d body-iterations\|Compatibility formula" tools/world-builder/worlds/worked_examples_test.go | head -10
+grep -n "Assertion 38\|totalBiomassNonzero\|3B-biology: %d body-iterations\|Compatibility formula" worlds/worked_examples_test.go | head -10
 ```
 
 Identify:
@@ -2209,7 +2209,7 @@ Expected: 0 issues; all packages pass.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/worked_examples_test.go
+git add worlds/worked_examples_test.go
 git commit -m "test(worlds): extend TestZed_FullDetail_3A2b with 3B-final assertions"
 ```
 
@@ -2233,9 +2233,9 @@ Expected: 9 commits (one per Task 1-9).
 Dispatch `superpowers:code-reviewer` (Opus model) on the entire branch. Provide:
 
 - Branch name: `feat/wbh-world-physical-3b-final`
-- Spec path: `tools/world-builder/docs/specs/2026-05-05-world-physical-3b-final-design.md`
-- Plan path: `tools/world-builder/docs/plans/2026-05-05-world-physical-3b-final.md`
-- Diff command: `git -C /Users/markayers/Documents/Traveller diff main..feat/wbh-world-physical-3b-final -- tools/world-builder/`
+- Spec path: `docs/specs/2026-05-05-world-physical-3b-final-design.md`
+- Plan path: `docs/plans/2026-05-05-world-physical-3b-final.md`
+- Diff command: `git -C /Users/markayers/Documents/Traveller diff main..feat/wbh-world-physical-3b-final -- `
 
 Reviewer should report: spec-compliance issues, code-quality issues, cross-cutting concerns, merge readiness assessment. Specifically watch for C1-style integration silent-zero bugs (precedent: 3B-geology terrestrial MassEarth=0; 3B-biology moonDP.Temperature missing).
 

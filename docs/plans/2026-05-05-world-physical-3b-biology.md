@@ -23,7 +23,7 @@
 
 ## Reference
 
-- **Spec:** `tools/world-builder/docs/specs/2026-05-05-world-physical-3b-biology-design.md` (commit `95c70ef`)
+- **Spec:** `docs/specs/2026-05-05-world-physical-3b-biology-design.md` (commit `95c70ef`)
 - **WBH source:** pp.127-131
 - **Predecessor:** 3B-geology merged on `main` as `2ebced4`
 
@@ -52,9 +52,9 @@ Per established precedent (3A2b-rederive, 3B-geology), the Opus final-gate revie
 
 **Files:**
 
-- Create: `tools/world-builder/worlds/biology.go`
-- Modify: `tools/world-builder/worlds/system_detail.go` (DetailedPlacement struct + HasBiology accessor)
-- Modify: `tools/world-builder/worlds/moons.go` (Moon struct + HasBiology accessor)
+- Create: `worlds/biology.go`
+- Modify: `worlds/system_detail.go` (DetailedPlacement struct + HasBiology accessor)
+- Modify: `worlds/moons.go` (Moon struct + HasBiology accessor)
 
 - [ ] **Step 1: Create the branch from main**
 
@@ -164,9 +164,9 @@ Expected: 0 issues; all packages pass.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/system_detail.go \
-        tools/world-builder/worlds/moons.go
+git add worlds/biology.go \
+        worlds/system_detail.go \
+        worlds/moons.go
 git commit -m "feat(worlds): Biology struct + DetailedPlacement.Biology + Moon.Biology"
 ```
 
@@ -176,8 +176,8 @@ git commit -m "feat(worlds): Biology struct + DetailedPlacement.Biology + Moon.B
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go`
-- Create: `tools/world-builder/worlds/biology_test.go`
+- Modify: `worlds/biology.go`
+- Create: `worlds/biology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -487,8 +487,8 @@ Expected: 0 issues; all packages pass.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go
+git add worlds/biology.go \
+        worlds/biology_test.go
 git commit -m "feat(worlds): RollBiomass (WBH p.127-128)"
 ```
 
@@ -498,8 +498,8 @@ git commit -m "feat(worlds): RollBiomass (WBH p.127-128)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go`
-- Modify: `tools/world-builder/worlds/biology_test.go`
+- Modify: `worlds/biology.go`
+- Modify: `worlds/biology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -690,8 +690,8 @@ Expected: all 8 tests PASS.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go
+git add worlds/biology.go \
+        worlds/biology_test.go
 git commit -m "feat(worlds): RollBiocomplexity (WBH p.129)"
 ```
 
@@ -701,8 +701,8 @@ git commit -m "feat(worlds): RollBiocomplexity (WBH p.129)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go`
-- Modify: `tools/world-builder/worlds/biology_test.go`
+- Modify: `worlds/biology.go`
+- Modify: `worlds/biology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -784,8 +784,8 @@ Expected: all 4 tests PASS.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go
+git add worlds/biology.go \
+        worlds/biology_test.go
 git commit -m "feat(worlds): RollNativeSophont (WBH p.130)"
 ```
 
@@ -795,8 +795,8 @@ git commit -m "feat(worlds): RollNativeSophont (WBH p.130)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go`
-- Modify: `tools/world-builder/worlds/biology_test.go`
+- Modify: `worlds/biology.go`
+- Modify: `worlds/biology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -894,8 +894,8 @@ Expected: all 5 tests PASS.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go
+git add worlds/biology.go \
+        worlds/biology_test.go
 git commit -m "feat(worlds): RollExtinctSophont (WBH p.130)"
 ```
 
@@ -905,8 +905,8 @@ git commit -m "feat(worlds): RollExtinctSophont (WBH p.130)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go`
-- Modify: `tools/world-builder/worlds/biology_test.go`
+- Modify: `worlds/biology.go`
+- Modify: `worlds/biology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1010,8 +1010,8 @@ Expected: all 5 tests PASS.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go
+git add worlds/biology.go \
+        worlds/biology_test.go
 git commit -m "feat(worlds): RollBiodiversity (WBH p.130)"
 ```
 
@@ -1021,8 +1021,8 @@ git commit -m "feat(worlds): RollBiodiversity (WBH p.130)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go`
-- Modify: `tools/world-builder/worlds/biology_test.go`
+- Modify: `worlds/biology.go`
+- Modify: `worlds/biology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1206,8 +1206,8 @@ Expected: all 7 tests PASS.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go
+git add worlds/biology.go \
+        worlds/biology_test.go
 git commit -m "feat(worlds): RollCompatibility (WBH p.130-131)"
 ```
 
@@ -1217,8 +1217,8 @@ git commit -m "feat(worlds): RollCompatibility (WBH p.130-131)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go`
-- Modify: `tools/world-builder/worlds/biology_test.go`
+- Modify: `worlds/biology.go`
+- Modify: `worlds/biology_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1451,8 +1451,8 @@ Expected: all 11 tests PASS.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go
+git add worlds/biology.go \
+        worlds/biology_test.go
 git commit -m "feat(worlds): RollResourceRating (WBH p.131)"
 ```
 
@@ -1462,10 +1462,10 @@ git commit -m "feat(worlds): RollResourceRating (WBH p.131)"
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/biology.go` (Profile method)
-- Modify: `tools/world-builder/worlds/system_detail_steps.go` (runStep5F + helpers)
-- Modify: `tools/world-builder/worlds/system_detail.go` (DetailSystem wiring)
-- Modify: `tools/world-builder/worlds/biology_test.go` (Profile + orchestrator tests)
+- Modify: `worlds/biology.go` (Profile method)
+- Modify: `worlds/system_detail_steps.go` (runStep5F + helpers)
+- Modify: `worlds/system_detail.go` (DetailSystem wiring)
+- Modify: `worlds/biology_test.go` (Profile + orchestrator tests)
 
 - [ ] **Step 1: Write failing tests for `Profile()`**
 
@@ -1931,10 +1931,10 @@ Expected: 0 issues; all packages pass. The existing 100-iteration `TestZed_FullD
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/biology.go \
-        tools/world-builder/worlds/biology_test.go \
-        tools/world-builder/worlds/system_detail_steps.go \
-        tools/world-builder/worlds/system_detail.go
+git add worlds/biology.go \
+        worlds/biology_test.go \
+        worlds/system_detail_steps.go \
+        worlds/system_detail.go
 git commit -m "feat(worlds): Biology.Profile + runStep5F orchestrator + DetailSystem wiring (WBH pp.127-131)"
 ```
 
@@ -1944,12 +1944,12 @@ git commit -m "feat(worlds): Biology.Profile + runStep5F orchestrator + DetailSy
 
 **Files:**
 
-- Modify: `tools/world-builder/worlds/worked_examples_test.go`
+- Modify: `worlds/worked_examples_test.go`
 
 - [ ] **Step 1: Locate the existing assertions**
 
 ```bash
-grep -n "Assertion 31\|3B-geology: post-TSS" tools/world-builder/worlds/worked_examples_test.go | head -3
+grep -n "Assertion 31\|3B-geology: post-TSS" worlds/worked_examples_test.go | head -3
 ```
 
 Identify the location of the 31-and-prior assertions inside the iter loop, and the 5 trailing `t.Logf` notes after the loop.
@@ -2123,7 +2123,7 @@ Expected: 0 issues; all packages pass.
 
 ```bash
 cd /Users/markayers/Documents/Traveller
-git add tools/world-builder/worlds/worked_examples_test.go
+git add worlds/worked_examples_test.go
 git commit -m "test(worlds): extend TestZed_FullDetail_3A2b with 3B-biology assertions"
 ```
 
@@ -2147,9 +2147,9 @@ Expected: 10 commits (one per Task 1-10).
 Dispatch `superpowers:code-reviewer` (or `code-reviewer` agent) on the entire branch with model=opus. Provide:
 
 - Branch name: `feat/wbh-world-physical-3b-biology`
-- Spec path: `tools/world-builder/docs/specs/2026-05-05-world-physical-3b-biology-design.md`
-- Plan path: `tools/world-builder/docs/plans/2026-05-05-world-physical-3b-biology.md`
-- Diff command: `git -C /Users/markayers/Documents/Traveller diff main..feat/wbh-world-physical-3b-biology -- tools/world-builder/`
+- Spec path: `docs/specs/2026-05-05-world-physical-3b-biology-design.md`
+- Plan path: `docs/plans/2026-05-05-world-physical-3b-biology.md`
+- Diff command: `git -C /Users/markayers/Documents/Traveller diff main..feat/wbh-world-physical-3b-biology -- `
 
 Reviewer should report: spec-compliance issues, code-quality issues, cross-cutting concerns, merge readiness assessment. Specifically watch for C1-style integration silent-zero bugs (precedent: 3B-geology's terrestrial MassEarth=0 trap).
 

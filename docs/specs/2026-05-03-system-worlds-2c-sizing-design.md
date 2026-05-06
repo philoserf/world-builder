@@ -4,8 +4,8 @@
 **Status:** approved through brainstorming; pending user review of written spec
 **Source material:** Mongoose Publishing, _World Builder's Handbook_ (Geir Lanesskog, 2023). PDF in repo at `Mongoose/Core Rules/World Builders Handbook.pdf`.
 **Source pages:** WBH pp. 53–67.
-**Parent spec:** `tools/world-builder/docs/specs/2026-05-02-world-builder-design.md`.
-**Predecessor:** `tools/world-builder/docs/specs/2026-05-03-system-worlds-2b-counts-placement-design.md` (World Counts + Placement).
+**Parent spec:** `docs/specs/2026-05-02-world-builder-design.md`.
+**Predecessor:** `docs/specs/2026-05-03-system-worlds-2b-counts-placement-design.md` (World Counts + Placement).
 
 ## Purpose
 
@@ -344,7 +344,7 @@ func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSC
 ## File layout
 
 ```text
-tools/world-builder/
+
 ├── stars/
 │   ├── period.go                       NEW   Period struct, OrbitalPeriod()
 │   └── period_test.go                  NEW   per-formula + Sol/Zed values
@@ -476,6 +476,6 @@ Carry-forward #3 (plumb `ageGyr` into `RollPlanetEccentricities`) may shift valu
 - **Worked-example acceptance.** `TestZed_FullDetail` reproduces the book's Zed walkthrough across pp. 53–67 to declared tolerances, with two documented carve-outs: (a) HZ-candidate atmosphere/hydrographics cells render `?`; (b) Aab IV d-moon size matches form (`5`) not p.58 sizing table (`S`), per WBH errata note.
 - **Carry-forward landings.** Items 1, 2, 3, 4 from 2B in place. `TestSol_GenerateSystemPlacement` smoke test passes. `GenerateSystemPlacement` errors are wrapped at all five callsites with `fmt.Errorf("worlds: <step>: %w", err)`. `RollPlanetEccentricities` accepts `ageGyr` and applies WBH p.27 sub-1.0/age>1Gyr DM; existing `TestZed_FullPlacement` updated if eccentricity values shift.
 - **Test specificity.** `TestRollEccentricity_ExtraDM` and `TestRollPlanetEccentricities_AppliesAnomalyDM` assert specific resulting eccentricity values, not just "DM had effect."
-- **Build green.** A fresh checkout of `tools/world-builder/` runs `just check && just test` clean (gofumpt + go vet + golangci-lint v2.12.1 + `go test -race ./...`).
+- **Build green.** A fresh checkout of `` runs `just check && just test` clean (gofumpt + go vet + golangci-lint v2.12.1 + `go test -race ./...`).
 - **Source traceability.** A reader with the WBH open can match every exported symbol in `stars/period.go` and the new `worlds/*.go` files to a specific page or step in WBH pp. 53–67.
 - **Memory hygiene.** After merge, update `MEMORY.md` and `project_world_builder_resume.md` to reflect: 2C complete, sub-project 3 (World Physical, pp. 69–146) is next, and add a brief feedback memory for the p.58/p.63 book-data inconsistency.

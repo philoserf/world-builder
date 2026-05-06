@@ -10,7 +10,7 @@
 
 **Scope:** Single-star generation only. Multi-star presence, secondaries, stellar orbits, eccentricity, inclination, designations, and the IISS Class 0/I survey form are deferred to Plan 2.
 
-**Spec:** `tools/world-builder/docs/specs/2026-05-02-world-builder-design.md`
+**Spec:** `docs/specs/2026-05-02-world-builder-design.md`
 
 **Source pages:** WBH pp. 14–22, plus pp. 26 (Orbit#) and 35 (Terra/Sol example).
 
@@ -20,35 +20,35 @@
 
 | File                                                | Responsibility                                                                                       |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `tools/world-builder/go.mod`                        | Module definition (`module wbh`, `go 1.22`)                                                          |
-| `tools/world-builder/.gitignore`                    | Build artefacts                                                                                      |
-| `tools/world-builder/.golangci.yml`                 | Linter config                                                                                        |
-| `tools/world-builder/justfile`                      | `check`, `test`, `fmt`, `tidy` recipes                                                               |
-| `tools/world-builder/README.md`                     | One-paragraph usage                                                                                  |
-| `tools/world-builder/dice/dice.go`                  | `Parse` dice-notation parser                                                                         |
-| `tools/world-builder/dice/dice_test.go`             | Dice parser tests                                                                                    |
-| `tools/world-builder/roller/roller.go`              | `Roller` interface + `Seeded`, `Scripted`, `Fixed`                                                   |
-| `tools/world-builder/roller/roller_test.go`         | Roller tests                                                                                         |
-| `tools/world-builder/stars/types.go`                | `SpectralType`, `LuminosityClass`, `StarKind`, `Star`                                                |
-| `tools/world-builder/stars/types_test.go`           | Type tests                                                                                           |
-| `tools/world-builder/stars/tables.go`               | All Stars-chapter tables (Star Type Determination, Subtype, Mass, Temperature, Diameter, Luminosity) |
-| `tools/world-builder/stars/tables_test.go`          | Table integrity tests                                                                                |
-| `tools/world-builder/stars/primary.go`              | Star Type Determination + Subtype + class restrictions                                               |
-| `tools/world-builder/stars/primary_test.go`         | Primary roll tests                                                                                   |
-| `tools/world-builder/stars/physical.go`             | Mass, diameter, temperature, luminosity, interpolation, variance                                     |
-| `tools/world-builder/stars/physical_test.go`        | Physical quantity tests                                                                              |
-| `tools/world-builder/stars/ages.go`                 | Main sequence / subgiant / giant / final ages                                                        |
-| `tools/world-builder/stars/ages_test.go`            | Age formula tests                                                                                    |
-| `tools/world-builder/stars/peculiar.go`             | Peculiar/special object kind dispatch                                                                |
-| `tools/world-builder/stars/peculiar_test.go`        | Peculiar tests                                                                                       |
-| `tools/world-builder/stars/stars.go`                | Public entry points (`GenerateMainSequenceStar`, `Compose`)                                          |
-| `tools/world-builder/stars/worked_examples_test.go` | Sol/Terra and Zed-primary regression tests                                                           |
+| `go.mod`                        | Module definition (`module wbh`, `go 1.22`)                                                          |
+| `.gitignore`                    | Build artefacts                                                                                      |
+| `.golangci.yml`                 | Linter config                                                                                        |
+| `justfile`                      | `check`, `test`, `fmt`, `tidy` recipes                                                               |
+| `README.md`                     | One-paragraph usage                                                                                  |
+| `dice/dice.go`                  | `Parse` dice-notation parser                                                                         |
+| `dice/dice_test.go`             | Dice parser tests                                                                                    |
+| `roller/roller.go`              | `Roller` interface + `Seeded`, `Scripted`, `Fixed`                                                   |
+| `roller/roller_test.go`         | Roller tests                                                                                         |
+| `stars/types.go`                | `SpectralType`, `LuminosityClass`, `StarKind`, `Star`                                                |
+| `stars/types_test.go`           | Type tests                                                                                           |
+| `stars/tables.go`               | All Stars-chapter tables (Star Type Determination, Subtype, Mass, Temperature, Diameter, Luminosity) |
+| `stars/tables_test.go`          | Table integrity tests                                                                                |
+| `stars/primary.go`              | Star Type Determination + Subtype + class restrictions                                               |
+| `stars/primary_test.go`         | Primary roll tests                                                                                   |
+| `stars/physical.go`             | Mass, diameter, temperature, luminosity, interpolation, variance                                     |
+| `stars/physical_test.go`        | Physical quantity tests                                                                              |
+| `stars/ages.go`                 | Main sequence / subgiant / giant / final ages                                                        |
+| `stars/ages_test.go`            | Age formula tests                                                                                    |
+| `stars/peculiar.go`             | Peculiar/special object kind dispatch                                                                |
+| `stars/peculiar_test.go`        | Peculiar tests                                                                                       |
+| `stars/stars.go`                | Public entry points (`GenerateMainSequenceStar`, `Compose`)                                          |
+| `stars/worked_examples_test.go` | Sol/Terra and Zed-primary regression tests                                                           |
 
 ---
 
 ## Conventions
 
-- All shell commands assume working directory `/Users/markayers/Documents/Traveller/tools/world-builder/` unless otherwise noted.
+- All shell commands assume working directory `/Users/markayers/Documents/Traveller/` unless otherwise noted.
 - Run tests with `go test -race ./...` and lint with `golangci-lint run`.
 - Format with `gofumpt -l -w .`.
 - Commits use conventional commit format (`feat(stars): …`, `test(dice): …`, etc.).
@@ -62,12 +62,12 @@
 
 **Files:**
 
-- Create: `tools/world-builder/go.mod`
-- Create: `tools/world-builder/go.sum` (will be empty initially)
-- Create: `tools/world-builder/.gitignore`
-- Create: `tools/world-builder/.golangci.yml`
-- Create: `tools/world-builder/justfile`
-- Create: `tools/world-builder/README.md`
+- Create: `go.mod`
+- Create: `go.sum` (will be empty initially)
+- Create: `.gitignore`
+- Create: `.golangci.yml`
+- Create: `justfile`
+- Create: `README.md`
 
 - [ ] **Step 1: Verify parent directory and prerequisites**
 
@@ -106,7 +106,7 @@ go 1.22
 
 - [ ] **Step 3: Create `.gitignore`**
 
-`tools/world-builder/.gitignore`:
+`.gitignore`:
 
 ```text
 # Go build artefacts
@@ -127,7 +127,7 @@ coverage.html
 
 - [ ] **Step 4: Create `.golangci.yml`**
 
-`tools/world-builder/.golangci.yml` (golangci-lint v2 schema; gofumpt enforced by the `just check` recipe via the CLI, not by golangci-lint's bundled gofumpt — they can disagree on import grouping):
+`.golangci.yml` (golangci-lint v2 schema; gofumpt enforced by the `just check` recipe via the CLI, not by golangci-lint's bundled gofumpt — they can disagree on import grouping):
 
 ```yaml
 version: "2"
@@ -158,7 +158,7 @@ issues:
 
 - [ ] **Step 5: Create `justfile`**
 
-`tools/world-builder/justfile`:
+`justfile`:
 
 ```just
 default: check test
@@ -182,7 +182,7 @@ The `check` recipe's gofumpt invocation lists files that would be reformatted; t
 
 - [ ] **Step 6: Create `README.md`**
 
-`tools/world-builder/README.md`:
+`README.md`:
 
 ````markdown
 # wbh — World Builder's Handbook reference implementation
@@ -197,7 +197,7 @@ just fmt      # apply formatting
 ```
 
 The library is the artifact; the CLI is a thin wrapper. See
-`tools/world-builder/docs/specs/2026-05-02-world-builder-design.md` at the repo
+`docs/specs/2026-05-02-world-builder-design.md` at the repo
 root for design rationale.
 ````
 
@@ -223,14 +223,14 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(world-builder): scaf
 
 **Files:**
 
-- Create: `tools/world-builder/dice/dice.go`
-- Create: `tools/world-builder/dice/dice_test.go`
+- Create: `dice/dice.go`
+- Create: `dice/dice_test.go`
 
 WBH uses notations like `2D`, `1D`, `2D-7`, `1D+5`, `D3`, `D3-1`, `d10`, `d100`, `2d10`. The parser returns a `Spec{Count, Sides, Modifier}`.
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/dice/dice_test.go`:
+`dice/dice_test.go`:
 
 ```go
 package dice
@@ -291,7 +291,7 @@ Expected: build failure — `undefined: Parse`, `undefined: Spec`.
 
 - [ ] **Step 3: Implement `Parse`**
 
-`tools/world-builder/dice/dice.go`:
+`dice/dice.go`:
 
 ```go
 // Package dice parses WBH dice notation strings.
@@ -374,7 +374,7 @@ Expected: all tests pass.
 ```bash
 gofumpt -l -w dice
 golangci-lint run ./dice/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/dice
+git -C /Users/markayers/Documents/Traveller add dice
 git -C /Users/markayers/Documents/Traveller commit -m "feat(dice): WBH dice notation parser"
 ```
 
@@ -384,12 +384,12 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(dice): WBH dice nota
 
 **Files:**
 
-- Create: `tools/world-builder/roller/roller.go`
-- Create: `tools/world-builder/roller/roller_test.go`
+- Create: `roller/roller.go`
+- Create: `roller/roller_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/roller/roller_test.go`:
+`roller/roller_test.go`:
 
 ```go
 package roller
@@ -493,7 +493,7 @@ Expected: build error.
 
 - [ ] **Step 3: Implement Roller**
 
-`tools/world-builder/roller/roller.go`:
+`roller/roller.go`:
 
 ```go
 // Package roller provides dice-rolling abstractions used throughout wbh.
@@ -591,7 +591,7 @@ Expected: all pass.
 ```bash
 gofumpt -l -w roller
 golangci-lint run ./roller/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/roller
+git -C /Users/markayers/Documents/Traveller add roller
 git -C /Users/markayers/Documents/Traveller commit -m "feat(roller): Roller interface with Seeded, Scripted, Fixed"
 ```
 
@@ -601,12 +601,12 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(roller): Roller inte
 
 **Files:**
 
-- Create: `tools/world-builder/stars/types.go`
-- Create: `tools/world-builder/stars/types_test.go`
+- Create: `stars/types.go`
+- Create: `stars/types_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/stars/types_test.go`:
+`stars/types_test.go`:
 
 ```go
 package stars
@@ -687,7 +687,7 @@ Expected: build error — undefined symbols.
 
 - [ ] **Step 3: Implement types**
 
-`tools/world-builder/stars/types.go`:
+`stars/types.go`:
 
 ```go
 // Package stars implements the WBH Stars chapter (pp. 14–35).
@@ -797,7 +797,7 @@ Expected: all pass.
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): SpectralType, LuminosityClass, StarKind, Star types"
 ```
 
@@ -807,12 +807,12 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): SpectralType
 
 **Files:**
 
-- Create: `tools/world-builder/stars/tables.go`
-- Create: `tools/world-builder/stars/tables_test.go`
+- Create: `stars/tables.go`
+- Create: `stars/tables_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/stars/tables_test.go`:
+`stars/tables_test.go`:
 
 ```go
 package stars
@@ -885,7 +885,7 @@ Expected: build error — `undefined: StarTypeDetermination`.
 
 - [ ] **Step 3: Implement table**
 
-`tools/world-builder/stars/tables.go`:
+`stars/tables.go`:
 
 ```go
 package stars
@@ -926,7 +926,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Star Type Determination table (WBH p.15)"
 ```
 
@@ -936,12 +936,12 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Star Type De
 
 **Files:**
 
-- Modify: `tools/world-builder/stars/tables.go` (append)
-- Modify: `tools/world-builder/stars/tables_test.go` (append)
+- Modify: `stars/tables.go` (append)
+- Modify: `stars/tables_test.go` (append)
 
 - [ ] **Step 1: Append failing tests**
 
-Append to `tools/world-builder/stars/tables_test.go`:
+Append to `stars/tables_test.go`:
 
 ```go
 func TestStarSubtype_Complete(t *testing.T) {
@@ -985,7 +985,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Append tables**
 
-Append to `tools/world-builder/stars/tables.go`:
+Append to `stars/tables.go`:
 
 ```go
 // StarSubtypeNumeric is the WBH p. 16 Star Subtype table — Numeric column.
@@ -1010,7 +1010,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Star Subtype tables (WBH p.16)"
 ```
 
@@ -1020,12 +1020,12 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Star Subtype
 
 **Files:**
 
-- Create: `tools/world-builder/stars/primary.go`
-- Create: `tools/world-builder/stars/primary_test.go`
+- Create: `stars/primary.go`
+- Create: `stars/primary_test.go`
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/stars/primary_test.go`:
+`stars/primary_test.go`:
 
 ```go
 package stars
@@ -1140,7 +1140,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Implement**
 
-`tools/world-builder/stars/primary.go`:
+`stars/primary.go`:
 
 ```go
 package stars
@@ -1239,7 +1239,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): primary star type and subtype rolls (WBH pp.15-16)"
 ```
 
@@ -1249,8 +1249,8 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): primary star
 
 **Files:**
 
-- Modify: `tools/world-builder/stars/primary.go` (append)
-- Modify: `tools/world-builder/stars/primary_test.go` (append)
+- Modify: `stars/primary.go` (append)
+- Modify: `stars/primary_test.go` (append)
 
 WBH p. 16:
 
@@ -1260,7 +1260,7 @@ WBH p. 16:
 
 - [ ] **Step 1: Append failing tests**
 
-Append to `tools/world-builder/stars/primary_test.go`:
+Append to `stars/primary_test.go`:
 
 ```go
 func TestApplyClassIVLetterConstraint(t *testing.T) {
@@ -1315,7 +1315,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Append implementation**
 
-Append to `tools/world-builder/stars/primary.go`:
+Append to `stars/primary.go`:
 
 ```go
 // ApplyClassIVLetterConstraint maps a spectral letter for Class IV
@@ -1380,7 +1380,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Class IV/VI/III+ restrictions (WBH p.16)"
 ```
 
@@ -1390,14 +1390,14 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Class IV/VI/
 
 **Files:**
 
-- Modify: `tools/world-builder/stars/tables.go`
-- Modify: `tools/world-builder/stars/tables_test.go`
+- Modify: `stars/tables.go`
+- Modify: `stars/tables_test.go`
 
 The Mass, Diameter, and Luminosity tables (WBH pp. 17, 19) all have the same row shape: `Ia | Ib | II | III | IV | V | VI`, with some cells absent. Use a shared `ClassRow` struct with `*float64` fields. The Temperature column on p. 17 is 1D (one value per spectral type).
 
 - [ ] **Step 1: Append failing tests**
 
-Append to `tools/world-builder/stars/tables_test.go`:
+Append to `stars/tables_test.go`:
 
 ```go
 func TestStarMass_KnownCells(t *testing.T) {
@@ -1500,7 +1500,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Append `ClassRow`, `Get`, and the four tables**
 
-Append to `tools/world-builder/stars/tables.go`:
+Append to `stars/tables.go`:
 
 ```go
 // ClassRow holds class-keyed values for tables shaped like the Mass,
@@ -1621,7 +1621,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Mass, Temperature, Diameter, Luminosity tables (WBH pp.17,19)"
 ```
 
@@ -1631,14 +1631,14 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): Mass, Temper
 
 **Files:**
 
-- Create: `tools/world-builder/stars/physical.go`
-- Create: `tools/world-builder/stars/physical_test.go`
+- Create: `stars/physical.go`
+- Create: `stars/physical_test.go`
 
 The book's grid is irregular: O0, O5, B0, B5, A0, A5, F0, F5, G0, G5, K0, K5, M0, M5, M9. Every "0" / "5" / "9" subtype is tabulated; intermediate subtypes interpolate linearly between bracketing rows. The book treats K0 as if it were "G10" for interpolation: a G7 V is "2/5 of the way between G5 V and K0 V."
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/stars/physical_test.go`:
+`stars/physical_test.go`:
 
 ```go
 package stars
@@ -1738,7 +1738,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Implement**
 
-`tools/world-builder/stars/physical.go`:
+`stars/physical.go`:
 
 ```go
 package stars
@@ -1863,7 +1863,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): spectral-grid interpolation helpers (WBH p.17 G7 V example)"
 ```
 
@@ -1873,12 +1873,12 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): spectral-gri
 
 **Files:**
 
-- Modify: `tools/world-builder/stars/physical.go`
-- Modify: `tools/world-builder/stars/physical_test.go`
+- Modify: `stars/physical.go`
+- Modify: `stars/physical_test.go`
 
 - [ ] **Step 1: Append failing tests**
 
-Append to `tools/world-builder/stars/physical_test.go`:
+Append to `stars/physical_test.go`:
 
 ```go
 func TestComputeMass_G7V(t *testing.T) {
@@ -1922,7 +1922,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Append implementation**
 
-Append to `tools/world-builder/stars/physical.go`:
+Append to `stars/physical.go`:
 
 ```go
 // ComputeMass returns the interpolated mass in solar units (WBH p. 17).
@@ -1953,7 +1953,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): mass, diameter, temperature lookups"
 ```
 
@@ -1963,14 +1963,14 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): mass, diamet
 
 **Files:**
 
-- Modify: `tools/world-builder/stars/physical.go`
-- Modify: `tools/world-builder/stars/physical_test.go`
+- Modify: `stars/physical.go`
+- Modify: `stars/physical_test.go`
 
 WBH p. 20 gives the closed-form luminosity: **L = (D/D⊙)² × (T/T⊙)⁴**, with T⊙ = 5772 K.
 
 - [ ] **Step 1: Append failing tests**
 
-Append to `tools/world-builder/stars/physical_test.go`:
+Append to `stars/physical_test.go`:
 
 ```go
 func TestComputeLuminosityFromTable_G0V(t *testing.T) {
@@ -2009,7 +2009,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Append implementation**
 
-Append to `tools/world-builder/stars/physical.go`:
+Append to `stars/physical.go`:
 
 ```go
 // SolTemperatureK is the WBH p. 20 reference temperature for Sol.
@@ -2042,7 +2042,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): luminosity table lookup and physical formula"
 ```
 
@@ -2052,14 +2052,14 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): luminosity t
 
 **Files:**
 
-- Modify: `tools/world-builder/stars/physical.go`
-- Modify: `tools/world-builder/stars/physical_test.go`
+- Modify: `stars/physical.go`
+- Modify: `stars/physical_test.go`
 
 WBH p. 17: optional ±20% variance for mass and diameter via 2D-7. WBH p. 19: ±30% for luminosity. The factor scales linearly across [-5, +5]: `value × (1 + (2D-7)/5 × maxPct)`.
 
 - [ ] **Step 1: Append failing tests**
 
-Append to `tools/world-builder/stars/physical_test.go`:
+Append to `stars/physical_test.go`:
 
 ```go
 import (
@@ -2117,7 +2117,7 @@ Expected: undefined `ApplyVariance`.
 
 - [ ] **Step 3: Append implementation**
 
-Append to `tools/world-builder/stars/physical.go`:
+Append to `stars/physical.go`:
 
 ```go
 import (
@@ -2153,7 +2153,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): optional variance rolls for mass/diameter/luminosity"
 ```
 
@@ -2163,14 +2163,14 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): optional var
 
 **Files:**
 
-- Create: `tools/world-builder/stars/peculiar.go`
-- Create: `tools/world-builder/stars/peculiar_test.go`
+- Create: `stars/peculiar.go`
+- Create: `stars/peculiar_test.go`
 
 WBH pp. 16, 22: a "Special" primary roll leads through Unusual or Peculiar columns. The book offers a simple resolution path (1D: 1-5 = neutron star, 6 = black hole). Plan 1 implements the simple path; the full Unusual/Peculiar dispatch lands in Plan 2.
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/stars/peculiar_test.go`:
+`stars/peculiar_test.go`:
 
 ```go
 package stars
@@ -2250,7 +2250,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Implement**
 
-`tools/world-builder/stars/peculiar.go`:
+`stars/peculiar.go`:
 
 ```go
 package stars
@@ -2325,7 +2325,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): peculiar/special object kind dispatch (WBH p.16)"
 ```
 
@@ -2335,8 +2335,8 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): peculiar/spe
 
 **Files:**
 
-- Create: `tools/world-builder/stars/ages.go`
-- Create: `tools/world-builder/stars/ages_test.go`
+- Create: `stars/ages.go`
+- Create: `stars/ages_test.go`
 
 WBH p. 20:
 
@@ -2346,7 +2346,7 @@ WBH p. 20:
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/stars/ages_test.go`:
+`stars/ages_test.go`:
 
 ```go
 package stars
@@ -2431,7 +2431,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Implement**
 
-`tools/world-builder/stars/ages.go`:
+`stars/ages.go`:
 
 ```go
 package stars
@@ -2483,7 +2483,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): main sequence lifespan and small-star age (WBH pp.20-21)"
 ```
 
@@ -2493,8 +2493,8 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): main sequenc
 
 **Files:**
 
-- Modify: `tools/world-builder/stars/ages.go`
-- Modify: `tools/world-builder/stars/ages_test.go`
+- Modify: `stars/ages.go`
+- Modify: `stars/ages_test.go`
 
 WBH pp. 21–22:
 
@@ -2504,7 +2504,7 @@ WBH pp. 21–22:
 
 - [ ] **Step 1: Append failing tests**
 
-Append to `tools/world-builder/stars/ages_test.go`:
+Append to `stars/ages_test.go`:
 
 ```go
 func TestSubgiantLifespan_Zed(t *testing.T) {
@@ -2550,7 +2550,7 @@ Expected: undefined symbols.
 
 - [ ] **Step 3: Append implementation**
 
-Append to `tools/world-builder/stars/ages.go`:
+Append to `stars/ages.go`:
 
 ```go
 // SubgiantLifespan returns the subgiant phase lifespan in Gyr (WBH p. 21):
@@ -2594,7 +2594,7 @@ go test -race ./stars/...
 ```bash
 gofumpt -l -w stars
 golangci-lint run ./stars/...
-git -C /Users/markayers/Documents/Traveller add tools/world-builder/stars
+git -C /Users/markayers/Documents/Traveller add stars
 git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): subgiant, giant, and post-stellar final-age formulas"
 ```
 
@@ -2604,8 +2604,8 @@ git -C /Users/markayers/Documents/Traveller commit -m "feat(stars): subgiant, gi
 
 **Files:**
 
-- Create: `tools/world-builder/stars/stars.go`
-- Create: `tools/world-builder/stars/worked_examples_test.go`
+- Create: `stars/stars.go`
+- Create: `stars/worked_examples_test.go`
 
 This task ties the pieces together into a public API and proves it works against the simplest worked example: Sol/Terra (WBH p. 35), which is fully specified.
 
@@ -2617,7 +2617,7 @@ Sol  G2 V  Mass 1.000  Temp 5,772  Diameter 1.000  Luminosity 1.000  Age 4.568
 
 - [ ] **Step 1: Write failing tests**
 
-`tools/world-builder/stars/worked_examples_test.go`:
+`stars/worked_examples_test.go`:
 
 ```go
 package stars_test
@@ -2725,7 +2725,7 @@ Expected: undefined `stars.Compose`, `stars.GenerateMainSequenceStar`.
 
 - [ ] **Step 3: Implement public API**
 
-`tools/world-builder/stars/stars.go`:
+`stars/stars.go`:
 
 ```go
 package stars
