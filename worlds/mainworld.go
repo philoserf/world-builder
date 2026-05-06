@@ -123,7 +123,7 @@ func pickMainworld(detailed []DetailedPlacement) string {
 			c.resource = b.ResourceRating
 			c.hasSophont = b.HasNativeSophont || b.HadExtinctSophont
 		}
-		if belt != nil {
+		if bodyType == BodyPlanetoidBelt && belt != nil {
 			c.resource = belt.ResourceRating
 		}
 		candidates = append(candidates, c)
@@ -190,6 +190,6 @@ func pickMainworld(detailed []DetailedPlacement) string {
 		return candidates[best].designation
 	}
 
-	// Priority 4: first terrestrial in iteration order.
+	// Priority 4: first terrestrial-or-belt body in iteration order.
 	return candidates[0].designation
 }
