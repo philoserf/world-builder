@@ -32,12 +32,12 @@ func renderIISS4PBelt(body *DetailedPlacement, sys stars.System, mainworldDesign
 
 	// Orbit
 	sb.WriteString("ORBIT\n")
-	span := 0.0
+	spanStr := "(not available)"
 	if body.Belt != nil {
-		span = body.Belt.Span
+		spanStr = fmt.Sprintf("%.3f Orbit#s", body.Belt.Span)
 	}
-	fmt.Fprintf(&sb, "  O#: %.2f   AU: %.2f   Span: %.3f Orbit#s   Period (h): %.2f\n\n",
-		body.Orbit, stars.OrbitToAU(body.Orbit), span, body.Period.Hours)
+	fmt.Fprintf(&sb, "  O#: %.2f   AU: %.2f   Span: %s   Period (h): %.2f\n\n",
+		body.Orbit, stars.OrbitToAU(body.Orbit), spanStr, body.Period.Hours)
 
 	// Composition
 	sb.WriteString("COMPOSITION\n")

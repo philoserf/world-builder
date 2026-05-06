@@ -60,16 +60,12 @@ func TestRenderIISS4PBelt_NilBeltDetails_DegradesGracefully(t *testing.T) {
 	body.Group = Group{Designation: "A"}
 	sys := stars.System{}
 
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("unexpected panic: %v", r)
-		}
-	}()
 	got := renderIISS4PBelt(body, sys, "")
 
 	expected := []string{
 		"IISS CLASS IV SURVEY — FORM 0407K-IV PART P.B",
 		"WORLD: Empty Belt",
+		"Span: (not available)",
 		"(belt details not generated)",
 	}
 	for _, want := range expected {
