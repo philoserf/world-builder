@@ -145,3 +145,100 @@ func TestRenderIISSClass4P_SeismicSection_Present(t *testing.T) {
 		t.Errorf("missing TSS 17: got %q", got)
 	}
 }
+
+func TestRenderIISSClass4P_LifeSection_Present(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	body.Biology = &Biology{
+		Biomass: 10, Biocomplexity: 5, HasNativeSophont: false,
+		Biodiversity: 7, Compatibility: 6, ResourceRating: 11,
+	}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "LIFE") {
+		t.Errorf("missing LIFE section: got %q", got)
+	}
+	if !strings.Contains(got, "Biomass: A") {
+		t.Errorf("missing Biomass: A (eHex): got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_HabitabilitySection_Present(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	body.Habitability = &Habitability{Rating: 7}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "HABITABILITY") {
+		t.Errorf("missing HABITABILITY section: got %q", got)
+	}
+	if !strings.Contains(got, "Rating: 7") {
+		t.Errorf("missing Rating: 7: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_NoMoons_NoSubordinatesSection(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if strings.Contains(got, "SUBORDINATES") {
+		t.Errorf("should not have SUBORDINATES section when no moons: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_WithMoons_SubordinatesRendered(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab IV"
+	body.SizeCode = "5"
+	body.Moons = []Moon{
+		{Designation: "Aab IV a", SizeCode: "5", DiameterKm: 5000, OrbitKm: 3_920_000, Eccentricity: 0.10, PeriodHours: 624.69},
+	}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "SUBORDINATES") {
+		t.Errorf("missing SUBORDINATES section: got %q", got)
+	}
+	if !strings.Contains(got, "Aab IV a") {
+		t.Errorf("missing moon designation: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_MainworldAnnotation(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab IV d"
+	body.SizeCode = "5"
+	got := RenderIISSClass4P(body, stars.System{}, "Aab IV d")
+	if !strings.Contains(got, "system mainworld") {
+		t.Errorf("missing mainworld annotation: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_NotMainworld_NoAnnotation(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab IV"
+	body.SizeCode = "5"
+	got := RenderIISSClass4P(body, stars.System{}, "Aab IV d")
+	if strings.Contains(got, "system mainworld") {
+		t.Errorf("should not have mainworld annotation: got %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_Belt_StubRendering(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyPlanetoidBelt
+	body.Designation = "Aab Belt"
+	body.SizeCode = "0"
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "NOT YET IMPLEMENTED") {
+		t.Errorf("missing belt stub marker: got %q", got)
+	}
+	if !strings.Contains(got, "Aab Belt") {
+		t.Errorf("missing belt designation: got %q", got)
+	}
+}

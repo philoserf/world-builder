@@ -13,14 +13,14 @@ import (
 // (FORM 0407F-IV PART P) for a single body. Plain-text output with
 // section headers matching the book's form layout.
 //
-// The third argument is the SystemDetail.MainworldDesignation; it is
-// reserved for the Comments section (Tasks 7/8) and unused here.
+// mainworldDesignation is the SystemDetail.MainworldDesignation; used
+// only to mark whether THIS body is the mainworld in the Comments section.
 //
 // Returns "" if body is nil or body.Body == BodyEmpty.
 //
 // Belt bodies (Size 0) get a placeholder stub; full Form 0407K-IV PART P.B
 // rendering is deferred (see spec carry-forwards).
-func RenderIISSClass4P(body *DetailedPlacement, sys stars.System, _ string) string {
+func RenderIISSClass4P(body *DetailedPlacement, sys stars.System, mainworldDesignation string) string {
 	if body == nil || body.Body == BodyEmpty {
 		return ""
 	}
@@ -39,8 +39,12 @@ func RenderIISSClass4P(body *DetailedPlacement, sys stars.System, _ string) stri
 	renderIISS4PRotation(&sb, body)
 	renderIISS4PTemperature(&sb, body)
 	renderIISS4PSeismic(&sb, body)
+	renderIISS4PLife(&sb, body)
+	renderIISS4PResources(&sb, body)
+	renderIISS4PHabitability(&sb, body)
+	renderIISS4PSubordinates(&sb, body)
+	renderIISS4PComments(&sb, body, mainworldDesignation)
 
-	// Task 8 appends the remaining sections + Comments.
 	return sb.String()
 }
 
@@ -141,4 +145,59 @@ func renderIISS4PSeismic(sb *strings.Builder, body *DetailedPlacement) {
 	g := body.Geology
 	fmt.Fprintf(sb, "  TSS: %d   Residual: %d   TidalStress: %d   TidalHeating: %d   Plates: %d\n\n",
 		g.TotalSeismicStress, g.ResidualSeismicStress, g.TidalStressFactor, g.TidalHeatingFactor, g.TectonicPlates)
+}
+
+func renderIISS4PLife(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("LIFE\n")
+	if body.Biology == nil {
+		sb.WriteString("  (not computed)\n\n")
+		return
+	}
+	b := body.Biology
+	sophontStr := "no"
+	if b.HasNativeSophont {
+		sophontStr = "yes"
+	} else if b.HadExtinctSophont {
+		sophontStr = "extinct"
+	}
+	fmt.Fprintf(sb, "  Biomass: %s   Biocomplexity: %d   Sophonts?: %s   Biodiversity: %d   Compatibility: %d\n\n",
+		string(eHexDigit(b.Biomass)), b.Biocomplexity, sophontStr, b.Biodiversity, b.Compatibility)
+}
+
+func renderIISS4PResources(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("RESOURCES\n")
+	if body.Biology == nil {
+		sb.WriteString("  (not computed)\n\n")
+		return
+	}
+	fmt.Fprintf(sb, "  Rating: %s\n\n", string(eHexDigit(body.Biology.ResourceRating)))
+}
+
+func renderIISS4PHabitability(sb *strings.Builder, body *DetailedPlacement) {
+	sb.WriteString("HABITABILITY\n")
+	if body.Habitability == nil {
+		sb.WriteString("  (not computed)\n\n")
+		return
+	}
+	fmt.Fprintf(sb, "  Rating: %d\n\n", body.Habitability.Rating)
+}
+
+func renderIISS4PSubordinates(sb *strings.Builder, body *DetailedPlacement) {
+	if len(body.Moons) == 0 {
+		return
+	}
+	sb.WriteString("SUBORDINATES\n")
+	sb.WriteString("  Designation   SizeCode   Diameter (km)   Orbit (km)   Ecc   Period (h)\n")
+	for _, m := range body.Moons {
+		fmt.Fprintf(sb, "  %s   %s   %.0f   %d   %.3f   %.2f\n",
+			m.Designation, m.SizeCode, m.DiameterKm, m.OrbitKm, m.Eccentricity, m.PeriodHours)
+	}
+	sb.WriteString("\n")
+}
+
+func renderIISS4PComments(sb *strings.Builder, body *DetailedPlacement, mainworldDesignation string) {
+	sb.WriteString("COMMENTS\n")
+	if mainworldDesignation != "" && body.Designation == mainworldDesignation {
+		sb.WriteString("  This is the system mainworld.\n")
+	}
 }
