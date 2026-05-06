@@ -44,8 +44,8 @@ func ComputeHabitability(body *DetailedPlacement) Habitability {
 	dm += habitabilityAtmDM(body)
 	dm += habitabilityHydroDM(body)
 	dm += habitabilityTidalLockDM(body)
-
-	// Temperature + Gravity DMs added in Task 3.
+	dm += habitabilityTempDM(body)
+	dm += habitabilityGravityDM(body)
 
 	rating := min(max(10+dm, 0), 12)
 	return Habitability{Rating: rating}
@@ -121,4 +121,73 @@ func habitabilityTidalLockDM(body *DetailedPlacement) int {
 		return -2
 	}
 	return 0
+}
+
+// habitabilityTempDM per WBH p.132 temperature-DM table.
+// Returns 0 when Temperature is nil (defensive).
+//
+// Note: HighK > 323 and MeanK > 323 are strict (323 itself is in the
+// [304, 323] band → -2, NOT in the >323 band → -4). Per WBH p.132 footnote,
+// "use worst at edges" — but the bands as written are unambiguous at 323.
+func habitabilityTempDM(body *DetailedPlacement) int {
+	if body.Temperature == nil {
+		return 0
+	}
+	dm := 0
+	t := body.Temperature
+	if t.HighK > 323 {
+		dm += -2
+	}
+	if t.HighK > 0 && t.HighK < 279 {
+		dm += -2
+	}
+	if t.MeanK > 323 {
+		dm += -4
+	} else if t.MeanK >= 304 && t.MeanK <= 323 {
+		dm += -2
+	}
+	if t.MeanK > 0 && t.MeanK < 273 {
+		dm += -2
+	}
+	if t.LowK > 0 && t.LowK < 200 {
+		dm += -2
+	}
+	return dm
+}
+
+// habitabilityGravityDM per WBH p.132 gravity-DM table.
+//
+// WBH p.132 has overlapping bands (0.2-0.7 and 0.4-0.7). Per the worked
+// example for Zed Prime (gravity 0.66 → DM-1, NOT -2), the narrower band
+// wins. Documented as a WBH inconsistency (footnote contradicts worked
+// example); implementation follows the worked example.
+//
+// Undefined gravity (Physical nil): per WBH "+1 - |6 - Size|".
+func habitabilityGravityDM(body *DetailedPlacement) int {
+	if body.Physical == nil {
+		size := SizeAsInt(body.SizeCode)
+		diff := 6 - size
+		if diff < 0 {
+			diff = -diff
+		}
+		return 1 - diff
+	}
+	g := body.Physical.Gravity
+	switch {
+	case g < 0.2:
+		return -4
+	case g >= 0.7 && g <= 0.9:
+		return +1
+	case g >= 0.4 && g < 0.7:
+		return -1 // narrower band; wins over 0.2-0.7 per Q3-a
+	case g >= 0.2 && g < 0.4:
+		return -2 // residual of 0.2-0.7
+	case g > 1.1 && g <= 1.4:
+		return -1
+	case g > 1.4 && g <= 2.0:
+		return -3
+	case g > 2.0:
+		return -6
+	}
+	return 0 // 0.9-1.1 (Earth-like baseline)
 }
