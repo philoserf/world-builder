@@ -303,3 +303,117 @@ func writeNotGenerated(sb *strings.Builder) {
 	sb.WriteString("| Field | Value |\n|---|---|\n")
 	sb.WriteString("| Status | (not generated) |\n\n")
 }
+
+// RenderClass23Markdown renders the IISS Class II/III Survey form (WBH
+// pp.60-67, Form 0421D-II.III) as a Markdown section. Output starts
+// with an H2 form heading and contains H3 sub-sections for Header,
+// Object Counts, Stars, and Objects.
+func RenderClass23Markdown(form IISSClass23Form) string {
+	var sb strings.Builder
+	sb.WriteString("## IISS Class II/III Survey — Form 0421D-II.III\n\n")
+	writeClass23Header(&sb, form)
+	writeClass23ObjectCounts(&sb, form)
+	writeClass23Stars(&sb, form.Stars)
+	writeClass23Objects(&sb, form.Objects)
+	if form.Notes != "" {
+		fmt.Fprintf(&sb, "### Notes\n\n%s\n\n", form.Notes)
+	}
+	if form.Comments != "" {
+		fmt.Fprintf(&sb, "### Comments\n\n%s\n\n", form.Comments)
+	}
+	return sb.String()
+}
+
+func writeClass23Header(sb *strings.Builder, form IISSClass23Form) {
+	sb.WriteString("### Header\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Sector | %s |\n", emDashIfEmpty23(form.Sector))
+	fmt.Fprintf(sb, "| Location | %s |\n", emDashIfEmpty23(form.Location))
+	fmt.Fprintf(sb, "| IISS Designation | %s |\n", emDashIfEmpty23(form.IISSDesig))
+	fmt.Fprintf(sb, "| Initial Survey | %s |\n", emDashIfEmpty23(form.InitialSurvey))
+	fmt.Fprintf(sb, "| Last Updated | %s |\n", emDashIfEmpty23(form.LastUpdated))
+	fmt.Fprintf(sb, "| System Age (Gyr) | %.3f |\n", form.SystemAgeGyr)
+	classIIIStr := "no"
+	if form.ClassIIIStatus {
+		classIIIStr = "yes"
+	}
+	fmt.Fprintf(sb, "| Class III Status | %s |\n\n", classIIIStr)
+}
+
+func writeClass23ObjectCounts(sb *strings.Builder, form IISSClass23Form) {
+	sb.WriteString("### Object Counts\n\n")
+	sb.WriteString("| Field | Value |\n|---|---|\n")
+	fmt.Fprintf(sb, "| Stellar | %d |\n", form.StellarCount)
+	fmt.Fprintf(sb, "| Gas Giants | %d |\n", form.GasGiants)
+	fmt.Fprintf(sb, "| Planetoid Belts | %d |\n", form.PlanetoidBelts)
+	fmt.Fprintf(sb, "| Terrestrials | %d |\n\n", form.Terrestrials)
+}
+
+// writeClass23Stars renders the same Stars table data as Class 0/I, but
+// in this package — the spec chose duplication over extracting a shared
+// helper across packages.
+func writeClass23Stars(sb *strings.Builder, components []stars.SurveyComponent) {
+	sb.WriteString("### Stars\n\n")
+	sb.WriteString("| Component | Class | Mass | Temperature | Diameter | Luminosity | Orbit | AU | Eccentricity | Period (y) | HZCO | MAO |\n")
+	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|\n")
+	for _, c := range components {
+		// Mass and Luminosity always render with a value (composites sum to non-zero);
+		// other numerics use floatNonZero23 so 0 → em-dash for "not applicable".
+		fmt.Fprintf(
+			sb,
+			"| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
+			emDashIfEmpty23(c.Component),
+			emDashIfEmpty23(c.Class),
+			fmt.Sprintf("%.3f", c.Mass),
+			floatNonZero23(c.Temperature, 0),
+			floatNonZero23(c.Diameter, 3),
+			fmt.Sprintf("%.3f", c.Luminosity),
+			floatNonZero23(c.Orbit, 2),
+			floatNonZero23(c.AU, 3),
+			floatNonZero23(c.Eccentricity, 2),
+			floatNonZero23(c.PeriodYears, 3),
+			floatNonZero23(c.HZCO, 2),
+			floatNonZero23(c.MAO, 2),
+		)
+	}
+	sb.WriteString("\n")
+}
+
+func writeClass23Objects(sb *strings.Builder, rows []ObjectRow) {
+	sb.WriteString("### Objects\n\n")
+	sb.WriteString("| Primary | Designation | Orbit | AU | Eccentricity | Period | SAH/UWP | Subs | Notes |\n")
+	sb.WriteString("|---|---|---|---|---|---|---|---|---|\n")
+	for _, r := range rows {
+		fmt.Fprintf(
+			sb,
+			"| %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
+			emDashIfEmpty23(r.Primary),
+			emDashIfEmpty23(r.Designation),
+			floatNonZero23(r.Orbit, 2),
+			floatNonZero23(r.AU, 3),
+			floatNonZero23(r.Ecc, 3),
+			emDashIfEmpty23(r.PeriodStr),
+			emDashIfEmpty23(r.SAH),
+			emDashIfEmpty23(r.Sub),
+			emDashIfEmpty23(r.Notes),
+		)
+	}
+	sb.WriteString("\n")
+}
+
+// emDashIfEmpty23 is the worlds-package counterpart to stars/markdown.go's
+// emDashIfEmpty — duplicated intentionally per spec (no shared helper across
+// package boundaries).
+func emDashIfEmpty23(s string) string {
+	if s == "" {
+		return "—"
+	}
+	return s
+}
+
+func floatNonZero23(v float64, prec int) string {
+	if v == 0 {
+		return "—"
+	}
+	return fmt.Sprintf("%.*f", prec, v)
+}

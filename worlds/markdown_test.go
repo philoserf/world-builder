@@ -193,3 +193,64 @@ func TestRenderClass4PMarkdown_BodyEmpty_ReturnsEmpty(t *testing.T) {
 		t.Errorf("BodyEmpty should return empty string; got %q", got)
 	}
 }
+
+func TestRenderClass23Markdown_PopulatedFields(t *testing.T) {
+	form := IISSClass23Form{
+		SurveyForm: stars.SurveyForm{
+			Sector:        "Storr",
+			Location:      "0602",
+			IISSDesig:     "566-837 (Zed Prime)",
+			InitialSurvey: "207-568",
+			LastUpdated:   "218-1061",
+			SystemAgeGyr:  6.336,
+			StellarCount:  5,
+			Stars: []stars.SurveyComponent{
+				{Component: "Aa", Class: "G7 V", Mass: 0.929, Temperature: 5440, Diameter: 0.967, Luminosity: 0.738},
+			},
+		},
+		GasGiants:      4,
+		PlanetoidBelts: 2,
+		Terrestrials:   12,
+		ClassIIIStatus: true,
+		Objects: []ObjectRow{
+			{Primary: "Aab", Designation: "Aab IV", Orbit: 3.1, AU: 1.06, Ecc: 0.10, PeriodStr: "0.805y", SAH: "GLE", Sub: "5", Notes: "1,200⊕, HZ"},
+			{Primary: "Aab", Designation: "Aab IV d", SAH: "566*", Sub: "", Notes: ""},
+		},
+	}
+
+	got := RenderClass23Markdown(form)
+
+	expected := []string{
+		"## IISS Class II/III Survey — Form 0421D-II.III",
+		"### Header",
+		"| IISS Designation | 566-837 (Zed Prime) |",
+		"| Class III Status | yes |",
+		"### Object Counts",
+		"| Stellar | 5 |",
+		"| Gas Giants | 4 |",
+		"| Planetoid Belts | 2 |",
+		"| Terrestrials | 12 |",
+		"### Stars",
+		"| Aa | G7 V |",
+		"### Objects",
+		"| Primary | Designation | Orbit | AU | Eccentricity | Period | SAH/UWP | Subs | Notes |",
+		"| Aab | Aab IV |",
+		"| Aab | Aab IV d |",
+	}
+	for _, want := range expected {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in output:\n%s", want, got)
+		}
+	}
+}
+
+func TestRenderClass23Markdown_ClassIIStatusRendersAsNo(t *testing.T) {
+	form := IISSClass23Form{
+		SurveyForm:     stars.SurveyForm{IISSDesig: "Test"},
+		ClassIIIStatus: false,
+	}
+	got := RenderClass23Markdown(form)
+	if !strings.Contains(got, "| Class III Status | no |") {
+		t.Errorf("expected 'Class III Status | no'; got:\n%s", got)
+	}
+}
