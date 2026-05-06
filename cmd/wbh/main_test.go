@@ -54,17 +54,6 @@ func TestRun_UnknownFormat(t *testing.T) {
 	}
 }
 
-func TestRun_DefaultsToJSON(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	err := run([]string{"-seed", "42"}, &stdout, &stderr)
-	if err != nil {
-		t.Fatalf("run error: %v", err)
-	}
-	if !strings.Contains(stdout.String(), "StellarCount") {
-		t.Fatalf("default format expected JSON; got %q", stdout.String())
-	}
-}
-
 func TestRun_TimeBasedSeed(t *testing.T) {
 	// seed=0 -> time-based. Just verify no error and the output contains JSON.
 	var stdout, stderr bytes.Buffer
@@ -73,5 +62,56 @@ func TestRun_TimeBasedSeed(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "StellarCount") {
 		t.Fatalf("expected JSON output for time-based seed")
+	}
+}
+
+func TestRun_DefaultIsMarkdown(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if err := run([]string{"-seed", "42"}, &stdout, &stderr); err != nil {
+		t.Fatalf("run failed: %v (stderr=%q)", err, stderr.String())
+	}
+	out := stdout.String()
+	trimmed := strings.TrimLeft(out, "\n")
+	if !strings.HasPrefix(trimmed, "# Star System:") {
+		preview := out
+		if len(preview) > 80 {
+			preview = preview[:80]
+		}
+		t.Errorf("expected output to start with '# Star System:'; got first 80 chars: %q", preview)
+	}
+	if !strings.Contains(out, "## IISS Class 0/I Survey") {
+		t.Errorf("expected Class 0/I H2 in default output")
+	}
+}
+
+func TestRun_FormatMarkdownExplicit(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if err := run([]string{"-seed", "42", "-format", "markdown"}, &stdout, &stderr); err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+	if !strings.Contains(stdout.String(), "## IISS Class 0/I Survey") {
+		t.Errorf("expected Class 0/I H2 with -format markdown")
+	}
+}
+
+func TestRun_FormatJSONStillWorks(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if err := run([]string{"-seed", "42", "-format", "json"}, &stdout, &stderr); err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &parsed); err != nil {
+		t.Errorf("expected valid JSON; got error %v on output:\n%s", err, stdout.String())
+	}
+}
+
+func TestRun_FormatShortStillWorks(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if err := run([]string{"-seed", "42", "-format", "short"}, &stdout, &stderr); err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+	out := strings.TrimSpace(stdout.String())
+	if strings.Contains(out, "\n") {
+		t.Errorf("expected single-line short output; got:\n%s", out)
 	}
 }
