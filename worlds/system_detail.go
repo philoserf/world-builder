@@ -387,6 +387,9 @@ type DetailedPlacement struct {
 
 	// 3B-biology additions
 	Biology *Biology
+
+	// 3B-final additions
+	Habitability *Habitability
 }
 
 // HasPhysical reports whether body-physical data has been generated for this placement.
@@ -422,6 +425,9 @@ func (dp *DetailedPlacement) HasGeology() bool { return dp.Geology != nil }
 // HasBiology reports whether biology data has been generated for this placement.
 func (dp *DetailedPlacement) HasBiology() bool { return dp.Biology != nil }
 
+// HasHabitability reports whether habitability data has been generated for this placement.
+func (dp *DetailedPlacement) HasHabitability() bool { return dp.Habitability != nil }
+
 // RenderSAH returns the 3-character SAH triplet for the IISS form.
 // HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".
 func (dp *DetailedPlacement) RenderSAH() string {
@@ -456,4 +462,14 @@ type SystemDetail struct {
 	ShortProfile string          // "G-P-T-N-S" form per WBH p.58
 	LongProfile  string          // "St-N-W-W-S:..." form per WBH p.58
 	Survey       IISSClass23Form // IISS Class II/III survey form (Task 13)
+
+	// MainworldDesignation is the auto-picked mainworld's designation per
+	// WBH p.134. Priority chain: bodies with native sophonts → highest
+	// habitability → highest resource → first in iteration order.
+	// Empty string if no terrestrial body qualifies.
+	//
+	// The book explicitly says the Referee may override this pick. A future
+	// sub-project may add a Referee-override mechanism; for now the
+	// auto-pick is the only source.
+	MainworldDesignation string
 }

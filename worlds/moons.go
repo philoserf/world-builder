@@ -44,6 +44,9 @@ type Moon struct {
 
 	// 3B-biology additions
 	Biology *Biology
+
+	// 3B-final additions
+	Habitability *Habitability
 }
 
 // HasSurfaceDistribution reports whether surface-distribution data has been generated for this moon.
@@ -69,6 +72,9 @@ func (m *Moon) HasGeology() bool { return m.Geology != nil }
 
 // HasBiology reports whether biology data has been generated for this moon.
 func (m *Moon) HasBiology() bool { return m.Biology != nil }
+
+// HasHabitability reports whether habitability data has been generated for this moon.
+func (m *Moon) HasHabitability() bool { return m.Habitability != nil }
 
 // ParentInfo describes a moon's parent body. Only one of (terrestrial
 // SizeCode) or (IsGasGiant + GGClass) should be populated.
