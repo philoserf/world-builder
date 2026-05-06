@@ -20,12 +20,16 @@ func runStep5G(r roller.Roller, detailed []DetailedPlacement, sys stars.System) 
 	_ = sys // unused
 	for i := range detailed {
 		dp := &detailed[i]
-		if !habitabilityApplies(dp) {
-			continue
+		// Process parent body if applicable.
+		if habitabilityApplies(dp) {
+			h := ComputeHabitability(dp)
+			dp.Habitability = &h
 		}
-		h := ComputeHabitability(dp)
-		dp.Habitability = &h
-
+		// ALWAYS iterate moons — they can be terrestrial bodies regardless of
+		// parent type. Zed Prime is a moon of Aab IV (Gas Giant) and is the
+		// canonical Habitability-7 mainworld per WBH p.141. The previous
+		// 'continue' on the parent check silently skipped the entire moon loop
+		// for GG/belt parents, denying Habitability to those moons.
 		for j := range dp.Moons {
 			m := &dp.Moons[j]
 			moonDP := buildMoonPlacementView(m, dp)

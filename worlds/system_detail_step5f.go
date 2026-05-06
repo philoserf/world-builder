@@ -20,11 +20,15 @@ import (
 func runStep5F(r roller.Roller, detailed []DetailedPlacement, sys stars.System) error {
 	for i := range detailed {
 		dp := &detailed[i]
-		if !biologyApplies(dp) {
-			continue
+		// Process parent body if applicable.
+		if biologyApplies(dp) {
+			dp.Biology = computeBiology(r, dp, sys.Primary.AgeGyr)
 		}
-		dp.Biology = computeBiology(r, dp, sys.Primary.AgeGyr)
-
+		// ALWAYS iterate moons — they can be terrestrial-with-atm bodies
+		// regardless of parent type. Zed Prime is a moon of Aab IV (Gas Giant)
+		// and has Biomass=A per WBH p.141. The previous 'continue' on the
+		// parent check silently skipped the entire moon loop for GG/belt
+		// parents, denying Biology to those moons.
 		for j := range dp.Moons {
 			m := &dp.Moons[j]
 			if m.Atmosphere == nil {

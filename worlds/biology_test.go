@@ -869,6 +869,43 @@ func TestRunStep5F_BiocomplexityBelowEight_NoSophontRolls(t *testing.T) {
 	}
 }
 
+func TestRunStep5F_MoonOfGGParent_GetsBiology(t *testing.T) {
+	// Critical regression test: Zed Prime is a moon of Aab IV (a Gas Giant)
+	// and per WBH p.141 has Biomass=A. The previous implementation used
+	// 'continue' on the parent-applies check, skipping the entire moon loop
+	// when the parent was a GG, silently denying Biology to such moons.
+	dp := DetailedPlacement{}
+	dp.Body = BodyGasGiant
+	dp.GGClass = GasGiantSmall
+	dp.Designation = "Aab IV"
+	dp.Moons = []Moon{
+		{
+			Designation:   "Aab IV d",
+			SizeCode:      "5",
+			Atmosphere:    &Atmosphere{Code: 6},
+			Hydrographics: &Hydrographics{Code: 6},
+			Physical:      &BodyPhysical{Density: 1.03, Gravity: 0.66},
+			Temperature:   &Temperature{MeanK: 300, HighK: 346, LowK: 262},
+		},
+	}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 6.336}}
+	// Generous dice budget for full biology + resource roll on the moon.
+	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	// Parent (GG) should NOT have Biology.
+	if detailed[0].Biology != nil {
+		t.Error("GG parent should not have Biology")
+	}
+	// Moon should have Biology — this is the bug being fixed.
+	if detailed[0].Moons[0].Biology == nil {
+		t.Fatal("Moon of GG parent should have Biology (Zed Prime case)")
+	}
+}
+
 func TestRunStep5F_MoonBiomass_UsesMoonTemperature(t *testing.T) {
 	// Regression test for the moonDP.Temperature=nil silent-zero bug:
 	// computeBiology must see the moon's actual temperature so RollBiomass
