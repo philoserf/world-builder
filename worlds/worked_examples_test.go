@@ -1425,14 +1425,17 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 		// (and HZ-planet moons with Atmosphere). Skip belts, GGs, empty.
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
-			if dp.Body != worlds.BodyTerrestrial || dp.Atmosphere == nil {
-				continue
+			if dp.Body == worlds.BodyTerrestrial && dp.Atmosphere != nil && dp.SizeCode != "0" {
+				if !dp.HasBiology() {
+					t.Errorf("iter %d: body %s missing Biology", iter, dp.Designation)
+				}
 			}
-			if dp.SizeCode == "0" {
-				continue
-			}
-			if !dp.HasBiology() {
-				t.Errorf("iter %d: body %s missing Biology", iter, dp.Designation)
+			// Per-moon coverage: HZ-planet moons with atmosphere also get Biology.
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.Atmosphere != nil && !m.HasBiology() {
+					t.Errorf("iter %d: moon %s has atmosphere but missing Biology", iter, m.Designation)
+				}
 			}
 		}
 

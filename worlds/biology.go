@@ -20,6 +20,8 @@ import (
 //     false (prerequisite for sophont rolls is Biocomplexity >= 8).
 //   - Belts (Size 0), gas giants, empty placements: biology not generated;
 //     dp.Biology stays nil.
+//   - Terrestrial bodies without Atmosphere data: biology not generated;
+//     dp.Biology stays nil.
 type Biology struct {
 	// 2D + DMs, with combined-DM sum clamped to [-12, +4] per WBH p.127.
 	// Range 0-15 (eHex 0-F); 0 = no native life.

@@ -494,6 +494,11 @@ func runStep5F(r roller.Roller, detailed []DetailedPlacement, sys stars.System) 
 				continue
 			}
 			moonDP := buildMoonPlacementView(m, dp)
+			// buildMoonPlacementView does not copy Temperature; set it
+			// explicitly so RollBiomass can read m.Temperature for the
+			// temperature DMs (precedent: same pattern in computeMoonGeology
+			// for TidalEffects per 3B-geology Task 8).
+			moonDP.Temperature = m.Temperature
 			m.Biology = computeBiology(r, moonDP, sys.Primary.AgeGyr)
 		}
 	}

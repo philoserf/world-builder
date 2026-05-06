@@ -868,3 +868,51 @@ func TestRunStep5F_BiocomplexityBelowEight_NoSophontRolls(t *testing.T) {
 			bio.HasNativeSophont, bio.HadExtinctSophont)
 	}
 }
+
+func TestRunStep5F_MoonBiomass_UsesMoonTemperature(t *testing.T) {
+	// Regression test for the moonDP.Temperature=nil silent-zero bug:
+	// computeBiology must see the moon's actual temperature so RollBiomass
+	// can apply the temperate-zone DM+2 (or other temp DMs).
+	dp := DetailedPlacement{}
+	dp.Body = BodyTerrestrial
+	dp.SizeCode = "8"
+	dp.Designation = "Aab III"
+	dp.Atmosphere = &Atmosphere{Code: 6}
+	dp.Hydrographics = &Hydrographics{Code: 6}
+	dp.Physical = &BodyPhysical{Density: 1.0}
+	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
+	dp.Moons = []Moon{
+		{
+			Designation:   "Aab III a",
+			SizeCode:      "5",
+			Atmosphere:    &Atmosphere{Code: 6},
+			Hydrographics: &Hydrographics{Code: 6}, // hydro 6 → +1
+			Physical:      &BodyPhysical{Density: 1.0},
+			Temperature:   &Temperature{MeanK: 290, HighK: 310}, // +2 mean
+		},
+	}
+
+	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}} // age > 4 → +1
+
+	// Generous dice budget for both bodies.
+	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
+	detailed := []DetailedPlacement{dp}
+	if err := runStep5F(r, detailed, sys); err != nil {
+		t.Fatal(err)
+	}
+	if detailed[0].Moons[0].Biology == nil {
+		t.Fatal("Moon Biology is nil")
+	}
+	moonBio := detailed[0].Moons[0].Biology
+	// Moon should have biomass ≥ 8: parent rolls Biomass first (consumes one
+	// dice), then biocomplexity/sophont/biodiv/compat/resource — about 7 dice
+	// for the parent. Then moon Biomass rolls 2D=8 with DMs hydro+1, age+1,
+	// mean+2 → +4 (at cap), 8+4 = 12.
+	// If the temperature DMs were silently ignored (the bug), the moon DMs
+	// would be hydro+1, age+1 = +2, and biomass would be 8+2 = 10.
+	// The exact value depends on dice consumption order; assert the moon
+	// got the temperate-zone benefit by checking biomass is at least 11.
+	if moonBio.Biomass < 11 {
+		t.Errorf("moon Biomass: got %d, want >= 11 (temperature DMs should apply)", moonBio.Biomass)
+	}
+}
