@@ -118,6 +118,57 @@ func runStep5A(r roller.Roller, detailed []DetailedPlacement, sys stars.System, 
 			dp.Hydrographics = &hydro
 		}
 
+		// Moon atmosphere + hydrographics (HZ-planet moons only). Moons inherit
+		// the parent's HZ-orbit position and HZCO offset since they share its slot.
+		if dp.HZ && len(dp.Moons) > 0 {
+			offset := dp.Orbit - hzco
+			tempRange := HZCOOffsetToTempRange(dp.Orbit, hzco)
+			meanT := tempRangeMidpointK(tempRange)
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.GGClass != NotGasGiant {
+					continue
+				}
+				if m.SizeCode == "" || m.SizeCode == "0" || m.SizeCode == "R" {
+					continue
+				}
+				atmoCode, err := RollAtmoCode(r, m.SizeCode, offset)
+				if err != nil {
+					return fmt.Errorf("worlds: moon atmosphere %s: %w", m.Designation, err)
+				}
+				atmo := Atmosphere{Code: atmoCode}
+				if atmoCode == 11 || atmoCode == 12 {
+					st, serr := RollCorrosiveInsidiousSubtype(r, m.SizeCode, dp.Orbit, hzco, atmoCode == 12, false)
+					if serr != nil {
+						return fmt.Errorf("worlds: moon atmo subtype %s: %w", m.Designation, serr)
+					}
+					atmo.Subtype = st
+				}
+				press, perr := RollTotalPressure(r, atmoCode)
+				if perr != nil {
+					return fmt.Errorf("worlds: moon pressure %s: %w", m.Designation, perr)
+				}
+				atmo.Pressure = press
+				if atmoCode >= 2 && atmoCode <= 9 {
+					frac, ferr := RollOxygenFraction(r, sys.Primary.AgeGyr)
+					if ferr != nil {
+						return fmt.Errorf("worlds: moon oxygen %s: %w", m.Designation, ferr)
+					}
+					atmo.OxygenPartialPressure = frac * press
+				}
+				if m.Physical != nil {
+					atmo.ScaleHeight = DeriveScaleHeight(meanT, m.Physical.Gravity)
+				}
+				m.Atmosphere = &atmo
+
+				hydro, herr := GenerateHydrographics(r, atmo, m.SizeCode, tempRange)
+				if herr != nil {
+					return fmt.Errorf("worlds: moon hydro %s: %w", m.Designation, herr)
+				}
+				m.Hydrographics = &hydro
+			}
+		}
+
 		// Moon refinement (any planet with moons).
 		if len(dp.Moons) > 0 {
 			refinePlacementMoons(r, dp)
