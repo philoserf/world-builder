@@ -306,3 +306,35 @@ func TestDetailSystem_MoonAtmosphereHydrographicsPersisted(t *testing.T) {
 		t.Skip("no HZ-planet terrestrial moons found across 30 seeds; test cannot validate")
 	}
 }
+
+// TestBuildMoonPlacementView_PropagatesParentGroup asserts that the moonDP
+// view inherits the parent's stellar Group. Without this, downstream readers
+// (temperature_albedo.go, temperature.go, temperature_rederive.go) fall back
+// to sys.Primary.HZCO() instead of the actual parent group's HZCO — wrong
+// for multi-star systems where the parent is in a non-primary group.
+func TestBuildMoonPlacementView_PropagatesParentGroup(t *testing.T) {
+	t.Parallel()
+
+	parent := &DetailedPlacement{
+		SizeCode:    "8",
+		DiameterKm:  12000,
+		Designation: "B II",
+		HZ:          true,
+	}
+	parent.Body = BodyTerrestrial
+	parent.Group = Group{Designation: "B"}
+	parent.Orbit = 1.5
+
+	m := &Moon{
+		Designation: "B II a",
+		SizeCode:    "5",
+		DiameterKm:  9000,
+	}
+
+	moonDP := buildMoonPlacementView(m, parent)
+
+	if moonDP.Group.Designation != "B" {
+		t.Errorf("moonDP.Group.Designation = %q, want %q (parent's Group not propagated)",
+			moonDP.Group.Designation, parent.Group.Designation)
+	}
+}
