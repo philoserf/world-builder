@@ -284,6 +284,9 @@ func runStep5E(r roller.Roller, detailed []DetailedPlacement, sys stars.System) 
 		// Temperature recompute (in place) per WBH p.125.
 		if dp.Temperature != nil {
 			ApplyInherentTempAddition(dp.Temperature, dp.Geology.InherentTemperatureK)
+			if dp.Atmosphere != nil && dp.Physical != nil {
+				dp.Atmosphere.ScaleHeight = DeriveScaleHeight(dp.Temperature.MeanK, dp.Physical.Gravity)
+			}
 		}
 
 		// Process moons.
@@ -292,6 +295,9 @@ func runStep5E(r roller.Roller, detailed []DetailedPlacement, sys stars.System) 
 			m.Geology = computeMoonGeology(r, m, dp, sys)
 			if m.Temperature != nil {
 				ApplyInherentTempAddition(m.Temperature, m.Geology.InherentTemperatureK)
+				if m.Atmosphere != nil && m.Physical != nil {
+					m.Atmosphere.ScaleHeight = DeriveScaleHeight(m.Temperature.MeanK, m.Physical.Gravity)
+				}
 			}
 		}
 	}

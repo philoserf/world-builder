@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 
 	"wbh/roller"
@@ -336,5 +337,68 @@ func TestBuildMoonPlacementView_PropagatesParentGroup(t *testing.T) {
 	if moonDP.Group.Designation != "B" {
 		t.Errorf("moonDP.Group.Designation = %q, want %q (parent's Group not propagated)",
 			moonDP.Group.Designation, parent.Group.Designation)
+	}
+}
+
+// TestDetailSystem_ScaleHeightRefreshedAfter5E asserts that after DetailSystem,
+// any body whose 3B-geology pass added inherent temperature has its
+// Atmosphere.ScaleHeight in sync with the post-5E MeanK.
+//
+// 3A1 computes ScaleHeight from an HZCO-band midpoint estimate. 5D rederive
+// refreshes it using the real MeanK from 5C. 5E then bumps MeanK via
+// ApplyInherentTempAddition (when total seismic stress is high) — ScaleHeight
+// must be refreshed once more or it drifts from the temperature it claims.
+func TestDetailSystem_ScaleHeightRefreshedAfter5E(t *testing.T) {
+	t.Parallel()
+
+	sys := stars.System{
+		Primary: stars.Compose(stars.ComposeOpts{
+			Kind:            stars.KindMainSequence,
+			SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+			LuminosityClass: stars.V,
+			Mass:            1.0,
+			Diameter:        1.0,
+			Temperature:     5800,
+			AgeGyr:          4.6,
+		}),
+		PrimaryDesignation: "A",
+		AgeGyr:             4.6,
+	}
+
+	saw := 0
+	for iter := range 50 {
+		seed := int64(iter)
+		r := roller.NewSeeded(seed)
+		sp, err := GenerateSystemPlacement(r, sys)
+		if err != nil {
+			continue
+		}
+		sd, err := DetailSystem(r, sys, sp, IISSClass23Header{})
+		if err != nil {
+			continue
+		}
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if dp.Atmosphere == nil || dp.Physical == nil ||
+				!dp.HasTemperature() || !dp.HasGeology() {
+				continue
+			}
+			if dp.Geology.InherentTemperatureK <= 0 {
+				continue
+			}
+			if dp.Physical.Gravity == 0 {
+				continue
+			}
+			saw++
+			want := DeriveScaleHeight(dp.Temperature.MeanK, dp.Physical.Gravity)
+			if math.Abs(dp.Atmosphere.ScaleHeight-want)/want > 0.001 {
+				t.Errorf("seed %d body %s: ScaleHeight=%v, want %v (DeriveScaleHeight(MeanK=%v, G=%v))",
+					seed, dp.Designation, dp.Atmosphere.ScaleHeight, want,
+					dp.Temperature.MeanK, dp.Physical.Gravity)
+			}
+		}
+	}
+	if saw == 0 {
+		t.Skip("no bodies with InherentTemperatureK > 0 in 50 seeds; test cannot validate")
 	}
 }
