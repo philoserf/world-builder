@@ -153,7 +153,14 @@ func writeClass4PTemperature(sb *strings.Builder, body *DetailedPlacement) {
 	sb.WriteString("| Field | Value |\n|---|---|\n")
 	fmt.Fprintf(sb, "| High (K) | %.0f |\n", t.HighK)
 	fmt.Fprintf(sb, "| Mean (K) | %.0f |\n", t.MeanK)
-	fmt.Fprintf(sb, "| Low (K) | %.0f |\n", t.LowK)
+	// LowK == 0 is MeanTemperatureK's degenerate-model sentinel (lowL ≤ 0
+	// when LuminosityModifier hits its 1.0 clamp). Suppress as em-dash so
+	// users don't read a literal "0 K" claim. See issue #1.
+	if t.LowK <= 0 && t.MeanK > 0 {
+		sb.WriteString("| Low (K) | — |\n")
+	} else {
+		fmt.Fprintf(sb, "| Low (K) | %.0f |\n", t.LowK)
+	}
 	fmt.Fprintf(sb, "| Luminosity | %.3f |\n", t.Luminosity)
 	fmt.Fprintf(sb, "| Albedo | %.2f |\n", t.Albedo)
 	fmt.Fprintf(sb, "| Greenhouse | %.2f |\n\n", t.GreenhouseFactor)
