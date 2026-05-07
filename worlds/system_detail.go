@@ -154,6 +154,7 @@ func buildMoonPlacementView(m *Moon, parent *DetailedPlacement) *DetailedPlaceme
 		dp.Body = BodyGasGiant
 	}
 	dp.Orbit = parent.Orbit
+	dp.Group = parent.Group
 	return dp
 }
 
