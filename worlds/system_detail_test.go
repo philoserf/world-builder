@@ -240,3 +240,69 @@ func TestDetailSystem_MoonBodyPhysicalPersisted(t *testing.T) {
 		t.Fatal("no non-trivial moons in this system; test cannot validate (try a different seed)")
 	}
 }
+
+// TestDetailSystem_MoonAtmosphereHydrographicsPersisted asserts that after
+// DetailSystem, every non-trivial terrestrial moon of an HZ-orbit planet has
+// Atmosphere and Hydrographics populated.
+//
+// Spec: docs/specs/2026-05-03-world-physical-3a1-design.md requires atm + hydro
+// for "every HZ-orbit body and every HZ-planet moon". The companion fix in
+// `46cc66e` closed body-physical for moons; atm/hydro is the remaining 3A1 gap.
+func TestDetailSystem_MoonAtmosphereHydrographicsPersisted(t *testing.T) {
+	t.Parallel()
+
+	sys := stars.System{
+		Primary: stars.Compose(stars.ComposeOpts{
+			Kind:            stars.KindMainSequence,
+			SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+			LuminosityClass: stars.V,
+			Mass:            1.0,
+			Diameter:        1.0,
+			Temperature:     5800,
+			AgeGyr:          4.6,
+		}),
+		PrimaryDesignation: "A",
+		AgeGyr:             4.6,
+	}
+
+	saw := 0
+	for iter := range 30 {
+		seed := int64(iter)
+		r := roller.NewSeeded(seed)
+		sp, err := GenerateSystemPlacement(r, sys)
+		if err != nil {
+			continue
+		}
+		sd, err := DetailSystem(r, sys, sp, IISSClass23Header{})
+		if err != nil {
+			continue
+		}
+		for i := range sd.Detailed {
+			dp := &sd.Detailed[i]
+			if !dp.HZ || dp.GGClass != NotGasGiant {
+				continue
+			}
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.GGClass != NotGasGiant {
+					continue
+				}
+				if m.SizeCode == "" || m.SizeCode == "0" || m.SizeCode == "R" {
+					continue
+				}
+				saw++
+				if m.Atmosphere == nil {
+					t.Errorf("seed %d moon %s (parent %s HZ, size %s): Atmosphere = nil",
+						seed, m.Designation, dp.Designation, m.SizeCode)
+				}
+				if m.Hydrographics == nil {
+					t.Errorf("seed %d moon %s (parent %s HZ, size %s): Hydrographics = nil",
+						seed, m.Designation, dp.Designation, m.SizeCode)
+				}
+			}
+		}
+	}
+	if saw == 0 {
+		t.Skip("no HZ-planet terrestrial moons found across 30 seeds; test cannot validate")
+	}
+}

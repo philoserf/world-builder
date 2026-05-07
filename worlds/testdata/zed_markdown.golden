@@ -78,7 +78,7 @@
 | Aab | Aab II d | — | — | — | — | S | — | — |
 | Aab | Aab II e | — | — | — | — | 1 | — | — |
 | Aab | Aab III | 2.29 | 0.787 | 0.005 | 0.515y | 9?? | 0 | — |
-| Aab | Aab IV | 2.82 | 0.946 | 0.015 | 0.679y | AB6 | 0 | HZ |
+| Aab | Aab IV | 2.82 | 0.946 | 0.015 | 0.679y | AB7 | 0 | HZ |
 | Cab | Cab I | 1.14 | 0.441 | 0.005 | 0.293y | GMA | 10 | 80⊕, HZ, 4??, 1??, 2??, 1??, S??, R??, R??, S??, S??, R?? |
 | Cab | Cab I a | — | — | — | — | 4?? | — | — |
 | Cab | Cab I b | — | — | — | — | 1?? | — | — |
@@ -128,24 +128,24 @@
 | Code | 11 |
 | Pressure (bar) | 0.000 |
 | O₂ (bar) | 0.000 |
-| Scale Height | 6.34 |
+| Scale Height | 6.51 |
 
 ### Hydrographics
 
 | Field | Value |
 |---|---|
-| Code | 6 |
-| Coverage (%) | 64 |
-| Profile | H6:H2O-100 |
+| Code | 7 |
+| Coverage (%) | 72 |
+| Profile | H7:H2O-100 |
 
 ### Rotation
 
 | Field | Value |
 |---|---|
-| Sidereal (h) | 32.15 |
-| Solar (h) | 32.32 |
-| Solar days/year | 184.03 |
-| Axial Tilt (°) | 74.58 |
+| Sidereal (h) | 41.91 |
+| Solar (h) | 42.21 |
+| Solar days/year | 140.92 |
+| Axial Tilt (°) | 9.00 |
 | Tidal lock | no |
 | Tides (m) | 0.05 |
 
@@ -153,11 +153,11 @@
 
 | Field | Value |
 |---|---|
-| High (K) | 336 |
-| Mean (K) | 283 |
-| Low (K) | 0 |
+| High (K) | 321 |
+| Mean (K) | 290 |
+| Low (K) | 247 |
 | Luminosity | 1.419 |
-| Albedo | 0.38 |
+| Albedo | 0.31 |
 | Greenhouse | 0.00 |
 
 ### Seismic
@@ -168,23 +168,23 @@
 | Residual Stress | 144 |
 | Tidal Stress | 0 |
 | Tidal Heating | 0 |
-| Tectonic Plates | 14 |
+| Tectonic Plates | 16 |
 
 ### Life
 
 | Field | Value |
 |---|---|
-| Biomass | 0 |
-| Biocomplexity | 0 |
+| Biomass | 6 |
+| Biocomplexity | 1 |
 | Sophonts? | no |
-| Biodiversity | 0 |
+| Biodiversity | 6 |
 | Compatibility | 0 |
 
 ### Resources
 
 | Field | Value |
 |---|---|
-| Rating | B |
+| Rating | C |
 
 ### Habitability
 
