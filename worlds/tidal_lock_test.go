@@ -349,6 +349,90 @@ func TestApplyTidalLockEffect_OneToOneLock_EccentricityReroll(t *testing.T) {
 	}
 }
 
+// TestApplyTidalLockEffect_BecomesRetrograde_LowTiltFlips covers FinalResult=9
+// (the lower of the two BecomesRetrograde branches). Body starts at tilt 30°;
+// the post-process should flip degrees to 180-30 = 150 and set Retrograde=true.
+// FinalResult=9 also rolls 1D for NewSiderealHours = 1D × 5 × 24h.
+func TestApplyTidalLockEffect_BecomesRetrograde_LowTiltFlips(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
+	body.AxialTilt = &AxialTilt{Degrees: 30, BaselineDegrees: 30}
+
+	// 1D roll for NewSiderealHours: 3 → 3 × 10 × 24 = 720h.
+	r := roller.NewScripted(3)
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 9, 8766.0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !tl.BecomesRetrograde {
+		t.Error("BecomesRetrograde: got false, want true (FinalResult=9)")
+	}
+	if tl.LockRatio != "" {
+		t.Errorf("LockRatio: got %q, want empty (BecomesRetrograde branch)", tl.LockRatio)
+	}
+	if tl.NewSiderealHours != 720 {
+		t.Errorf("NewSiderealHours: got %v, want 720 (1D=3 × 10 × 24)", tl.NewSiderealHours)
+	}
+	if body.AxialTilt.Degrees != 150 {
+		t.Errorf("AxialTilt.Degrees: got %v, want 150 (flipped 180-30)", body.AxialTilt.Degrees)
+	}
+	if !body.AxialTilt.Retrograde {
+		t.Error("AxialTilt.Retrograde: got false, want true (degrees > 90 after flip)")
+	}
+	if body.DayLength.SiderealHours != 720 {
+		t.Errorf("body.DayLength.SiderealHours: got %v, want 720", body.DayLength.SiderealHours)
+	}
+}
+
+// TestApplyTidalLockEffect_BecomesRetrograde_HighTiltNoFlip covers the FinalResult=10
+// branch where a body already has tilt >= 90°. The post-process must NOT flip
+// (no 180-degrees mutation) and must set Retrograde=true.
+func TestApplyTidalLockEffect_BecomesRetrograde_HighTiltNoFlip(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
+	body.AxialTilt = &AxialTilt{Degrees: 120, BaselineDegrees: 120}
+
+	// 1D roll for NewSiderealHours: 2 → 2 × 50 × 24 = 2400h (FinalResult=10 multiplier).
+	r := roller.NewScripted(2)
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 10, 8766.0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !tl.BecomesRetrograde {
+		t.Error("BecomesRetrograde: got false, want true (FinalResult=10)")
+	}
+	if tl.NewSiderealHours != 2400 {
+		t.Errorf("NewSiderealHours: got %v, want 2400 (1D=2 × 50 × 24)", tl.NewSiderealHours)
+	}
+	if body.AxialTilt.Degrees != 120 {
+		t.Errorf("AxialTilt.Degrees: got %v, want 120 (no flip, already > 90)", body.AxialTilt.Degrees)
+	}
+	if !body.AxialTilt.Retrograde {
+		t.Error("AxialTilt.Retrograde: got false, want true (degrees > 90)")
+	}
+}
+
+// TestApplyTidalLockEffect_BecomesRetrograde_NilAxialTilt verifies the
+// post-process safely no-ops when body.AxialTilt is nil — a body with no
+// rolled tilt must not panic on the BecomesRetrograde flag.
+func TestApplyTidalLockEffect_BecomesRetrograde_NilAxialTilt(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
+	// AxialTilt deliberately nil.
+
+	r := roller.NewScripted(4)
+	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 9, 8766.0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !tl.BecomesRetrograde {
+		t.Error("BecomesRetrograde: got false, want true (FinalResult=9)")
+	}
+	if body.AxialTilt != nil {
+		t.Errorf("body.AxialTilt: got %+v, want nil (should not be created by tidal lock)", body.AxialTilt)
+	}
+}
+
 func TestGenerateTidalLock_ZedPrime_FullPath(t *testing.T) {
 	// Zed Prime moon→planet path:
 	//   1. EvaluateTidalLockDMs returns DM+7 for moon→planet case.
