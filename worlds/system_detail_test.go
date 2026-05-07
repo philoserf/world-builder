@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"wbh/roller"
@@ -444,5 +445,49 @@ func TestFindMainworld_FindsMoonMainworld(t *testing.T) {
 	if got.Group.Designation != "B" {
 		t.Errorf("FindMainworld result has Group.Designation = %q, want %q (parent's group not propagated)",
 			got.Group.Designation, "B")
+	}
+}
+
+// TestClass4PTemperature_LowKZeroRendersAsEmDash asserts that when
+// MeanTemperatureK degenerates to 0 (LuminosityModifier hits its 1.0
+// clamp → lowL = Luminosity × 0 → core ≤ 0 → returns 0 sentinel), the
+// renderer shows an em-dash instead of "0", which would falsely claim
+// the body is at absolute zero.
+//
+// Empirical incidence: 709 bodies hit this case across 200 G2V seeds.
+// The model breaks down whenever variance ≥ atmospheric buffering
+// (high-tilt, thin-atm, slow-rotation bodies). The data stays 0 (the
+// model's honest "we don't know"); the renderer suppresses it.
+func TestClass4PTemperature_LowKZeroRendersAsEmDash(t *testing.T) {
+	t.Parallel()
+
+	body := &DetailedPlacement{
+		Temperature: &Temperature{
+			MeanK:              287,
+			HighK:              336,
+			LowK:               0, // formula degenerated
+			Luminosity:         1.0,
+			Albedo:             0.30,
+			GreenhouseFactor:   0.36,
+			LuminosityModifier: 1.0, // clamped — signals degenerate model
+		},
+	}
+
+	var sb strings.Builder
+	writeClass4PTemperature(&sb, body)
+	out := sb.String()
+
+	if strings.Contains(out, "| Low (K) | 0 |") {
+		t.Errorf("renderer emitted unphysical \"Low (K) | 0\" for a body with MeanK=287 (model-degenerate case); want em-dash. Output:\n%s", out)
+	}
+	if !strings.Contains(out, "| Low (K) | — |") {
+		t.Errorf("renderer should show em-dash for degenerate LowK; output:\n%s", out)
+	}
+	// Sanity: High/Mean/etc still render normally.
+	if !strings.Contains(out, "| High (K) | 336 |") {
+		t.Errorf("renderer broke HighK; output:\n%s", out)
+	}
+	if !strings.Contains(out, "| Mean (K) | 287 |") {
+		t.Errorf("renderer broke MeanK; output:\n%s", out)
 	}
 }

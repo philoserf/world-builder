@@ -122,8 +122,16 @@ func renderIISS4PTemperature(sb *strings.Builder, body *DetailedPlacement) {
 		return
 	}
 	t := body.Temperature
-	fmt.Fprintf(sb, "  High (K): %.1f   Mean (K): %.1f   Low (K): %.1f\n",
-		t.HighK, t.MeanK, t.LowK)
+	// LowK == 0 is MeanTemperatureK's degenerate-model sentinel (lowL ≤ 0
+	// when LuminosityModifier hits its 1.0 clamp). Render as "—" so users
+	// don't read a literal "0 K" claim. See issue #1.
+	if t.LowK <= 0 && t.MeanK > 0 {
+		fmt.Fprintf(sb, "  High (K): %.1f   Mean (K): %.1f   Low (K): —\n",
+			t.HighK, t.MeanK)
+	} else {
+		fmt.Fprintf(sb, "  High (K): %.1f   Mean (K): %.1f   Low (K): %.1f\n",
+			t.HighK, t.MeanK, t.LowK)
+	}
 	fmt.Fprintf(sb, "  Luminosity: %.3f   Albedo: %.2f   Greenhouse: %.2f\n\n",
 		t.Luminosity, t.Albedo, t.GreenhouseFactor)
 }
