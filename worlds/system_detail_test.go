@@ -178,3 +178,65 @@ func TestDetailSystem_TerrestrialMassPersisted(t *testing.T) {
 		t.Fatal("no terrestrials with Physical in this seed; test cannot validate")
 	}
 }
+
+// TestDetailSystem_MoonBodyPhysicalPersisted asserts that after DetailSystem,
+// every non-trivial terrestrial moon (not GG-cascade, not Size 0/R/blank) has
+// Physical populated and MassEarth = DeriveMass(density, diameter).
+//
+// Regression: runStep5A (3A1) iterated detailed[i] only — never dp.Moons[j].
+// Moons therefore had Physical=nil, MassEarth=0, and downstream callers
+// silently no-opped on nil-Physical or zero-mass guards.
+func TestDetailSystem_MoonBodyPhysicalPersisted(t *testing.T) {
+	t.Parallel()
+
+	sys := stars.System{
+		Primary: stars.Compose(stars.ComposeOpts{
+			Kind:            stars.KindMainSequence,
+			SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+			LuminosityClass: stars.V,
+			Mass:            1.0,
+			Diameter:        1.0,
+			Temperature:     5800,
+			AgeGyr:          4.6,
+		}),
+		PrimaryDesignation: "A",
+		AgeGyr:             4.6,
+	}
+
+	r := roller.NewSeeded(42)
+	sp, err := GenerateSystemPlacement(r, sys)
+	if err != nil {
+		t.Fatalf("GenerateSystemPlacement err: %v", err)
+	}
+	sd, err := DetailSystem(r, sys, sp, IISSClass23Header{})
+	if err != nil {
+		t.Fatalf("DetailSystem err: %v", err)
+	}
+
+	saw := 0
+	for _, dp := range sd.Detailed {
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			if m.GGClass != NotGasGiant {
+				continue
+			}
+			if m.SizeCode == "" || m.SizeCode == "0" || m.SizeCode == "R" {
+				continue
+			}
+			saw++
+			if m.Physical == nil {
+				t.Errorf("moon %s (parent %s, size %s): Physical = nil, want non-nil",
+					m.Designation, dp.Designation, m.SizeCode)
+				continue
+			}
+			want := DeriveMass(m.Physical.Density, m.DiameterKm)
+			if m.MassEarth != want {
+				t.Errorf("moon %s: MassEarth = %v, want %v (DeriveMass(%v, %v))",
+					m.Designation, m.MassEarth, want, m.Physical.Density, m.DiameterKm)
+			}
+		}
+	}
+	if saw == 0 {
+		t.Fatal("no non-trivial moons in this system; test cannot validate (try a different seed)")
+	}
+}
