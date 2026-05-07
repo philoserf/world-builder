@@ -1181,17 +1181,13 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 		// 3A2b-rederive invariants (new):
 
 		// Assertion 17: ScaleHeight under real T.
-		// 8.5 × meanK/288 / gravityG ± 20%.
-		// Skip bodies where geology added significant heat (InherentTemperatureK > 0):
-		// 5E raises MeanK but does not recompute ScaleHeight; post-geology MeanK no
-		// longer reflects the temperature used for the stored ScaleHeight.
+		// 8.5 × meanK/288 / gravityG ± 20%. ScaleHeight is refreshed twice in the
+		// pipeline: by 5D rederive (post-real-T) and by 5E geology (post-inherent-
+		// temperature addition), so the stored value should always reflect the
+		// final MeanK regardless of geology heating.
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.Atmosphere == nil || dp.Atmosphere.Code == 0 || !dp.HasTemperature() {
-				continue
-			}
-			// Skip bodies where geology heat addition has moved MeanK past the 5D reference.
-			if dp.HasGeology() && dp.Geology.InherentTemperatureK > 0 {
 				continue
 			}
 			gravity := 0.0
