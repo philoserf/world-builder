@@ -34,6 +34,7 @@ func runStep5A(r roller.Roller, detailed []DetailedPlacement, sys stars.System, 
 				return fmt.Errorf("worlds: body physical %s: %w", dp.Designation, err)
 			}
 			dp.Physical = &bp
+			dp.MassEarth = DeriveMass(bp.Density, dp.DiameterKm)
 		}
 
 		// Belt details (Size 0 only).

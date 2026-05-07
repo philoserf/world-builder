@@ -126,3 +126,55 @@ func TestDetailSystem_PipelineComposition(t *testing.T) {
 		}
 	}
 }
+
+// TestDetailSystem_TerrestrialMassPersisted asserts that after DetailSystem,
+// every terrestrial body with a populated Physical block also has a non-zero
+// MassEarth equal to DeriveMass(density, diameter).
+//
+// Regression: dp.MassEarth was set only by gas-giant sizing; terrestrial paths
+// computed mass inside GenerateBodyPhysical and discarded it. Renderers that
+// read dp.MassEarth directly (Class IV-P Size table) emitted 0; silent-zero
+// callers (surface_tidal_effects.go) short-circuited.
+func TestDetailSystem_TerrestrialMassPersisted(t *testing.T) {
+	t.Parallel()
+
+	sys := stars.System{
+		Primary: stars.Compose(stars.ComposeOpts{
+			Kind:            stars.KindMainSequence,
+			SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
+			LuminosityClass: stars.V,
+			Mass:            1.0,
+			Diameter:        1.0,
+			Temperature:     5800,
+			AgeGyr:          4.6,
+		}),
+		PrimaryDesignation: "A",
+		AgeGyr:             4.6,
+	}
+
+	r := roller.NewSeeded(42)
+	sp, err := GenerateSystemPlacement(r, sys)
+	if err != nil {
+		t.Fatalf("GenerateSystemPlacement err: %v", err)
+	}
+	sd, err := DetailSystem(r, sys, sp, IISSClass23Header{})
+	if err != nil {
+		t.Fatalf("DetailSystem err: %v", err)
+	}
+
+	saw := 0
+	for i, dp := range sd.Detailed {
+		if dp.Physical == nil {
+			continue
+		}
+		saw++
+		want := DeriveMass(dp.Physical.Density, dp.DiameterKm)
+		if dp.MassEarth != want {
+			t.Errorf("dp[%d] %s: MassEarth = %v, want %v (DeriveMass(%v, %v))",
+				i, dp.Designation, dp.MassEarth, want, dp.Physical.Density, dp.DiameterKm)
+		}
+	}
+	if saw == 0 {
+		t.Fatal("no terrestrials with Physical in this seed; test cannot validate")
+	}
+}
