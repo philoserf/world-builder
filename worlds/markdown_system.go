@@ -34,7 +34,7 @@ func RenderSystemMarkdown(sd SystemDetail, sys stars.System) string {
 
 	// Class IV-P — only when a mainworld was picked.
 	if sd.MainworldDesignation != "" {
-		if mw := findMainworld(sd, sd.MainworldDesignation); mw != nil {
+		if mw := FindMainworld(sd, sd.MainworldDesignation); mw != nil {
 			sb.WriteString(RenderClass4PMarkdown(mw, sys, sd.MainworldDesignation))
 		}
 	}
@@ -42,9 +42,9 @@ func RenderSystemMarkdown(sd SystemDetail, sys stars.System) string {
 	return sb.String()
 }
 
-// findMainworld locates the body in sd.Detailed (or its moons) whose
+// FindMainworld locates the body in sd.Detailed (or its moons) whose
 // Designation matches mainworld. Returns nil if not found.
-func findMainworld(sd SystemDetail, mainworld string) *DetailedPlacement {
+func FindMainworld(sd SystemDetail, mainworld string) *DetailedPlacement {
 	for i := range sd.Detailed {
 		if sd.Detailed[i].Designation == mainworld {
 			return &sd.Detailed[i]

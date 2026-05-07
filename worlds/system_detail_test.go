@@ -402,3 +402,47 @@ func TestDetailSystem_ScaleHeightRefreshedAfter5E(t *testing.T) {
 		t.Skip("no bodies with InherentTemperatureK > 0 in 50 seeds; test cannot validate")
 	}
 }
+
+// TestFindMainworld_FindsMoonMainworld asserts that the exported
+// FindMainworld helper resolves a moon-mainworld designation to a
+// synthesized DetailedPlacement view (not nil).
+//
+// Regression: a manual lookup in the worked-example acceptance test
+// (assertion 43) iterated only sd.Detailed top-level entries and
+// silently no-opped when MainworldDesignation matched a moon. Exposing
+// findMainworld lets external callers (and the test) reuse the
+// internal lookup that already handles moons via buildMoonPlacementView.
+func TestFindMainworld_FindsMoonMainworld(t *testing.T) {
+	t.Parallel()
+
+	parent := DetailedPlacement{
+		SizeCode:    "8",
+		DiameterKm:  12000,
+		Designation: "B II",
+		Moons: []Moon{
+			{Designation: "B II a", SizeCode: "5", DiameterKm: 9000},
+			{Designation: "B II b", SizeCode: "S", DiameterKm: 1500},
+		},
+	}
+	parent.Body = BodyTerrestrial
+	parent.Group = Group{Designation: "B"}
+	parent.Orbit = 1.5
+	parent.HZ = true
+
+	sd := SystemDetail{
+		Detailed:             []DetailedPlacement{parent},
+		MainworldDesignation: "B II a",
+	}
+
+	got := FindMainworld(sd, "B II a")
+	if got == nil {
+		t.Fatal("FindMainworld returned nil for moon designation B II a")
+	}
+	if got.Designation != "B II a" {
+		t.Errorf("FindMainworld returned body %q, want \"B II a\"", got.Designation)
+	}
+	if got.Group.Designation != "B" {
+		t.Errorf("FindMainworld result has Group.Designation = %q, want %q (parent's group not propagated)",
+			got.Group.Designation, "B")
+	}
+}
