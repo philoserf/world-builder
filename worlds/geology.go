@@ -225,3 +225,36 @@ func RollTectonicPlates(r roller.Roller, body *DetailedPlacement, tss int) int {
 	}
 	return result
 }
+
+// TotalSeismicStressLabel returns a banded label for total seismic stress
+// anchored on WBH p.126 prose: "<1 = essentially geologically dead" (book
+// quote), "10-100 = active (DM+1 plates)" (book band), ">100 = at least one
+// ongoing volcanic eruption + near-constant earthquake activity" (book quote).
+func TotalSeismicStressLabel(s int) string {
+	switch {
+	case s <= 0:
+		return "Geologically dead" // book quote
+	case s < 10:
+		return "Quiet" // interpolated (between "dead" and "active")
+	case s <= 100:
+		return "Active" // book: DM+1 band, "tectonic activity"
+	default: // > 100
+		return "Hyperactive (constant eruptions)" // book quote (paraphrased)
+	}
+}
+
+// TidalHeatingFactorLabel returns a banded label for tidal heating factor
+// anchored on WBH p.126 reference points: "ignore values less than 1",
+// "Enceladus ≈ 11", "Io ≈ 101".
+func TidalHeatingFactorLabel(f int) string {
+	switch {
+	case f < 1:
+		return "Negligible" // book: "ignore values less than 1"
+	case f <= 10:
+		return "Mild" // interpolated (below Enceladus)
+	case f <= 100:
+		return "Significant (Enceladus-class)" // book anchor
+	default: // > 100
+		return "Extreme (Io-class)" // book anchor
+	}
+}

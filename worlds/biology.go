@@ -453,3 +453,98 @@ func RollTerrestrialResourceRating(r roller.Roller, body *DetailedPlacement, bio
 	result := roll - 7 + size + dm
 	return min(max(result, 2), 12)
 }
+
+// BiocomplexityName returns the WBH p.129 biocomplexity descriptor.
+// Source: WBH p.129 "Biocomplexity Rating" table — book-quoted descriptions
+// for ratings 1-9; rating 10+ uses the book's "A (10)+" row description.
+// Returns "" for rating 0 (no biomass → no biocomplexity rendered).
+func BiocomplexityName(c int) string {
+	switch {
+	case c <= 0:
+		return ""
+	case c == 1:
+		return "Primitive single-cell organisms"
+	case c == 2:
+		return "Advanced cellular organisms"
+	case c == 3:
+		return "Primitive multicellular organisms"
+	case c == 4:
+		return "Differentiated multicellular organisms"
+	case c == 5:
+		return "Complex multicellular organisms"
+	case c == 6:
+		return "Advanced multicellular organisms"
+	case c == 7:
+		return "Socially advanced organisms"
+	case c == 8:
+		return "Mentally advanced organisms"
+	case c == 9:
+		return "Extant or extinct sophonts"
+	default: // 10+
+		return "Ecosystem-wide superorganisms"
+	}
+}
+
+// BiomassLabel returns a project-supplied descriptor anchored on WBH pp.127-128
+// prose anchors: "0 = no native life" and "A (10)+ = healthy garden world".
+// Intermediate bands (1, 2-3, 4-5, 6-7, 8-9) are interpolated to give a
+// graded sense of life density on the book's exponential scale.
+func BiomassLabel(b int) string {
+	switch {
+	case b <= 0:
+		return "None (sterile)" // book: "no native life"
+	case b == 1:
+		return "Trace" // interpolated
+	case b <= 3:
+		return "Sparse" // interpolated
+	case b <= 5:
+		return "Moderate" // interpolated
+	case b <= 7:
+		return "Abundant" // interpolated
+	case b <= 9:
+		return "Lush" // interpolated
+	default: // 10+
+		return "Garden world" // book: "healthy garden world"
+	}
+}
+
+// BiodiversityLabel returns a project-supplied descriptor anchored on WBH p.130
+// prose anchors: "<3 = very uniform biosphere with limited species dominating"
+// and "A (10)+ = pre-human Terra-like complexity".
+func BiodiversityLabel(b int) string {
+	switch {
+	case b <= 0:
+		return "None"
+	case b <= 2:
+		return "Uniform (few dominant species)" // book: "very uniform biosphere"
+	case b <= 5:
+		return "Limited" // interpolated
+	case b <= 7:
+		return "Moderate" // interpolated
+	case b <= 9:
+		return "Diverse" // interpolated
+	default: // 10+
+		return "Terra-like complexity" // book: "pre-human Terra-like"
+	}
+}
+
+// CompatibilityLabel returns a project-supplied descriptor anchored on WBH
+// pp.130-131 prose anchors: "0 = incompatible" and "A (10) = full Terran
+// compatibility". Values >10 are possible and represent specially nutritious
+// or beneficial native biology per book footnote.
+func CompatibilityLabel(c int) string {
+	switch {
+	case c <= 0:
+		return "Incompatible" // book: "all native life is incompatible"
+	case c <= 3:
+		return "Marginal" // interpolated
+	case c <= 6:
+		return "Partial" // interpolated
+	case c <= 9:
+		return "Mostly compatible" // interpolated
+	case c == 10:
+		return "Fully Terran-compatible" // book: "equivalent to full Terran compatibility"
+	default: // 11+
+		return "Beyond Terran" // book footnote: "greater values are possible"
+	}
+}

@@ -97,7 +97,11 @@ func writeClass4PAtmosphere(sb *strings.Builder, body *DetailedPlacement) {
 	}
 	a := body.Atmosphere
 	sb.WriteString("| Field | Value |\n|---|---|\n")
-	fmt.Fprintf(sb, "| Code | %d |\n", a.Code)
+	if name := AtmosphereCodeName(a.Code); name != "" {
+		fmt.Fprintf(sb, "| Code | %d — %s |\n", a.Code, name)
+	} else {
+		fmt.Fprintf(sb, "| Code | %d |\n", a.Code)
+	}
 	fmt.Fprintf(sb, "| Pressure (bar) | %.3f |\n", a.Pressure)
 	fmt.Fprintf(sb, "| O₂ (bar) | %.3f |\n", a.OxygenPartialPressure)
 	fmt.Fprintf(sb, "| Scale Height | %.2f |\n\n", a.ScaleHeight)
@@ -174,10 +178,10 @@ func writeClass4PSeismic(sb *strings.Builder, body *DetailedPlacement) {
 	}
 	g := body.Geology
 	sb.WriteString("| Field | Value |\n|---|---|\n")
-	fmt.Fprintf(sb, "| Total Seismic Stress | %d |\n", g.TotalSeismicStress)
+	fmt.Fprintf(sb, "| Total Seismic Stress | %d — %s |\n", g.TotalSeismicStress, TotalSeismicStressLabel(g.TotalSeismicStress))
 	fmt.Fprintf(sb, "| Residual Stress | %d |\n", g.ResidualSeismicStress)
 	fmt.Fprintf(sb, "| Tidal Stress | %d |\n", g.TidalStressFactor)
-	fmt.Fprintf(sb, "| Tidal Heating | %d |\n", g.TidalHeatingFactor)
+	fmt.Fprintf(sb, "| Tidal Heating | %d — %s |\n", g.TidalHeatingFactor, TidalHeatingFactorLabel(g.TidalHeatingFactor))
 	fmt.Fprintf(sb, "| Tectonic Plates | %d |\n\n", g.TectonicPlates)
 }
 
@@ -195,11 +199,15 @@ func writeClass4PLife(sb *strings.Builder, body *DetailedPlacement) {
 		sophontStr = "extinct"
 	}
 	sb.WriteString("| Field | Value |\n|---|---|\n")
-	fmt.Fprintf(sb, "| Biomass | %s |\n", string(eHexDigit(b.Biomass)))
-	fmt.Fprintf(sb, "| Biocomplexity | %d |\n", b.Biocomplexity)
+	fmt.Fprintf(sb, "| Biomass | %s — %s |\n", string(eHexDigit(b.Biomass)), BiomassLabel(b.Biomass))
+	if name := BiocomplexityName(b.Biocomplexity); name != "" {
+		fmt.Fprintf(sb, "| Biocomplexity | %d — %s |\n", b.Biocomplexity, name)
+	} else {
+		fmt.Fprintf(sb, "| Biocomplexity | %d |\n", b.Biocomplexity)
+	}
 	fmt.Fprintf(sb, "| Sophonts? | %s |\n", sophontStr)
-	fmt.Fprintf(sb, "| Biodiversity | %d |\n", b.Biodiversity)
-	fmt.Fprintf(sb, "| Compatibility | %d |\n\n", b.Compatibility)
+	fmt.Fprintf(sb, "| Biodiversity | %d — %s |\n", b.Biodiversity, BiodiversityLabel(b.Biodiversity))
+	fmt.Fprintf(sb, "| Compatibility | %d — %s |\n\n", b.Compatibility, CompatibilityLabel(b.Compatibility))
 }
 
 func writeClass4PResources(sb *strings.Builder, body *DetailedPlacement) {
@@ -209,7 +217,9 @@ func writeClass4PResources(sb *strings.Builder, body *DetailedPlacement) {
 		return
 	}
 	sb.WriteString("| Field | Value |\n|---|---|\n")
-	fmt.Fprintf(sb, "| Rating | %s |\n\n", string(eHexDigit(body.Biology.ResourceRating)))
+	fmt.Fprintf(sb, "| Rating | %s — %s |\n\n",
+		string(eHexDigit(body.Biology.ResourceRating)),
+		ResourceRatingName(body.Biology.ResourceRating))
 }
 
 func writeClass4PHabitability(sb *strings.Builder, body *DetailedPlacement) {
@@ -219,7 +229,8 @@ func writeClass4PHabitability(sb *strings.Builder, body *DetailedPlacement) {
 		return
 	}
 	sb.WriteString("| Field | Value |\n|---|---|\n")
-	fmt.Fprintf(sb, "| Rating | %d |\n\n", body.Habitability.Rating)
+	fmt.Fprintf(sb, "| Rating | %d — %s |\n\n",
+		body.Habitability.Rating, HabitabilityRatingName(body.Habitability.Rating))
 }
 
 func writeClass4PSubordinates(sb *strings.Builder, body *DetailedPlacement) {
