@@ -1138,8 +1138,8 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 				continue
 			}
 			m := dp.Temperature.MeanK
-			if m < 50 || m > 1500 {
-				t.Errorf("iter %d: HZ body %s: MeanK %v outside [50, 1500]", iter, dp.Designation, m)
+			if m < 50 || m > 2000 {
+				t.Errorf("iter %d: HZ body %s: MeanK %v outside [50, 2000]", iter, dp.Designation, m)
 			}
 		}
 

@@ -37,6 +37,37 @@ func runStep5A(r roller.Roller, detailed []DetailedPlacement, sys stars.System, 
 			dp.MassEarth = DeriveMass(bp.Density, dp.DiameterKm)
 		}
 
+		// Moon body physical (every non-trivial terrestrial moon, regardless of
+		// parent type). GG-cascade moons get their mass from sizing_gasgiant.
+		// Moons inherit the parent's HZ-offset DMs since they share its orbit.
+		if len(dp.Moons) > 0 {
+			beyondHZCO := 0
+			if offset := dp.Orbit - hzco; offset > 0 {
+				beyondHZCO = int(offset)
+			}
+			for j := range dp.Moons {
+				m := &dp.Moons[j]
+				if m.GGClass != NotGasGiant {
+					continue
+				}
+				if m.SizeCode == "" || m.SizeCode == "0" || m.SizeCode == "R" {
+					continue
+				}
+				dms := BodyPhysicalDMs{
+					SizeCode:       m.SizeCode,
+					AtHZCOOrCloser: dp.HZ,
+					BeyondHZCO:     beyondHZCO,
+					SystemAgeGyr:   sys.Primary.AgeGyr,
+				}
+				mbp, err := GenerateBodyPhysical(r, m.SizeCode, int(m.DiameterKm), dms)
+				if err != nil {
+					return fmt.Errorf("worlds: moon body physical %s: %w", m.Designation, err)
+				}
+				m.Physical = &mbp
+				m.MassEarth = DeriveMass(mbp.Density, m.DiameterKm)
+			}
+		}
+
 		// Belt details (Size 0 only).
 		if dp.SizeCode == "0" {
 			bd, err := GenerateBeltDetails(r, dp.Orbit, sp.SystemSpread, hzco, sys.Primary.AgeGyr, false, false)
