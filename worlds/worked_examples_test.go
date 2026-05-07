@@ -919,6 +919,7 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 
 	totalTHFNonzero := 0
 	totalBiomassNonzero := 0
+	moonMainworldCount := 0
 	for iter := range 100 {
 		seed := int64(iter)
 		r := roller.NewSeeded(seed)
@@ -1613,15 +1614,26 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 		}
 
 		// Assertion 43: RenderIISSClass4P for the mainworld produces non-empty
-		// output containing "HABITABILITY".
-		var mainworldBody *worlds.DetailedPlacement
-		for i := range sd.Detailed {
-			if sd.Detailed[i].Designation == sd.MainworldDesignation {
-				mainworldBody = &sd.Detailed[i]
-				break
+		// output containing "HABITABILITY". Uses worlds.FindMainworld so moon-
+		// mainworld designations resolve via buildMoonPlacementView — the
+		// previous manual loop iterated only sd.Detailed top-level entries
+		// and silently no-opped on moon mainworlds (issue #17).
+		mainworldBody := worlds.FindMainworld(sd, sd.MainworldDesignation)
+		if mainworldBody == nil {
+			t.Errorf("iter %d: FindMainworld returned nil for designation %q",
+				iter, sd.MainworldDesignation)
+		} else {
+			// Track how often the mainworld is a moon — moon-views have a
+			// non-empty parent group but their designation contains a space-
+			// separated suffix letter (e.g. "Aab IV d"). Using the simpler
+			// signal: scan parent moons for a matching designation.
+			for i := range sd.Detailed {
+				for j := range sd.Detailed[i].Moons {
+					if sd.Detailed[i].Moons[j].Designation == sd.MainworldDesignation {
+						moonMainworldCount++
+					}
+				}
 			}
-		}
-		if mainworldBody != nil {
 			out := worlds.RenderIISSClass4P(mainworldBody, sys, sd.MainworldDesignation)
 			if out == "" {
 				t.Errorf("iter %d: RenderIISSClass4P returned empty string for mainworld %s",
@@ -1645,6 +1657,7 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 		t.Errorf("integration: Biomass was zero for ALL bodies across 100 iterations — likely a silent-zero bug")
 	}
 	t.Logf("3B-biology: %d body-iterations had non-zero Biomass across 100-iter sweep", totalBiomassNonzero)
+	t.Logf("3B-final: %d/100 iterations picked a moon as mainworld (assertion 43 now exercises these via FindMainworld)", moonMainworldCount)
 
 	// Referee-fiat / book-inconsistency logs (informational only).
 	t.Logf("p.101 continent counts deferred to Referee fiat per 3A2a Q6 option (b)")
