@@ -191,3 +191,41 @@ func habitabilityGravityDM(body *DetailedPlacement) int {
 	}
 	return 0 // 0.9-1.1 (Earth-like baseline)
 }
+
+// HabitabilityRatingName returns the WBH p.133 banded label for a habitability
+// rating. Source: WBH p.133 "Habitability Rating" remarks table — book-quoted
+// descriptions copied verbatim from the bands.
+func HabitabilityRatingName(r int) string {
+	switch {
+	case r <= 0:
+		return "Actively hostile" // book: "Actively hostile world: not survivable without specialised equipment"
+	case r <= 2:
+		return "Barely habitable" // book: "Barely habitable world: full protective equipment often needed"
+	case r <= 5:
+		return "Marginally survivable" // book: "Marginally survivable world with proper equipment"
+	case r <= 7:
+		return "Regionally habitable" // book: "Regionally habitable world: may require acclimation"
+	case r <= 9:
+		return "Suitable" // book: "Suitable for human habitation with minimal equipment or acclimation"
+	default: // 10+
+		return "Garden world" // book: "Terra-equivalent garden world"
+	}
+}
+
+// ResourceRatingName returns the WBH p.131 banded label for a resource rating.
+// Source: WBH p.131 "Resource Rating" remarks — book-quoted summaries copied
+// from the band-table prose.
+func ResourceRatingName(r int) string {
+	switch {
+	case r <= 2:
+		return "No economically extractable resources" // book quote
+	case r <= 5:
+		return "Marginal" // book: "Marginal at best; avoided by most corporations"
+	case r <= 8:
+		return "Worthwhile" // book: "Worthwhile with considerable effort"
+	case r <= 10: // 9-A
+		return "Priority target" // book: "Priority targets for both corporations and individual prospectors"
+	default: // 11-12 (B-C)
+		return "Resource rush" // book: "Liable to experience a resource 'rush'"
+	}
+}

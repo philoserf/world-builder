@@ -125,7 +125,7 @@
 
 | Field | Value |
 |---|---|
-| Code | 11 |
+| Code | 11 — Corrosive |
 | Pressure (bar) | 0.000 |
 | O₂ (bar) | 0.000 |
 | Scale Height | 6.62 |
@@ -164,33 +164,33 @@
 
 | Field | Value |
 |---|---|
-| Total Seismic Stress | 144 |
+| Total Seismic Stress | 144 — Hyperactive (constant eruptions) |
 | Residual Stress | 144 |
 | Tidal Stress | 0 |
-| Tidal Heating | 0 |
+| Tidal Heating | 0 — Negligible |
 | Tectonic Plates | 16 |
 
 ### Life
 
 | Field | Value |
 |---|---|
-| Biomass | 6 |
-| Biocomplexity | 1 |
+| Biomass | 6 — Abundant |
+| Biocomplexity | 1 — Primitive single-cell organisms |
 | Sophonts? | no |
-| Biodiversity | 6 |
-| Compatibility | 0 |
+| Biodiversity | 6 — Moderate |
+| Compatibility | 0 — Incompatible |
 
 ### Resources
 
 | Field | Value |
 |---|---|
-| Rating | C |
+| Rating | C — Resource rush |
 
 ### Habitability
 
 | Field | Value |
 |---|---|
-| Rating | 0 |
+| Rating | 0 — Actively hostile |
 
 ### Comments
 

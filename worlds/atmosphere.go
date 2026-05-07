@@ -305,3 +305,49 @@ func RollAtmoCode(r roller.Roller, sizeCode SizeCode, _ float64) (int, error) {
 	code := max(roll-7+SizeAsInt(sizeCode), 0)
 	return code, nil
 }
+
+// AtmosphereCodeName returns the WBH p.79 atmosphere code description.
+// Returns "" for codes outside the book's table (0-17 ↔ 0..H).
+//
+// Source: WBH p.79 "Atmosphere Codes" table — values copied verbatim.
+func AtmosphereCodeName(code int) string {
+	switch code {
+	case 0:
+		return "None (Vacuum)"
+	case 1:
+		return "Trace"
+	case 2:
+		return "Very Thin, Tainted"
+	case 3:
+		return "Very Thin"
+	case 4:
+		return "Thin, Tainted"
+	case 5:
+		return "Thin"
+	case 6:
+		return "Standard"
+	case 7:
+		return "Standard, Tainted"
+	case 8:
+		return "Dense"
+	case 9:
+		return "Dense, Tainted"
+	case 10: // A
+		return "Exotic"
+	case 11: // B
+		return "Corrosive"
+	case 12: // C
+		return "Insidious"
+	case 13: // D
+		return "Very Dense"
+	case 14: // E
+		return "Low"
+	case 15: // F
+		return "Unusual"
+	case 16: // G
+		return "Gas, Helium"
+	case 17: // H
+		return "Gas, Hydrogen"
+	}
+	return ""
+}
