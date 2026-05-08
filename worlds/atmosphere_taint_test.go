@@ -78,3 +78,125 @@ func TestRollTaintSubtype_LHSuppressionOnSecondOrLater(t *testing.T) {
 		t.Errorf("atm 7 2D=2 second roll: got %q, want \"G\" (L suppressed)", got)
 	}
 }
+
+func TestRollTaintSeverity_BasicTable(t *testing.T) {
+	// 2D values → expected severity per WBH p.84.
+	cases := []struct {
+		twoD int
+		want int
+	}{
+		{2, 1},
+		{4, 1},
+		{5, 2},
+		{6, 3},
+		{7, 4},
+		{8, 5},
+		{9, 6},
+		{10, 7},
+		{11, 8},
+		{12, 9},
+	}
+	for _, c := range cases {
+		r := roller.NewScripted(c.twoD)
+		got := RollTaintSeverity(r, "B", 4, 0) // B taint, atm 4 (no DM), no ppO2 override
+		if got != c.want {
+			t.Errorf("2D=%d: got severity %d, want %d", c.twoD, got, c.want)
+		}
+	}
+}
+
+func TestRollTaintSeverity_LowOxygenPpO2Override(t *testing.T) {
+	cases := []struct {
+		ppO2 float64
+		want int
+	}{
+		{0.10, 2},  // ≥ 0.09
+		{0.085, 3}, // ≥ 0.08, < 0.09
+		{0.05, 8},  // < 0.08
+	}
+	for _, c := range cases {
+		r := roller.NewScripted(99) // unused since override fires
+		got := RollTaintSeverity(r, "L", 4, c.ppO2)
+		if got != c.want {
+			t.Errorf("L ppO2=%g: got %d, want %d", c.ppO2, got, c.want)
+		}
+	}
+}
+
+func TestRollTaintSeverity_HighOxygenPpO2Override(t *testing.T) {
+	cases := []struct {
+		ppO2 float64
+		want int
+	}{
+		{0.55, 2}, // < 0.6
+		{0.65, 7}, // [0.6, 0.7)
+		{0.75, 8}, // ≥ 0.7
+	}
+	for _, c := range cases {
+		r := roller.NewScripted(99)
+		got := RollTaintSeverity(r, "H", 4, c.ppO2)
+		if got != c.want {
+			t.Errorf("H ppO2=%g: got %d, want %d", c.ppO2, got, c.want)
+		}
+	}
+}
+
+func TestRollTaintSeverity_InsidiousDM(t *testing.T) {
+	// atm C (12) gets DM+6. 2D=4 + 6 = 10 → 7.
+	r := roller.NewScripted(4)
+	got := RollTaintSeverity(r, "B", 12, 0)
+	if got != 7 {
+		t.Errorf("atm C B taint 2D=4: got %d, want 7", got)
+	}
+}
+
+func TestRollTaintPersistence_BasicTable(t *testing.T) {
+	cases := []struct {
+		twoD int
+		want int
+	}{
+		{2, 2},
+		{3, 3},
+		{4, 4},
+		{5, 5},
+		{6, 6},
+		{7, 7},
+		{8, 8},
+		{9, 9},
+		{12, 9},
+	}
+	for _, c := range cases {
+		r := roller.NewScripted(c.twoD)
+		got := RollTaintPersistence(r, "B", 4, 5) // atm 4 no DM, severity 5 no DM trigger
+		if got != c.want {
+			t.Errorf("2D=%d: got persistence %d, want %d", c.twoD, got, c.want)
+		}
+	}
+}
+
+func TestRollTaintPersistence_LHDM(t *testing.T) {
+	// L/H taint → DM+4. 2D=2 + 4 = 6 → 6.
+	r := roller.NewScripted(2)
+	got := RollTaintPersistence(r, "L", 4, 5)
+	if got != 6 {
+		t.Errorf("L taint 2D=2 DM+4: got %d, want 6", got)
+	}
+}
+
+func TestRollTaintPersistence_HighSeverityDM(t *testing.T) {
+	// Severity ≥ 8 → DM+6. 2D=2 + 6 = 8 → 8.
+	r := roller.NewScripted(2)
+	got := RollTaintPersistence(r, "B", 4, 8)
+	if got != 8 {
+		t.Errorf("B taint severity 8 2D=2 DM+6: got %d, want 8", got)
+	}
+}
+
+func TestRollTaintPersistence_InsidiousDM(t *testing.T) {
+	// Atm C → DM+6. 2D=2 + 6 = 8 → 8.
+	r := roller.NewScripted(2)
+	got := RollTaintPersistence(r, "B", 12, 5)
+	if got != 8 {
+		t.Errorf("atm C B taint 2D=2 DM+6: got %d, want 8", got)
+	}
+}
