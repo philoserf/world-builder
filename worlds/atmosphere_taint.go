@@ -103,6 +103,112 @@ func taintSubtypeAtmDM(atmCode int) int {
 	return 0
 }
 
+// RollTaintSeverity rolls 2D + DMs on WBH p.84 Taint Severity table.
+//
+// DMs:
+//   - Atm C (Insidious, code 12): DM+6
+//   - L/H taints: ppO2-specific overrides (p.84 footnote) take precedence —
+//     no dice roll is made.
+//     For L: severity = 2 if ppO2 ≥ 0.09; 3 if ≥ 0.08; otherwise 8.
+//     For H: severity = 2 if ppO2 < 0.6; 7 if < 0.7; otherwise 8.
+//
+// Returns severity 1-9.
+func RollTaintSeverity(r roller.Roller, taintCode string, atmCode int, ppO2 float64) int {
+	switch taintCode {
+	case "L":
+		switch {
+		case ppO2 >= 0.09:
+			return 2
+		case ppO2 >= 0.08:
+			return 3
+		default:
+			return 8
+		}
+	case "H":
+		switch {
+		case ppO2 < 0.6:
+			return 2
+		case ppO2 < 0.7:
+			return 7
+		default:
+			return 8
+		}
+	}
+	roll := r.Roll("2D")
+	dm := 0
+	if atmCode == 12 {
+		dm += 6
+	}
+	return severityFromTotal(roll + dm)
+}
+
+func severityFromTotal(total int) int {
+	switch {
+	case total <= 4:
+		return 1
+	case total == 5:
+		return 2
+	case total == 6:
+		return 3
+	case total == 7:
+		return 4
+	case total == 8:
+		return 5
+	case total == 9:
+		return 6
+	case total == 10:
+		return 7
+	case total == 11:
+		return 8
+	default:
+		return 9
+	}
+}
+
+// RollTaintPersistence rolls 2D + DMs on WBH p.84 Taint Persistence table.
+//
+// DMs:
+//   - Atm C (Insidious, code 12): DM+6
+//   - L/H taints: DM+4
+//   - Severity ≥ 8: DM+6
+//
+// Returns persistence 2-9.
+func RollTaintPersistence(r roller.Roller, taintCode string, atmCode, severity int) int {
+	roll := r.Roll("2D")
+	dm := 0
+	if taintCode == "L" || taintCode == "H" {
+		dm += 4
+	}
+	if atmCode == 12 {
+		dm += 6
+	}
+	if severity >= 8 {
+		dm += 6
+	}
+	return persistenceFromTotal(roll + dm)
+}
+
+func persistenceFromTotal(total int) int {
+	switch {
+	case total <= 2:
+		return 2
+	case total == 3:
+		return 3
+	case total == 4:
+		return 4
+	case total == 5:
+		return 5
+	case total == 6:
+		return 6
+	case total == 7:
+		return 7
+	case total == 8:
+		return 8
+	default:
+		return 9
+	}
+}
+
 // RollTaintSubtype rolls 2D + atm DM on the WBH p.82 Taint Subtype
 // table. Applies the L/H suppression rule (treat as G):
 //   - When atmCode is outside the 4-9 band (e.g., A/B/C/F+ atms rolling
