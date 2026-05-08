@@ -10,7 +10,12 @@ import (
 //
 // Pressure, ScaleHeight, Subtype, and Profile are populated by 3A1 with
 // HZCO-bucketed provisional temperature; Step 5D (3A2b-rederive) re-derives
-// these fields under the real Temperature.MeanK. Post-5D values are final.
+// these fields under the real Temperature.MeanK. Post-5D values are final
+// for those fields.
+//
+// Taints and InsidiousHazard are populated by Step 5D-prime (post-rederive)
+// per WBH pp.81-90. Taints contains 0-3 entries; InsidiousHazard is
+// non-nil only for atm C (Insidious).
 type Atmosphere struct {
 	Code                  int
 	Subtype               string
@@ -18,6 +23,8 @@ type Atmosphere struct {
 	OxygenPartialPressure float64
 	ScaleHeight           float64
 	Profile               AtmosphereProfile
+	Taints                []Taint
+	InsidiousHazard       *Hazard
 }
 
 // AtmosphereProfile holds the gas-mix composition detail populated in Task 12.
