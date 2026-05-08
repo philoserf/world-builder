@@ -102,6 +102,11 @@ func runDetailPipeline(r roller.Roller, detailed []DetailedPlacement, sys stars.
 		return err
 	}
 
+	// Step 5D-prime — atmosphere taint typology (WBH pp.81-90).
+	if err := runStep5DPrime(r, detailed, sys); err != nil {
+		return err
+	}
+
 	// Step 5E — 3B-geology pass: seismic + GG residual heat + temp recompute + tectonic plates.
 	if err := runStep5E(r, detailed, sys); err != nil {
 		return err
