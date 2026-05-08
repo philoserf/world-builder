@@ -209,6 +209,55 @@ func persistenceFromTotal(total int) int {
 	}
 }
 
+// RollInsidiousHazard rolls 2D + DM on WBH p.90 Insidious Atmosphere
+// Hazard table. Returns hazard code from {B, R, G, T}.
+//
+// DMs:
+//   - Atmosphere is extremely dense: DM+2
+//
+// Table:
+//
+//	4-: B (Biologic)
+//	5:  R (Radioactivity)
+//	6,7: G (Gas Mix)
+//	8:  T (Temperature)
+//	9:  G
+//	10: T
+//	11: R
+//	12+: T
+//
+// The "T hazard auto on subtype D/E + reroll for additional hazard"
+// rule from p.90 is handled by the runStep5DPrime orchestrator, not here.
+func RollInsidiousHazard(r roller.Roller, isExtremelyDense bool) string {
+	roll := r.Roll("2D")
+	dm := 0
+	if isExtremelyDense {
+		dm += 2
+	}
+	return hazardFromTotal(roll + dm)
+}
+
+func hazardFromTotal(total int) string {
+	switch {
+	case total <= 4:
+		return "B"
+	case total == 5:
+		return "R"
+	case total == 6, total == 7:
+		return "G"
+	case total == 8:
+		return "T"
+	case total == 9:
+		return "G"
+	case total == 10:
+		return "T"
+	case total == 11:
+		return "R"
+	default:
+		return "T"
+	}
+}
+
 // RollTaintSubtype rolls 2D + atm DM on the WBH p.82 Taint Subtype
 // table. Applies the L/H suppression rule (treat as G):
 //   - When atmCode is outside the 4-9 band (e.g., A/B/C/F+ atms rolling

@@ -200,3 +200,37 @@ func TestRollTaintPersistence_InsidiousDM(t *testing.T) {
 		t.Errorf("atm C B taint 2D=2 DM+6: got %d, want 8", got)
 	}
 }
+
+func TestRollInsidiousHazard_AllResults(t *testing.T) {
+	cases := []struct {
+		twoD int
+		want string
+	}{
+		{2, "B"},
+		{4, "B"},
+		{5, "R"},
+		{6, "G"},
+		{7, "G"},
+		{8, "T"},
+		{9, "G"},
+		{10, "T"},
+		{11, "R"},
+		{12, "T"},
+	}
+	for _, c := range cases {
+		r := roller.NewScripted(c.twoD)
+		got := RollInsidiousHazard(r, false)
+		if got != c.want {
+			t.Errorf("2D=%d: got %q, want %q", c.twoD, got, c.want)
+		}
+	}
+}
+
+func TestRollInsidiousHazard_ExtremelyDenseDM(t *testing.T) {
+	// 2D=4 + DM+2 = 6 → G (without DM would be B).
+	r := roller.NewScripted(4)
+	got := RollInsidiousHazard(r, true)
+	if got != "G" {
+		t.Errorf("extremely dense 2D=4 DM+2: got %q, want \"G\"", got)
+	}
+}
