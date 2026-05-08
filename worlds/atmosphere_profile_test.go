@@ -197,6 +197,54 @@ func TestFormatAtmoProfileShorthand_CorrosiveWithGases(t *testing.T) {
 	}
 }
 
+func TestFormatAtmoProfileShorthand_TaintSuffix_NO(t *testing.T) {
+	t.Parallel()
+	atmo := Atmosphere{
+		Code:                  4,
+		Pressure:              0.544,
+		OxygenPartialPressure: 0.114,
+		Taints: []Taint{
+			{Code: "P", Severity: 6, Persistence: 3},
+			{Code: "R", Severity: 5, Persistence: 4},
+		},
+	}
+	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+	want := "4-0.544-0.114:P.6.3,R.5.4"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestFormatAtmoProfileShorthand_TaintSuffix_Insidious(t *testing.T) {
+	t.Parallel()
+	atmo := Atmosphere{
+		Code:            12,
+		Subtype:         "6",
+		Pressure:        1.21,
+		Taints:          []Taint{{Code: "G", Severity: 4, Persistence: 5}},
+		InsidiousHazard: &Hazard{Code: "T"},
+	}
+	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+	want := "C-St6.T:1.21 G.4.5"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestFormatAtmoProfileShorthand_NoTaint_Unchanged(t *testing.T) {
+	t.Parallel()
+	atmo := Atmosphere{
+		Code:                  6,
+		Pressure:              1.013,
+		OxygenPartialPressure: 0.212,
+	}
+	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+	want := "6-1.013-0.212"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
 func TestRollGasMix_BasicShape(t *testing.T) {
 	t.Parallel()
 	// Frozen Exotic A (Zed Cab II context). Verify produces non-empty Gases slice.

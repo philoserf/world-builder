@@ -168,16 +168,16 @@
 | Residual Stress | 144 |
 | Tidal Stress | 0 |
 | Tidal Heating | 0 — Negligible |
-| Tectonic Plates | 16 |
+| Tectonic Plates | 12 |
 
 ### Life
 
 | Field | Value |
 |---|---|
-| Biomass | 6 — Abundant |
-| Biocomplexity | 1 — Primitive single-cell organisms |
+| Biomass | 0 — None (sterile) |
+| Biocomplexity | 0 |
 | Sophonts? | no |
-| Biodiversity | 6 — Moderate |
+| Biodiversity | 0 — None |
 | Compatibility | 0 — Incompatible |
 
 ### Resources

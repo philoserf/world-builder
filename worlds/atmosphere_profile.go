@@ -489,14 +489,15 @@ func atmosphereCodeChar(code int) string {
 	return ""
 }
 
-// FormatAtmoProfileShorthand produces the atmosphere profile string per WBH p.82 (N-O codes)
-// or p.88 (exotic/corrosive/insidious codes):
+// FormatAtmoProfileShorthand produces the atmosphere profile string per WBH p.82 (N-O codes),
+// p.85 (exotic), p.88-89 (corrosive/insidious):
 //
-//   - N-O atmospheres (codes 2-9, D=13, E=14): "A-bar-ppo[:Gas-pct...]"
-//     e.g. "6-1.013-0.212"
-//   - Exotic/Corrosive/Insidious (codes A=10, B=11, C=12, F=15):
-//     "A-St#[:bar][:Gas-pct:Gas-pct...]"
+//   - N-O atmospheres (codes 2-9, D=13, E=14): "A-bar-ppo[:Gas-pct...][:T.S.P,...]"
+//     e.g. "6-1.013-0.212" or "4-0.544-0.114:P.6.3,R.5.4"
+//   - Exotic/Corrosive (codes A=10, B=11, F=15): "A-St#[:bar][:Gas-pct:Gas-pct...] [I.S.P,...]"
 //     e.g. "A-St7:0.98:N2-96:Ar-04"
+//   - Insidious (code C=12): subtype becomes "St#.H" where H is InsidiousHazard.Code
+//     e.g. "C-St6.T:1.21 G.4.5"
 func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string {
 	codeChar := atmosphereCodeChar(atmo.Code)
 	isNO := (atmo.Code >= 2 && atmo.Code <= 9) || atmo.Code == 13 || atmo.Code == 14
@@ -507,13 +508,17 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 			for _, g := range prof.Gases {
 				parts = append(parts, fmt.Sprintf("%s-%02d", g.Name, g.PercentBP/100))
 			}
-			return strings.Join(parts, ":")
+			base = strings.Join(parts, ":")
 		}
-		return base
+		return appendTaintSuffix(base, atmo.Taints, ":")
 	}
 
 	// Exotic / Corrosive / Insidious
-	base := fmt.Sprintf("%s-St%s", codeChar, atmo.Subtype)
+	subtypeWithHazard := atmo.Subtype
+	if atmo.Code == 12 && atmo.InsidiousHazard != nil {
+		subtypeWithHazard = atmo.Subtype + "." + atmo.InsidiousHazard.Code
+	}
+	base := fmt.Sprintf("%s-St%s", codeChar, subtypeWithHazard)
 	if atmo.Pressure > 0 {
 		base += fmt.Sprintf(":%.2f", atmo.Pressure)
 	}
@@ -522,7 +527,20 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 		for _, g := range prof.Gases {
 			parts = append(parts, fmt.Sprintf("%s-%02d", g.Name, g.PercentBP/100))
 		}
-		return strings.Join(parts, ":")
+		base = strings.Join(parts, ":")
 	}
-	return base
+	return appendTaintSuffix(base, atmo.Taints, " ")
+}
+
+// appendTaintSuffix appends T.S.P or I.S.P entries comma-separated,
+// joined to base with sep. Returns base unchanged when taints is empty.
+func appendTaintSuffix(base string, taints []Taint, sep string) string {
+	if len(taints) == 0 {
+		return base
+	}
+	parts := make([]string, 0, len(taints))
+	for _, t := range taints {
+		parts = append(parts, fmt.Sprintf("%s.%d.%d", t.Code, t.Severity, t.Persistence))
+	}
+	return base + sep + strings.Join(parts, ",")
 }
