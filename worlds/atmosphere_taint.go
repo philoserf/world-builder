@@ -2,7 +2,9 @@
 // (post-3B follow-up: closes Q3-a deferrals).
 package worlds
 
-import "wbh/roller"
+import (
+	"wbh/roller"
+)
 
 // Taint — one taint or irritant condition per WBH p.82-84.
 //
@@ -274,4 +276,72 @@ func RollTaintSubtype(r roller.Roller, atmCode int, isSecondOrLater bool) string
 		return "G"
 	}
 	return code
+}
+
+// RollAllTaints rolls the full taint profile for a body's atmosphere
+// per WBH pp.81-84. Caller passes any pre-seeded taint from
+// PromoteOxygenTaint (or nil if the atm wasn't promoted). Pre-seeded
+// taints have Severity and Persistence == 0; this function fills them
+// using the severity/persistence rolls so callers don't have to special-
+// case pre-seeded entries.
+//
+// Multi-roll behavior per WBH p.83:
+//   - Result of 10 (rawRoll + dm == 10) → particulates AND reroll for next taint.
+//   - Maximum 3 taint conditions per world.
+//   - L/H suppression on 2nd/3rd rolls (handled by RollTaintSubtype).
+//
+// ppO2 adjustment per WBH p.83 (only on fresh L/H rolls, not pre-seeded):
+//   - L: ppO2 -= 1D/100; total pressure unchanged (gas replaced with N₂).
+//   - H: ppO2 += 1D/10; same.
+//
+// Mutates body.Atmosphere.OxygenPartialPressure when ppO2 adjustment fires.
+//
+// Returns the populated []Taint slice for assignment to body.Atmosphere.Taints.
+func RollAllTaints(r roller.Roller, body *DetailedPlacement, preseeded *Taint) []Taint {
+	if body == nil || body.Atmosphere == nil {
+		return nil
+	}
+	atmCode := body.Atmosphere.Code
+	taints := make([]Taint, 0, 3)
+
+	// Slot 1: pre-seeded if present. Fill severity + persistence.
+	if preseeded != nil {
+		ppO2 := body.Atmosphere.OxygenPartialPressure
+		sev := RollTaintSeverity(r, preseeded.Code, atmCode, ppO2)
+		pers := RollTaintPersistence(r, preseeded.Code, atmCode, sev)
+		taints = append(taints, Taint{Code: preseeded.Code, Severity: sev, Persistence: pers})
+	}
+
+	// Multi-roll loop. isSecondOrLater = anything appended already.
+	for len(taints) < 3 {
+		isSecondOrLater := len(taints) > 0
+		rawRoll := r.Roll("2D")
+		dm := taintSubtypeAtmDM(atmCode)
+		total := rawRoll + dm
+		code := taintSubtypeFromTotal(total)
+		if (code == "L" || code == "H") && (isSecondOrLater || atmCode < 4 || atmCode > 9) {
+			code = "G"
+		}
+
+		// Fresh L/H only (no pre-seed, first roll): adjust ppO2.
+		if (code == "L" || code == "H") && !isSecondOrLater && preseeded == nil {
+			adjust := r.Roll("1D")
+			if code == "L" {
+				body.Atmosphere.OxygenPartialPressure -= float64(adjust) / 100.0
+			} else {
+				body.Atmosphere.OxygenPartialPressure += float64(adjust) / 10.0
+			}
+		}
+
+		ppO2 := body.Atmosphere.OxygenPartialPressure
+		sev := RollTaintSeverity(r, code, atmCode, ppO2)
+		pers := RollTaintPersistence(r, code, atmCode, sev)
+		taints = append(taints, Taint{Code: code, Severity: sev, Persistence: pers})
+
+		// Reroll trigger: rawRoll + dm == 10.
+		if total != 10 {
+			break
+		}
+	}
+	return taints
 }

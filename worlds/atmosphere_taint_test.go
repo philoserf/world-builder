@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"math"
 	"testing"
 
 	"wbh/roller"
@@ -232,5 +233,130 @@ func TestRollInsidiousHazard_ExtremelyDenseDM(t *testing.T) {
 	got := RollInsidiousHazard(r, true)
 	if got != "G" {
 		t.Errorf("extremely dense 2D=4 DM+2: got %q, want \"G\"", got)
+	}
+}
+
+func TestRollAllTaints_NoPreseed_SingleTaint(t *testing.T) {
+	// Atm 7, no DM. Subtype 2D=4 → B (no reroll); severity 2D=7 → 4; persistence 2D=5 → 5.
+	r := roller.NewScripted(4, 7, 5)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
+	}
+	taints := RollAllTaints(r, body, nil)
+	if len(taints) != 1 {
+		t.Fatalf("got %d taints, want 1", len(taints))
+	}
+	if taints[0] != (Taint{Code: "B", Severity: 4, Persistence: 5}) {
+		t.Errorf("got %+v, want {B, 4, 5}", taints[0])
+	}
+}
+
+func TestRollAllTaints_PreseededL_FillsSevPers(t *testing.T) {
+	// Pre-seeded L on atm 4 ppO2=0.05.
+	// Severity uses ppO2 override (0.05 < 0.08) → 8 (no roll consumed).
+	// Persistence: L → DM+4; severity 8 → DM+6; total +10.
+	// 2D=2 + 10 = 12 → 9. (One Roll consumed for persistence.)
+	// Then taint #2 subtype roll: 2D=8 + DM-2 (atm 4) = 6 → P.
+	//   isSecondOrLater=true so L/H suppressed (P doesn't trigger anyway).
+	// Severity for P at atm 4: 2D=7 → 4.
+	// Persistence for P at atm 4 sev 4: 2D=5 → 5.
+	preseeded := &Taint{Code: "L"}
+	r := roller.NewScripted(
+		2, // persistence for preseeded L: 2D=2 + DM+4 + DM+6 = 12 → 9
+		8, // subtype #2 raw roll: 2D=8 + DM-2 = 6 → P
+		7, // severity for P
+		5, // persistence for P
+	)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 4, Pressure: 0.5, OxygenPartialPressure: 0.05},
+	}
+	taints := RollAllTaints(r, body, preseeded)
+	if len(taints) != 2 {
+		t.Fatalf("got %d taints, want 2", len(taints))
+	}
+	if taints[0] != (Taint{Code: "L", Severity: 8, Persistence: 9}) {
+		t.Errorf("preseeded got %+v, want {L, 8, 9}", taints[0])
+	}
+	if taints[1] != (Taint{Code: "P", Severity: 4, Persistence: 5}) {
+		t.Errorf("rolled got %+v, want {P, 4, 5}", taints[1])
+	}
+}
+
+func TestRollAllTaints_MaxThree(t *testing.T) {
+	// Atm 7 (no DM). Three rolls of 10 → P, reroll, P, reroll, P, no further.
+	// Each P: severity 2D=7 → 4; persistence 2D=5 → 5.
+	r := roller.NewScripted(
+		10, 7, 5, // taint 1: P 4 5
+		10, 7, 5, // taint 2: P 4 5
+		10, 7, 5, // taint 3: P 4 5 (no further reroll)
+	)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
+	}
+	taints := RollAllTaints(r, body, nil)
+	if len(taints) != 3 {
+		t.Fatalf("got %d taints, want 3 (max)", len(taints))
+	}
+	for i, tt := range taints {
+		if tt.Code != "P" {
+			t.Errorf("taint #%d: got %q, want P", i, tt.Code)
+		}
+	}
+}
+
+func TestRollAllTaints_LRollAdjustsPpO2(t *testing.T) {
+	// Atm 4, ppO2=0.21. Subtype 2D=4 + DM-2 = 2 → L.
+	// L is in 4-9 band on first roll: not suppressed. Fresh L: 1D adjust roll.
+	// 1D=3 → ppO2 -= 0.03 → ppO2 becomes 0.18.
+	// Severity for L at ppO2=0.18 → override: 0.18 ≥ 0.09 → 2.
+	// Persistence: L → DM+4; severity 2 < 8 → no extra DM. 2D=2 + 4 = 6 → 6.
+	r := roller.NewScripted(
+		4, // subtype 2D=4 → L (with DM-2 = 2)
+		3, // 1D for ppO2 adjust
+		// severity uses override, no roll consumed
+		2, // persistence 2D=2 + DM+4 = 6
+	)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 4, Pressure: 0.5, OxygenPartialPressure: 0.21},
+	}
+	originalPress := body.Atmosphere.Pressure
+	taints := RollAllTaints(r, body, nil)
+	if len(taints) != 1 {
+		t.Fatalf("got %d taints, want 1", len(taints))
+	}
+	if taints[0].Code != "L" || taints[0].Severity != 2 || taints[0].Persistence != 6 {
+		t.Errorf("got %+v, want {L, 2, 6}", taints[0])
+	}
+	wantPpO2 := 0.21 - 0.03
+	if math.Abs(body.Atmosphere.OxygenPartialPressure-wantPpO2) > 1e-9 {
+		t.Errorf("ppO2 got %g, want %g", body.Atmosphere.OxygenPartialPressure, wantPpO2)
+	}
+	if body.Atmosphere.Pressure != originalPress {
+		t.Errorf("total pressure changed to %g, want unchanged %g", body.Atmosphere.Pressure, originalPress)
+	}
+}
+
+func TestRollAllTaints_Invariants(t *testing.T) {
+	// Property test across many seeds.
+	for seed := int64(1); seed <= 50; seed++ {
+		r := roller.NewSeeded(seed)
+		body := &DetailedPlacement{
+			Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
+		}
+		taints := RollAllTaints(r, body, nil)
+		if len(taints) > 3 {
+			t.Errorf("seed=%d: got %d taints, want ≤ 3", seed, len(taints))
+		}
+		for i, tt := range taints {
+			if tt.Severity < 1 || tt.Severity > 9 {
+				t.Errorf("seed=%d taint #%d: severity %d out of [1,9]", seed, i, tt.Severity)
+			}
+			if tt.Persistence < 2 || tt.Persistence > 9 {
+				t.Errorf("seed=%d taint #%d: persistence %d out of [2,9]", seed, i, tt.Persistence)
+			}
+			if i > 0 && (tt.Code == "L" || tt.Code == "H") {
+				t.Errorf("seed=%d taint #%d: L/H must be suppressed on 2nd/3rd rolls", seed, i)
+			}
+		}
 	}
 }
