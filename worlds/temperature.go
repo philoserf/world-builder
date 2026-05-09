@@ -525,7 +525,10 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 
 	// Zone latitude adjustment from WBH p.116. Sole variance contributor
 	// in the tropical zone; added to the seasonal axial tilt in middle/
-	// arctic zones.
+	// arctic zones. Note: zoneTiltAdjustment returns a single value for
+	// the entire tropical band (sin(45° - tilt)) — by book design, every
+	// tropical latitude gets the same temperature regardless of where it
+	// sits inside the band. That uniformity is intentional, not a bug.
 	zoneAdj := t.zoneTiltAdjustment(latDeg)
 	absLat := latDeg
 	if absLat < 0 {
