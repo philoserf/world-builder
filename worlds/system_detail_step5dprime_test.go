@@ -115,38 +115,47 @@ func TestRunStep5DPrime_PromotionAppliesBeforeRoll(t *testing.T) {
 }
 
 func TestRunStep5DPrime_ExtremelyDenseSubtypeDM(t *testing.T) {
-	// Atm C with subtype "D" should fire the WBH p.90 DM+2 on the
-	// Insidious Hazard roll; subtype "6" should not.
+	// End-to-end test of computeBodyTaints → RollInsidiousHazards for
+	// atm-C bodies. Verifies both the WBH p.89 DM+2 ("Extremely Dense"
+	// subtypes C/D/E) and the WBH p.90 footnote (subtypes D/E grant an
+	// automatic T plus a rolled hazard).
 	//
 	// RollAllTaints for atm 12 with no pre-seed consumes 3 rolls
 	// (subtype 2D, severity 2D, persistence 2D) before the loop breaks
-	// (rawRoll != 10). Then RollInsidiousHazard consumes 1 roll.
+	// (rawRoll != 10). Then RollInsidiousHazards consumes 1 roll for
+	// the rolled hazard (the auto-T for D/E is free).
 	//
 	// Subtype roll 7 → 2D=7+0=7 → taintSubtypeFromTotal=G → atm 12 is
 	// outside 4-9 so any L/H would be suppressed to G; G is already G.
-	// No ppO2 adjust path. Severity 7 (atm-C DM+6) and persistence 7
-	// don't matter for this test — they're stable across the two cases.
+	// No ppO2 adjust path. Severity 7 and persistence 7 don't matter
+	// for this test — they're stable across the cases.
 	//
-	// Hazard roll 4:
-	//   subtype "D" → DM+2 → 6 → G (hazardFromTotal(6) == "G")
-	//   subtype "6" → DM 0  → 4 → B (hazardFromTotal(<=4) == "B")
+	// Per-case hazard rolls:
+	//   subtype "D", hazardRoll=4 → DM+2 → 6 → G; auto-T prepended → "TG"
+	//   subtype "E", hazardRoll=2 → DM+2 → 4 → B; auto-T prepended → "TB"
+	//   subtype "6", hazardRoll=4 → DM 0  → 4 → B; no auto-T          → "B"
 	cases := []struct {
-		name    string
-		subtype string
+		name       string
+		subtype    string
+		hazardRoll int
 		// want is the concatenated hazard codes (e.g. "TG" = auto-T + rolled-G).
 		want    string
 		wantLen int
 	}{
 		// Subtype D fires the WBH p.90 footnote: auto-T plus rolled-G
 		// (2D=4 + DM+2 = 6 → G). 2 hazards.
-		{"D triggers DM+2 with auto-T", "D", "TG", 2},
+		{"D triggers DM+2 with auto-T", "D", 4, "TG", 2},
+		// Subtype E also fires the WBH p.90 footnote: auto-T plus rolled-B
+		// (2D=2 + DM+2 = 4 → B). 2 hazards. Distinct integration path
+		// from D since it's a separate literal in RollInsidiousHazards.
+		{"E triggers DM+2 with auto-T", "E", 2, "TB", 2},
 		// Subtype 6: 1 rolled hazard, no DM, no auto-T.
 		// 2D=4 + DM+0 = 4 → B.
-		{"non-CDE no DM no auto-T", "6", "B", 1},
+		{"non-CDE no DM no auto-T", "6", 4, "B", 1},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			r := roller.NewScripted(7, 7, 7, 4)
+			r := roller.NewScripted(7, 7, 7, c.hazardRoll)
 			sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
 			detailed := []DetailedPlacement{{
 				Placement:  Placement{Body: BodyTerrestrial},
