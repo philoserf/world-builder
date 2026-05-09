@@ -63,6 +63,17 @@ func HasAnyTaint(taints []Taint) bool {
 	return len(taints) > 0
 }
 
+// isExtremelyDenseSubtype reports whether a Corrosive/Insidious atmosphere
+// subtype letter is "Extremely Dense" per WBH p.89 — rows 12/13/14+
+// (codes C/D/E).
+func isExtremelyDenseSubtype(subtype string) bool {
+	switch subtype {
+	case "C", "D", "E":
+		return true
+	}
+	return false
+}
+
 // taintEligibleAtmosphere reports whether the given atmosphere code
 // participates in the WBH taint/irritant typology (pp.79, 82, 85, 89).
 // Tainted atms 2/4/7/9 roll on the Taint Subtype table; A/B/C (10/11/12)

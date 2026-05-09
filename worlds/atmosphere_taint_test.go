@@ -458,3 +458,27 @@ func TestRollAllTaints_Invariants(t *testing.T) {
 		}
 	}
 }
+
+func TestIsExtremelyDenseSubtype(t *testing.T) {
+	cases := []struct {
+		subtype string
+		want    bool
+	}{
+		{"C", true},
+		{"D", true},
+		{"E", true},
+		{"", false},
+		{"1", false},
+		{"6", false},
+		{"9", false},
+		{"A", false},
+		{"B", false},
+		{"F", false},
+	}
+	for _, c := range cases {
+		got := isExtremelyDenseSubtype(c.subtype)
+		if got != c.want {
+			t.Errorf("isExtremelyDenseSubtype(%q): got %v, want %v", c.subtype, got, c.want)
+		}
+	}
+}
