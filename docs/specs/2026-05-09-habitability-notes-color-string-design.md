@@ -73,7 +73,7 @@ func habitabilityGravityDM(body *DetailedPlacement) (int, string)
 func habitabilityTempDM(body *DetailedPlacement) (int, []string)
 ```
 
-The temperature helper returns `[]string` because its 5 sub-conditions (HighK > 323, HighK < 279, MeanK > 323, MeanK 304–323, MeanK < 273, LowK < 200) can fire independently and each contributes a separate description.
+The temperature helper returns `[]string` because its 6 sub-conditions (HighK > 323, HighK < 279, MeanK > 323, MeanK 304–323, MeanK < 273, LowK < 200) can fire independently and each contributes a separate description.
 
 Empty string ("" or empty slice) means no DM fired.
 
