@@ -667,6 +667,20 @@ func TestRederive_AtmosphereB_RunawayBoilingOnly_PreservesSubtype(t *testing.T) 
 		t.Errorf("atm pressure changed under boiling-only runaway: pre=%v post=%v",
 			prePressure, body.Atmosphere.Pressure)
 	}
+
+	// Verify the hydro re-roll used TempBoiling DM-6 (not TempHot DM-2).
+	// RollHydroDigit formula for atm 11 subtype 5 size 8:
+	//   digit = clamp(2D - 7 + atmCode + dm, 0, 10)
+	//   dm = -4 (atm ≥ 10) - 6 (TempBoiling) = -10
+	// Scripted hydro 2D = 7 → 7 - 7 + 11 - 10 = 1.
+	// (TempHot DM-2 would give 7 - 7 + 11 - 6 = 5 — the original Code,
+	// indistinguishable from "no re-roll happened.") Asserting Code == 1
+	// proves the boiling override fired, so a regression that drops the
+	// `if runawayFired { hydroTempRange = TempBoiling }` line is caught.
+	if body.Hydrographics.Code != 1 {
+		t.Errorf("hydro code: got %d, want 1 (TempBoiling DM-6 applied; TempHot would give 5)",
+			body.Hydrographics.Code)
+	}
 }
 
 // abs is a local int abs helper (no math.Abs for ints in stdlib).

@@ -38,9 +38,13 @@ func MeanKToTempRange(meanK float64) TempRange {
 //
 // Currently mutates (Tasks 6-9):
 //   - Atmosphere.ScaleHeight   (re-derived from current MeanK + gravity via DeriveScaleHeight)
-//   - Atmosphere.Code          (mutated to A/B/C if CheckRunawayGreenhouse fires; HZ bodies only)
-//   - Atmosphere.Subtype+Pressure (re-rolled with DM+4 if runaway fired)
-//   - Hydrographics.Code       (re-rolled with TempBoiling DM-6 if runaway fired, else current TempRange)
+//   - Atmosphere.Code          (mutated to A/B/C only on the runaway-greenhouse 2-9/D/E path;
+//     atm A/B/C/F+ stay unchanged on a "boiling-only" runaway fire
+//     per WBH p.79; HZ bodies only)
+//   - Atmosphere.Subtype+Pressure (re-rolled with DM+4 only when atm code was actually mutated;
+//     boiling-only fires preserve subtype and pressure)
+//   - Hydrographics.Code       (re-rolled with TempBoiling DM-6 on any runaway fire — both
+//     the mutation and boiling-only paths — else current TempRange)
 //   - Hydrographics.Profile    (composition tail per p.102)
 //   - Atmosphere.Profile       (gas mix for exotic A/B/C/F atm with hydro > 0)
 //
