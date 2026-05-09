@@ -63,6 +63,11 @@ func HasAnyTaint(taints []Taint) bool {
 	return len(taints) > 0
 }
 
+// taintEligibleAtmosphere reports whether the given atmosphere code
+// participates in the WBH taint/irritant typology (pp.79, 82, 85, 89).
+// Tainted atms 2/4/7/9 roll on the Taint Subtype table; A/B/C (10/11/12)
+// and F/G/H (15/16/17) roll for irritants off the same table. All other
+// codes return no entries.
 func taintEligibleAtmosphere(atmCode int) bool {
 	switch atmCode {
 	case 2, 4, 7, 9, 10, 11, 12, 15, 16, 17:
@@ -237,8 +242,10 @@ func persistenceFromTotal(total int) int {
 //	11: R
 //	12+: T
 //
-// The "T hazard auto on subtype D/E + reroll for additional hazard"
-// rule from p.90 is handled by the runStep5DPrime orchestrator, not here.
+// Not implemented: the WBH p.90 footnote rule that subtype D or E grants
+// an automatic T hazard plus an additional rolled hazard. Representing
+// two hazards requires changing Atmosphere.InsidiousHazard from a single
+// pointer to a slice; see the follow-up issue tracking that work.
 func RollInsidiousHazard(r roller.Roller, isExtremelyDense bool) string {
 	roll := r.Roll("2D")
 	dm := 0
@@ -294,6 +301,11 @@ func RollTaintSubtype(r roller.Roller, atmCode int, isSecondOrLater bool) string
 // using the severity/persistence rolls so callers don't have to special-
 // case pre-seeded entries.
 //
+// Eligibility is delegated to taintEligibleAtmosphere (currently 2/4/7/9
+// and A/B/C/F/G/H per the broader reading of the original review). Returns
+// nil for any other code so atms 0/1/3, untainted standard 5/6/8, and atm
+// D/E get no entries.
+//
 // Multi-roll behavior per WBH p.83:
 //   - Result of 10 (rawRoll + dm == 10) → particulates AND reroll for next taint.
 //   - Maximum 3 taint conditions per world.
@@ -302,6 +314,9 @@ func RollTaintSubtype(r roller.Roller, atmCode int, isSecondOrLater bool) string
 // ppO2 adjustment per WBH p.83 (only on fresh L/H rolls, not pre-seeded):
 //   - L: ppO2 -= 1D/100; total pressure unchanged (gas replaced with N₂).
 //   - H: ppO2 += 1D/10; same.
+//
+// ppO2 is clamped after adjustment: never negative, and never above
+// total Pressure when Pressure is known (>0; "Varies" atms report 0).
 //
 // Mutates body.Atmosphere.OxygenPartialPressure when ppO2 adjustment fires.
 //
@@ -336,12 +351,20 @@ func RollAllTaints(r roller.Roller, body *DetailedPlacement, preseeded *Taint) [
 		}
 
 		// Fresh L/H only (no pre-seed, first roll): adjust ppO2.
+		// Clamp to [0, Pressure] so the gas-replacement model from p.83
+		// can't produce negative ppO2 or ppO2 above total pressure.
 		if (code == "L" || code == "H") && !isSecondOrLater && preseeded == nil {
 			adjust := r.Roll("1D")
 			if code == "L" {
 				body.Atmosphere.OxygenPartialPressure -= float64(adjust) / 100.0
 			} else {
 				body.Atmosphere.OxygenPartialPressure += float64(adjust) / 10.0
+			}
+			if body.Atmosphere.OxygenPartialPressure < 0 {
+				body.Atmosphere.OxygenPartialPressure = 0
+			}
+			if body.Atmosphere.Pressure > 0 && body.Atmosphere.OxygenPartialPressure > body.Atmosphere.Pressure {
+				body.Atmosphere.OxygenPartialPressure = body.Atmosphere.Pressure
 			}
 		}
 
