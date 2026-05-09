@@ -182,13 +182,23 @@ func corrosiveInsidiousPressureRange(subtype string) (minBar, spanBar float64) {
 	return 0, 0
 }
 
-// RollTotalPressure computes total atmospheric pressure per WBH p.80:
+// RollTotalPressure computes total atmospheric pressure per WBH p.80,
+// or per the WBH p.89 subtype-keyed range for atm B/C:
 //
 //	bar = MinPressureRange + Span × ((1D-1)×5 + (1D-1)) / 30
 //
+// For atm codes 11 (B) and 12 (C), subtype must be set (one of
+// "1"-"9", "A"-"E"); otherwise pressure falls back to 0 (legacy
+// "Varies" behavior). For all other codes, subtype is ignored.
+//
 // Returns minBar with no rolls consumed when span = 0.
-func RollTotalPressure(r roller.Roller, atmoCode int) (float64, error) {
-	minBar, span := AtmospherePressureRange(atmoCode)
+func RollTotalPressure(r roller.Roller, atmoCode int, subtype string) (float64, error) {
+	var minBar, span float64
+	if (atmoCode == 11 || atmoCode == 12) && subtype != "" {
+		minBar, span = corrosiveInsidiousPressureRange(subtype)
+	} else {
+		minBar, span = AtmospherePressureRange(atmoCode)
+	}
 	if span == 0 {
 		return minBar, nil
 	}

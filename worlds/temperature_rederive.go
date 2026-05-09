@@ -200,7 +200,7 @@ func rerollAtmSubtypeAndPressure(
 	}
 	body.Atmosphere.Subtype = newSubtype
 
-	newPressure, err := RollTotalPressure(r, code)
+	newPressure, err := RollTotalPressure(r, code, newSubtype)
 	if err != nil {
 		return fmt.Errorf("worlds: rerollAtmSubtypeAndPressure: pressure: %w", err)
 	}

@@ -1112,7 +1112,12 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 			}
 		}
 
-		// Assertion 13: GreenhouseFactor ≥ 0 and < 5 (sanity bound).
+		// Assertion 13: GreenhouseFactor ≥ 0 and < 5 (sanity bound) —
+		// except atm B/C, where the unclamped factor scales with √P × 1..18
+		// and can legitimately exceed 5 at extreme pressures. The actual
+		// (1+G) clamp at [0.001, 1.999] is applied at MeanTemperatureK
+		// per WBH p.111 thumb-rule-two, so large unclamped G values don't
+		// propagate to temperature.
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if !dp.HasTemperature() {
@@ -1122,7 +1127,9 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 			if g < 0 {
 				t.Errorf("iter %d: body %s: GreenhouseFactor %v < 0", iter, dp.Designation, g)
 			}
-			if g >= 5 {
+			isCorrosiveOrInsidious := dp.Atmosphere != nil &&
+				(dp.Atmosphere.Code == 11 || dp.Atmosphere.Code == 12)
+			if g >= 5 && !isCorrosiveOrInsidious {
 				t.Errorf("iter %d: body %s: GreenhouseFactor %v ≥ 5 (sanity bound)", iter, dp.Designation, g)
 			}
 		}
@@ -1262,7 +1269,9 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 			}
 		}
 
-		// Assertion 21: Pressure sanity (≥ 0; non-gas-giants < 100 bar).
+		// Assertion 21: Pressure sanity (≥ 0; non-gas-giants < 100 bar,
+		// or < 10000 bar for atm B/C which can legitimately reach
+		// extreme densities at subtype E per WBH p.89).
 		for i := range sd.Detailed {
 			dp := &sd.Detailed[i]
 			if dp.Atmosphere == nil {
@@ -1272,9 +1281,13 @@ func TestZed_FullDetail_3A2b(t *testing.T) {
 				t.Errorf("iter %d: body %s: negative Pressure %v",
 					iter, dp.Designation, dp.Atmosphere.Pressure)
 			}
-			if dp.GGClass == worlds.NotGasGiant && dp.Atmosphere.Pressure > 100 {
-				t.Errorf("iter %d: body %s (terrestrial): Pressure %v > 100 bar",
-					iter, dp.Designation, dp.Atmosphere.Pressure)
+			maxPress := 100.0
+			if dp.Atmosphere.Code == 11 || dp.Atmosphere.Code == 12 {
+				maxPress = 10000
+			}
+			if dp.GGClass == worlds.NotGasGiant && dp.Atmosphere.Pressure > maxPress {
+				t.Errorf("iter %d: body %s (terrestrial): Pressure %v > %v bar",
+					iter, dp.Designation, dp.Atmosphere.Pressure, maxPress)
 			}
 		}
 

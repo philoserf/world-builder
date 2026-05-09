@@ -78,7 +78,7 @@
 | Aab | Aab II d | — | — | — | — | S | — | — |
 | Aab | Aab II e | — | — | — | — | 1 | — | — |
 | Aab | Aab III | 2.29 | 0.787 | 0.005 | 0.515y | 9?? | 0 | — |
-| Aab | Aab IV | 2.82 | 0.946 | 0.015 | 0.679y | AB7 | 0 | HZ |
+| Aab | Aab IV | 2.82 | 0.946 | 0.015 | 0.679y | AB4 | 0 | HZ |
 | Cab | Cab I | 1.14 | 0.441 | 0.005 | 0.293y | GMA | 10 | 80⊕, HZ, 4??, 1??, 2??, 1??, S??, R??, R??, S??, S??, R?? |
 | Cab | Cab I a | — | — | — | — | 4?? | — | — |
 | Cab | Cab I b | — | — | — | — | 1?? | — | — |
@@ -126,27 +126,27 @@
 | Field | Value |
 |---|---|
 | Code | 11 — Corrosive |
-| Pressure (bar) | 0.000 |
+| Pressure (bar) | 1.095 |
 | O₂ (bar) | 0.000 |
-| Scale Height | 6.62 |
-| Profile | B-St7:NH3-91:CH4-06:Other-02 R.4.7 |
+| Scale Height | 7.15 |
+| Profile | B-St7:1.09:N2-82:NH3-17:Other-00 B.1.8 |
 
 ### Hydrographics
 
 | Field | Value |
 |---|---|
-| Code | 7 |
-| Coverage (%) | 72 |
-| Profile | H7:H2O-100 |
+| Code | 4 |
+| Coverage (%) | 42 |
+| Profile | H4:H2O-100 |
 
 ### Rotation
 
 | Field | Value |
 |---|---|
-| Sidereal (h) | 41.91 |
-| Solar (h) | 42.21 |
-| Solar days/year | 140.92 |
-| Axial Tilt (°) | 9.00 |
+| Sidereal (h) | 29.45 |
+| Solar (h) | 29.60 |
+| Solar days/year | 200.95 |
+| Axial Tilt (°) | 0.00 |
 | Tidal lock | no |
 | Tides (m) | 0.05 |
 
@@ -154,12 +154,12 @@
 
 | Field | Value |
 |---|---|
-| High (K) | 321 |
-| Mean (K) | 290 |
-| Low (K) | 247 |
+| High (K) | 323 |
+| Mean (K) | 313 |
+| Low (K) | 304 |
 | Luminosity | 1.419 |
-| Albedo | 0.31 |
-| Greenhouse | 0.00 |
+| Albedo | 0.52 |
+| Greenhouse | 1.57 |
 
 ### Seismic
 
@@ -169,23 +169,23 @@
 | Residual Stress | 144 |
 | Tidal Stress | 0 |
 | Tidal Heating | 0 — Negligible |
-| Tectonic Plates | 11 |
+| Tectonic Plates | 9 |
 
 ### Life
 
 | Field | Value |
 |---|---|
-| Biomass | 0 — None (sterile) |
-| Biocomplexity | 0 |
+| Biomass | 1 — Trace |
+| Biocomplexity | 1 — Primitive single-cell organisms |
 | Sophonts? | no |
-| Biodiversity | 0 — None |
+| Biodiversity | 1 — Uniform (few dominant species) |
 | Compatibility | 0 — Incompatible |
 
 ### Resources
 
 | Field | Value |
 |---|---|
-| Rating | 7 — Worthwhile |
+| Rating | B — Resource rush |
 
 ### Habitability
 
