@@ -231,3 +231,36 @@ func TestRollCorrosiveInsidiousSubtype_Boundaries(t *testing.T) {
 		})
 	}
 }
+
+func TestCorrosiveInsidiousPressureRange(t *testing.T) {
+	cases := []struct {
+		subtype  string
+		wantMin  float64
+		wantSpan float64
+	}{
+		{"1", 0.1, 0.32},
+		{"2", 0.1, 0.32},
+		{"3", 0.1, 0.32},
+		{"4", 0.43, 0.27},
+		{"5", 0.43, 0.27},
+		{"6", 0.70, 0.79},
+		{"7", 0.70, 0.79},
+		{"8", 1.50, 0.99},
+		{"9", 1.50, 0.99},
+		{"A", 2.50, 7.50},
+		{"B", 2.50, 7.50},
+		{"C", 10, 90},
+		{"D", 100, 900},
+		{"E", 1000, 9000},
+		{"", 0, 0},
+		{"0", 0, 0},
+		{"Z", 0, 0},
+	}
+	for _, c := range cases {
+		gotMin, gotSpan := corrosiveInsidiousPressureRange(c.subtype)
+		if gotMin != c.wantMin || gotSpan != c.wantSpan {
+			t.Errorf("corrosiveInsidiousPressureRange(%q): got (%g, %g), want (%g, %g)",
+				c.subtype, gotMin, gotSpan, c.wantMin, c.wantSpan)
+		}
+	}
+}
