@@ -174,7 +174,7 @@ sb.WriteString("\n")
 `TestComputeHabitability_Notes` in `worlds/habitability_test.go`:
 
 - Terra-equivalent body (Size 8, Atm 6, Hydro 7, no tidal lock, mean temp 290K, gravity 1.0) → `Notes == ""`. (Earth-baseline produces no fired-DM descriptions.)
-- Zed-Prime-like body (Size 5, Atm 6, Hydro 5, mean temp 346K, gravity 0.66) → `Notes` contains "Too hot most of the time" and "Low gravity", joined with "; ".
+- Zed-Prime-like body (Size 5, Atm 6, Hydro 5, HighK 346, MeanK 290, gravity 0.66) → `Notes` contains "Too hot at times" and "Low gravity", joined with "; ". This mirrors the WBH p.133 worked example ("its high temperature of 346 exceeds 323 for a DM-2 but mean temperature is within bounds").
 - Hostile body (Size 8, Atm 11/B, Hydro 7, tidal-locked, mean temp 290K, gravity 1.0) → `Notes` contains "Hostile Atmosphere" and "Very little useable land surface area".
 - Multi-note temperature: HighK 350, MeanK 340, LowK 250 → notes include "Too hot at times", "Too hot most of the time" (no "Too cold most of the time" since MeanK ≥ 273).
 
