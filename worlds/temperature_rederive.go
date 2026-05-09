@@ -66,12 +66,22 @@ func RederiveAtmosphereHydrographics(
 		body.Atmosphere.ScaleHeight = DeriveScaleHeight(meanK, body.Physical.Gravity)
 	}
 
-	// 1.5 (HZ-only): CheckRunawayGreenhouse — may mutate atm.Code to A/B/C.
+	// 1.5 (HZ-only): CheckRunawayGreenhouse — may mutate atm.Code to A/B/C
+	// for atm 2-9/D/E paths, or fire boiling-only for atm A/B/C/F+ (no
+	// mutation). We compare pre/post atm.Code to know which path fired
+	// and only re-roll subtype/pressure when the code was mutated. Per
+	// WBH p.79, the boiling-only path's "only effect" is the hydro DM-6
+	// applied below.
 	runawayFired := false
 	if body.HZ {
+		var preCode int
+		if body.Atmosphere != nil {
+			preCode = body.Atmosphere.Code
+		}
 		runawayFired = CheckRunawayGreenhouse(r, body, sys)
-		if runawayFired {
-			// Re-roll subtype + pressure with runawayResult=true (DM+4 to subtype).
+		if runawayFired && body.Atmosphere != nil && body.Atmosphere.Code != preCode {
+			// Code was mutated (atm 2-9/D/E → A/B/C path). Re-roll subtype
+			// + pressure with runawayResult=true (DM+4 to subtype).
 			if err := rerollAtmSubtypeAndPressure(r, body, sys, true); err != nil {
 				return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: post-runaway: %w", err)
 			}

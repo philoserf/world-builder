@@ -9,7 +9,7 @@ import (
 
 // CheckRunawayGreenhouse evaluates and applies WBH p.79 Optional Runaway
 // Greenhouse. Triggered when:
-//   - body.Atmosphere is non-nil AND atm.Code in {2-9, D=13, E=14}
+//   - body.Atmosphere is non-nil AND atm.Code is 2 or above
 //   - body.Temperature is non-nil AND MeanK > 303K
 //   - 2D + DMs ≥ 12
 //
@@ -19,18 +19,21 @@ import (
 //   - +1 if originally tainted (codes 2, 4, 7, 9)
 //   - -2 if Size 2-5
 //
-// On trigger, mutates atm.Code via 1D table:
+// On trigger, the outcome depends on the original atm code:
 //
-//	1   → A (10)
-//	2-4 → B (11)
-//	5+  → C (12)
+//   - atm 2-9, D (13), E (14): mutate body.Atmosphere.Code via 1D table:
+//     1   → A (10)
+//     2-4 → B (11)
+//     5+  → C (12)
 //
-// Returns true iff trigger fired. Caller re-rolls Hydrographics with DM-6
-// (boiling) instead of DM-2 (hot) when this returns true.
+//   - atm A (10), B (11), C (12), F+ (15+): no mutation. WBH: "the only
+//     effect of a runaway greenhouse is to consider the world to be
+//     boiling." The caller treats the bool return as "consider boiling"
+//     and applies hydro DM-6 instead of DM-2.
 //
-// MVP simplification: atm A/B/C (10/11/12) and F+ (15+) skip this check.
-// The book's "consider boiling" case for those codes (only flips hydrographics
-// DM without mutating atm code) is deferred — see spec carry-forwards.
+// Returns true iff the trigger fired (regardless of outcome path).
+// Caller distinguishes the mutation vs boiling-only paths by comparing
+// the pre-call atm.Code to the post-call value.
 func CheckRunawayGreenhouse(r roller.Roller, body *DetailedPlacement, sys stars.System) bool {
 	if body.Atmosphere == nil || body.Temperature == nil {
 		return false
@@ -39,8 +42,8 @@ func CheckRunawayGreenhouse(r roller.Roller, body *DetailedPlacement, sys stars.
 		return false
 	}
 	code := body.Atmosphere.Code
-	// Trigger range: atm 2-9, D (13), E (14). Skip A/B/C (10-12), F+ (15+), and 0/1.
-	if code < 2 || code == 10 || code == 11 || code == 12 || code >= 15 {
+	// Atm 0 (None) and 1 (Trace) are not in the WBH p.79 runaway table.
+	if code < 2 {
 		return false
 	}
 
@@ -63,7 +66,14 @@ func CheckRunawayGreenhouse(r roller.Roller, body *DetailedPlacement, sys stars.
 		return false
 	}
 
-	// Trigger fired: roll 1D for new atm code.
+	// Trigger fired. WBH p.79: for atm A, B, C, or F+, the only effect
+	// is the "consider boiling" hydro DM (handled by the caller). No
+	// atm code mutation, no subtype/pressure re-roll.
+	if code == 10 || code == 11 || code == 12 || code >= 15 {
+		return true
+	}
+
+	// Atm 2-9, D, E: mutate code via 1D table.
 	atmRoll := r.Roll("1D")
 	switch {
 	case atmRoll == 1:
