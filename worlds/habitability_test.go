@@ -402,3 +402,77 @@ func TestComputeHabitability_HabitabilityCannotExceed12(t *testing.T) {
 		t.Errorf("got %d, want 12 (max positive)", got.Rating)
 	}
 }
+
+func TestComputeHabitability_Notes(t *testing.T) {
+	cases := []struct {
+		name      string
+		setup     func() *DetailedPlacement
+		wantNotes string
+	}{
+		{
+			name: "Terra baseline (no DMs fire)",
+			setup: func() *DetailedPlacement {
+				body := &DetailedPlacement{}
+				body.SizeCode = "8"
+				body.Atmosphere = &Atmosphere{Code: 6}
+				body.Hydrographics = &Hydrographics{Code: 7}
+				body.Temperature = &Temperature{HighK: 310, MeanK: 290, LowK: 270}
+				body.Physical = &BodyPhysical{Gravity: 1.0}
+				return body
+			},
+			wantNotes: "",
+		},
+		{
+			name: "Zed Prime (HighK > 323 + low gravity)",
+			setup: func() *DetailedPlacement {
+				body := &DetailedPlacement{}
+				body.SizeCode = "5"
+				body.Atmosphere = &Atmosphere{Code: 6}
+				body.Hydrographics = &Hydrographics{Code: 5}
+				body.Temperature = &Temperature{HighK: 346, MeanK: 290, LowK: 270}
+				body.Physical = &BodyPhysical{Gravity: 0.66}
+				return body
+			},
+			wantNotes: "Too hot at times; Low gravity",
+		},
+		{
+			name: "Hostile (atm B + tidal lock 1:1)",
+			setup: func() *DetailedPlacement {
+				body := &DetailedPlacement{}
+				body.SizeCode = "8"
+				body.Atmosphere = &Atmosphere{Code: 11}
+				body.Hydrographics = &Hydrographics{Code: 7}
+				body.TidalLock = &TidalLock{
+					Case:           TidalLockCasePlanetToStar,
+					LockRatio:      "1:1",
+					IsTwilightZone: true,
+				}
+				body.Temperature = &Temperature{HighK: 310, MeanK: 290, LowK: 270}
+				body.Physical = &BodyPhysical{Gravity: 1.0}
+				return body
+			},
+			wantNotes: "Hostile Atmosphere; Very little useable land surface area",
+		},
+		{
+			name: "Multi-temp (HighK and MeanK both > 323)",
+			setup: func() *DetailedPlacement {
+				body := &DetailedPlacement{}
+				body.SizeCode = "8"
+				body.Atmosphere = &Atmosphere{Code: 6}
+				body.Hydrographics = &Hydrographics{Code: 7}
+				body.Temperature = &Temperature{HighK: 350, MeanK: 340, LowK: 250}
+				body.Physical = &BodyPhysical{Gravity: 1.0}
+				return body
+			},
+			wantNotes: "Too hot at times; Too hot most of the time",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := ComputeHabitability(c.setup())
+			if got.Notes != c.wantNotes {
+				t.Errorf("got Notes %q, want %q", got.Notes, c.wantNotes)
+			}
+		})
+	}
+}
