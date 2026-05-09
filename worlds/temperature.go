@@ -454,14 +454,16 @@ func (t *Temperature) MeanByLatitude(latDeg float64) float64 {
 // tropicalLatitudeBoundary returns the absolute axial tilt in degrees
 // (clamped to [0, 90]) — the WBH p.116 boundary between the tropical
 // zone (|lat| ≤ tilt) and the rest of the world. NaN from Asin (when
-// |AxialTiltFactor| > 1) clamps to 0 or 90 by sign.
+// |AxialTiltFactor| > 1) clamps to 90; negative AxialTiltFactor takes
+// the absolute value so the comparison stays meaningful when callers
+// construct Temperature directly with a sign-flipped factor.
 func (t *Temperature) tropicalLatitudeBoundary() float64 {
 	tiltDeg := math.Asin(t.AxialTiltFactor) * 180.0 / math.Pi
 	if math.IsNaN(tiltDeg) {
-		if t.AxialTiltFactor > 0 {
-			return 90
-		}
-		return 0
+		return 90
+	}
+	if tiltDeg < 0 {
+		tiltDeg = -tiltDeg
 	}
 	return tiltDeg
 }
@@ -537,7 +539,14 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 	if absLat > 90 {
 		absLat = 90
 	}
-	isTropical := absLat <= t.tropicalLatitudeBoundary()
+	// "No seasonal swing" applies in the tropical zone for Part A worlds
+	// (axial tilt < 45°). For Part B worlds (tilt ≥ 45°) the zone boundaries
+	// reorganize per WBH p.117 and the no-swing region is (90 − tilt), not
+	// the raw tilt — see issue #30. Until that lands, gate the swing-skip
+	// to Part A only so high-tilt worlds keep applying the seasonal swing
+	// uniformly (their pre-#4 behavior).
+	tiltDeg := t.tropicalLatitudeBoundary()
+	isTropical := tiltDeg < 45 && absLat <= tiltDeg
 
 	variance := zoneAdj
 	if !isTropical {

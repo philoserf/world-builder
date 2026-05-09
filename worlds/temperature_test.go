@@ -1053,10 +1053,11 @@ func TestTemperature_AtMoment_NoonExceedsDawn(t *testing.T) {
 }
 
 func TestTemperature_MeanBySeason_LatitudesProduceDifferentTemps(t *testing.T) {
-	// Same date, different latitudes → different temperatures. The
-	// existing implementation returns the same value at all latitudes
-	// because the seasonal swing is applied as a global luminosity
-	// modifier without composing with the latitude zone formula.
+	// Same date, different latitudes → different temperatures. Prior to
+	// the WBH p.116 composition fix, MeanBySeason returned the same
+	// value at all latitudes because the seasonal swing was applied as
+	// a global luminosity modifier without composing with the latitude
+	// zone formula. This test guards against regressing to that bug.
 	temp := &Temperature{
 		MeanK:             288,
 		Luminosity:        1.0,

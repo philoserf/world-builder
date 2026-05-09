@@ -26,7 +26,7 @@ Zone latitude adjustment formulas:
 
 For Part B (axial tilt ≥ 45°): no middle zone; the latitude luminosity adjustment for the gap region is set to the result at the edge of the arctic zone (`90° − tilt`).
 
-The existing helper `zoneTiltAdjustment(latDeg)` (in `worlds/temperature.go:457`) already implements this three-zone classification correctly. `MeanByLatitude` already uses it for annual-mean temperatures.
+The existing helper `zoneTiltAdjustment(latDeg)` in `worlds/temperature.go` implements the three-zone classification correctly for Part A (axial tilt < 45°). `MeanByLatitude` uses it for annual-mean temperatures. The Part B branch (tilt ≥ 45°) of `zoneTiltAdjustment` has a pre-existing correctness gap — case 1 of its switch fires for any `lat ≤ tilt` and clamps the negative `45 − tilt` argument to 0 instead of producing the book's `sin(tilt − 45)` for the inner equatorial-tropical region. Fixing that is out of scope here and tracked separately as issue #30; this PR's `MeanBySeason` change scopes its no-seasonal-swing branch to Part A only so that high-tilt worlds preserve their pre-existing behavior pending the Part B fix.
 
 WBH p.116, the key passage that prescribes seasonal composition (this is what the current `MeanBySeason` ignores):
 
