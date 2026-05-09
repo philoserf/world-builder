@@ -459,6 +459,41 @@ func TestRollAllTaints_Invariants(t *testing.T) {
 	}
 }
 
+func TestRollInsidiousHazards(t *testing.T) {
+	cases := []struct {
+		name             string
+		subtype          string
+		isExtremelyDense bool
+		twoD             int
+		want             []Hazard
+	}{
+		// Subtype "6" (no D/E rule, no DM): rolled-B from 2D=4.
+		{"subtype 6 single", "6", false, 4, []Hazard{{Code: "B"}}},
+		// Subtype "C" (no D/E rule, DM+2 from extremely-dense): rolled-G from 2D=4 + DM+2 = 6 → G.
+		{"subtype C single with DM", "C", true, 4, []Hazard{{Code: "G"}}},
+		// Subtype "D" (D/E rule fires, DM+2): auto-T + rolled-G (2D=4 + DM+2 = 6 → G).
+		{"subtype D auto-T plus rolled", "D", true, 4, []Hazard{{Code: "T"}, {Code: "G"}}},
+		// Subtype "E" (D/E rule fires, DM+2): auto-T + rolled-B (2D=2 + DM+2 = 4 → B).
+		{"subtype E auto-T plus rolled", "E", true, 2, []Hazard{{Code: "T"}, {Code: "B"}}},
+		// Duplicate-T case: subtype "D", no DM, 2D=8 → T as rolled, plus auto-T.
+		{"subtype D duplicate T", "D", false, 8, []Hazard{{Code: "T"}, {Code: "T"}}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := roller.NewScripted(c.twoD)
+			got := RollInsidiousHazards(r, c.subtype, c.isExtremelyDense)
+			if len(got) != len(c.want) {
+				t.Fatalf("len: got %d, want %d (got %+v)", len(got), len(c.want), got)
+			}
+			for i := range got {
+				if got[i] != c.want[i] {
+					t.Errorf("[%d]: got %+v, want %+v", i, got[i], c.want[i])
+				}
+			}
+		})
+	}
+}
+
 func TestIsExtremelyDenseSubtype(t *testing.T) {
 	cases := []struct {
 		subtype string

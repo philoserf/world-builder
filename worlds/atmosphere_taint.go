@@ -253,10 +253,10 @@ func persistenceFromTotal(total int) int {
 //	11: R
 //	12+: T
 //
-// Not implemented: the WBH p.90 footnote rule that subtype D or E grants
-// an automatic T hazard plus an additional rolled hazard. Representing
-// two hazards requires changing Atmosphere.InsidiousHazard from a single
-// pointer to a slice; see the follow-up issue tracking that work.
+// The WBH p.90 footnote rule (subtype D/E auto-T plus additional rolled
+// hazard) is handled by RollInsidiousHazards (plural); this function is
+// the dice primitive used by both the single-hazard path and the rolled
+// half of the D/E pair.
 func RollInsidiousHazard(r roller.Roller, isExtremelyDense bool) string {
 	roll := r.Roll("2D")
 	dm := 0
@@ -264,6 +264,31 @@ func RollInsidiousHazard(r roller.Roller, isExtremelyDense bool) string {
 		dm += 2
 	}
 	return hazardFromTotal(roll + dm)
+}
+
+// RollInsidiousHazards applies the full WBH p.90 hazard procedure for
+// atm C, including the footnote rule for subtypes D and E.
+//
+// Behavior:
+//   - Subtypes D, E: returns 2 hazards. The first is Hazard{Code: "T"}
+//     per the p.90 footnote ("a T hazard automatically exists"); the
+//     second is rolled via RollInsidiousHazard.
+//   - All other subtypes: returns 1 rolled hazard.
+//
+// isExtremelyDense applies DM+2 to the rolled hazard only (the auto-T
+// is fixed). Pass the same flag the caller would pass to
+// RollInsidiousHazard.
+//
+// If subtype D/E rolls a T as the additional hazard, the result is
+// [T, T] — the book footnote doesn't direct a reroll, so neither do we.
+func RollInsidiousHazards(r roller.Roller, subtype string, isExtremelyDense bool) []Hazard {
+	var hazards []Hazard
+	if subtype == "D" || subtype == "E" {
+		hazards = append(hazards, Hazard{Code: "T"})
+	}
+	rolled := RollInsidiousHazard(r, isExtremelyDense)
+	hazards = append(hazards, Hazard{Code: rolled})
+	return hazards
 }
 
 func hazardFromTotal(total int) string {
