@@ -204,6 +204,7 @@ func exoticBiomassBonus(atmCode int) int {
 //
 // DMs:
 //   - Atmosphere not 4-9: -2
+//   - Low-oxygen taint ("L"): -2
 //   - Age 3-4 Gyrs: -2
 //   - Age 2-3 Gyrs: -4
 //   - Age 1-2 Gyrs: -8
@@ -216,14 +217,17 @@ func exoticBiomassBonus(atmCode int) int {
 //
 // Result < 1 promoted to 1 (when biomass > 0).
 //
-// Skipped: low-oxygen-taint DM-2 deferred per spec Q3-a (taint typology
-// not yet modeled).
+// Applies WBH p.129 low-oxygen-taint DM-2 when atm has an "L" taint.
 func RollBiocomplexity(r roller.Roller, body *DetailedPlacement, biomass int, ageGyr float64) int {
 	if biomass <= 0 {
 		return 0
 	}
 	dm := biocomplexityAgeDM(ageGyr)
 	if !atmIs4to9(body) {
+		dm += -2
+	}
+	// Low-oxygen-taint DM-2 per WBH p.129.
+	if body != nil && body.Atmosphere != nil && HasTaintCode(body.Atmosphere.Taints, "L") {
 		dm += -2
 	}
 	roll := r.Roll("2D")

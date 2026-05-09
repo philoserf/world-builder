@@ -906,6 +906,31 @@ func TestRunStep5F_MoonOfGGParent_GetsBiology(t *testing.T) {
 	}
 }
 
+func TestRollBiocomplexity_LowOxygenTaintAddsDM(t *testing.T) {
+	// Atm 4, biomass=5, age=5. Atm 4 IS in 4-9 so no atm-not-in-band DM.
+	// Without L: DM = 0; 2D=8 - 7 + min(5,9) = 6.
+	// With L: DM = -2; result = 4.
+	withTaint := &DetailedPlacement{
+		Atmosphere: &Atmosphere{
+			Code:   4,
+			Taints: []Taint{{Code: "L", Severity: 8, Persistence: 9}},
+		},
+	}
+	withoutTaint := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 4},
+	}
+	rA := roller.NewScripted(8)
+	rB := roller.NewScripted(8)
+	got := RollBiocomplexity(rA, withTaint, 5, 5.0)
+	if got != 4 {
+		t.Errorf("with L taint: got %d, want 4", got)
+	}
+	got = RollBiocomplexity(rB, withoutTaint, 5, 5.0)
+	if got != 6 {
+		t.Errorf("without L taint: got %d, want 6", got)
+	}
+}
+
 func TestRollBiomass_BiologicTaintPromotesZeroToOne(t *testing.T) {
 	// Atm 0 with B taint, hydro 0, age 5, rolled 2D=2 → biomass would be 0
 	// without promotion. With B taint, promoted to 1 per WBH p.127 SC1.
