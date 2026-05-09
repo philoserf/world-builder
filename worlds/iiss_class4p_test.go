@@ -177,6 +177,28 @@ func TestRenderIISSClass4P_HabitabilitySection_Present(t *testing.T) {
 	if !strings.Contains(got, "Rating: 7") {
 		t.Errorf("missing Rating: 7: got %q", got)
 	}
+	// Empty Notes: no Notes line.
+	if strings.Contains(got, "Notes:") {
+		t.Errorf("got Notes: line for empty Notes: %q", got)
+	}
+}
+
+func TestRenderIISSClass4P_HabitabilitySection_WithNotes(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.Designation = "Aab III"
+	body.SizeCode = "5"
+	body.Habitability = &Habitability{
+		Rating: 7,
+		Notes:  "Too hot at times; Low gravity",
+	}
+	got := RenderIISSClass4P(body, stars.System{}, "")
+	if !strings.Contains(got, "Rating: 7") {
+		t.Errorf("missing Rating: 7: got %q", got)
+	}
+	if !strings.Contains(got, "Notes:  Too hot at times; Low gravity") {
+		t.Errorf("missing Notes line: got %q", got)
+	}
 }
 
 func TestRenderIISSClass4P_NoMoons_NoSubordinatesSection(t *testing.T) {
