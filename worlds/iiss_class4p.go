@@ -183,7 +183,11 @@ func renderIISS4PHabitability(sb *strings.Builder, body *DetailedPlacement) {
 		sb.WriteString("  (not computed)\n\n")
 		return
 	}
-	fmt.Fprintf(sb, "  Rating: %d\n\n", body.Habitability.Rating)
+	fmt.Fprintf(sb, "  Rating: %d\n", body.Habitability.Rating)
+	if body.Habitability.Notes != "" {
+		fmt.Fprintf(sb, "  Notes:  %s\n", body.Habitability.Notes)
+	}
+	sb.WriteString("\n")
 }
 
 func renderIISS4PSubordinates(sb *strings.Builder, body *DetailedPlacement) {

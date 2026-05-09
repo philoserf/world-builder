@@ -233,8 +233,12 @@ func writeClass4PHabitability(sb *strings.Builder, body *DetailedPlacement) {
 		return
 	}
 	sb.WriteString("| Field | Value |\n|---|---|\n")
-	fmt.Fprintf(sb, "| Rating | %d — %s |\n\n",
+	fmt.Fprintf(sb, "| Rating | %d — %s |\n",
 		body.Habitability.Rating, HabitabilityRatingName(body.Habitability.Rating))
+	if body.Habitability.Notes != "" {
+		fmt.Fprintf(sb, "| Notes | %s |\n", body.Habitability.Notes)
+	}
+	sb.WriteString("\n")
 }
 
 func writeClass4PSubordinates(sb *strings.Builder, body *DetailedPlacement) {
