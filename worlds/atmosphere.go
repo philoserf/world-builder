@@ -143,6 +143,45 @@ func AtmospherePressureRange(code int) (minBar, spanBar float64) {
 	return 0, 0
 }
 
+// corrosiveInsidiousPressureRange returns (minBar, spanBar) for atm
+// codes B (11) and C (12) keyed off the WBH p.89 subtype letter.
+//
+// Subtypes 1-B carry the explicit ranges from the p.89 table.
+// Subtypes C/D/E carry "10.0+ / unbound" in the book; we return
+// project-supplied tiered ranges per the design spec dated 2026-05-09
+// (atm-bc-pressure-from-subtype) honoring p.89's "Only insidious
+// extremely dense atmospheres should have pressures exceeding 1,000
+// bar" hint:
+//
+//	C: 10–100      (min=10,   span=90)
+//	D: 100–1000    (min=100,  span=900)
+//	E: 1000–10000  (min=1000, span=9000)
+//
+// Empty/unknown subtype returns (0, 0). Callers in the live pipeline
+// always roll the subtype before pressure (see system_detail_steps.go
+// and temperature_rederive.go).
+func corrosiveInsidiousPressureRange(subtype string) (minBar, spanBar float64) {
+	switch subtype {
+	case "1", "2", "3":
+		return 0.1, 0.32
+	case "4", "5":
+		return 0.43, 0.27
+	case "6", "7":
+		return 0.70, 0.79
+	case "8", "9":
+		return 1.50, 0.99
+	case "A", "B":
+		return 2.50, 7.50
+	case "C":
+		return 10, 90
+	case "D":
+		return 100, 900
+	case "E":
+		return 1000, 9000
+	}
+	return 0, 0
+}
+
 // RollTotalPressure computes total atmospheric pressure per WBH p.80:
 //
 //	bar = MinPressureRange + Span × ((1D-1)×5 + (1D-1)) / 30
