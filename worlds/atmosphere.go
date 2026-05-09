@@ -13,9 +13,10 @@ import (
 // these fields under the real Temperature.MeanK. Post-5D values are final
 // for those fields.
 //
-// Taints and InsidiousHazard are populated by Step 5D-prime (post-rederive)
-// per WBH pp.81-90. Taints contains 0-3 entries; InsidiousHazard is
-// non-nil only for atm C (Insidious).
+// Taints and InsidiousHazards are populated by Step 5D-prime (post-rederive)
+// per WBH pp.81-90. Taints contains 0-3 entries; InsidiousHazards is
+// non-empty only for atm C (Insidious) — typically 1 hazard, but 2 when
+// the subtype is D or E (auto-T plus rolled, per the p.90 footnote).
 type Atmosphere struct {
 	Code                  int
 	Subtype               string
@@ -24,7 +25,7 @@ type Atmosphere struct {
 	ScaleHeight           float64
 	Profile               AtmosphereProfile
 	Taints                []Taint
-	InsidiousHazard       *Hazard
+	InsidiousHazards      []Hazard
 }
 
 // AtmosphereProfile holds the gas-mix composition detail populated in Task 12.

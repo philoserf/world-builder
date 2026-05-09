@@ -496,8 +496,10 @@ func atmosphereCodeChar(code int) string {
 //     e.g. "6-1.013-0.212" or "4-0.544-0.114:P.6.3,R.5.4"
 //   - Exotic/Corrosive (codes A=10, B=11, F=15): "A-St#[:bar][:Gas-pct:Gas-pct...] [I.S.P,...]"
 //     e.g. "A-St7:0.98:N2-96:Ar-04"
-//   - Insidious (code C=12): subtype becomes "St#.H" where H is InsidiousHazard.Code
-//     e.g. "C-St6.T:1.21 G.4.5"
+//   - Insidious (code C=12): subtype becomes "St#.H..." where H... is the
+//     concatenated single-letter codes from InsidiousHazards (1 letter for
+//     most subtypes; 2 letters when subtype is D or E per WBH p.90 footnote)
+//     e.g. "C-St6.T:1.21 G.4.5" or "C-StD.TG:120.50"
 func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string {
 	codeChar := atmosphereCodeChar(atmo.Code)
 	isNO := (atmo.Code >= 2 && atmo.Code <= 9) || atmo.Code == 13 || atmo.Code == 14
@@ -515,8 +517,12 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 
 	// Exotic / Corrosive / Insidious
 	subtypeWithHazard := atmo.Subtype
-	if atmo.Code == 12 && atmo.InsidiousHazard != nil {
-		subtypeWithHazard = atmo.Subtype + "." + atmo.InsidiousHazard.Code
+	if atmo.Code == 12 && len(atmo.InsidiousHazards) > 0 {
+		var codes strings.Builder
+		for _, h := range atmo.InsidiousHazards {
+			codes.WriteString(h.Code)
+		}
+		subtypeWithHazard = atmo.Subtype + "." + codes.String()
 	}
 	base := fmt.Sprintf("%s-St%s", codeChar, subtypeWithHazard)
 	if atmo.Pressure > 0 {
