@@ -80,8 +80,12 @@ func renderIISS4PAtmosphere(sb *strings.Builder, body *DetailedPlacement) {
 		return
 	}
 	atm := body.Atmosphere
-	fmt.Fprintf(sb, "  Code: %d   Pressure (bar): %.3f   O2 (bar): %.3f   Scale Height: %.2f\n\n",
+	fmt.Fprintf(sb, "  Code: %d   Pressure (bar): %.3f   O2 (bar): %.3f   Scale Height: %.2f\n",
 		atm.Code, atm.Pressure, atm.OxygenPartialPressure, atm.ScaleHeight)
+	if sh := FormatAtmoProfileShorthand(*atm, atm.Profile); sh != "" {
+		fmt.Fprintf(sb, "  Profile: %s\n", sh)
+	}
+	sb.WriteString("\n")
 }
 
 func renderIISS4PHydrographics(sb *strings.Builder, body *DetailedPlacement) {

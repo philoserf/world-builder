@@ -104,7 +104,11 @@ func writeClass4PAtmosphere(sb *strings.Builder, body *DetailedPlacement) {
 	}
 	fmt.Fprintf(sb, "| Pressure (bar) | %.3f |\n", a.Pressure)
 	fmt.Fprintf(sb, "| O₂ (bar) | %.3f |\n", a.OxygenPartialPressure)
-	fmt.Fprintf(sb, "| Scale Height | %.2f |\n\n", a.ScaleHeight)
+	fmt.Fprintf(sb, "| Scale Height | %.2f |\n", a.ScaleHeight)
+	if sh := FormatAtmoProfileShorthand(*a, a.Profile); sh != "" {
+		fmt.Fprintf(sb, "| Profile | %s |\n", sh)
+	}
+	sb.WriteString("\n")
 }
 
 func writeClass4PHydrographics(sb *strings.Builder, body *DetailedPlacement) {
