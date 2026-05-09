@@ -53,16 +53,10 @@ func computeBodyTaints(r roller.Roller, dp *DetailedPlacement) {
 	// slot too. Returns nil for any other code.
 	atm.Taints = RollAllTaints(r, dp, preseed)
 
-	// Step 3: Insidious hazard for atm C only.
-	//
-	// isExtremelyDense currently never fires: insidious atms model
-	// pressure as "Varies" (AtmospherePressureRange returns 0/0), so
-	// RollTotalPressure leaves atm.Pressure == 0 and the threshold is
-	// unreachable. The book's "extremely dense" criterion likely maps
-	// to one of the high subtype letters, but the WBH text doesn't
-	// pin down which — see the follow-up issue tracking that mapping.
+	// Step 3: Insidious hazard for atm C only. WBH p.90 DM+2 fires when
+	// the subtype letter is "Extremely Dense" (C/D/E per WBH p.89).
 	if atm.Code == 12 {
-		isExtremelyDense := atm.Pressure >= 10.0
+		isExtremelyDense := isExtremelyDenseSubtype(atm.Subtype)
 		hazardCode := RollInsidiousHazard(r, isExtremelyDense)
 		atm.InsidiousHazard = &Hazard{Code: hazardCode}
 	}
