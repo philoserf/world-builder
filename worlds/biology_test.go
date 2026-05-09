@@ -422,6 +422,49 @@ func TestRollCompatibility_NilAtmosphere_NoAtmDM(t *testing.T) {
 	}
 }
 
+func TestRollCompatibility_OtherwiseTaintedDM(t *testing.T) {
+	// Atm 5 with P taint. Atm 5 → +1 from atm table. P taint not in {2,4,7,9} → -2 added.
+	// Biocomplexity 4. 2D=8.
+	// Without taint: 8 - 4/2 + 1 = 7
+	// With taint: 8 - 2 + 1 - 2 = 5
+	withTaint := &DetailedPlacement{
+		Atmosphere: &Atmosphere{
+			Code:   5,
+			Taints: []Taint{{Code: "P", Severity: 5, Persistence: 5}},
+		},
+	}
+	withoutTaint := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 5},
+	}
+	rA := roller.NewScripted(8)
+	rB := roller.NewScripted(8)
+	got := RollCompatibility(rA, withTaint, 4, 5.0)
+	if got != 5 {
+		t.Errorf("with P taint on atm 5: got %d, want 5", got)
+	}
+	got = RollCompatibility(rB, withoutTaint, 4, 5.0)
+	if got != 7 {
+		t.Errorf("without taint on atm 5: got %d, want 7", got)
+	}
+}
+
+func TestRollCompatibility_TaintOnInherentlyTaintedAtmsNoDoubleDM(t *testing.T) {
+	// Atm 4 (code already in {2,4,7,9}) with P taint. Should NOT double-count.
+	// Atm 4 → -2 from atm table. P taint NOT additionally counted because atm 4 is in the set.
+	// 2D=8, biocomplexity=4: 8 - 2 - 2 = 4.
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{
+			Code:   4,
+			Taints: []Taint{{Code: "P", Severity: 5, Persistence: 5}},
+		},
+	}
+	r := roller.NewScripted(8)
+	got := RollCompatibility(r, body, 4, 5.0)
+	if got != 4 {
+		t.Errorf("atm 4 with P taint: got %d, want 4 (no double DM)", got)
+	}
+}
+
 func TestRollTerrestrialResourceRating_TerrestrialNoLife(t *testing.T) {
 	// Size 5, Density 1.0 (no DM), no biology.
 	// 2D=8 → 8 - 7 + 5 = 6.

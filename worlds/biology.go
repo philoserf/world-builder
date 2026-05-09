@@ -324,6 +324,9 @@ func RollBiodiversity(r roller.Roller, biomass, biocomplexity int) int {
 //   - Atmosphere A, F: -6
 //   - Atmosphere C: -10
 //   - Atmosphere D, E: -1
+//   - "Or otherwise tainted" (WBH p.131): -2 for any tainted atm whose
+//     code is not already in {2, 4, 7, 9} (those already get -2 from the
+//     table above; codes in that set are not double-counted).
 //   - Age > 8 Gyrs: -2
 //
 // NOTE: WBH p.131 worked example shows 7 + 3 - 2.5 + 2 = 9.5 for Zed Prime
@@ -333,11 +336,16 @@ func RollBiodiversity(r roller.Roller, biomass, biocomplexity int) int {
 //
 // Atm codes G/H mentioned in the book DM table don't exist in the WBH
 // 0-F atm system. They cannot be produced by RollAtmoCode — no DM applied.
-//
-// Skipped: "or otherwise tainted" qualifier on the -2 row deferred per
-// spec Q3-a (Atmosphere taint typology not yet modeled).
 func RollCompatibility(r roller.Roller, body *DetailedPlacement, biocomplexity int, ageGyr float64) int {
 	dm := compatibilityAtmDM(body)
+	// Applies WBH p.131 "or otherwise tainted" qualifier: -2 for any
+	// tainted atm whose code isn't already in {2, 4, 7, 9}.
+	if body != nil && body.Atmosphere != nil && HasAnyTaint(body.Atmosphere.Taints) {
+		c := body.Atmosphere.Code
+		if c != 2 && c != 4 && c != 7 && c != 9 {
+			dm += -2
+		}
+	}
 	if ageGyr > 8 {
 		dm += -2
 	}
