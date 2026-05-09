@@ -124,8 +124,9 @@ func TestCheckRunawayGreenhouse_AtmAlreadyExtreme_BoilingOnly(t *testing.T) {
 	// WBH p.79: for atm A, B, C, F+, the runaway-greenhouse trigger still
 	// evaluates, but the only effect is to consider the world boiling. The
 	// atm code does NOT mutate. Each subtest scripts dice that produce a
-	// trigger total ≥ 12 (atm 8, age 5, size 8 → DM age+5 + boiling+4 +
-	// size+0 = +9; 2D=3 + 9 = 12 → trigger).
+	// trigger total ≥ 12 (age 5, size 8 → DM age+5 (ceil 5.0) + boiling+4
+	// (MeanK 400 ≥ 388) + size+0 (size 8 outside 2-5) = +9; tainted DM
+	// doesn't apply to atm 10/11/12/15-17. 2D=3 + 9 = 12 → trigger).
 	cases := []struct {
 		name string
 		code int
