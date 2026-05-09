@@ -9,13 +9,13 @@
 
 Make the WBH p.90 "Atmosphere is extremely dense → DM+2" rule actually fire on the Insidious Atmosphere Hazard roll.
 
-The current code at `worlds/system_detail_step5dprime.go:51` reads:
+Before this change, `computeBodyTaints` in `worlds/system_detail_step5dprime.go` derived `isExtremelyDense` from a pressure threshold:
 
 ```go
 isExtremelyDense := atm.Pressure >= 10.0
 ```
 
-Because `AtmospherePressureRange(12)` returns `(0, 0)` (atm C is modeled as "Varies"), `RollTotalPressure` leaves `atm.Pressure == 0` for every insidious body. The threshold is unreachable in the live pipeline; the DM never applies.
+Because `AtmospherePressureRange(12)` returns `(0, 0)` (atm C is modeled as "Varies"), `RollTotalPressure` leaves `atm.Pressure == 0` for every insidious body. The threshold was unreachable in the live pipeline; the DM never applied.
 
 ## Source of truth
 
