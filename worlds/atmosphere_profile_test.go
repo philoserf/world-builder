@@ -218,14 +218,31 @@ func TestFormatAtmoProfileShorthand_TaintSuffix_NO(t *testing.T) {
 func TestFormatAtmoProfileShorthand_TaintSuffix_Insidious(t *testing.T) {
 	t.Parallel()
 	atmo := Atmosphere{
-		Code:            12,
-		Subtype:         "6",
-		Pressure:        1.21,
-		Taints:          []Taint{{Code: "G", Severity: 4, Persistence: 5}},
-		InsidiousHazard: &Hazard{Code: "T"},
+		Code:             12,
+		Subtype:          "6",
+		Pressure:         1.21,
+		Taints:           []Taint{{Code: "G", Severity: 4, Persistence: 5}},
+		InsidiousHazards: []Hazard{{Code: "T"}},
 	}
 	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
 	want := "C-St6.T:1.21 G.4.5"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestFormatAtmoProfileShorthand_TaintSuffix_Insidious_MultiHazard(t *testing.T) {
+	t.Parallel()
+	// Subtype D triggers the WBH p.90 footnote: auto-T + rolled hazard.
+	// Hazard codes are concatenated single letters after the subtype dot.
+	atmo := Atmosphere{
+		Code:             12,
+		Subtype:          "D",
+		Pressure:         120.5,
+		InsidiousHazards: []Hazard{{Code: "T"}, {Code: "G"}},
+	}
+	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+	want := "C-StD.TG:120.50"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}

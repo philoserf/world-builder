@@ -33,7 +33,7 @@ func runStep5DPrime(r roller.Roller, detailed []DetailedPlacement, _ stars.Syste
 // computeBodyTaints applies the full taint pipeline to a body. Returns
 // without rolling when body has no Atmosphere.
 //
-// Clears any stale Taints / InsidiousHazard before rolling so that
+// Clears any stale Taints / InsidiousHazards before rolling so that
 // re-running the pipeline (or running it on a body that previously held
 // data from a different code) cannot leak old entries.
 func computeBodyTaints(r roller.Roller, dp *DetailedPlacement) {
@@ -42,7 +42,7 @@ func computeBodyTaints(r roller.Roller, dp *DetailedPlacement) {
 	}
 	atm := dp.Atmosphere
 	atm.Taints = nil
-	atm.InsidiousHazard = nil
+	atm.InsidiousHazards = nil
 
 	// Step 1: Promotion (atm 5/6/8 → 4/7/9 based on ppO2).
 	newCode, preseed := PromoteOxygenTaint(atm.Code, atm.OxygenPartialPressure)
@@ -53,11 +53,13 @@ func computeBodyTaints(r roller.Roller, dp *DetailedPlacement) {
 	// slot too. Returns nil for any other code.
 	atm.Taints = RollAllTaints(r, dp, preseed)
 
-	// Step 3: Insidious hazard for atm C only. WBH p.90 DM+2 fires when
-	// the subtype letter is "Extremely Dense" (C/D/E per WBH p.89).
+	// Step 3: Insidious hazards for atm C only. WBH p.90 DM+2 fires when
+	// the subtype letter is "Extremely Dense" (C/D/E per WBH p.89). The
+	// p.90 footnote also grants an automatic T hazard plus an additional
+	// rolled hazard when the subtype is D or E — RollInsidiousHazards
+	// applies that rule.
 	if atm.Code == 12 {
 		isExtremelyDense := isExtremelyDenseSubtype(atm.Subtype)
-		hazardCode := RollInsidiousHazard(r, isExtremelyDense)
-		atm.InsidiousHazard = &Hazard{Code: hazardCode}
+		atm.InsidiousHazards = RollInsidiousHazards(r, atm.Subtype, isExtremelyDense)
 	}
 }

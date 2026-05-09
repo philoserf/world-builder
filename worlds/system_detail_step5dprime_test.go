@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"strings"
 	"testing"
 
 	"wbh/roller"
@@ -36,8 +37,8 @@ func TestRunStep5DPrime_AtmCGetsHazard(t *testing.T) {
 	if err := runStep5DPrime(r, detailed, sys); err != nil {
 		t.Fatalf("runStep5DPrime: %v", err)
 	}
-	if detailed[0].Atmosphere.InsidiousHazard == nil {
-		t.Errorf("expected InsidiousHazard on atm C, got nil")
+	if len(detailed[0].Atmosphere.InsidiousHazards) == 0 {
+		t.Errorf("expected InsidiousHazards on atm C, got empty")
 	}
 }
 
@@ -53,8 +54,8 @@ func TestRunStep5DPrime_NonAtmCNoHazard(t *testing.T) {
 	if err := runStep5DPrime(r, detailed, sys); err != nil {
 		t.Fatalf("runStep5DPrime: %v", err)
 	}
-	if detailed[0].Atmosphere.InsidiousHazard != nil {
-		t.Errorf("got InsidiousHazard on atm B, want nil")
+	if len(detailed[0].Atmosphere.InsidiousHazards) > 0 {
+		t.Errorf("got InsidiousHazards on atm B, want empty")
 	}
 }
 
@@ -132,10 +133,16 @@ func TestRunStep5DPrime_ExtremelyDenseSubtypeDM(t *testing.T) {
 	cases := []struct {
 		name    string
 		subtype string
+		// want is the concatenated hazard codes (e.g. "TG" = auto-T + rolled-G).
 		want    string
+		wantLen int
 	}{
-		{"D triggers DM+2", "D", "G"},
-		{"non-CDE no DM", "6", "B"},
+		// Subtype D fires the WBH p.90 footnote: auto-T plus rolled-G
+		// (2D=4 + DM+2 = 6 → G). 2 hazards.
+		{"D triggers DM+2 with auto-T", "D", "TG", 2},
+		// Subtype 6: 1 rolled hazard, no DM, no auto-T.
+		// 2D=4 + DM+0 = 4 → B.
+		{"non-CDE no DM no auto-T", "6", "B", 1},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -150,12 +157,19 @@ func TestRunStep5DPrime_ExtremelyDenseSubtypeDM(t *testing.T) {
 			if err := runStep5DPrime(r, detailed, sys); err != nil {
 				t.Fatalf("runStep5DPrime: %v", err)
 			}
-			if detailed[0].Atmosphere.InsidiousHazard == nil {
-				t.Fatalf("subtype %q: expected InsidiousHazard, got nil", c.subtype)
+			hazards := detailed[0].Atmosphere.InsidiousHazards
+			if len(hazards) == 0 {
+				t.Fatalf("subtype %q: expected InsidiousHazards, got empty", c.subtype)
 			}
-			got := detailed[0].Atmosphere.InsidiousHazard.Code
-			if got != c.want {
-				t.Errorf("subtype %q: got hazard %q, want %q", c.subtype, got, c.want)
+			if len(hazards) != c.wantLen {
+				t.Errorf("subtype %q: got %d hazards %+v, want %d", c.subtype, len(hazards), hazards, c.wantLen)
+			}
+			var gotCodes strings.Builder
+			for _, h := range hazards {
+				gotCodes.WriteString(h.Code)
+			}
+			if gotCodes.String() != c.want {
+				t.Errorf("subtype %q: got hazard codes %q, want %q", c.subtype, gotCodes.String(), c.want)
 			}
 		})
 	}
