@@ -62,8 +62,9 @@ type Biology struct {
 // Returns 0 if body or body.Atmosphere is nil. nil Hydrographics is
 // treated as Hydro 0 (DM-4). nil Temperature contributes no temp DMs.
 //
-// Skipped: Special Case 1 (biologic-taint biomass=0 promotion) requires
-// Atmosphere taint typology not yet modeled — deferred per spec Q3-a.
+// Applies WBH p.127 Special Case 1: a body with biologic-taint
+// atmosphere (Taints contains a "B" entry) and rolled biomass = 0
+// is promoted to biomass = 1.
 func RollBiomass(r roller.Roller, body *DetailedPlacement, ageGyr float64) int {
 	if body == nil || body.Atmosphere == nil {
 		return 0
@@ -82,8 +83,18 @@ func RollBiomass(r roller.Roller, body *DetailedPlacement, ageGyr float64) int {
 	roll := r.Roll("2D")
 	biomass := max(roll+dm, 0)
 
+	// Special Case 1 (WBH p.127): biologic-taint forces biomass ≥ 1.
+	// Track whether biomass was rolled (not promoted) for the SC2 gate below.
+	rolledPositive := biomass >= 1
+	if biomass == 0 && HasTaintCode(body.Atmosphere.Taints, "B") {
+		biomass = 1
+	}
+
 	// Exotic-atm bonus (rolled biomass ≥ 1 on atm 0/1/A/B/C/F+).
-	if biomass >= 1 && exoticBiomassBonusApplies(body.Atmosphere.Code) {
+	// Only fires when the roll itself produced a positive result (SC2 says
+	// "rolled biomass ≥ 1"); a biomass that was promoted from 0 by SC1 does
+	// not qualify.
+	if rolledPositive && exoticBiomassBonusApplies(body.Atmosphere.Code) {
 		biomass += exoticBiomassBonus(body.Atmosphere.Code)
 	}
 	return biomass

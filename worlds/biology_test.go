@@ -906,6 +906,35 @@ func TestRunStep5F_MoonOfGGParent_GetsBiology(t *testing.T) {
 	}
 }
 
+func TestRollBiomass_BiologicTaintPromotesZeroToOne(t *testing.T) {
+	// Atm 0 with B taint, hydro 0, age 5, rolled 2D=2 → biomass would be 0
+	// without promotion. With B taint, promoted to 1 per WBH p.127 SC1.
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{
+			Code:   0,
+			Taints: []Taint{{Code: "B", Severity: 5, Persistence: 5}},
+		},
+		Hydrographics: &Hydrographics{Code: 0},
+	}
+	r := roller.NewScripted(2) // 2D=2
+	got := RollBiomass(r, body, 5.0)
+	if got != 1 {
+		t.Errorf("biomass with B taint and rolled=0: got %d, want 1 (promoted)", got)
+	}
+}
+
+func TestRollBiomass_NoBiologicTaint_StaysZero(t *testing.T) {
+	body := &DetailedPlacement{
+		Atmosphere:    &Atmosphere{Code: 0, Taints: []Taint{{Code: "P", Severity: 5, Persistence: 5}}},
+		Hydrographics: &Hydrographics{Code: 0},
+	}
+	r := roller.NewScripted(2)
+	got := RollBiomass(r, body, 5.0)
+	if got != 0 {
+		t.Errorf("biomass with non-B taint and rolled=0: got %d, want 0", got)
+	}
+}
+
 func TestRunStep5F_MoonBiomass_UsesMoonTemperature(t *testing.T) {
 	// Regression test for the moonDP.Temperature=nil silent-zero bug:
 	// computeBiology must see the moon's actual temperature so RollBiomass
