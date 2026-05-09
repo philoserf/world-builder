@@ -92,7 +92,7 @@ func runStep5A(r roller.Roller, detailed []DetailedPlacement, sys stars.System, 
 				}
 				atmo.Subtype = st
 			}
-			press, perr := RollTotalPressure(r, atmoCode)
+			press, perr := RollTotalPressure(r, atmoCode, atmo.Subtype)
 			if perr != nil {
 				return fmt.Errorf("worlds: pressure %s: %w", dp.Designation, perr)
 			}
@@ -144,7 +144,7 @@ func runStep5A(r roller.Roller, detailed []DetailedPlacement, sys stars.System, 
 					}
 					atmo.Subtype = st
 				}
-				press, perr := RollTotalPressure(r, atmoCode)
+				press, perr := RollTotalPressure(r, atmoCode, atmo.Subtype)
 				if perr != nil {
 					return fmt.Errorf("worlds: moon pressure %s: %w", m.Designation, perr)
 				}

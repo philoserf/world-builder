@@ -142,12 +142,75 @@ func TestRollTotalPressure_ZedPrime(t *testing.T) {
 	// Book p.80: 1D-1=2 → ×5=10; 1D-1=3 → +3 = 13. Pressure = 0.7 + 0.79 × 13/30 = 1.0423.
 	// Scripted: first 1D=3 (1D-1=2), second 1D=4 (1D-1=3).
 	r := roller.NewScripted(3, 4)
-	got, err := RollTotalPressure(r, 6)
+	got, err := RollTotalPressure(r, 6, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if math.Abs(got-1.0423) > 0.01 {
 		t.Errorf("got %v, want 1.0423", got)
+	}
+}
+
+func TestRollTotalPressure_AtmBCWithSubtype(t *testing.T) {
+	cases := []struct {
+		name    string
+		atmCode int
+		subtype string
+		// Roll values for the formula's two 1D rolls.
+		// scale = ((a-1)*5 + (b-1)) / 30; pressure = min + span*scale.
+		a, b int
+		want float64
+	}{
+		// Subtype 6 (Standard): min=0.70, span=0.79.
+		// (1,1) → scale=0 → 0.70.
+		{"atm B subtype 6 min", 11, "6", 1, 1, 0.70},
+		// (6,6) → scale=1 → 0.70+0.79 = 1.49.
+		{"atm B subtype 6 max", 11, "6", 6, 6, 1.49},
+		// Subtype C: min=10, span=90.
+		{"atm C subtype C min", 12, "C", 1, 1, 10},
+		{"atm C subtype C max", 12, "C", 6, 6, 100},
+		// Subtype E: min=1000, span=9000.
+		{"atm C subtype E min", 12, "E", 1, 1, 1000},
+		{"atm C subtype E max", 12, "E", 6, 6, 10000},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := roller.NewScripted(c.a, c.b)
+			got, err := RollTotalPressure(r, c.atmCode, c.subtype)
+			if err != nil {
+				t.Fatalf("err: %v", err)
+			}
+			if got != c.want {
+				t.Errorf("got %g, want %g", got, c.want)
+			}
+		})
+	}
+}
+
+func TestRollTotalPressure_AtmBCEmptySubtype(t *testing.T) {
+	// Empty subtype on atm 11/12 falls back to (0, 0): no rolls consumed,
+	// returns 0. This preserves legacy "Varies" behavior for callers that
+	// don't have a subtype yet.
+	r := roller.NewScripted() // no rolls scripted; if any are consumed, panic.
+	got, err := RollTotalPressure(r, 11, "")
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got != 0 {
+		t.Errorf("got %g, want 0", got)
+	}
+}
+
+func TestRollTotalPressure_RegularCodeIgnoresSubtype(t *testing.T) {
+	// For atm codes outside 11/12, the subtype parameter is ignored.
+	// Atm 6 (Standard): min=0.70, span=0.79. (1,1) → 0.70.
+	r := roller.NewScripted(1, 1)
+	got, err := RollTotalPressure(r, 6, "C") // subtype "C" ignored on atm 6
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got != 0.70 {
+		t.Errorf("got %g, want 0.70", got)
 	}
 }
 
