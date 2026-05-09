@@ -251,6 +251,17 @@ func TestRollAllTaints_NoPreseed_SingleTaint(t *testing.T) {
 	}
 }
 
+func TestRollAllTaints_UnsupportedAtmosphere_NoTaints(t *testing.T) {
+	r := roller.NewScripted(7, 7, 7)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 6, Pressure: 1.0, OxygenPartialPressure: 0.21},
+	}
+	taints := RollAllTaints(r, body, nil)
+	if taints != nil {
+		t.Fatalf("got %+v, want nil", taints)
+	}
+}
+
 func TestRollAllTaints_PreseededL_FillsSevPers(t *testing.T) {
 	// Pre-seeded L on atm 4 ppO2=0.05.
 	// Severity uses ppO2 override (0.05 < 0.08) → 8 (no roll consumed).

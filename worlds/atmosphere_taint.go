@@ -63,6 +63,15 @@ func HasAnyTaint(taints []Taint) bool {
 	return len(taints) > 0
 }
 
+func taintEligibleAtmosphere(atmCode int) bool {
+	switch atmCode {
+	case 2, 4, 7, 9, 10, 11, 12, 15, 16, 17:
+		return true
+	default:
+		return false
+	}
+}
+
 // taintSubtypeFromTotal maps a 2D+DM total to a Taint Subtype code per
 // WBH p.82 Taint Subtype table. Values below 2 clamp to L; values above
 // 12 clamp to H.
@@ -302,6 +311,9 @@ func RollAllTaints(r roller.Roller, body *DetailedPlacement, preseeded *Taint) [
 		return nil
 	}
 	atmCode := body.Atmosphere.Code
+	if !taintEligibleAtmosphere(atmCode) {
+		return nil
+	}
 	taints := make([]Taint, 0, 3)
 
 	// Slot 1: pre-seeded if present. Fill severity + persistence.
