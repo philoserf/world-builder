@@ -1052,6 +1052,93 @@ func TestTemperature_AtMoment_NoonExceedsDawn(t *testing.T) {
 	}
 }
 
+func TestTemperature_MeanBySeason_LatitudesProduceDifferentTemps(t *testing.T) {
+	// Same date, different latitudes → different temperatures. The
+	// existing implementation returns the same value at all latitudes
+	// because the seasonal swing is applied as a global luminosity
+	// modifier without composing with the latitude zone formula.
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   0.40, // ~23.6° tilt → tropical zone is |lat| ≤ 23.6°
+		AtmosphericFactor: 2.0,
+	}
+	summerSolstice := 0.0
+	tropical := temp.MeanBySeason(0, summerSolstice, 365.25)   // equator
+	temperate := temp.MeanBySeason(45, summerSolstice, 365.25) // middle zone
+	if tropical == temperate {
+		t.Errorf("equator (%v) and 45°N (%v) returned identical temps; latitude composition is not applied",
+			tropical, temperate)
+	}
+}
+
+func TestTemperature_MeanBySeason_TropicalZone_NoSeasonalSwing(t *testing.T) {
+	// WBH p.116: "tropical temperatures have little seasonal variation
+	// (from axial tilt)." A latitude inside the tropical band (|lat| ≤
+	// axial tilt) should return the same value at solstice and equinox.
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   0.40, // ~23.6° tilt; lat=10° is well inside tropical
+		AtmosphericFactor: 2.0,
+	}
+	year := 365.25
+	solstice := temp.MeanBySeason(10, 0, year)
+	equinox := temp.MeanBySeason(10, year/4, year)
+	if solstice != equinox {
+		t.Errorf("tropical zone should not swing seasonally: solstice=%v equinox=%v", solstice, equinox)
+	}
+}
+
+func TestTemperature_MeanBySeason_MiddleZone_SummerExceedsWinter(t *testing.T) {
+	// WBH p.116: middle/arctic zones add the seasonal axial-tilt factor
+	// to the zone latitude adjustment. At lat 45° (middle zone for tilt
+	// 23.6°), summer solstice should be warmer than winter solstice.
+	// (This was the only assertion the old buggy implementation could
+	// satisfy; we keep it as a regression guard.)
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   0.40,
+		AtmosphericFactor: 2.0,
+	}
+	summer := temp.MeanBySeason(45, 0, 365.25)
+	winter := temp.MeanBySeason(45, 365.25/2, 365.25)
+	if summer <= winter {
+		t.Errorf("middle zone: summer %v should exceed winter %v", summer, winter)
+	}
+}
+
+func TestTemperature_MeanBySeason_NoYearLength_FallsBackToMeanByLatitude(t *testing.T) {
+	// localYearDays == 0 short-circuits to MeanByLatitude regardless of
+	// daysSinceSolstice. Pre-existing behavior; sanity guard.
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   0.40,
+		AtmosphericFactor: 2.0,
+	}
+	for _, lat := range []float64{0, 30, 60, 89} {
+		want := temp.MeanByLatitude(lat)
+		got := temp.MeanBySeason(lat, 999, 0)
+		if got != want {
+			t.Errorf("lat %v: got %v, want %v (MeanByLatitude fallback)", lat, got, want)
+		}
+	}
+}
+
 func TestTemperature_AdjustedForAltitude_NearGround(t *testing.T) {
 	temp := &Temperature{
 		MeanK:            288,

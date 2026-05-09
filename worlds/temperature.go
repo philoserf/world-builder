@@ -451,19 +451,26 @@ func (t *Temperature) MeanByLatitude(latDeg float64) float64 {
 	return MeanTemperatureK(latLum, t.Albedo, t.GreenhouseFactor, t.AU)
 }
 
+// tropicalLatitudeBoundary returns the absolute axial tilt in degrees
+// (clamped to [0, 90]) — the WBH p.116 boundary between the tropical
+// zone (|lat| ≤ tilt) and the rest of the world. NaN from Asin (when
+// |AxialTiltFactor| > 1) clamps to 0 or 90 by sign.
+func (t *Temperature) tropicalLatitudeBoundary() float64 {
+	tiltDeg := math.Asin(t.AxialTiltFactor) * 180.0 / math.Pi
+	if math.IsNaN(tiltDeg) {
+		if t.AxialTiltFactor > 0 {
+			return 90
+		}
+		return 0
+	}
+	return tiltDeg
+}
+
 // zoneTiltAdjustment returns the latitude-zone-adjusted axial-tilt-equivalent
 // factor per WBH p.116-117 three-zone classification (tropical / middle /
 // arctic). For axial tilt ≥ 45° the middle zone disappears (Part B p.117).
 func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
-	tiltDeg := math.Asin(t.AxialTiltFactor) * 180.0 / math.Pi
-	if math.IsNaN(tiltDeg) {
-		// |AxialTiltFactor| > 1 — clamp.
-		if t.AxialTiltFactor > 0 {
-			tiltDeg = 90
-		} else {
-			tiltDeg = 0
-		}
-	}
+	tiltDeg := t.tropicalLatitudeBoundary()
 	if latDeg < 0 {
 		latDeg = -latDeg
 	}
@@ -489,23 +496,25 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 }
 
 // MeanBySeason returns the mean temperature on a specific day at a specific
-// latitude, ignoring time of day, per WBH p.115.
+// latitude, ignoring time of day, per WBH p.115-116.
 //
 // daysSinceSolstice: 0 = summer solstice in the relevant hemisphere; year/2 = winter solstice.
 // localYearDays: caller decides — for moons, use parent's stellar year (moons co-orbit star with planet).
 //
-// KNOWN LIMITATION: the current implementation applies the seasonal axial-tilt
-// swing as a signed luminosity modifier without composing it with the latitude
-// zone formula. As a result, latDeg currently does not affect the output (the
-// seasonal swing is uniform across latitudes for a given date). The spec
-// foresaw layering both factors, but the plan's substitution-into-zone
-// approach zeroes out at lat=45° (sin(45-45)=0). Composing them properly is
-// deferred to a follow-up — no production caller exists yet.
+// Composition rule per WBH p.116 three-zone classification:
+//   - Tropical zone (|lat| ≤ axial tilt): no seasonal swing — "tropical
+//     temperatures have little seasonal variation (from axial tilt)."
+//     The zone latitude adjustment from zoneTiltAdjustment is the sole
+//     variance contributor.
+//   - Middle/arctic zone: seasonal axial-tilt factor is added to the
+//     zone latitude adjustment per "the zone's latitude adjustment is
+//     added to the axial tilt factor for that time period."
 //
 // Twilight worlds always return TwilightK (band centerline). Hemisphere-aware
 // selection — bright/dark/twilight by latitude — is the caller's responsibility:
 // read t.BrightSideK / t.TwilightK / t.DarkSideK directly. The spec foresaw
-// auto-selection inside this method but the implementation defers it.
+// auto-selection inside this method but the implementation defers it (see
+// issue #5).
 func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays float64) float64 {
 	if t.IsTwilight {
 		return t.TwilightK
@@ -514,18 +523,33 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 		return t.MeanByLatitude(latDeg)
 	}
 
-	// Adjusted Fractional Year per WBH p.115.
-	stdYearDays := 8766.0 / 24.0 // 365.25
-	lagDays := 0.1 * math.Min(stdYearDays, localYearDays)
-	adjFracYear := (daysSinceSolstice - 0.1*lagDays) / localYearDays
+	// Zone latitude adjustment from WBH p.116. Sole variance contributor
+	// in the tropical zone; added to the seasonal axial tilt in middle/
+	// arctic zones.
+	zoneAdj := t.zoneTiltAdjustment(latDeg)
+	absLat := latDeg
+	if absLat < 0 {
+		absLat = -absLat
+	}
+	if absLat > 90 {
+		absLat = 90
+	}
+	isTropical := absLat <= t.tropicalLatitudeBoundary()
 
-	// Seasonal axial tilt factor: cos(adjFracYear × 360°) × stored AxialTiltFactor.
-	// Positive = summer (sun higher in sky → more heat); negative = winter (less heat).
-	// Apply directly as a signed luminosity modifier: the axial-tilt contribution
-	// swings from +AxialTiltFactor at summer solstice to -AxialTiltFactor at winter.
-	seasonalTilt := math.Cos(adjFracYear*2*math.Pi) * t.AxialTiltFactor
+	variance := zoneAdj
+	if !isTropical {
+		// Adjusted Fractional Year per WBH p.115.
+		stdYearDays := 8766.0 / 24.0 // 365.25
+		lagDays := 0.1 * math.Min(stdYearDays, localYearDays)
+		adjFracYear := (daysSinceSolstice - 0.1*lagDays) / localYearDays
 
-	lumMod := seasonalTilt / t.AtmosphericFactor
+		// Seasonal axial tilt factor: cos(adjFracYear × 360°) × AxialTiltFactor.
+		// +AxialTiltFactor at summer solstice; -AxialTiltFactor at winter.
+		seasonalTilt := math.Cos(adjFracYear*2*math.Pi) * t.AxialTiltFactor
+		variance += seasonalTilt
+	}
+
+	lumMod := variance / t.AtmosphericFactor
 	if lumMod > 1 {
 		lumMod = 1
 	}
