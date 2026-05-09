@@ -120,17 +120,43 @@ func TestCheckRunawayGreenhouse_LowAtmCode(t *testing.T) {
 	}
 }
 
-func TestCheckRunawayGreenhouse_AtmAlreadyExotic_Skipped(t *testing.T) {
-	for _, code := range []int{10, 11, 12, 15} {
-		body := &DetailedPlacement{}
-		body.Atmosphere = &Atmosphere{Code: code}
-		body.Temperature = &Temperature{MeanK: 400}
-		sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
+func TestCheckRunawayGreenhouse_AtmAlreadyExtreme_BoilingOnly(t *testing.T) {
+	// WBH p.79: for atm A, B, C, F+, the runaway-greenhouse trigger still
+	// evaluates, but the only effect is to consider the world boiling. The
+	// atm code does NOT mutate. Each subtest scripts dice that produce a
+	// trigger total ≥ 12 (atm 8, age 5, size 8 → DM age+5 + boiling+4 +
+	// size+0 = +9; 2D=3 + 9 = 12 → trigger).
+	cases := []struct {
+		name string
+		code int
+	}{
+		{"atm A (10)", 10},
+		{"atm B (11)", 11},
+		{"atm C (12)", 12},
+		{"atm F (15)", 15},
+		{"atm G (16)", 16},
+		{"atm H (17)", 17},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			body := &DetailedPlacement{}
+			body.Atmosphere = &Atmosphere{Code: c.code}
+			body.SizeCode = "8"
+			body.Temperature = &Temperature{MeanK: 400}
+			sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
 
-		r := roller.NewScripted()
-		if got := CheckRunawayGreenhouse(r, body, sys); got {
-			t.Errorf("atm %d: expected false (exotic atm skipped per MVP)", code)
-		}
+			// 2D=3 → 3 + age+5 (ceil 5.0) + boiling+4 = 12 → trigger.
+			// No 1D code-mutation roll consumed because boiling-only.
+			r := roller.NewScripted(3)
+			got := CheckRunawayGreenhouse(r, body, sys)
+			if !got {
+				t.Errorf("expected true (trigger fired with mod=12)")
+			}
+			if body.Atmosphere.Code != c.code {
+				t.Errorf("atm code mutated for boiling-only path: got %d, want %d (unchanged)",
+					body.Atmosphere.Code, c.code)
+			}
+		})
 	}
 }
 
@@ -594,6 +620,51 @@ func TestRederive_NonHZBody_NoRunawayCheck(t *testing.T) {
 	// Atm code unchanged.
 	if body.Atmosphere.Code != 6 {
 		t.Errorf("atm code: got %d, want 6 (non-HZ skips runaway)", body.Atmosphere.Code)
+	}
+}
+
+func TestRederive_AtmosphereB_RunawayBoilingOnly_PreservesSubtype(t *testing.T) {
+	// HZ atm-B body with MeanK > 303 (boiling) and DMs that trigger the
+	// runaway-greenhouse roll. Per WBH p.79, atm B's only runaway effect
+	// is the "considered boiling" hydro DM — atm.Code/Subtype/Pressure
+	// must NOT change.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.HZ = true
+	body.SizeCode = "8"
+	body.Orbit = 3.0
+	body.Atmosphere = &Atmosphere{Code: 11, Subtype: "5", Pressure: 1.5, ScaleHeight: 8.5}
+	body.Hydrographics = &Hydrographics{Code: 5}
+	body.Physical = &BodyPhysical{Density: 1.0, Gravity: 1.0}
+	body.Temperature = &Temperature{MeanK: 400} // > 303, > 388 → boiling DM+4
+
+	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
+
+	preCode := body.Atmosphere.Code
+	preSubtype := body.Atmosphere.Subtype
+	prePressure := body.Atmosphere.Pressure
+
+	// Scripted dice budget:
+	//   1 roll for runaway 2D trigger (= 3 + age+5 + boiling+4 = 12 → fires)
+	//   No 1D code-mutation roll (boiling-only path).
+	//   No subtype/pressure re-roll (caller skips for boiling-only).
+	//   Hydrographics + gas mix re-rolls consume the rest (over-script for safety).
+	r := roller.NewScripted(3, 7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8)
+	if err := RederiveAtmosphereHydrographics(r, body, sys, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	if body.Atmosphere.Code != preCode {
+		t.Errorf("atm code changed under boiling-only runaway: pre=%d post=%d",
+			preCode, body.Atmosphere.Code)
+	}
+	if body.Atmosphere.Subtype != preSubtype {
+		t.Errorf("atm subtype changed under boiling-only runaway: pre=%s post=%s",
+			preSubtype, body.Atmosphere.Subtype)
+	}
+	if body.Atmosphere.Pressure != prePressure {
+		t.Errorf("atm pressure changed under boiling-only runaway: pre=%v post=%v",
+			prePressure, body.Atmosphere.Pressure)
 	}
 }
 
