@@ -336,6 +336,93 @@ func TestRollAllTaints_LRollAdjustsPpO2(t *testing.T) {
 	}
 }
 
+// ---- Worked-example regression tests (WBH pp.85, 88, 90) -------------------
+
+func TestAabVd_TaintProfile_p85(t *testing.T) {
+	// WBH p.85 Aab V d desert moon, atm 4, ppO2 = 0.114 bar (in band — no
+	// promotion). Taint subtype rolls land on P (severity 6, persistence 3)
+	// + R (severity 5, persistence 4).
+	r := roller.NewScripted(
+		12, // subtype #1 raw 2D=12 + DM-2 = 10 → P, reroll
+		9,  // severity for P: 2D=9 → 6
+		3,  // persistence for P: 2D=3 → 3
+		5,  // subtype #2 raw 2D=5 + DM-2 = 3 → R
+		8,  // severity for R: 2D=8 → 5
+		4,  // persistence for R: 2D=4 → 4
+	)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{
+			Code:                  4,
+			Pressure:              0.544,
+			OxygenPartialPressure: 0.114,
+		},
+	}
+	taints := RollAllTaints(r, body, nil)
+	if len(taints) != 2 {
+		t.Fatalf("got %d taints, want 2", len(taints))
+	}
+	if taints[0] != (Taint{Code: "P", Severity: 6, Persistence: 3}) {
+		t.Errorf("taint #1: got %+v, want {P, 6, 3}", taints[0])
+	}
+	if taints[1] != (Taint{Code: "R", Severity: 5, Persistence: 4}) {
+		t.Errorf("taint #2: got %+v, want {R, 5, 4}", taints[1])
+	}
+}
+
+func TestAabVb_ExoticIrritant_p88(t *testing.T) {
+	// WBH p.88 Aab V b exotic atm A, dense subtype 9. Book example uses an
+	// orbit DM not modeled in our RollTaintSubtype (book shows 9+2=11 → R);
+	// our impl applies 0 DM for atm A. Script 2D=11 directly to land on R.
+	// Severity for R: 2D=5 → 2 (book "2:surmountable").
+	// Persistence for R: 2D=9 → 9 (book "9:constant"; severity 2 < 8 so no
+	// extra DM; R isn't L/H so no L/H DM. Atm A isn't atm C so no DM+6.)
+	r := roller.NewScripted(
+		11, // subtype 2D=11 → R (no DMs in our impl on atm A)
+		5,  // severity 2D=5 → 2
+		9,  // persistence 2D=9 → 9
+	)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 10, Subtype: "9", Pressure: 2.09},
+	}
+	taints := RollAllTaints(r, body, nil)
+	if len(taints) != 1 {
+		t.Fatalf("got %d taints, want 1", len(taints))
+	}
+	if taints[0] != (Taint{Code: "R", Severity: 2, Persistence: 9}) {
+		t.Errorf("got %+v, want {R, 2, 9}", taints[0])
+	}
+	if body.Atmosphere.Code != 10 || body.Atmosphere.Subtype != "9" {
+		t.Errorf("atmosphere mutated unexpectedly: %+v", body.Atmosphere)
+	}
+}
+
+func TestAaBVI_CorrosiveProfile_p90(t *testing.T) {
+	// WBH p.90 AaB VI corrosive atm B, subtype 6 (standard). Book example
+	// does NOT roll an irritant — referee elects gas-mix as the corrosive
+	// cause. Our impl always rolls. Test asserts structural invariants
+	// without pinning specific irritant values.
+	r := roller.NewScripted(
+		7, // subtype 2D=7 → G (gas mix)
+		7, // severity 2D=7 → 4
+		7, // persistence 2D=7 → 7
+	)
+	body := &DetailedPlacement{
+		Atmosphere: &Atmosphere{Code: 11, Subtype: "6", Pressure: 1.21},
+	}
+	taints := RollAllTaints(r, body, nil)
+	if len(taints) != 1 {
+		t.Fatalf("got %d taints, want 1 (always-roll policy)", len(taints))
+	}
+	if body.Atmosphere.Code != 11 || body.Atmosphere.Subtype != "6" {
+		t.Errorf("atmosphere mutated unexpectedly: %+v", body.Atmosphere)
+	}
+	for _, tt := range taints {
+		if tt.Code == "L" || tt.Code == "H" {
+			t.Errorf("L/H not suppressed on atm B: got %+v", tt)
+		}
+	}
+}
+
 func TestRollAllTaints_Invariants(t *testing.T) {
 	// Property test across many seeds.
 	for seed := int64(1); seed <= 50; seed++ {
