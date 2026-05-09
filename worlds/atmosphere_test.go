@@ -180,7 +180,7 @@ func TestRollTotalPressure_AtmBCWithSubtype(t *testing.T) {
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
-			if got != c.want {
+			if math.Abs(got-c.want) > 1e-9 {
 				t.Errorf("got %g, want %g", got, c.want)
 			}
 		})

@@ -149,9 +149,15 @@ func AtmospherePressureRange(code int) (minBar, spanBar float64) {
 // Subtypes 1-B carry the explicit ranges from the p.89 table.
 // Subtypes C/D/E carry "10.0+ / unbound" in the book; we return
 // project-supplied tiered ranges per the design spec dated 2026-05-09
-// (atm-bc-pressure-from-subtype) honoring p.89's "Only insidious
-// extremely dense atmospheres should have pressures exceeding 1,000
-// bar" hint:
+// (atm-bc-pressure-from-subtype). The tiers apply uniformly to atm B
+// and atm C — both share the p.89 subtype table — but per-code
+// distribution differs in practice: insidious (atm C) gets DM+2 on
+// the subtype roll (WBH p.89 footnote), so it lands subtype E and the
+// 1000+ bar tier far more often than corrosive (atm B). This matches
+// p.89's "Only insidious extremely dense atmospheres should have
+// pressures exceeding 1,000 bar" expectation statistically; corrosive
+// atmospheres can technically reach the same tier when subtype E is
+// rolled, which is rare without the DM+2.
 //
 //	C: 10–100      (min=10,   span=90)
 //	D: 100–1000    (min=100,  span=900)
