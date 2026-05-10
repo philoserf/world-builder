@@ -13,7 +13,7 @@ import (
 // 3B-biology, 3B-final passes). Caller owns construction of the
 // detailed slice and post-pipeline assembly (baseline, profiles, IISS
 // form, mainworld pick).
-func runDetailPipeline(r roller.Roller, detailed []DetailedPlacement, sys stars.System, sp SystemPlacement) error {
+func runDetailPipeline(r roller.Roller, detailed []DetailedPlacement, sys stars.System, sp SystemPlacement, opts DetailOpts) error {
 	// Step 1 — sizing
 	gasGiantDM := gasGiantSizingDM(sys, sp)
 	for i := range detailed {
@@ -113,7 +113,7 @@ func runDetailPipeline(r roller.Roller, detailed []DetailedPlacement, sys stars.
 	}
 
 	// Step 5F — 3B-biology pass: native lifeform ratings + resource rating.
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, opts); err != nil {
 		return err
 	}
 

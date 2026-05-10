@@ -491,3 +491,77 @@ func TestClass4PTemperature_LowKZeroRendersAsEmDash(t *testing.T) {
 		t.Errorf("renderer broke MeanK; output:\n%s", out)
 	}
 }
+
+func TestDetailSystemWithOpts_OxygenAtmFloor(t *testing.T) {
+	// Smoke test: drive the full pipeline with the oxygen-atm biomass
+	// floor opt-in. Verify the opt-in path threads through to Step 5F
+	// and the unfloored zero-baseline path stays untouched.
+
+	// Run twice with the SAME seed: once without the floor, once with.
+	// Different opt values will produce different roller-consumption
+	// patterns past the first biomass clamp, so the post-clamp diff
+	// is a smoke-level signal — we only assert that opts on does not
+	// crash, completes, and that any oxygen-atm body without rolled
+	// life under default opts has biomass ≥ 1 with the floor on.
+
+	rNoOpts := roller.NewSeeded(42)
+	sysNo, err := stars.GenerateSystem(rNoOpts, stars.GenerateSystemOpts{Accuracy: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	spNo, err := GenerateSystemPlacement(rNoOpts, sysNo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sdNo, err := DetailSystemWithOpts(rNoOpts, sysNo, spNo, IISSClass23Header{}, DetailOpts{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rOpts := roller.NewSeeded(42)
+	sysOn, err := stars.GenerateSystem(rOpts, stars.GenerateSystemOpts{Accuracy: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	spOn, err := GenerateSystemPlacement(rOpts, sysOn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sdOn, err := DetailSystemWithOpts(rOpts, sysOn, spOn, IISSClass23Header{}, DetailOpts{OxygenAtmBiomassFloor: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Sanity: the two SystemDetail outputs are well-formed.
+	if len(sdNo.Detailed) == 0 || len(sdOn.Detailed) == 0 {
+		t.Fatal("expected non-empty Detailed slices from both runs")
+	}
+
+	// Floor invariant: every body whose atmosphere is oxygen-bearing
+	// AND has a Biology must have Biomass >= 1 in the opts-on run.
+	for i := range sdOn.Detailed {
+		dp := &sdOn.Detailed[i]
+		if dp.Biology == nil || dp.Atmosphere == nil {
+			continue
+		}
+		if hasOxygenAtmosphere(dp.Atmosphere) && dp.Biology.Biomass < 1 {
+			t.Errorf("body %d: oxygen-atm biomass under floor: code=%d biomass=%d",
+				i, dp.Atmosphere.Code, dp.Biology.Biomass)
+		}
+		for j := range dp.Moons {
+			m := &dp.Moons[j]
+			if m.Biology == nil || m.Atmosphere == nil {
+				continue
+			}
+			if hasOxygenAtmosphere(m.Atmosphere) && m.Biology.Biomass < 1 {
+				t.Errorf("body %d moon %d: oxygen-atm biomass under floor: code=%d biomass=%d",
+					i, j, m.Atmosphere.Code, m.Biology.Biomass)
+			}
+		}
+	}
+
+	// Reference: under default opts, the same body MAY have biomass 0
+	// (the rule is opt-in). Just exercise the path; do not assert
+	// strict difference because seed 42 may not produce a sub-1 roll.
+	_ = sdNo
+}

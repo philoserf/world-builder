@@ -17,12 +17,12 @@ import (
 // biomass = 0 (Biomass + Resource); 0 × 2D when body is skipped.
 //
 //nolint:unparam // matches sibling runStep5* signatures (always-nil error)
-func runStep5F(r roller.Roller, detailed []DetailedPlacement, sys stars.System) error {
+func runStep5F(r roller.Roller, detailed []DetailedPlacement, sys stars.System, opts DetailOpts) error {
 	for i := range detailed {
 		dp := &detailed[i]
 		// Process parent body if applicable.
 		if biologyApplies(dp) {
-			dp.Biology = computeBiology(r, dp, sys.Primary.AgeGyr)
+			dp.Biology = computeBiology(r, dp, sys.Primary.AgeGyr, opts)
 		}
 		// ALWAYS iterate moons — they can be terrestrial-with-atm bodies
 		// regardless of parent type. Zed Prime is a moon of Aab IV (Gas Giant)
@@ -40,7 +40,7 @@ func runStep5F(r roller.Roller, detailed []DetailedPlacement, sys stars.System) 
 			// temperature DMs (precedent: same pattern in computeMoonGeology
 			// for TidalEffects per 3B-geology Task 8).
 			moonDP.Temperature = m.Temperature
-			m.Biology = computeBiology(r, moonDP, sys.Primary.AgeGyr)
+			m.Biology = computeBiology(r, moonDP, sys.Primary.AgeGyr, opts)
 		}
 	}
 	return nil
@@ -63,10 +63,18 @@ func biologyApplies(dp *DetailedPlacement) bool {
 }
 
 // computeBiology populates a Biology for the given body. Caller has
-// already verified biologyApplies(dp).
-func computeBiology(r roller.Roller, dp *DetailedPlacement, ageGyr float64) *Biology {
+// already verified biologyApplies(dp). When opts.OxygenAtmBiomassFloor
+// is set AND the body's atmosphere is in the oxygen-bearing set, a
+// rolled biomass below 1 is clamped up to 1 per WBH p.128 Optional
+// Rule. The floor runs before dependent rolls so an elevated biomass
+// of 1 propagates naturally into Biocomplexity / Biodiversity /
+// Compatibility.
+func computeBiology(r roller.Roller, dp *DetailedPlacement, ageGyr float64, opts DetailOpts) *Biology {
 	bio := &Biology{}
 	bio.Biomass = RollBiomass(r, dp, ageGyr)
+	if opts.OxygenAtmBiomassFloor && bio.Biomass < 1 && hasOxygenAtmosphere(dp.Atmosphere) {
+		bio.Biomass = 1
+	}
 	if bio.Biomass > 0 {
 		bio.Biocomplexity = RollBiocomplexity(r, dp, bio.Biomass, ageGyr)
 		if bio.Biocomplexity >= 8 {

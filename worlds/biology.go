@@ -179,6 +179,23 @@ func exoticBiomassBonusApplies(atmCode int) bool {
 		atmCode == 10 || atmCode == 11 || atmCode == 12 || atmCode == 15
 }
 
+// hasOxygenAtmosphere reports whether atm carries free oxygen per
+// WBH p.128 Optional Rule (codes 2-9, D, E). Hex codes:
+//
+//	2-9: progressively thicker oxygen atmospheres
+//	D (13): dense oxygen atmosphere
+//	E (14): ellipsoidal oxygen atmosphere
+//
+// Excluded: 0 (None), 1 (Trace), A (10, Exotic), B (11, Corrosive),
+// C (12, Insidious), F (15, Unusual).
+func hasOxygenAtmosphere(atm *Atmosphere) bool {
+	if atm == nil {
+		return false
+	}
+	code := atm.Code
+	return (code >= 2 && code <= 9) || code == 13 || code == 14
+}
+
 // exoticBiomassBonus returns |atmDM| − 1 for the exotic atm codes per WBH
 // Special Case 2: "Add one less than the negative Atmosphere DM".
 func exoticBiomassBonus(atmCode int) int {

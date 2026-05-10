@@ -699,7 +699,7 @@ func TestRunStep5F_TerrestrialWithLife_PopulatesAll(t *testing.T) {
 	// Biomass + Biocomplexity + 2 sophont + Biodiversity + Compatibility + Resource = 7 dice.
 	r := roller.NewScripted(10, 10, 11, 11, 8, 7, 8)
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Biology == nil {
@@ -730,7 +730,7 @@ func TestRunStep5F_TerrestrialNoLife_OnlyResource(t *testing.T) {
 	// Biomass roll (2D=2) + Resource roll (2D=8) = 2 dice when biomass=0.
 	r := roller.NewScripted(2, 8)
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Biology == nil {
@@ -758,7 +758,7 @@ func TestRunStep5F_GasGiant_NoBiology(t *testing.T) {
 	dp.Designation = "Aab IV"
 	r := roller.NewScripted()
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Biology != nil {
@@ -773,7 +773,7 @@ func TestRunStep5F_BeltSize0_NoBiology(t *testing.T) {
 	dp.Designation = "Aab Belt"
 	r := roller.NewScripted()
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Biology != nil {
@@ -786,7 +786,7 @@ func TestRunStep5F_BodyEmpty_NoOp(t *testing.T) {
 	dp.Body = BodyEmpty
 	r := roller.NewScripted()
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Biology != nil {
@@ -803,7 +803,7 @@ func TestRunStep5F_TerrestrialNoAtmosphere_NoBiology(t *testing.T) {
 	dp.Atmosphere = nil
 	r := roller.NewScripted()
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}); err != nil {
+	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Biology != nil {
@@ -836,7 +836,7 @@ func TestRunStep5F_MoonWithAtmosphere_GetsBiology(t *testing.T) {
 	// Generous dice budget for parent (up to 7) + moon (up to 7).
 	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Biology == nil {
@@ -868,7 +868,7 @@ func TestRunStep5F_MoonNoAtmosphere_NoBiology(t *testing.T) {
 
 	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8)
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Moons[0].Biology != nil {
@@ -893,7 +893,7 @@ func TestRunStep5F_BiocomplexityBelowEight_NoSophontRolls(t *testing.T) {
 	// (NO sophont rolls if biocomplexity < 8.)
 	r := roller.NewScripted(8, 2, 6, 6, 8)
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	bio := detailed[0].Biology
@@ -936,7 +936,7 @@ func TestRunStep5F_MoonOfGGParent_GetsBiology(t *testing.T) {
 	// Generous dice budget for full biology + resource roll on the moon.
 	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	// Parent (GG) should NOT have Biology.
@@ -1031,7 +1031,7 @@ func TestRunStep5F_MoonBiomass_UsesMoonTemperature(t *testing.T) {
 	// Generous dice budget for both bodies.
 	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
 	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys); err != nil {
+	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	if detailed[0].Moons[0].Biology == nil {
@@ -1048,5 +1048,80 @@ func TestRunStep5F_MoonBiomass_UsesMoonTemperature(t *testing.T) {
 	// got the temperate-zone benefit by checking biomass is at least 11.
 	if moonBio.Biomass < 11 {
 		t.Errorf("moon Biomass: got %d, want >= 11 (temperature DMs should apply)", moonBio.Biomass)
+	}
+}
+
+// --- WBH p.128 Optional Rule 1: oxygen-atm biomass floor ---
+
+// fixedRollerForBiomassZero returns a Scripted roller whose RollBiomass
+// outcome is well below 1 (rolled-zero baseline). The shared fixture
+// (atm 6, hydro 5, ageGyr 0.5) gives DM = 0 + 0 + (-2) = -2, so 2D=2
+// produces a modified result of 0. Subsequent dependent rolls
+// (Biocomplexity, Biodiversity, Compatibility, ResourceRating) draw
+// from the same scripted sequence — provide enough values to cover
+// them when biomass is elevated to 1.
+func fixedRollerForBiomassZero(t *testing.T) roller.Roller {
+	t.Helper()
+	return roller.NewScripted(2, 7, 7, 7, 7, 7, 7)
+}
+
+func TestComputeBiology_OxygenAtmFloor_Off_RolledZeroStaysZero(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 6} // standard-oxygen
+	body.Hydrographics = &Hydrographics{Code: 5}
+
+	bio := computeBiology(fixedRollerForBiomassZero(t), body, 0.5, DetailOpts{})
+	if bio.Biomass != 0 {
+		t.Errorf("opts off: biomass should stay 0, got %d", bio.Biomass)
+	}
+}
+
+func TestComputeBiology_OxygenAtmFloor_On_RolledZeroBecomesOne(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 6} // standard-oxygen
+	body.Hydrographics = &Hydrographics{Code: 5}
+
+	opts := DetailOpts{OxygenAtmBiomassFloor: true}
+	bio := computeBiology(fixedRollerForBiomassZero(t), body, 0.5, opts)
+	if bio.Biomass != 1 {
+		t.Errorf("opts on, oxygen atm, rolled zero: want biomass 1, got %d", bio.Biomass)
+	}
+}
+
+func TestComputeBiology_OxygenAtmFloor_On_NonOxygenAtmStaysZero(t *testing.T) {
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 10} // A — Exotic, not oxygen-bearing
+	body.Hydrographics = &Hydrographics{Code: 5}
+
+	opts := DetailOpts{OxygenAtmBiomassFloor: true}
+	bio := computeBiology(fixedRollerForBiomassZero(t), body, 0.5, opts)
+	if bio.Biomass != 0 {
+		t.Errorf("opts on, non-oxygen atm: biomass should stay 0, got %d", bio.Biomass)
+	}
+}
+
+func TestComputeBiology_OxygenAtmFloor_On_RolledPositiveUnchanged(t *testing.T) {
+	// Dice that produce a positive biomass without help from the floor.
+	// 2D=12, oxygen atm + hydro 7 (+1) + temp 290 (+2 mean sweet spot) +
+	// age 5.0 (+1) → DM = +4 (cap). 12 + 4 = 16, well above 2.
+	body := &DetailedPlacement{}
+	body.Body = BodyTerrestrial
+	body.SizeCode = "8"
+	body.Atmosphere = &Atmosphere{Code: 6}
+	body.Hydrographics = &Hydrographics{Code: 7} // +1 DM
+	body.Temperature = &Temperature{MeanK: 290}  // sweet-spot DM+2
+
+	// 2D=12 (6+6). Successor rolls cover dependent stats.
+	r := roller.NewScripted(12, 7, 7, 7, 7, 7, 7)
+	opts := DetailOpts{OxygenAtmBiomassFloor: true}
+	bio := computeBiology(r, body, 5.0, opts)
+	if bio.Biomass < 2 {
+		t.Errorf("opts on, oxygen atm, positive roll: biomass should reflect the roll (>=2), got %d", bio.Biomass)
 	}
 }
