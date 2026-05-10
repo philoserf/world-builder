@@ -26,13 +26,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 
 // ApplyRotationTilt is implemented in stage4.go.
 
-// ApplyClimate walks the universe and calls ConvergeClimate per body.
-// Stage-5 entry point. Per dependency-graph.md § Stage 5, the climate
-// fixed-point cluster (atm/hydro/temp + partial geology) converges
-// per body before downstream stages run.
-func ApplyClimate(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 5: ConvergeClimate")
-}
+// ApplyClimate is implemented in stage5.go.
 
 // ApplyTaintTypology mutates Body.Atmosphere in place — oxygen-taint
 // promotion can change atm.Code; corrosive / insidious typology may

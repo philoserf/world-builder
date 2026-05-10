@@ -5,29 +5,10 @@ package worlds
 // as their respective Stage's procedures are implemented. The cycle
 // schedule is in docs/pass-2/dependency-graph.md.
 
-// Atmosphere — Stage 5 climate. Populated post-ConvergeClimate. Cycle 4
-// reads Pressure for the dense-atmosphere tidal-lock DM; the rest of
-// the fields land in cycle 5 (ConvergeClimate).
-type Atmosphere struct {
-	Code                  int
-	Subtype               string
-	Pressure              float64
-	OxygenPartialPressure float64
-	ScaleHeight           float64
-	Taints                []string
-}
+// Atmosphere, Hydrographics, Temperature live in atmosphere.go,
+// hydrographics.go, temperature.go (cycle 5).
 
-// Hydrographics — Stage 5 climate. Code plus surface distribution
-// inputs. Populated post-ConvergeClimate.
-type Hydrographics struct{}
-
-// Temperature — Stage 5 climate. MeanK plus per-zone variants
-// (high/low/worst). Populated post-ConvergeClimate.
-type Temperature struct{}
-
-// SurfaceDistribution — Stage 6. Hydrosphere distribution across zones.
-// Computed against converged hydrographics.
-type SurfaceDistribution struct{}
+// SurfaceDistribution lives in surface_distribution.go (cycle 5/6).
 
 // Geology — Stages 5–7. TSS components and tectonic plates.
 type Geology struct{}
