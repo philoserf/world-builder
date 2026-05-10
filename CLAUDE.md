@@ -28,6 +28,8 @@ go run ./cmd/wbh -seed 42 -format short          # run the CLI
 
 ## Architecture
 
+**Before adding a pipeline step:** verify moons are visited (including moons of gas-giant parents). Per-step planet/moon divergence is the highest-frequency Critical bug in this codebase — see _Moons mirror planets_ below.
+
 ### Pure-function pipeline with deterministic dice
 
 Every dice roll passes through `roller.Roller`. There are no package-level RNG calls. A seed plus a sequence of options fully determines a system. This is the core invariant — anything that calls `math/rand` or `crypto/rand` outside `roller/` is a bug.
@@ -40,7 +42,7 @@ dice → roller → stars → worlds → cmd/wbh
 - `roller/` — `Roller` interface with three impls: `Seeded` (production), `Scripted` (replays book values for worked-example tests; **panics on exhaustion** — that always indicates a test bug), `Fixed`.
 - `stars/` — WBH pp. 14–35 (Stars chapter). Public entry: `stars.GenerateSystem(r, opts)`.
 - `worlds/` — WBH pp. 36–146. Layered façades: `worlds.SystemPlacement` → `worlds.SystemDetail`.
-- `cmd/wbh/` — thin CLI wrapper; emits JSON IISS Survey form or short profile.
+- `cmd/wbh/` — thin CLI wrapper; emits Markdown (default), JSON, or short profile. See _Output_ below.
 
 Each `Generate*` takes upstream results plus a `Roller`, returns immutable value types. No package-level state. Variance and accuracy options live on per-call `*Opts` structs, off by default.
 
@@ -92,7 +94,7 @@ When the book is inconsistent, the test asserts the implementation's chosen inte
 ## Conventions
 
 - Module path: `wbh` (local-only). Imports: `"wbh/stars"`, `"wbh/worlds"`, etc.
-- Go 1.26.2 (`go.mod`). Modernizer hints (`go fix`) reflect Go 1.21+/1.22+ idioms (`min`/`max`, range-over-int, `new(value)`) and are enforced.
+- Go version: see `go.mod`. Modernizer hints (`go fix`) reflect Go 1.21+/1.22+ idioms (`min`/`max`, range-over-int, `new(value)`) and are enforced.
 - Doc-comments cite WBH page numbers next to procedures and tables — that's the project's traceability mechanism (no runtime metadata wrapper).
 - The library is the artifact; `cmd/wbh` is one screen of code and stays that way.
 - No CI. Local `task` (or `task check && task test`) is the gate.
@@ -106,7 +108,7 @@ The project is **done** when:
 
 WBH pp. 147–234 (World Social Characteristics, Special Circumstances) are **out of scope** for current and near-term purposes. Do not start work in those chapters; do not add code that anticipates them.
 
-The rules half is essentially complete on `main`: Stars (pp. 14–35), System Worlds and Orbits (pp. 36–68), and the full World Physical chapter (pp. 69–146) including 3B-final habitability, mainworld pick, and the IISS Class IV-P form. The one rules gap that remains is **Form 0407K-IV PART P.B** (belt-mainworld Class IV-P variant) — back in scope so Class IV-P works for every mainworld type. Pass-1 specs/plans/retrospective live in `docs/pass-1/{specs,plans,retrospective}/`, dated and named for the WBH section they cover. Pass-2 design and implementation work lives under `docs/pass-2/` (unnumbered, topic-named).
+The rules half is complete on `main`: Stars (pp. 14–35), System Worlds and Orbits (pp. 36–68), and the full World Physical chapter (pp. 69–146) — including 3B-final habitability, mainworld pick, and all three IISS forms with Class IV-P variants for planet, moon, and belt mainworlds. Pass-1 specs/plans/retrospective live in `docs/pass-1/{specs,plans,retrospective}/`, dated and named for the WBH section they cover. Pass-2 design and implementation work lives under `docs/pass-2/` (unnumbered, topic-named).
 
 ### Output
 
