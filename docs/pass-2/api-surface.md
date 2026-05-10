@@ -539,13 +539,14 @@ After stubs land, the harness fixtures are written against them (red). After har
 
 The stub commit is a single PR-sized change, ~30 source files, no implementation logic. It is reviewable as one artifact. Subsequent implementation cycles touch a small subset of those files per cycle.
 
-## Open questions deferred to implementation
+## Open questions, decided
 
-- **Where does pass-2's `Group` live?** Pass 1's `worlds.Group` was an embedded field on `Placement`; pass 2 may move it to `stars/` (since it's stellar-group geometry) or keep it in `worlds/`. Decided when stubs are written.
-- **`OrbitToAU` and HZCO accessors.** Pass 1 had these on `stars.Star` and as free functions in `stars/`. Pass 2 picks one location per accessor.
-- **Belt member detail (Class IV-P PART P.B Major Bodies subtable).** Pass 1 deferred per-body belt-member detail; pass 2 inherits the deferral but the API surface should not preclude adding it later. `BeltDetails.Members []BeltMember` is a future field; pass-2 stubs declare an empty slice.
+These decisions resolve the stub line-items they blocked. Cycle 0 (stub commit) honors them.
 
-These questions block specific stub line-items, not the overall design. They are resolved during the stub-writing cycle.
+- **Where does pass-2's `Group` live? — `stars/`.** Group is stellar-group geometry (HZCO, MAO, parent-star references). Pass-1 had `worlds.Group`; pass-2 moves to `stars.Group`. `worlds/` imports `stars/` and uses `stars.Group` as a foreign type at boundaries. The `Body` struct's `Group` field is typed as `stars.Group`.
+- **`OrbitToAU` and HZCO accessors — methods on `stars.Star`.** Pass 1 mixed methods and free functions; pass 2 picks methods. `star.HZCOOrbit() float64`, `star.OrbitToAU(orbit float64) float64`. No sibling free functions; no two ways to compute the same value.
+- **Belt member detail — omitted from cycle-0 stubs.** `BeltDetails` does not declare `Members []BeltMember`. `Class4PPartPB` is an empty struct shell — `Variant == Class4PBelt` on the parent `Class4PForm` is the only marker that the belt variant exists. Both are fleshed out post-parity, when the belt-mainworld fixture in `harness.md` § Class4P/PartPB lands. Per anti-pattern A.4 (dead fields), declaring a field without a writer/reader is forbidden; the omission is the right call.
+- **`ConvergeClimate` panic-on-overflow stance — deferred to cycle-6 (Climate) spec.** Per `spike-findings.md` § Finding 6a; the production-vs-test trade-off (raise N? log and degrade? introspect Roller type?) is not pre-stub work. Cycle 0 stubs `ConvergeClimate` as `panic("unimplemented: see api-surface.md § ConvergeClimate")` — the convergence behavior is irrelevant until cycle 6.
 
 ## What this document commits pass 2 to
 
