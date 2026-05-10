@@ -100,12 +100,12 @@ WBH p.131 "Special Case 1" already promotes biomass=0 → 1 with biocomplexity=1
 
 ## Tests
 
-New tests in `worlds/biology_test.go`:
+New tests in `worlds/biology_test.go` (named for the function under test, `computeBiology`, since the floor lives there — not in `RollBiomass`):
 
-1. `TestRollBiomass_OxygenAtmFloor_Off_RolledZeroStaysZero` — oxygen atm + low roll, opts off → biomass 0.
-2. `TestRollBiomass_OxygenAtmFloor_On_RolledZeroBecomesOne` — same dice, opts on → biomass 1.
-3. `TestRollBiomass_OxygenAtmFloor_On_NonOxygenAtmStaysZero` — atm A (10), opts on, low roll → biomass 0 (rule does not apply).
-4. `TestRollBiomass_OxygenAtmFloor_On_RolledPositiveUnchanged` — oxygen atm, opts on, dice produce biomass 5 → biomass 5 (rule does not depress).
+1. `TestComputeBiology_OxygenAtmFloor_Off_RolledZeroStaysZero` — oxygen atm + low roll, opts off → biomass 0.
+2. `TestComputeBiology_OxygenAtmFloor_On_RolledZeroBecomesOne` — same dice, opts on → biomass 1.
+3. `TestComputeBiology_OxygenAtmFloor_On_NonOxygenAtmStaysZero` — atm A (10), opts on, low roll → biomass 0 (rule does not apply).
+4. `TestComputeBiology_OxygenAtmFloor_On_RolledPositiveUnchanged` — oxygen atm, opts on, dice produce biomass 5 → biomass 5 (rule does not depress).
 
 Plus an integration smoke test:
 
