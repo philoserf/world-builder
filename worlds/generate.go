@@ -2,7 +2,6 @@ package worlds
 
 import (
 	"wbh/roller"
-	"wbh/stars"
 )
 
 // Generate constructs a Seeded Roller from seed and delegates to
@@ -91,21 +90,7 @@ func AggregateSystem(u *Universe) {
 	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 10")
 }
 
-// GenerateBodyPhysical rolls composition / density / gravity / mass
-// for one terrestrial body. Stage-3 leaf procedure.
-func GenerateBodyPhysical(r roller.Roller, body *Body, ageGyr float64) (BodyPhysical, error) {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 3")
-}
-
-// GenerateBeltDetails rolls span / composition / bulk / resource /
-// significant-size counts for one belt. Stage-3 leaf procedure.
-func GenerateBeltDetails(r roller.Roller, body *Body, sys stars.System, sp SystemPlacement) (BeltDetails, error) {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 3")
-}
-
-// RefineMoons computes Hill-sphere moon orbit limit for parent, may
-// remove moons exceeding the limit, then per-moon orbit and period.
-// Stage-3 procedure for terrestrial parents and gas giants alike.
-func RefineMoons(r roller.Roller, parent *Body) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 3")
-}
+// GenerateBodyPhysical lives in body_physical.go (real implementation).
+// GenerateBeltDetails lives in belt_details.go (real implementation).
+// Stage-3 orchestration (the mass-derivation, moon-refinement walks)
+// lives in stage3.go.

@@ -5,14 +5,6 @@ package worlds
 // as their respective Stage's procedures are implemented. The cycle
 // schedule is in docs/pass-2/dependency-graph.md.
 
-// BodyPhysical — Stage 3 (3A1). Composition, density, gravity, mass.
-type BodyPhysical struct{}
-
-// BeltDetails — Stage 3, belts only. Span, composition, bulk, resource,
-// significant-size counts. Members []BeltMember is deferred per
-// docs/pass-2/api-surface.md § Open questions, decided.
-type BeltDetails struct{}
-
 // DayLength — Stage 4 (3A2a). Sidereal hours, solar hours, year days.
 type DayLength struct{}
 
