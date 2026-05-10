@@ -122,6 +122,10 @@ WBH p.131 worked example for Zed Prime:
 
 **Verification target divergence noted.** This is the one case where the chosen interpretation does **not** reproduce the canonical IISS form value. Pass 2 accepts this divergence because the alternative (encoding the unsourced `+3` as a constant) would commit the implementation to a magic number with no procedural justification. The harness fixture asserts `"A576"`; the IISS form's `"A579"` is documented as book-internal arithmetic drift.
 
+**Exception to the verification-target rule.** The decision rule at the top of this document says "follow whichever interpretation reproduces the canonical IISS form." This entry deliberately violates that rule, and the rule is therefore a heuristic, not a constitution. The criterion that breaks the tie: when reproducing the form would require implementing an unsourced constant, the formula wins; when reproducing the form follows from a procedural rule that is itself defensible (Inconsistency 6's "narrower band wins"), the form wins.
+
+A referee replicating Zed Prime by hand under the formula gets `"A576"`/`Hab 7`; the form's printed values give `"A579"`/`Hab 7`. The two results differ on Compatibility but agree on Habitability — they cannot both be the verification target. Pass 2 picks the formula for Compatibility, the form for Habitability, and accepts the asymmetry. Both divergences are flagged ⚠️ in the harness; neither hides.
+
 ### Adjacent finding: WBH p.131 Compatibility table mentions atm codes G and H
 
 The Compatibility DM table on p.131 lists "Atmosphere 0, 1, B, G, or H: DM−8". Atm codes G and H **do not exist** in the standard WBH atm system (range 0–F). They are likely a remnant from Cepheus Engine or an earlier Mongoose supplement. `RollAtmoCode` cannot produce them, so pass-2's `compatibilityAtmDM` simply omits G/H — no DM is applied because the codes can never appear. Documented in the procedure's doc-comment.

@@ -53,7 +53,7 @@ Generates the star system independent of any worlds.
 **Notes:**
 
 - `OrbitPeriodYears` for the i-th companion sums the masses of the primary plus all earlier-placed companions (book order is inner-to-outer). Pass 2 keeps this.
-- Special objects (Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, Nebula, Protostar, Star Cluster, Anomaly) have stub physical values; detailed physics is post-parity work.
+- Special objects (Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, Nebula, Protostar, Star Cluster, Anomaly) have minimum-useful values: type label, mass, age. Detailed physics — accretion, degenerate-matter equations, jet behavior — is post-parity work, but the type/mass/age trio is enough that a referee can use the body in a campaign. A pass-2 IISS form rendering "Black Hole companion: <stubbed>" is a fidelity-gate failure; "Black Hole companion: 8 M☉, 6.0 Gyr" is acceptable.
 - `AgeGyr` flows downstream into atmosphere oxygen fraction, body physical age DMs, biology, geology — it is one of the most reused inputs. Compute once on the primary; companions inherit.
 
 ## Stage 1: System Worlds — Placement (WBH pp.36–52)

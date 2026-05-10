@@ -31,6 +31,8 @@ Pass 2 implements **one** path through WBH pp.14–146. Concretely cut:
 
 The API surface shrinks dramatically. Most `Generate*` functions become `(inputs..., r Roller) → result`, no Opts struct. That's a much smaller surface to design up front and to test for misuse.
 
+**The cuts are pre-parity discipline, not permanent design.** Several cuts are referee-facing — Rare Earth Universe Variant, the optional any-oxygen-atm biomass floor, the `-mainworld <designation>` override — and exist in WBH because campaigns differ. They come back after fidelity is reached, as a Pass-3 referee-knobs sub-project. The cuts list is the shape of pass-2's first merge, not the shape of the long-term tool.
+
 ### Full stub interface designed up front
 
 Every public signature is written and committed as a stub before any implementation. That includes:
@@ -89,13 +91,15 @@ Implementation order, after the docs:
 4. Implement procedures, driven by which fixture is closest to green next, in dependency-graph order.
 5. Per-cycle delivery target: 1–3 fixtures green, ~3–7 days each.
 
-## Behavior parity gate
+## Fidelity gate (not parity)
+
+Pass 2's merge gate is fidelity to the book, not byte-equivalence to pass 1. The TSS fold-in (`dependency-graph.md` § Stage 7) and the surface-distribution-after-converge reordering (`dependency-graph.md` § Pass-2 sequencing) are deliberate corrections that _will_ produce different IISS output from pass 1 for some seeds. Calling that gate "parity" overstates it; calling it "fidelity" names what's actually being asserted.
 
 Pass 2 merges to `main` when:
 
-- Every worked-example fixture passes.
-- `cmd/wbh -seed N -format markdown` produces byte-equivalent output to pass 1 for a fixed seed set, **or** any divergence is explicitly reviewed and accepted (with rationale committed alongside).
-- The cut list (above) is honored — no resurrected variance/accuracy/optional flags.
+- Every worked-example fixture passes (post-decision values, per `wbh-inconsistencies.md`).
+- For each pass-1-vs-pass-2 IISS divergence on a fixed seed set, a fixture asserts pass-2's value with a comment citing the corrected design.
+- The cut list (above) is honored pre-merge — no resurrected variance/accuracy/optional flags during the merge cycle. (Post-parity reintroduction is named below.)
 
 Until then, `main` retains pass 1 as shipped working software. There is no pressure to merge.
 
@@ -111,6 +115,15 @@ Brooks' second-system warning applies. Specific cleverness traps for this projec
 - **Coverage thresholds in `task check`.** Aspirational; not pre-parity.
 
 **Stop rule:** any abstraction not justified by an existing call-site needing it goes back on the shelf. Aspirational architecture is post-parity work, never pre-parity.
+
+## Post-parity work named
+
+Pass 2 is small on purpose. These items are _not_ cuts forever — they're queued for after the fidelity gate clears. Naming them here means they cannot quietly become "we should never do this" by absence. They are deferred, not refused.
+
+- **Referee knobs.** Rare Earth Universe Variant, optional biomass floor, optional Insidious DE branch, `-mainworld <designation>` override. WBH ships these because campaigns differ; pass-3 reintroduces them as `*Opts` fields with explicit per-call rationale.
+- **Notable Features Markdown block.** A referee-facing summary above the IISS forms: tidal-lock zones, WorstLow cold snaps, high-gravity/high-atm crush worlds, taint chains, mainworld habitability rationale. Post-parity sub-project; the IISS forms alone are canon-good but referee-hostile for at-a-glance use.
+- **Special-object detail.** Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, Nebula, Protostar, Star Cluster, Anomaly currently get minimum-useful values (type/mass/age). Detailed physics — accretion, degenerate-matter equations — is post-parity but pre-Pass-3.
+- **Belt-mainworld worked example.** No canonical WBH example exists; harness defers (`harness.md` § `ZedPrime/Class4P/PartPB`). Post-parity, the belt mainworld branch gets an internally-constructed example fixture so PART P.B does not ship dark.
 
 ## Risks named
 

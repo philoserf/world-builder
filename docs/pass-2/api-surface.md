@@ -38,11 +38,13 @@ wbh/
 - Roll-bearing functions return `(T, error)` because dice exhaustion is a real failure mode for `Scripted` rollers (panics for production `Seeded`).
 - Pure-formula functions (`Derive*`, deterministic `Compute*`) return `T` with no error.
 - Validation errors at trust boundaries (CLI input parsing) return wrapped errors with context.
-- Misuse-path errors (illegal subtype, unknown atm code) panic in production, return error in test-friendly procedures. Pass 2 picks one per procedure and documents it; no procedure does both depending on caller.
+- Misuse-path errors (illegal subtype, unknown atm code) panic in production, return error in test-friendly procedures. Each public function declares panic-or-error in `harness.md` § Misuse-path tests (Stance column) before stubs land; no procedure does both depending on caller.
 
 ### Mutability
 
-Pass 2 prefers immutable value types. Where mutation is unavoidable (climate convergence iteration, TSS temperature update), the mutator is named `Apply*`, takes a pointer or a settable struct, and the doc-comment cites the WBH page that requires the mutation.
+The pipeline is mutator-shaped. `ApplyDetailFrontEnd`, `ApplyRotationTilt`, `ApplyClimate`, `ApplyTaintTypology`, etc., walk the universe and write to bodies in place. This is deliberate: the universe carries mutable per-body state through ten stages; returning a fresh `Universe` per stage would copy hundreds of bodies for no semantic gain.
+
+Within procedures, value-typed inputs/outputs (atomic computations, table lookups) stay immutable. The boundary is at the stage-application level: `Apply*` mutates, `Compute*`/`Derive*`/`Roll*` returns. The doc-comment of every `Apply*` function cites the WBH page or the `dependency-graph.md` stage that requires the mutation.
 
 ### Types vs interfaces
 
@@ -164,10 +166,14 @@ type Body struct {
 ```go
 // AllBodies yields every Body in the universe (planets, moons, belts) in
 // ascending-orbit order within each star group, with each body's children
-// yielded immediately after the parent.
+// yielded immediately after the parent. This order is contract — LongProfile
+// and AssignPlanetDesignations rely on it.
 func (u *Universe) AllBodies() iter.Seq[*Body] { ... }
 
-// Bodies filters AllBodies to a predicate.
+// Bodies filters AllBodies to a predicate. Iteration order is *not* contract —
+// consumers that need a specific order use AllBodies and filter inline. This
+// leaves room for future order-agnostic callers (per-body climate convergence
+// does not need ordering and could parallelize).
 func (u *Universe) Bodies(filter func(*Body) bool) iter.Seq[*Body] { ... }
 ```
 
@@ -212,7 +218,7 @@ type Climate struct {
 func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error
 ```
 
-**Why a struct, not just successive mutations on Body.** The convergence variable is local to the loop. Exposing it externally would let callers reach into a half-converged state. The Climate type is internal-by-design; only ConvergeClimate constructs it.
+**Why a struct, not just successive mutations on Body.** The convergence variable is local to the loop. Exposing it externally would let callers reach into a half-converged state. The Climate type is internal-by-design; only ConvergeClimate constructs it. Post-parity, a sibling `ConvergeClimateWithTrace` may expose iteration history for debugging unexpected atm flips; the type signature leaves room.
 
 **Why the partial-geology fold-in.** Per `dependency-graph.md` § Stage 7, the TSS back-edge into Temperature is real. Pass 1 ignored it; pass 2 includes it. The geology factors that depend only on body physical / orbital parameters (Residual, TSF, THF) are computed inside the loop. The factors that depend on stable TSS (Tectonic Plates, GG residual heat propagation) are computed after.
 
@@ -392,21 +398,29 @@ No `Renderer` interface; no `(f Class0IForm) Markdown() string` method. Direct f
 ```go
 package worlds
 
-// Generate runs the entire pipeline from seed to populated Universe.
-// All other entry points (GenerateSystem, GenerateSystemPlacement,
-// individual Apply* stages) remain available for callers that need
-// finer control.
+// Generate constructs a Seeded Roller from seed and delegates to
+// GenerateWithRoller. The convenience entry for production callers
+// (cmd/wbh and end-users with a seed in hand).
 func Generate(seed int64) (Universe, error)
+
+// GenerateWithRoller runs the entire pipeline against any Roller.
+// Tests use it with a Scripted roller to drive end-to-end fixtures
+// through one entry point; cmd/wbh and Generate use it via the seed
+// convenience. All other entry points (GenerateSystem,
+// GenerateSystemPlacement, individual Apply* stages) remain available
+// for callers that need finer control.
+func GenerateWithRoller(r roller.Roller) (Universe, error)
 ```
 
-`Generate(seed)` is the one-call convenience for `cmd/wbh` and tests. It:
+`GenerateWithRoller(r)` is the pipeline. It:
 
-1. Constructs a `roller.Seeded(seed)`.
-2. Calls `GenerateSystem`.
-3. Calls `GenerateSystemPlacement`.
-4. Constructs `Universe` with empty Detail.
-5. Calls `ApplyDetailFrontEnd`, `GenerateBodyPhysical` (per body), `RefineMoons`, `ApplyRotationTilt`, `ApplyClimate`, `ApplyTaintTypology`, `ApplySurfaceDistribution`, `ApplyTectonicPlates`, `ApplyGGResidualHeat`, `ApplyBiology`, `ApplyHabitability`, `AggregateSystem`.
-6. Returns the universe.
+1. Calls `GenerateSystem(r, GenerateSystemOpts{})`.
+2. Calls `GenerateSystemPlacement(r, sys)`.
+3. Constructs `Universe` with empty Detail.
+4. Calls `ApplyDetailFrontEnd`, `GenerateBodyPhysical` (per body), `RefineMoons`, `ApplyRotationTilt`, `ApplyClimate`, `ApplyTaintTypology`, `ApplySurfaceDistribution`, `ApplyTectonicPlates`, `ApplyGGResidualHeat`, `ApplyBiology`, `ApplyHabitability`, `AggregateSystem`.
+5. Returns the universe.
+
+`Generate(seed)` constructs a `roller.NewSeeded(seed)` and delegates. Splitting the two means harness fixtures (`harness.md` § Façade end-to-end) can drive the full pipeline through the public API with a Scripted roller — without the seed convenience getting in the way.
 
 `cmd/wbh/main.go` becomes:
 

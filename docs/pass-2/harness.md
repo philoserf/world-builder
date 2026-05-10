@@ -163,6 +163,17 @@ Pass-1 carry-forward: covered by `TestZed_FullDetail_3A2b`'s 3B-geology block; p
 
 Pass-1 carry-forward: `TestZed_FullDetail` (now superseded), `TestZed_FullDetail_3A2b` (acceptance gate).
 
+## Façade end-to-end
+
+`Generate(seed)` and `GenerateWithRoller(r)` are the public-API top entry (`api-surface.md` § The top-level façade). These fixtures exercise the entire pipeline through the public façade, ensuring the top-level shape works as a real caller would call it — not just leaf procedures in isolation.
+
+| ID             | WBH page | Status | Asserts                                                                                                                  |
+| -------------- | -------: | :----: | ------------------------------------------------------------------------------------------------------------------------ |
+| `Sol/Generate` |        — |   🔴   | `GenerateWithRoller(scriptedSol)` returns Universe with non-empty Stars, Placements, IISS forms. Smoke-level shape only. |
+| `Zed/Generate` |        — |   🔴   | `GenerateWithRoller(scriptedZed)` returns Universe matching the per-stage Zed assertions composed end-to-end.            |
+
+These fixtures land in the _initial_ harness commit so the façade signature is exercised from cycle 1, not synthesized at cycle 11. They start red against the unimplemented `GenerateWithRoller` stub; they go green when the pipeline's last stage lands. Per `design-intent.md` § Risks named, this keeps the public-API shape under test from the first commit forward — pass 1's API emerged from real callers, and pass 2 must not lose that constraint by designing the façade in isolation.
+
 ## Markdown system output
 
 | ID                   | WBH page | Status | Asserts                                                                                                                                                         |
@@ -173,7 +184,7 @@ The golden file is `worlds/testdata/zed_markdown_golden.md` (or `iiss/testdata/.
 
 ## Misuse-path contract tests
 
-Per `api-surface.md` § Misuse-path test pattern, every public function ships with at least one misuse-path test. The catalog below names the public function and the misuse paths to verify.
+Per `api-surface.md` § Misuse-path test pattern, every public function ships with at least one misuse-path test. The catalog below names the public function and the misuse paths to verify. During stub authoring, a Stance column is added per row capturing whether each misuse path is enforced via panic, error return, or compile-fail (typed parameter). The Stance column is the source of truth for the `api-surface.md` § Errors and misuse contracts commitment that "no procedure does both depending on caller."
 
 | Function                        | Misuse paths                                                                                         |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------- |
