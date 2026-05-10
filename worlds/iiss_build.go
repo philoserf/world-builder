@@ -254,15 +254,142 @@ func buildClass4P(u *Universe) iiss.Class4PForm {
 	switch mainworld.Kind {
 	case BodyPlanetoidBelt:
 		form.Variant = iiss.Class4PBelt
-		form.PartPB = &iiss.Class4PPartPB{}
+		form.PartPB = buildClass4PPartPB(u, mainworld)
 	case BodyMoon:
 		form.Variant = iiss.Class4PMoon
-		form.PartP = &iiss.Class4PPartP{}
+		form.PartP = buildClass4PPartP(u, mainworld)
 	default:
 		form.Variant = iiss.Class4PPlanet
-		form.PartP = &iiss.Class4PPartP{}
+		form.PartP = buildClass4PPartP(u, mainworld)
 	}
 	return form
+}
+
+func buildClass4PPartP(u *Universe, body *Body) *iiss.Class4PPartP {
+	p := &iiss.Class4PPartP{
+		Designation:  body.Designation,
+		SystemAgeGyr: u.System.Primary.AgeGyr,
+		OrbitNumber:  body.Orbit,
+		AU:           stars.OrbitToAU(body.Orbit),
+		Eccentricity: body.Eccentricity,
+		PeriodHours:  body.Period.Hours,
+		DiameterKm:   body.DiameterKm,
+		MassEarth:    body.MassEarth,
+		IsMainworld:  true,
+	}
+	if body.Physical != nil {
+		p.Density = body.Physical.Density
+		p.Gravity = body.Physical.Gravity
+	}
+	if body.HasAtmosphere() {
+		atm := body.Atmosphere
+		p.Atmosphere = &iiss.Class4PAtmosphere{
+			Code:                  atm.Code,
+			Pressure:              atm.Pressure,
+			OxygenPartialPressure: atm.OxygenPartialPressure,
+			ScaleHeight:           atm.ScaleHeight,
+			ProfileShorthand:      FormatAtmoProfileShorthand(*atm, atm.Profile),
+		}
+	}
+	if body.HasHydrographics() {
+		hydro := body.Hydrographics
+		p.Hydrographics = &iiss.Class4PHydrographics{
+			Code:    hydro.Code,
+			Percent: hydro.Percent,
+			Profile: hydro.Profile,
+		}
+	}
+	if body.HasDayLength() {
+		p.SiderealHours = body.DayLength.SiderealHours
+		p.SolarHours = body.DayLength.SolarHours
+		p.SolarDaysPerYear = body.DayLength.YearDays
+	}
+	if body.HasAxialTilt() {
+		p.AxialTiltDeg = body.AxialTilt.Degrees
+	}
+	p.TidalLockRatio = "no"
+	if body.HasTidalLock() && body.TidalLock.LockRatio != "" {
+		p.TidalLockRatio = body.TidalLock.LockRatio
+	}
+	if body.HasTidalEffects() {
+		p.TidesMeters = body.TidalEffects.Total
+	}
+	if body.HasTemperature() {
+		t := body.Temperature
+		lowK := t.LowK
+		if lowK <= 0 && t.MeanK > 0 {
+			lowK = -1 // sentinel: render as "—"
+		}
+		p.Temperature = &iiss.Class4PTemperature{
+			HighK:            t.HighK,
+			MeanK:            t.MeanK,
+			LowK:             lowK,
+			Luminosity:       t.Luminosity,
+			Albedo:           t.Albedo,
+			GreenhouseFactor: t.GreenhouseFactor,
+		}
+	}
+	if body.HasGeology() {
+		g := body.Geology
+		p.Seismic = &iiss.Class4PSeismic{
+			TotalSeismicStress:    g.TotalSeismicStress,
+			ResidualSeismicStress: g.ResidualSeismicStress,
+			TidalStressFactor:     g.TidalStressFactor,
+			TidalHeatingFactor:    g.TidalHeatingFactor,
+			TectonicPlates:        g.TectonicPlates,
+		}
+	}
+	if body.HasBiology() {
+		bio := body.Biology
+		p.Life = &iiss.Class4PLife{
+			Biomass:        bio.Biomass,
+			Biocomplexity:  bio.Biocomplexity,
+			HasSophont:     bio.HasNativeSophont,
+			HadExtinct:     bio.HadExtinctSophont,
+			Biodiversity:   bio.Biodiversity,
+			Compatibility:  bio.Compatibility,
+			ResourceRating: bio.ResourceRating,
+		}
+	}
+	if body.HasHabitability() {
+		p.HabitabilityRating = body.Habitability.Rating
+		p.HabitabilityNotes = body.Habitability.Notes
+	}
+	for _, child := range body.Children {
+		p.Subordinates = append(p.Subordinates, iiss.Class4PSubordinate{
+			Designation:  child.Designation,
+			SizeCode:     string(child.SizeCode),
+			DiameterKm:   child.DiameterKm,
+			OrbitKm:      int(child.OrbitKm),
+			Eccentricity: child.Eccentricity,
+			PeriodHours:  child.PeriodHours,
+		})
+	}
+	return p
+}
+
+func buildClass4PPartPB(u *Universe, body *Body) *iiss.Class4PPartPB {
+	pb := &iiss.Class4PPartPB{
+		Designation:  body.Designation,
+		PrimaryGroup: body.Group.Designation,
+		SystemAgeGyr: u.System.Primary.AgeGyr,
+		OrbitNumber:  body.Orbit,
+		AU:           stars.OrbitToAU(body.Orbit),
+		PeriodHours:  body.Period.Hours,
+		IsMainworld:  true,
+	}
+	if body.Belt != nil {
+		pb.SpanOrbits = body.Belt.Span
+		pb.MTypePct = body.Belt.Composition.MTypePct
+		pb.STypePct = body.Belt.Composition.STypePct
+		pb.CTypePct = body.Belt.Composition.CTypePct
+		pb.OtherPct = body.Belt.Composition.OtherPct
+		pb.Bulk = body.Belt.Bulk
+		pb.SigSize1Bodies = body.Belt.SigSize1Bodies
+		pb.SigSizeSBodies = body.Belt.SigSizeSBodies
+		pb.ResourceRating = body.Belt.ResourceRating
+	}
+	return pb
 }
 
 func findMainworld(u *Universe) *Body {

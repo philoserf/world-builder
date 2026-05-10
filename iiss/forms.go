@@ -85,14 +85,141 @@ type Class4PForm struct {
 	PartPB  *Class4PPartPB
 }
 
-// Class4PPartP holds the planet / moon mainworld detail. Fields land as
-// renderer work proceeds.
-type Class4PPartP struct{}
+// Class4PPartP holds the planet / moon mainworld detail per WBH p.138
+// Form 0407F-IV PART P.
+type Class4PPartP struct {
+	Designation  string
+	SystemAgeGyr float64
 
-// Class4PPartPB holds the belt mainworld detail. Per docs/pass-2/
-// api-surface.md § Open questions, decided, this is an empty shell —
-// fleshed out post-parity when the belt-mainworld fixture lands.
-type Class4PPartPB struct{}
+	// Orbit
+	OrbitNumber  float64
+	AU           float64
+	Eccentricity float64
+	PeriodHours  float64
+
+	// Size
+	DiameterKm float64
+	Density    float64
+	Gravity    float64
+	MassEarth  float64
+
+	// Atmosphere — populated when the body has an atmosphere
+	Atmosphere *Class4PAtmosphere
+
+	// Hydrographics — populated when the body has hydrographics
+	Hydrographics *Class4PHydrographics
+
+	// Rotation
+	SiderealHours    float64
+	SolarHours       float64
+	SolarDaysPerYear float64
+	AxialTiltDeg     float64
+	TidalLockRatio   string
+	TidesMeters      float64
+
+	// Temperature
+	Temperature *Class4PTemperature
+
+	// Seismic / Geology
+	Seismic *Class4PSeismic
+
+	// Life
+	Life *Class4PLife
+
+	// Habitability
+	HabitabilityRating int
+	HabitabilityNotes  string
+
+	// Subordinates (moons of a planet mainworld; not used for moon mainworlds)
+	Subordinates []Class4PSubordinate
+
+	IsMainworld bool
+}
+
+// Class4PAtmosphere captures the WBH p.138 ATMOSPHERE block.
+type Class4PAtmosphere struct {
+	Code                  int
+	Pressure              float64
+	OxygenPartialPressure float64
+	ScaleHeight           float64
+	ProfileShorthand      string
+}
+
+// Class4PHydrographics captures the WBH p.138 HYDROGRAPHICS block.
+type Class4PHydrographics struct {
+	Code    int
+	Percent int
+	Profile string
+}
+
+// Class4PTemperature captures the WBH p.138 TEMPERATURE block.
+type Class4PTemperature struct {
+	HighK            float64
+	MeanK            float64
+	LowK             float64 // -1 sentinel = "—" (degenerate-model)
+	Luminosity       float64
+	Albedo           float64
+	GreenhouseFactor float64
+}
+
+// Class4PSeismic captures the WBH p.138 SEISMIC block.
+type Class4PSeismic struct {
+	TotalSeismicStress    int
+	ResidualSeismicStress int
+	TidalStressFactor     int
+	TidalHeatingFactor    int
+	TectonicPlates        int
+}
+
+// Class4PLife captures the WBH p.138 LIFE + RESOURCES blocks.
+type Class4PLife struct {
+	Biomass        int
+	Biocomplexity  int
+	HasSophont     bool
+	HadExtinct     bool
+	Biodiversity   int
+	Compatibility  int
+	ResourceRating int
+}
+
+// Class4PSubordinate is one row of the WBH p.138 SUBORDINATES table
+// (a planet mainworld's moons).
+type Class4PSubordinate struct {
+	Designation  string
+	SizeCode     string
+	DiameterKm   float64
+	OrbitKm      int
+	Eccentricity float64
+	PeriodHours  float64
+}
+
+// Class4PPartPB holds the belt mainworld detail per WBH p.139
+// FORM 0407K-IV PART P.B.
+type Class4PPartPB struct {
+	Designation  string
+	PrimaryGroup string
+	SystemAgeGyr float64
+
+	// Orbit
+	OrbitNumber float64
+	AU          float64
+	SpanOrbits  float64
+	PeriodHours float64
+
+	// Composition
+	MTypePct       int
+	STypePct       int
+	CTypePct       int
+	OtherPct       int
+	Bulk           int
+	SigSize1Bodies int
+	SigSizeSBodies int
+
+	// Resources
+	ResourceRating int
+
+	IsMainworld bool
+}
 
 // SystemForms aggregates the three IISS forms for a generated system,
 // plus the system-wide profile strings and the auto-picked mainworld
