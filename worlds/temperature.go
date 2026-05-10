@@ -493,6 +493,11 @@ func (t *Temperature) tropicalLatitudeBoundary() float64 {
 //
 // Returns are continuous at the Part A / Part B boundary (tilt = 45°): both
 // formulas evaluate to 0 there.
+//
+// Reads raw axial tilt directly rather than calling tropicalLatitudeBoundary —
+// this function discriminates Part A vs Part B (raw tilt < 45 vs ≥ 45),
+// while tropicalLatitudeBoundary returns the part-aware no-seasonal-swing
+// boundary (which is 90 − tilt under Part B, the wrong value here).
 func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 	rawTilt := math.Asin(t.AxialTiltFactor) * 180.0 / math.Pi
 	if math.IsNaN(rawTilt) {

@@ -1235,7 +1235,7 @@ func TestTemperature_MeanBySeason_PartB_InnerBand_NoSeasonalSwing(t *testing.T) 
 	year := 365.25
 	solstice := temp.MeanBySeason(20, 0, year)
 	equinox := temp.MeanBySeason(20, year/4, year)
-	if solstice != equinox {
+	if math.Abs(solstice-equinox) > 1e-9 {
 		t.Errorf("Part B inner band should not swing seasonally: solstice=%v equinox=%v", solstice, equinox)
 	}
 }
