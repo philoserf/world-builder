@@ -81,8 +81,8 @@ The floor runs **between the biomass roll and the dependent rolls**, so an eleva
 // hasOxygenAtmosphere reports whether atm carries free oxygen per
 // WBH p.128 Optional Rule (codes 2-9, D, E). Hex codes:
 //   2-9: oxygen-bearing thin → dense atmospheres
-//   D (13): dense (oxygen-bearing in WBH's canonical mapping)
-//   E (14): ellipsoidal (oxygen-bearing per WBH p.46)
+//   D (13): "Very Dense" oxygen atmosphere (2.50-10.0 bar, WBH p.79)
+//   E (14): "Low" oxygen atmosphere (0.10-0.42 bar, WBH p.79)
 func hasOxygenAtmosphere(atm *Atmosphere) bool {
     if atm == nil {
         return false

@@ -151,8 +151,8 @@ Insert near `exoticBiomassBonusApplies` (around line 177 of `worlds/biology.go`)
 // hasOxygenAtmosphere reports whether atm carries free oxygen per
 // WBH p.128 Optional Rule (codes 2-9, D, E). Hex codes:
 //   2-9: progressively thicker oxygen atmospheres
-//   D (13): dense oxygen atmosphere
-//   E (14): ellipsoidal oxygen atmosphere
+//   D (13): "Very Dense" oxygen atmosphere (2.50-10.0 bar per WBH p.79)
+//   E (14): "Low" oxygen atmosphere (0.10-0.42 bar per WBH p.79)
 //
 // Excluded: 0 (None), 1 (Trace), A (10, Exotic), B (11, Corrosive),
 // C (12, Insidious), F (15, Unusual).

@@ -493,6 +493,7 @@ func TestClass4PTemperature_LowKZeroRendersAsEmDash(t *testing.T) {
 }
 
 func TestDetailSystemWithOpts_OxygenAtmFloor(t *testing.T) {
+	t.Parallel()
 	// Smoke test: drive the full pipeline with the oxygen-atm biomass
 	// floor opt-in. Verify the opt-in path threads through to Step 5F
 	// and the unfloored zero-baseline path stays untouched.
