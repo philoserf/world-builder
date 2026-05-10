@@ -39,13 +39,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 
 // ApplyHabitability is implemented in stage9.go.
 
-// AggregateSystem computes the system-wide aggregations after every
-// body has converged: BaselineN backfill per allocation, ShortProfile,
-// LongProfile, the three IISS form structs, and the auto-picked
-// mainworld designation. Pure function; no rolls. Stage-10 entry point.
-func AggregateSystem(u *Universe) {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 10")
-}
+// AggregateSystem is implemented in stage10.go.
 
 // GenerateBodyPhysical lives in body_physical.go (real implementation).
 // GenerateBeltDetails lives in belt_details.go (real implementation).
