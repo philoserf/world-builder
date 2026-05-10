@@ -53,6 +53,7 @@ type Body struct {
 	OrbitPD     float64
 	OrbitKm     float64
 	PeriodHours float64
+	Retrograde  bool // moon orbits its parent retrograde (anomalous slot)
 
 	// Stage 3
 	Physical *BodyPhysical

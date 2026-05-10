@@ -24,13 +24,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 	panic("unimplemented: see docs/pass-2/api-surface.md § The top-level façade")
 }
 
-// ApplyRotationTilt populates DayLength, AxialTilt, TidalLock, and
-// SurfaceTidalEffects for every body in the universe. Surface
-// distribution is deferred to ApplySurfaceDistribution (Stage 6) so
-// it runs against converged hydrographics.
-func ApplyRotationTilt(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 4: Rotation/Tilt/Tide")
-}
+// ApplyRotationTilt is implemented in stage4.go.
 
 // ApplyClimate walks the universe and calls ConvergeClimate per body.
 // Stage-5 entry point. Per dependency-graph.md § Stage 5, the climate

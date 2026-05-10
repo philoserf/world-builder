@@ -5,22 +5,17 @@ package worlds
 // as their respective Stage's procedures are implemented. The cycle
 // schedule is in docs/pass-2/dependency-graph.md.
 
-// DayLength — Stage 4 (3A2a). Sidereal hours, solar hours, year days.
-type DayLength struct{}
-
-// AxialTilt — Stage 4. Degrees plus extreme-tilt flag.
-type AxialTilt struct{}
-
-// TidalLock — Stage 4. Lock case (planet-to-star, moon-to-planet,
-// planet-to-moon, none) plus the trigger metadata.
-type TidalLock struct{}
-
-// SurfaceTidalEffects — Stage 4. Per-zone tidal effects.
-type SurfaceTidalEffects struct{}
-
-// Atmosphere — Stage 5 climate. Code, pressure, taints, oxygen partial
-// pressure. Populated post-ConvergeClimate.
-type Atmosphere struct{}
+// Atmosphere — Stage 5 climate. Populated post-ConvergeClimate. Cycle 4
+// reads Pressure for the dense-atmosphere tidal-lock DM; the rest of
+// the fields land in cycle 5 (ConvergeClimate).
+type Atmosphere struct {
+	Code                  int
+	Subtype               string
+	Pressure              float64
+	OxygenPartialPressure float64
+	ScaleHeight           float64
+	Taints                []string
+}
 
 // Hydrographics — Stage 5 climate. Code plus surface distribution
 // inputs. Populated post-ConvergeClimate.
