@@ -553,11 +553,14 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 // part-aware zone latitude adjustment — see those helpers for the
 // per-band formulas.
 //
-// Twilight worlds always return TwilightK (band centerline). Hemisphere-aware
-// selection — bright/dark/twilight by latitude — is the caller's responsibility:
-// read t.BrightSideK / t.TwilightK / t.DarkSideK directly. The spec foresaw
-// auto-selection inside this method but the implementation defers it (see
-// issue #5).
+// Twilight worlds always return TwilightK (band centerline). Hemisphere-
+// aware selection is the caller's responsibility: read t.BrightSideK /
+// t.TwilightK / t.DarkSideK directly. WBH pp.120-122 model a 1:1-locked
+// world as longitude-partitioned (substellar / terminator great circle /
+// antistellar) — bright vs. dark is fundamentally a longitude decision,
+// not a latitude one, so the lat-only scenario API cannot pick a
+// hemisphere on a twilight world. Callers wanting hemisphere-aware
+// values use the three cached scalars.
 func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays float64) float64 {
 	if t.IsTwilight {
 		return t.TwilightK
@@ -623,10 +626,14 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 // lags 15% of the solar day past solar noon (i.e., peak at 65% of the day from
 // dawn). Dawn is the coolest point, peak is shortly after noon.
 //
-// Twilight worlds always return TwilightK (band centerline). Hemisphere-aware
-// selection — bright/dark/twilight by latitude — is the caller's responsibility:
-// read t.BrightSideK / t.TwilightK / t.DarkSideK directly. The spec foresaw
-// auto-selection inside this method but the implementation defers it.
+// Twilight worlds always return TwilightK (band centerline). Hemisphere-
+// aware selection is the caller's responsibility: read t.BrightSideK /
+// t.TwilightK / t.DarkSideK directly. WBH pp.120-122 model a 1:1-locked
+// world as longitude-partitioned (substellar / terminator great circle /
+// antistellar) — bright vs. dark is fundamentally a longitude decision,
+// not a latitude one, so the lat-only scenario API cannot pick a
+// hemisphere on a twilight world. Callers wanting hemisphere-aware
+// values use the three cached scalars.
 func (t *Temperature) AtMoment(latDeg, daysSinceSolstice, localYearDays, hoursSinceDawn, solarDayHours float64) float64 {
 	if t.IsTwilight {
 		return t.TwilightK
