@@ -66,7 +66,7 @@ Lifted from `docs/pass-1/retrospective/2026-05-06-pass-2.md` § "Decisions worth
 
 - **Go, not Python.** Static-binary distribution + compiled-in literal tables + native typing beats dynamic flexibility for this data shape.
 - **Deterministic Roller as the load-bearing seam.** `roller.Roller` with `Seeded`/`Scripted`/`Fixed` impls. No package-level RNG anywhere. Seed plus options fully determines a system. `Scripted` panics on exhaustion. **Port `roller/` and `dice/` verbatim.**
-- **Worked-example regression tests.** The most valuable testing pattern. Encoded with `roller.NewScripted(...)` driven by the book's exact dice; assert every output to the digit.
+- **Worked-example regression tests — the per-procedure form.** Encoded with `roller.NewScripted(...)` driven by the book's exact dice; assert every output to the digit. **These port verbatim from pass-1 source as long as procedure signatures are unchanged.** Per `spike-findings.md` § Finding 2, full-pipeline gold scripts (e.g., pass-1's `TestZed_FullDetail`) do not survive pipeline change and are not gold; pass 1 itself superseded its full-pipeline gold script with a `Seeded` + shape-invariant successor (`TestZed_FullDetail_3A2b`). Pass 2 inherits both patterns: per-procedure `Scripted` gold for narrow fixtures; `Seeded` + shape invariants for façade fixtures.
 - **Tables as Go literals with WBH page citations.** `*float64` for nullable cells (the book's "—"). Doc-comments cite the page. No external YAML/TOML data files.
 - **Brainstorm → spec → plan → TDD with subagent review.** Per-task two-stage review (spec compliance + code quality) caught real bugs across pass 1. Workflow stays.
 - **Modernizer-as-mandatory gate.** `task check` runs `go fix ./...` first and fails on any diff. Idiomatic Go 1.21+/1.22+ stays current.
@@ -86,10 +86,10 @@ These six documents under `docs/pass-2/` are the design backbone. They get draft
 Implementation order, after the docs:
 
 1. Port `roller/` and `dice/` verbatim from pass 1.
-2. Port the worked-example dice scripts as failing fixtures (compiles, tests red).
-3. Stub every public signature per `api-surface.md` (compiles, tests still red).
+2. Stub every public signature per `api-surface.md` (compiles).
+3. Port the worked-example dice scripts and `Seeded`-shape-invariant fixtures as failing tests (compiles against stubs, tests red). Per `spike-findings.md` § Finding 4, stubs must precede fixtures — Go test files cannot compile against unstubbed types.
 4. Implement procedures, driven by which fixture is closest to green next, in dependency-graph order.
-5. Per-cycle delivery target: 1–3 fixtures green, ~3–7 days each.
+5. Per-cycle delivery target: one stage's fixtures green, ~3–7 days. See § Cadence.
 
 ## Fidelity gate (not parity)
 
@@ -127,17 +127,18 @@ Pass 2 is small on purpose. These items are _not_ cuts forever — they're queue
 
 ## Risks named
 
-- **Sunk-cost math.** Pass 1 was ~two weeks of intermittent work, ~30 sub-projects. If pass 2 takes longer than pass 1 did to reach parity, the trade was bad. Soft cap: revisit the plan at week 3 if parity is not in sight.
+- **Sunk-cost math.** Pass 1 was ~two weeks of intermittent work, ~30 sub-projects. Pass 2 with the cycle-per-stage cadence (§ Cadence) targets ~12 cycles over ~8–10 weeks. Soft cap: revisit the plan at week 8 if the fidelity gate is not in sight; hard "is this still worth it?" review at week 12.
 - **API redesign in isolation.** Pass 1's API emerged from real callers. Pass 2 designs the API up front, but the harness fixtures and `cmd/wbh` are real callers from day one — they're not absent. Keep them as constraints on the design.
 - **Worked-example fidelity drift.** The pass-1 dice scripts are gold. They get ported as-is, not re-derived. Re-deriving would re-introduce bugs pass 1 caught.
 - **"Smaller chunks" without a number is guilt.** Concrete target: 1–3 worked-example fixtures green per cycle, ~3–7 days each. If a cycle goes longer, the chunking was wrong; split.
 
 ## Cadence
 
-The pass-1 cadence (chapter-sized brainstorm → spec → plan → TDD-with-subagent-review) survives in form, with two changes:
+The pass-1 cadence (chapter-sized brainstorm → spec → plan → TDD-with-subagent-review) survives in form, with three changes:
 
-- Cycles are sized by **fixtures-green**, not by **WBH pages**.
+- **Cycles are sized by stage, not by WBH pages or by individual fixtures.** A cycle = all fixtures for one dependency-graph stage, ~10–15 fixtures, ~3–7 days. With ten stages plus stub commit + harness commit + Markdown golden, that's roughly 12 cycles for ~8–10 weeks of work. Per `spike-findings.md` § Finding 5, the earlier "1–3 fixtures green per cycle" target gave 17–50 cycles for the full harness — not workable.
 - Cycles do **not** carry forward partial state across boundaries. `git status` must be clean at every cycle start. The pass-1 `just`→`task` migration sat as uncommitted state for most of a session and corrupted multiple subagent reports — that does not recur.
+- The stub commit and the harness commit are their own cycles (cycles 0 and 1) because both are PR-sized in their own right.
 
 ## Provenance
 

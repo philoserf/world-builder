@@ -167,12 +167,14 @@ Pass-1 carry-forward: `TestZed_FullDetail` (now superseded), `TestZed_FullDetail
 
 `Generate(seed)` and `GenerateWithRoller(r)` are the public-API top entry (`api-surface.md` § The top-level façade). These fixtures exercise the entire pipeline through the public façade, ensuring the top-level shape works as a real caller would call it — not just leaf procedures in isolation.
 
-| ID             | WBH page | Status | Asserts                                                                                                                  |
-| -------------- | -------: | :----: | ------------------------------------------------------------------------------------------------------------------------ |
-| `Sol/Generate` |        — |   🔴   | `GenerateWithRoller(scriptedSol)` returns Universe with non-empty Stars, Placements, IISS forms. Smoke-level shape only. |
-| `Zed/Generate` |        — |   🔴   | `GenerateWithRoller(scriptedZed)` returns Universe matching the per-stage Zed assertions composed end-to-end.            |
+**These are `Seeded` + shape-invariant fixtures, not `Scripted` value-exact fixtures** (per `spike-findings.md` § Finding 2). Pass-1 abandoned its full-pipeline gold script (`TestZed_FullDetail` was skipped/superseded) when new pipeline passes added dice the script didn't have; pass-2 reorders the pipeline more aggressively still. The right model is pass-1's successor `TestZed_FullDetail_3A2b`: drive 100 iterations of `roller.NewSeeded(seed)`, assert shape invariants.
 
-These fixtures land in the _initial_ harness commit so the façade signature is exercised from cycle 1, not synthesized at cycle 11. They start red against the unimplemented `GenerateWithRoller` stub; they go green when the pipeline's last stage lands. Per `design-intent.md` § Risks named, this keeps the public-API shape under test from the first commit forward — pass 1's API emerged from real callers, and pass 2 must not lose that constraint by designing the façade in isolation.
+| ID             | WBH page | Status | Asserts                                                                                                                                               |
+| -------------- | -------: | :----: | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Sol/Generate` |        — |   🔴   | `Generate(seed)` over 100 seeds: non-empty Stars, Placements, IISS Class 0/I form populated; mainworld designation == "A" (Sol single-primary).       |
+| `Zed/Generate` |        — |   🔴   | `Generate(seed)` over 100 seeds: every HZ terrestrial has 3-char SAH (no `?`), every body has DayLength + AxialTilt + TidalEffects, mainworld picked. |
+
+These fixtures land in the _initial_ harness commit so the façade signature is exercised from cycle 1, not synthesized at the final cycle. They start red against the unimplemented `Generate` / `GenerateWithRoller` stubs; they go green when the pipeline's last stage lands. Per `design-intent.md` § Risks named, this keeps the public-API shape under test from the first commit forward — pass 1's API emerged from real callers, and pass 2 must not lose that constraint by designing the façade in isolation.
 
 ## Markdown system output
 
