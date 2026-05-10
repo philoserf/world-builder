@@ -41,12 +41,13 @@ type Body struct {
 	HZ           bool
 
 	// Stage 2 (sizing/period)
-	SizeCode      string
-	DiameterKm    float64
-	GGClass       string
-	DiameterEarth float64 // GG only
-	MassEarth     float64
-	Period        float64
+	SizeCode       SizeCode
+	DiameterKm     float64
+	GGClass        GasGiantClass // NotGasGiant for non-GG bodies
+	GGDiameterCode string        // GG only — eHex code matching DiameterEarth
+	DiameterEarth  float64       // GG only
+	MassEarth      float64
+	Period         Period
 
 	// Moon-specific (Kind == BodyMoon)
 	OrbitPD     float64

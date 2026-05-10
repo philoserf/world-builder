@@ -25,17 +25,6 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 	panic("unimplemented: see docs/pass-2/api-surface.md § The top-level façade")
 }
 
-// ApplyDetailFrontEnd populates Body.SizeCode, DiameterKm, MassEarth
-// (gas giants only — terrestrial mass is derived during Stage 3),
-// Designation, Period, HZ, and Children (moons), for every Body in the
-// universe. Belt details and body physical follow in Stage 3.
-//
-// Operates on the universe in place (per docs/pass-2/api-surface.md §
-// Mutability — the pipeline is mutator-shaped).
-func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 2: Detail front-end")
-}
-
 // ApplyRotationTilt populates DayLength, AxialTilt, TidalLock, and
 // SurfaceTidalEffects for every body in the universe. Surface
 // distribution is deferred to ApplySurfaceDistribution (Stage 6) so
