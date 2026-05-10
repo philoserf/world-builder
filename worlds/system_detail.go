@@ -8,10 +8,26 @@ import (
 	"wbh/stars"
 )
 
+// DetailOpts gates opt-in WBH rules and Referee-discretion variants for
+// the per-body detail pipeline. The zero value disables every opt — so
+// DetailSystem(...) (the no-opts wrapper) preserves canonical-book
+// behavior for all existing callers.
+type DetailOpts struct {
+	// OxygenAtmBiomassFloor enables WBH p.128 Optional Rule: any world
+	// whose Atmosphere.Code is in the oxygen-bearing set {2-9, D, E}
+	// gets a biomass floor of 1 (the rolled value is clamped up if it
+	// came in below). Off by default — the book describes it as a
+	// Referee opt-in.
+	OxygenAtmBiomassFloor bool
+}
+
 // DetailSystem composes the full WBH pp. 53-67 procedure on top of a
 // SystemPlacement (2B output). Returns a SystemDetail with sizes,
 // moons, designations, periods, HZ tags, profiles, and the IISS
 // Class II/III form.
+//
+// Equivalent to DetailSystemWithOpts with a zero-valued DetailOpts —
+// canonical-book behavior, no opt-in rules.
 //
 // Pipeline:
 //
@@ -22,12 +38,18 @@ import (
 //  4. RenderIISSClass23.
 //  5. pickMainworld.
 func DetailSystem(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSClass23Header) (SystemDetail, error) {
+	return DetailSystemWithOpts(r, sys, sp, h, DetailOpts{})
+}
+
+// DetailSystemWithOpts is the opt-aware variant of DetailSystem. See
+// DetailOpts for the available opt-in rules.
+func DetailSystemWithOpts(r roller.Roller, sys stars.System, sp SystemPlacement, h IISSClass23Header, opts DetailOpts) (SystemDetail, error) {
 	detailed := make([]DetailedPlacement, len(sp.Placements))
 	for i := range sp.Placements {
 		detailed[i] = DetailedPlacement{Placement: sp.Placements[i]}
 	}
 
-	if err := runDetailPipeline(r, detailed, sys, sp); err != nil {
+	if err := runDetailPipeline(r, detailed, sys, sp, opts); err != nil {
 		return SystemDetail{}, err
 	}
 
