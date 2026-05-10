@@ -28,19 +28,8 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 
 // ApplyClimate is implemented in stage5.go.
 
-// ApplyTaintTypology mutates Body.Atmosphere in place — oxygen-taint
-// promotion can change atm.Code; corrosive / insidious typology may
-// add taints. Runs after ConvergeClimate. Stage-6 entry point.
-func ApplyTaintTypology(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 6")
-}
-
-// ApplySurfaceDistribution computes the hydrosphere distribution
-// across surface zones for every HZ terrestrial. Runs after climate
-// converges (so hydrographics is final) and after taint typology.
-func ApplySurfaceDistribution(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 6")
-}
+// ApplyTaintTypology and ApplySurfaceDistribution are implemented in
+// stage6.go.
 
 // ApplyTectonicPlates rolls tectonic-plate count for terrestrial
 // bodies whose total seismic stress is stable post-climate.
