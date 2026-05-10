@@ -9,16 +9,22 @@ type Class0IForm struct {
 	Stars        []Class0IStarRow
 }
 
-// Class0IStarRow is one row of the Class 0/I Stars table.
+// Class0IStarRow is one row of the Class 0/I Stars table. Mirrors
+// pass-1's stars.SurveyComponent so the form can render with full
+// companion-orbit fidelity.
 type Class0IStarRow struct {
-	Component   string
-	Class       string
-	Mass        float64
-	Diameter    float64
-	Temperature float64
-	Luminosity  float64
-	HZCO        float64
-	MAO         float64
+	Component    string
+	Class        string // "G7 V" / "D" / "—" for composites
+	Mass         float64
+	Diameter     float64 // 0 for composites
+	Temperature  float64 // 0 for composites
+	Luminosity   float64
+	Orbit        float64
+	AU           float64
+	Eccentricity float64
+	PeriodYears  float64
+	HZCO         float64 // populated only on rows that act as a single HZCO source
+	MAO          float64 // populated for Class II/III; 0 for Class 0/I header
 }
 
 // Class23Form is the IISS Class II/III Survey form (WBH form 0421D-II.III,

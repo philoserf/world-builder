@@ -23,28 +23,53 @@ func BuildIISSForms(u *Universe) {
 }
 
 func buildClass0I(u *Universe) iiss.Class0IForm {
-	form := iiss.Class0IForm{
-		FormHeader:   buildHeader(u),
-		SystemAgeGyr: u.System.Primary.AgeGyr,
-		StellarCount: 1 + len(u.System.Companions),
+	// Delegate to pass-1's stars.BuildSurveyForm for full companion +
+	// composite-barycentre fidelity, then translate to the iiss/
+	// boundary type.
+	meta := stars.SurveyMetadata{
+		Sector:      "—",
+		Location:    "—",
+		Designation: u.Detail.MainworldDesignation,
 	}
-	form.Stars = append(form.Stars, starRow("A", u.System.Primary))
-	for _, comp := range u.System.Companions {
-		designation := comp.Designation
-		if designation == "" {
-			designation = "?"
-		}
-		form.Stars = append(form.Stars, starRow(designation, comp.Star))
+	sf := stars.BuildSurveyForm(u.System, meta)
+	form := iiss.Class0IForm{
+		FormHeader: iiss.FormHeader{
+			SystemName:    u.System.PrimaryDesignation,
+			Sector:        sf.Sector,
+			Location:      sf.Location,
+			IISSDesig:     sf.IISSDesig,
+			InitialSurvey: sf.InitialSurvey,
+			LastUpdated:   sf.LastUpdated,
+		},
+		SystemAgeGyr: sf.SystemAgeGyr,
+		StellarCount: sf.StellarCount,
+	}
+	for _, c := range sf.Stars {
+		form.Stars = append(form.Stars, iiss.Class0IStarRow{
+			Component:    c.Component,
+			Class:        c.Class,
+			Mass:         c.Mass,
+			Diameter:     c.Diameter,
+			Temperature:  c.Temperature,
+			Luminosity:   c.Luminosity,
+			Orbit:        c.Orbit,
+			AU:           c.AU,
+			Eccentricity: c.Eccentricity,
+			PeriodYears:  c.PeriodYears,
+			HZCO:         c.HZCO,
+			MAO:          c.MAO,
+		})
 	}
 	return form
 }
 
 func buildClass23(u *Universe) iiss.Class23Form {
+	c0 := buildClass0I(u)
 	form := iiss.Class23Form{
-		FormHeader:   buildHeader(u),
-		SystemAgeGyr: u.System.Primary.AgeGyr,
-		StellarCount: 1 + len(u.System.Companions),
-		Stars:        buildClass0I(u).Stars,
+		FormHeader:   c0.FormHeader,
+		SystemAgeGyr: c0.SystemAgeGyr,
+		StellarCount: c0.StellarCount,
+		Stars:        c0.Stars,
 		Counts: iiss.Class23Counts{
 			GasGiants:      u.Placement.Counts.GasGiants,
 			PlanetoidBelts: u.Placement.Counts.PlanetoidBelts,
@@ -73,7 +98,7 @@ func buildClass23(u *Universe) iiss.Class23Form {
 
 func buildClass4P(u *Universe) iiss.Class4PForm {
 	form := iiss.Class4PForm{
-		FormHeader: buildHeader(u),
+		FormHeader: buildClass0I(u).FormHeader,
 	}
 	mainworld := findMainworld(u)
 	if mainworld == nil {
@@ -110,62 +135,6 @@ func findMainworld(u *Universe) *Body {
 		}
 	}
 	return nil
-}
-
-func buildHeader(u *Universe) iiss.FormHeader {
-	return iiss.FormHeader{
-		SystemName:    u.System.PrimaryDesignation,
-		Sector:        "—",
-		Location:      "—",
-		IISSDesig:     u.Detail.MainworldDesignation,
-		InitialSurvey: "—",
-		LastUpdated:   "—",
-	}
-}
-
-func starRow(component string, s stars.Star) iiss.Class0IStarRow {
-	return iiss.Class0IStarRow{
-		Component:   component,
-		Class:       formatStarClass(s),
-		Mass:        s.Mass,
-		Diameter:    s.Diameter,
-		Temperature: s.Temperature,
-		Luminosity:  s.Luminosity,
-		HZCO:        s.HZCO(),
-	}
-}
-
-func formatStarClass(s stars.Star) string {
-	if s.Kind == stars.KindWhiteDwarf {
-		return "D"
-	}
-	letter := s.SpectralType.Letter
-	if letter == 0 {
-		letter = '?'
-	}
-	return fmt.Sprintf("%c%d %s", letter, s.SpectralType.Subtype, formatLumClass(s.LuminosityClass))
-}
-
-func formatLumClass(c stars.LuminosityClass) string {
-	switch c {
-	case stars.Ia:
-		return "Ia"
-	case stars.Ib:
-		return "Ib"
-	case stars.II:
-		return "II"
-	case stars.III:
-		return "III"
-	case stars.IV:
-		return "IV"
-	case stars.V:
-		return "V"
-	case stars.VI:
-		return "VI"
-	case stars.D:
-		return "D"
-	}
-	return "?"
 }
 
 func buildBodyNotes(body *Body) string {
