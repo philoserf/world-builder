@@ -1189,3 +1189,74 @@ func TestTemperature_AdjustedForAltitude_ZeroAltitude_Passthrough(t *testing.T) 
 		t.Errorf("zero altitude should return baseTempK, got %v", got)
 	}
 }
+
+func TestTemperature_ZoneTiltAdjustment_PartB_InnerBand(t *testing.T) {
+	// WBH p.117 Part B: for tilt ≥ 45°, the inner equatorial-tropical band
+	// (|lat| ≤ 90 − tilt) returns sin(tilt − 45). For tilt 60° that is
+	// sin(15°) ≈ 0.2588 — a positive (warming) factor reflecting the
+	// always-illuminated equatorial band of a high-tilt world.
+	temp := &Temperature{
+		AxialTiltFactor: math.Sin(60 * math.Pi / 180.0), // tilt = 60°
+	}
+	got := temp.zoneTiltAdjustment(20)
+	want := math.Sin(15 * math.Pi / 180.0)
+	if math.Abs(got-want) > 1e-9 {
+		t.Errorf("got %v, want %v (sin(15°) for Part B inner band)", got, want)
+	}
+}
+
+func TestTemperature_ZoneTiltAdjustment_PartB_ArcticZone(t *testing.T) {
+	// WBH p.117 Part B: for tilt ≥ 45°, lat outside the inner band
+	// (|lat| > 90 − tilt) uses the standard arctic formula sin(45 − lat).
+	// For tilt 60°, lat 50° (outside the 30° inner band) → sin(-5°) ≈ -0.0872.
+	temp := &Temperature{
+		AxialTiltFactor: math.Sin(60 * math.Pi / 180.0),
+	}
+	got := temp.zoneTiltAdjustment(50)
+	want := math.Sin(-5 * math.Pi / 180.0)
+	if math.Abs(got-want) > 1e-9 {
+		t.Errorf("got %v, want %v (sin(-5°) for Part B arctic zone)", got, want)
+	}
+}
+
+func TestTemperature_MeanBySeason_PartB_InnerBand_NoSeasonalSwing(t *testing.T) {
+	// WBH p.117 Part B: for tilt ≥ 45°, the inner equatorial-tropical band
+	// (|lat| ≤ 90 − tilt) plays the role of Part A's tropical zone — no
+	// seasonal swing. Tilt 60° → inner band ends at 30°. Lat 20° is inside.
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   math.Sin(60 * math.Pi / 180.0),
+		AtmosphericFactor: 2.0,
+	}
+	year := 365.25
+	solstice := temp.MeanBySeason(20, 0, year)
+	equinox := temp.MeanBySeason(20, year/4, year)
+	if solstice != equinox {
+		t.Errorf("Part B inner band should not swing seasonally: solstice=%v equinox=%v", solstice, equinox)
+	}
+}
+
+func TestTemperature_MeanBySeason_PartB_ArcticZone_HasSeasonalSwing(t *testing.T) {
+	// WBH p.117 Part B: for tilt ≥ 45°, latitudes outside the inner band
+	// (|lat| > 90 − tilt) use the seasonal swing. Tilt 60°, lat 50° (outside
+	// the 30° inner band) → summer solstice should exceed winter solstice.
+	// (This was the deferred Part B test originally listed in #4's spec.)
+	temp := &Temperature{
+		MeanK:             288,
+		Luminosity:        1.0,
+		Albedo:            0.3,
+		GreenhouseFactor:  0.36,
+		AU:                1.0,
+		AxialTiltFactor:   math.Sin(60 * math.Pi / 180.0),
+		AtmosphericFactor: 2.0,
+	}
+	summer := temp.MeanBySeason(50, 0, 365.25)
+	winter := temp.MeanBySeason(50, 365.25/2, 365.25)
+	if summer <= winter {
+		t.Errorf("Part B arctic zone should swing seasonally: summer=%v winter=%v", summer, winter)
+	}
+}

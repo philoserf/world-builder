@@ -451,12 +451,19 @@ func (t *Temperature) MeanByLatitude(latDeg float64) float64 {
 	return MeanTemperatureK(latLum, t.Albedo, t.GreenhouseFactor, t.AU)
 }
 
-// tropicalLatitudeBoundary returns the absolute axial tilt in degrees
-// (clamped to [0, 90]) — the WBH p.116 boundary between the tropical
-// zone (|lat| ≤ tilt) and the rest of the world. NaN from Asin (when
-// |AxialTiltFactor| > 1) clamps to 90; negative AxialTiltFactor takes
-// the absolute value so the comparison stays meaningful when callers
-// construct Temperature directly with a sign-flipped factor.
+// tropicalLatitudeBoundary returns the latitude (degrees, [0, 90]) at which
+// the no-seasonal-swing zone ends. WBH p.116-117 reorganizes between the
+// two parts:
+//
+//   - Part A (tilt < 45°): the tropical band runs |lat| ≤ axial_tilt.
+//   - Part B (tilt ≥ 45°): the inner equatorial-tropical band runs
+//     |lat| ≤ (90° − axial_tilt). Outside that band, the world enters
+//     the arctic zone directly (no middle zone exists).
+//
+// NaN from Asin (when |AxialTiltFactor| > 1) clamps to 90; negative
+// AxialTiltFactor takes the absolute value so the comparison stays
+// meaningful when callers construct Temperature directly with a sign-
+// flipped factor.
 func (t *Temperature) tropicalLatitudeBoundary() float64 {
 	tiltDeg := math.Asin(t.AxialTiltFactor) * 180.0 / math.Pi
 	if math.IsNaN(tiltDeg) {
@@ -465,14 +472,35 @@ func (t *Temperature) tropicalLatitudeBoundary() float64 {
 	if tiltDeg < 0 {
 		tiltDeg = -tiltDeg
 	}
+	if tiltDeg >= 45 {
+		return 90 - tiltDeg
+	}
 	return tiltDeg
 }
 
 // zoneTiltAdjustment returns the latitude-zone-adjusted axial-tilt-equivalent
 // factor per WBH p.116-117 three-zone classification (tropical / middle /
-// arctic). For axial tilt ≥ 45° the middle zone disappears (Part B p.117).
+// arctic). The structure differs between the book's two parts:
+//
+//	Part A (tilt < 45°):
+//	  |lat| ≤ tilt           → sin(45° − tilt)        (tropical)
+//	  |lat| > tilt           → sin(45° − lat)         (middle/arctic)
+//
+//	Part B (tilt ≥ 45°): the middle zone disappears; the inner equatorial-
+//	tropical band uses the arctic-edge result, the rest uses arctic.
+//	  |lat| ≤ (90° − tilt)   → sin(tilt − 45°)        (inner band)
+//	  |lat| > (90° − tilt)   → sin(45° − lat)         (arctic)
+//
+// Returns are continuous at the Part A / Part B boundary (tilt = 45°): both
+// formulas evaluate to 0 there.
 func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
-	tiltDeg := t.tropicalLatitudeBoundary()
+	rawTilt := math.Asin(t.AxialTiltFactor) * 180.0 / math.Pi
+	if math.IsNaN(rawTilt) {
+		rawTilt = 90
+	}
+	if rawTilt < 0 {
+		rawTilt = -rawTilt
+	}
 	if latDeg < 0 {
 		latDeg = -latDeg
 	}
@@ -480,21 +508,19 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 		latDeg = 90
 	}
 
-	switch {
-	case latDeg <= tiltDeg:
-		// Tropical zone: sin(45° - axial_tilt) replaces axial tilt factor.
-		adj := 45.0 - tiltDeg
-		if adj < 0 {
-			adj = 0
+	if rawTilt >= 45 {
+		// WBH p.117 Part B: middle zone disappears.
+		if latDeg <= 90.0-rawTilt {
+			return math.Sin((rawTilt - 45.0) * math.Pi / 180.0)
 		}
-		return math.Sin(adj * math.Pi / 180.0)
-	case tiltDeg >= 45 && latDeg < (90-tiltDeg):
-		// Part B: no middle zone; use arctic-edge result at lat=90-tilt.
-		return math.Sin((45.0 - (90.0 - tiltDeg)) * math.Pi / 180.0)
-	default:
-		// Middle/arctic: sin(45° - latitude).
 		return math.Sin((45.0 - latDeg) * math.Pi / 180.0)
 	}
+
+	// WBH p.116 Part A: tropical band is |lat| ≤ tilt; rest is middle/arctic.
+	if latDeg <= rawTilt {
+		return math.Sin((45.0 - rawTilt) * math.Pi / 180.0)
+	}
+	return math.Sin((45.0 - latDeg) * math.Pi / 180.0)
 }
 
 // MeanBySeason returns the mean temperature on a specific day at a specific
@@ -539,14 +565,11 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 	if absLat > 90 {
 		absLat = 90
 	}
-	// "No seasonal swing" applies in the tropical zone for Part A worlds
-	// (axial tilt < 45°). For Part B worlds (tilt ≥ 45°) the zone boundaries
-	// reorganize per WBH p.117 and the no-swing region is (90 − tilt), not
-	// the raw tilt — see issue #30. Until that lands, gate the swing-skip
-	// to Part A only so high-tilt worlds keep applying the seasonal swing
-	// uniformly (their pre-#4 behavior).
-	tiltDeg := t.tropicalLatitudeBoundary()
-	isTropical := tiltDeg < 45 && absLat <= tiltDeg
+	// "No seasonal swing" applies inside the tropical band — for Part A
+	// (tilt < 45°) that band is |lat| ≤ tilt; for Part B (tilt ≥ 45°) it
+	// is |lat| ≤ (90 − tilt). tropicalLatitudeBoundary returns the correct
+	// boundary for each part per WBH p.116-117.
+	isTropical := absLat <= t.tropicalLatitudeBoundary()
 
 	variance := zoneAdj
 	if !isTropical {
