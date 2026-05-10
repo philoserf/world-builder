@@ -31,19 +31,9 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 // ApplyTaintTypology and ApplySurfaceDistribution are implemented in
 // stage6.go.
 
-// ApplyTectonicPlates rolls tectonic-plate count for terrestrial
-// bodies whose total seismic stress is stable post-climate.
-// Stage-7 procedure (forward-only after ConvergeClimate's TSS fold-in).
-func ApplyTectonicPlates(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 7")
-}
-
-// ApplyGGResidualHeat computes residual heat for gas giants. No
-// climate-cluster dependence; lives in Stage 7 alongside terrestrial
-// geology follow-ups.
-func ApplyGGResidualHeat(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 7")
-}
+// ApplyGeology (single Stage-7 entry covering residual seismic, TSF,
+// THF, GG residual heat, post-TSS temperature update, scale-height
+// recompute, and tectonic plates) is implemented in stage7.go.
 
 // ApplyBiology walks atmosphere-bearing terrestrials (and HZ-planet
 // moons with atmosphere) and rolls biomass → biocomplexity → sophonts

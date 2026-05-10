@@ -10,8 +10,7 @@ package worlds
 
 // SurfaceDistribution lives in surface_distribution.go (cycle 5/6).
 
-// Geology — Stages 5–7. TSS components and tectonic plates.
-type Geology struct{}
+// Geology lives in geology.go (cycle 7).
 
 // Biology — Stage 8. Biomass, biocomplexity, sophonts, biodiversity,
 // compatibility, terrestrial-resource rating.
