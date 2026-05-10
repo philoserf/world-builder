@@ -534,14 +534,24 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 // daysSinceSolstice: 0 = summer solstice in the relevant hemisphere; year/2 = winter solstice.
 // localYearDays: caller decides — for moons, use parent's stellar year (moons co-orbit star with planet).
 //
-// Composition rule per WBH p.116 three-zone classification:
-//   - Tropical zone (|lat| ≤ axial tilt): no seasonal swing — "tropical
-//     temperatures have little seasonal variation (from axial tilt)."
-//     The zone latitude adjustment from zoneTiltAdjustment is the sole
-//     variance contributor.
-//   - Middle/arctic zone: seasonal axial-tilt factor is added to the
-//     zone latitude adjustment per "the zone's latitude adjustment is
-//     added to the axial tilt factor for that time period."
+// Composition rule per WBH p.116-117 — the book splits behavior at 45°:
+//
+//   - Part A (tilt < 45°): tropical band is |lat| ≤ tilt — no seasonal
+//     swing per "tropical temperatures have little seasonal variation
+//     (from axial tilt)." Outside the band (middle/arctic zone), the
+//     seasonal axial-tilt factor is added to the zone latitude
+//     adjustment per "the zone's latitude adjustment is added to the
+//     axial tilt factor for that time period."
+//
+//   - Part B (tilt ≥ 45°): the middle zone disappears. The inner
+//     equatorial-tropical band is |lat| ≤ (90 − tilt) with no seasonal
+//     swing; outside that band the world is fully arctic with the
+//     seasonal swing applied.
+//
+// In both parts, tropicalLatitudeBoundary returns the correct no-
+// seasonal-swing boundary, and zoneTiltAdjustment returns the
+// part-aware zone latitude adjustment — see those helpers for the
+// per-band formulas.
 //
 // Twilight worlds always return TwilightK (band centerline). Hemisphere-aware
 // selection — bright/dark/twilight by latitude — is the caller's responsibility:
@@ -556,11 +566,12 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 		return t.MeanByLatitude(latDeg)
 	}
 
-	// Zone latitude adjustment from WBH p.116. Sole variance contributor
-	// in the tropical zone; added to the seasonal axial tilt in middle/
-	// arctic zones. Note: zoneTiltAdjustment returns a single value for
-	// the entire tropical band (sin(45° - tilt)) — by book design, every
-	// tropical latitude gets the same temperature regardless of where it
+	// Zone latitude adjustment from WBH p.116-117. Sole variance
+	// contributor inside the tropical band; added to the seasonal axial
+	// tilt outside it. Note: zoneTiltAdjustment returns a single value
+	// for the entire tropical band (sin(45° - tilt) for Part A,
+	// sin(tilt - 45°) for Part B's inner band) — by book design, every
+	// in-band latitude gets the same temperature regardless of where it
 	// sits inside the band. That uniformity is intentional, not a bug.
 	zoneAdj := t.zoneTiltAdjustment(latDeg)
 	absLat := latDeg
