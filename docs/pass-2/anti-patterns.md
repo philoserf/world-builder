@@ -34,7 +34,7 @@ This document is mandatory reading for the spec → plan → implementation cycl
 
 **Pass-1 history.** `Slot → AnomalousSlot → Placement → DetailedPlacement` is four levels. Setting `dp.Body` traverses through to `Placement.Slot.Body`, which is correct Go but confusing for readers.
 
-**Pass-2 prevention.** Maximum two levels of embedding. Pass 2 flattens to either `Slot` directly inside `DetailedPlacement` (with some duplication of the intermediate types' fields) or replaces embedding with named composition.
+**Pass-2 prevention.** Maximum two levels of embedding. Pass 2 collapses the four-level chain into a single `Body` struct that holds the placement fields directly (`Group`, `Orbit`, `Eccentricity`, `Kind`) — embedding eliminated, named composition used where structure is shared.
 
 **Spec checklist.** Does this sub-project introduce a struct that embeds another? Is the resulting depth ≤ 2? If not, justify or refactor.
 

@@ -38,7 +38,7 @@ The API surface shrinks dramatically. Most `Generate*` functions become `(inputs
 Every public signature is written and committed as a stub before any implementation. That includes:
 
 - All `Generate*` and per-procedure functions across `stars/` and `worlds/`.
-- All public types and their accessors (`DetailedPlacement`, the three IISS form structs, `Has*()` predicates).
+- All public types and their accessors (`Body`, `Universe`, `SystemDetail`, the three IISS form structs, `Has*()` predicates).
 - All renderers, returning typed structs from day one — **no string asymmetry like pass 1's IV-P.** `RenderClass0I`, `RenderClass23`, `RenderClass4P` are sibling functions over sibling structs, with `Markdown`/`JSON`/`PlainText` rendering as separate consumers.
 - All `Roller`-consuming entry points, with documented dice expectations.
 

@@ -113,7 +113,7 @@ Per-body. Runs for every terrestrial body (planets and moons of any parent type)
 - `RollComposition(dms)` → composition string.
 - `RollDensity(composition)` → `Density`.
 - `GenerateBodyPhysical` returns `BodyPhysical{Composition, Density, Gravity, ...}`.
-- `DeriveMass(Density, DiameterKm)` → `MassEarth` (terrestrial). Backfilled into `DetailedPlacement.MassEarth`.
+- `DeriveMass(Density, DiameterKm)` → `MassEarth` (terrestrial). Backfilled into `Body.MassEarth`.
 
 **Notes:** Moons inherit the parent's HZ-offset DMs (they share its orbit). Belts (Size 0) skip this entirely.
 
