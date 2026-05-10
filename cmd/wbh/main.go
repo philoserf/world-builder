@@ -1,17 +1,16 @@
 // Command wbh generates a Mongoose Traveller World Builder's Handbook
-// star system from a seed and emits its IISS Class 0/I Survey form.
+// star system from a seed and renders it as Markdown (default), JSON,
+// or a short profile string.
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
-	"wbh/roller"
-	"wbh/stars"
+	"wbh/iiss"
 	"wbh/worlds"
 )
 
@@ -35,34 +34,25 @@ func run(args []string, stdout, stderr io.Writer) error {
 	if s == 0 {
 		s = time.Now().UnixNano()
 	}
-	r := roller.NewSeeded(s)
-	sys, err := stars.GenerateSystem(r, stars.GenerateSystemOpts{
-		WithVariance: true,
-		Accuracy:     2,
-	})
+
+	u, err := worlds.Generate(s)
 	if err != nil {
 		return fmt.Errorf("generate: %w", err)
 	}
 
 	switch *format {
 	case "markdown":
-		sp, err := worlds.GenerateSystemPlacement(r, sys)
-		if err != nil {
-			return fmt.Errorf("system placement: %w", err)
-		}
-		sd, err := worlds.DetailSystem(r, sys, sp, worlds.IISSClass23Header{})
-		if err != nil {
-			return fmt.Errorf("detail system: %w", err)
-		}
-		_, err = fmt.Fprint(stdout, worlds.RenderSystemMarkdown(sd, sys))
+		_, err := fmt.Fprint(stdout, iiss.MarkdownSystem(u.Detail.SystemForms))
 		return err
 	case "json":
-		form := stars.BuildSurveyForm(sys, stars.SurveyMetadata{})
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(form)
+		out, err := iiss.JSONClass23(u.Detail.Class23)
+		if err != nil {
+			return fmt.Errorf("json: %w", err)
+		}
+		_, err = fmt.Fprintln(stdout, string(out))
+		return err
 	case "short":
-		_, err := fmt.Fprintln(stdout, stars.ShortProfile(sys))
+		_, err := fmt.Fprintln(stdout, u.Detail.ShortProfile)
 		return err
 	default:
 		return fmt.Errorf("unknown format: %q (want markdown, json, or short)", *format)

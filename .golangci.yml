@@ -19,4 +19,11 @@ linters:
     - misspell
     - unconvert
     - unparam
-
+  settings:
+    revive:
+      rules:
+        # Cycle 0 has stub functions whose bodies are just panic("unimplemented").
+        # Their parameters are part of the documented signature but are not
+        # referenced. Re-enable when stubs gain implementations (cycle 4+).
+        - name: unused-parameter
+          disabled: true

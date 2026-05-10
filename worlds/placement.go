@@ -6,24 +6,14 @@ import (
 	"wbh/roller"
 )
 
-// BodyType classifies the body type assigned to an orbit slot in Step 8.
-type BodyType int
-
-const (
-	// BodyEmpty marks an orbit slot with no world assigned.
-	BodyEmpty BodyType = iota
-	// BodyTerrestrial marks a terrestrial planet slot.
-	BodyTerrestrial
-	// BodyGasGiant marks a gas giant slot.
-	BodyGasGiant
-	// BodyPlanetoidBelt marks a planetoid belt slot.
-	BodyPlanetoidBelt
-)
-
 // Placement is one fully-resolved orbit slot after Step 8.
+//
+// BodyKind (planet, belt, gas giant, empty) is defined in body.go and
+// shared with the pass-2 Body type so a single set of constants applies
+// across Stage 1 (placement) and Stage 2+ (per-body procedures).
 type Placement struct {
 	AnomalousSlot
-	Body         BodyType
+	Body         BodyKind
 	PrefixRoll   string  // "1:6", "2:3" — audit trail
 	Eccentricity float64 // populated by Step 9 (RollPlanetEccentricities)
 }
@@ -67,7 +57,7 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 		}
 	}
 
-	placeOne := func(body BodyType) error {
+	placeOne := func(body BodyKind) error {
 		prefix, right := rollSlot()
 		idx := (prefix-1)*6 + (right - 1)
 		// Collision: +1 to right; if right > 6 advance prefix and wrap to 1
