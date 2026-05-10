@@ -10,7 +10,7 @@ task fmt      # apply formatting
 ```
 
 The library is the artifact; the CLI is a thin wrapper. See
-`docs/specs/2026-05-02-world-builder-design.md` for design rationale.
+`docs/pass-1/specs/2026-05-02-world-builder-design.md` for design rationale.
 
 ## Source
 

@@ -247,7 +247,7 @@ func TestDetailSystem_MoonBodyPhysicalPersisted(t *testing.T) {
 // DetailSystem, every non-trivial terrestrial moon of an HZ-orbit planet has
 // Atmosphere and Hydrographics populated.
 //
-// Spec: docs/specs/2026-05-03-world-physical-3a1-design.md requires atm + hydro
+// Spec: docs/pass-1/specs/2026-05-03-world-physical-3a1-design.md requires atm + hydro
 // for "every HZ-orbit body and every HZ-planet moon". The companion fix in
 // `46cc66e` closed body-physical for moons; atm/hydro is the remaining 3A1 gap.
 func TestDetailSystem_MoonAtmosphereHydrographicsPersisted(t *testing.T) {
