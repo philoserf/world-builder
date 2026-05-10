@@ -38,7 +38,19 @@ type SystemDetail struct {
 // yielded immediately after the parent. This order is contract — the
 // LongProfile and AssignPlanetDesignations procedures rely on it.
 func (u *Universe) AllBodies() iter.Seq[*Body] {
-	panic("unimplemented: see docs/pass-2/api-surface.md § The Body / Iteration")
+	return func(yield func(*Body) bool) {
+		for i := range u.Detail.Bodies {
+			body := &u.Detail.Bodies[i]
+			if !yield(body) {
+				return
+			}
+			for _, child := range body.Children {
+				if !yield(child) {
+					return
+				}
+			}
+		}
+	}
 }
 
 // Bodies filters AllBodies to a predicate. Iteration order is not
@@ -46,5 +58,14 @@ func (u *Universe) AllBodies() iter.Seq[*Body] {
 // filter inline. This leaves room for future order-agnostic callers
 // (per-body climate convergence does not need ordering).
 func (u *Universe) Bodies(filter func(*Body) bool) iter.Seq[*Body] {
-	panic("unimplemented: see docs/pass-2/api-surface.md § The Body / Iteration")
+	return func(yield func(*Body) bool) {
+		for body := range u.AllBodies() {
+			if !filter(body) {
+				continue
+			}
+			if !yield(body) {
+				return
+			}
+		}
+	}
 }

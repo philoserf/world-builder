@@ -20,7 +20,6 @@ import (
 // helper writes the actual output to .actual on diff so the developer
 // can inspect before promoting.
 func TestZed_MarkdownGolden(t *testing.T) {
-	t.Skip("cycle 11: pipeline + renderers incomplete; see harness.md § Markdown system output")
 	t.Parallel()
 
 	u, err := worlds.Generate(42)
