@@ -35,13 +35,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 // THF, GG residual heat, post-TSS temperature update, scale-height
 // recompute, and tectonic plates) is implemented in stage7.go.
 
-// ApplyBiology walks atmosphere-bearing terrestrials (and HZ-planet
-// moons with atmosphere) and rolls biomass → biocomplexity → sophonts
-// → biodiversity → compatibility → terrestrial-resource rating in the
-// strict order specified by dependency-graph.md § Stage 8.
-func ApplyBiology(r roller.Roller, u *Universe) error {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 8: Biology")
-}
+// ApplyBiology is implemented in stage8.go.
 
 // ApplyHabitability computes per-body habitability ratings for
 // terrestrials. Pure function; no rolls. Stage-9 entry point.

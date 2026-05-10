@@ -12,9 +12,7 @@ package worlds
 
 // Geology lives in geology.go (cycle 7).
 
-// Biology — Stage 8. Biomass, biocomplexity, sophonts, biodiversity,
-// compatibility, terrestrial-resource rating.
-type Biology struct{}
+// Biology lives in biology.go (cycle 8).
 
 // Habitability — Stage 9. Rating plus contributing-DM notes.
 type Habitability struct{}
