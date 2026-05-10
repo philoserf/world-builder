@@ -47,11 +47,19 @@ type Class23Counts struct {
 	Total          int
 }
 
-// Class23Object is one row of the Class II/III Objects table. Fields
-// land cycle-by-cycle as renderer detail is implemented.
+// Class23Object is one row of the WBH p.61 Class II/III Objects
+// table. Fields mirror pass-1's worlds.ObjectRow so the renderer
+// reproduces the book layout.
 type Class23Object struct {
-	Designation string
-	Notes       string
+	Primary     string // host star group: "Aab", "AB", "B", "Cab"
+	Designation string // "Aab I", "Aab IV d"
+	Orbit       float64
+	AU          float64
+	Ecc         float64
+	PeriodStr   string // "1.841d" or "8.627y"
+	SAH         string // "B??" / "GLE" / "AA6" / "200" / "566*" / "000" / "S"
+	Sub         string // significant-moon count, "?" for belt, "" for moon row
+	Notes       string // "HZ, R02, S, 1, 1" / "1,200⊕, HZ, 200, S, S, 566*, S"
 }
 
 // Class4PVariant identifies which Class IV-P variant applies to the

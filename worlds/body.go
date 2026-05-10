@@ -1,5 +1,7 @@
 package worlds
 
+import "fmt"
+
 // BodyKind classifies a Body in the universe. Per anti-pattern A.1, the
 // moon-vs-planet distinction is encoded as a Kind value, not a separate
 // type or code path.
@@ -121,6 +123,26 @@ func (b *Body) HasBiology() bool { return b.Biology != nil }
 
 // HasHabitability reports whether the habitability rating is computed.
 func (b *Body) HasHabitability() bool { return b.Habitability != nil }
+
+// RenderSAH returns the 3-character SAH triplet for the IISS form.
+// HZ bodies get the full triplet; non-HZ bodies render as "<Size>??".
+func (b *Body) RenderSAH() string {
+	size := string(b.SizeCode)
+	if size == "" {
+		size = "?"
+	}
+	if !b.HasAtmosphere() || !b.HasHydrographics() {
+		return size + "??"
+	}
+	atmoChar := atmosphereCodeChar(b.Atmosphere.Code)
+	hydroChar := fmt.Sprintf("%d", b.Hydrographics.Code)
+	if b.Hydrographics.Code == 10 {
+		hydroChar = "A"
+	}
+	return size + atmoChar + hydroChar
+}
+
+// atmosphereCodeChar lives in atmosphere_profile.go (cycle 5).
 
 // StellarOrbit returns the body's orbit around its host star. For
 // moons, that is the parent planet's orbit; for planets and belts, the

@@ -27,8 +27,8 @@ func MarkdownClass0I(f Class0IForm) string {
 	return b.String()
 }
 
-// MarkdownClass23 renders the Class II/III form as Markdown — counts
-// + per-body Notes table.
+// MarkdownClass23 renders the Class II/III form as Markdown —
+// counts, stellar census with MAO, and the WBH p.61 Objects table.
 func MarkdownClass23(f Class23Form) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "## Class II/III — %s\n\n", f.IISSDesig)
@@ -36,11 +36,37 @@ func MarkdownClass23(f Class23Form) string {
 	fmt.Fprintf(&b, "- Belts: %d\n", f.Counts.PlanetoidBelts)
 	fmt.Fprintf(&b, "- Terrestrials: %d\n", f.Counts.Terrestrials)
 	fmt.Fprintf(&b, "- Total: %d\n\n", f.Counts.Total)
+
+	if len(f.Stars) > 0 {
+		b.WriteString("### Stars (with MAO)\n\n")
+		b.WriteString("| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO | MAO |\n")
+		b.WriteString("| --------- | ----- | ---- | -------- | -------- | ---------- | ---- | --- |\n")
+		for _, s := range f.Stars {
+			fmt.Fprintf(&b, "| %s | %s | %.3f | %.3f | %.0f | %.4f | %.2f | %.2f |\n",
+				s.Component, s.Class, s.Mass, s.Diameter, s.Temperature, s.Luminosity, s.HZCO, s.MAO)
+		}
+		b.WriteString("\n")
+	}
+
 	if len(f.Objects) > 0 {
-		b.WriteString("| Designation | Notes |\n")
-		b.WriteString("| ----------- | ----- |\n")
+		b.WriteString("### Objects\n\n")
+		b.WriteString("| Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |\n")
+		b.WriteString("| ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |\n")
 		for _, o := range f.Objects {
-			fmt.Fprintf(&b, "| %s | %s |\n", o.Designation, o.Notes)
+			ecc := ""
+			if o.Ecc > 0 {
+				ecc = fmt.Sprintf("%.2f", o.Ecc)
+			}
+			orbit := ""
+			if o.Orbit > 0 {
+				orbit = fmt.Sprintf("%.2f", o.Orbit)
+			}
+			au := ""
+			if o.AU > 0 {
+				au = fmt.Sprintf("%.2f", o.AU)
+			}
+			fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
+				o.Primary, o.Designation, orbit, au, ecc, o.PeriodStr, o.SAH, o.Sub, o.Notes)
 		}
 	}
 	return b.String()

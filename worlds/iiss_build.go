@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"wbh/iiss"
@@ -77,23 +78,169 @@ func buildClass23(u *Universe) iiss.Class23Form {
 			Total:          u.Placement.Counts.Total,
 		},
 	}
+
+	// Post-fill MAO on Stars rows from the AvailableOrbits result —
+	// stars.BuildSurveyForm leaves MAO=0 for the Class 0/I header.
+	if avail, err := AvailableOrbits(u.System); err == nil {
+		fillStarsMAO(form.Stars, avail, u.System)
+	}
+
 	for i := range u.Detail.Bodies {
 		body := &u.Detail.Bodies[i]
 		if body.Kind == BodyEmpty {
 			continue
 		}
 		form.Objects = append(form.Objects, iiss.Class23Object{
+			Primary:     body.Group.Designation,
 			Designation: body.Designation,
-			Notes:       buildBodyNotes(body),
+			Orbit:       body.Orbit,
+			AU:          stars.OrbitToAU(body.Orbit),
+			Ecc:         body.Eccentricity,
+			PeriodStr:   formatPeriod(body.Period),
+			SAH:         renderObjectSAH(body),
+			Sub:         renderSub(body),
+			Notes:       renderObjectNotes(body),
 		})
 		for _, child := range body.Children {
 			form.Objects = append(form.Objects, iiss.Class23Object{
+				Primary:     body.Group.Designation,
 				Designation: child.Designation,
-				Notes:       buildBodyNotes(child),
+				SAH:         renderMoonSAH(child, body.HZ),
+				Sub:         "",
 			})
 		}
 	}
 	return form
+}
+
+// fillStarsMAO walks Stars rows and copies MAO from AvailableOrbits.
+// Composite rows ("Aab", "AB", "ABC") get MAO from the corresponding
+// outer companion's AU.
+func fillStarsMAO(rows []iiss.Class0IStarRow, avail Result, sys stars.System) {
+	maoByGroup := map[string]float64{}
+	for _, g := range avail.Groups {
+		maoByGroup[g.Designation] = g.MAO
+	}
+	composeMAO := map[string]float64{}
+	for _, c := range sys.Companions {
+		switch c.OrbitClass {
+		case stars.OrbitClose, stars.OrbitNear:
+			if c.AU > composeMAO["AB"] {
+				composeMAO["AB"] = c.AU
+			}
+		case stars.OrbitFar:
+			composeMAO["ABC"] = c.AU
+		}
+	}
+	for i, row := range rows {
+		key := row.Component
+		if idx := strings.Index(key, " ("); idx >= 0 {
+			key = key[:idx]
+		}
+		if mao, ok := maoByGroup[key]; ok {
+			rows[i].MAO = mao
+			continue
+		}
+		if mao, ok := composeMAO[key]; ok {
+			rows[i].MAO = mao
+		}
+	}
+}
+
+func renderObjectSAH(body *Body) string {
+	switch body.Kind {
+	case BodyTerrestrial:
+		return body.RenderSAH()
+	case BodyGasGiant:
+		var prefix string
+		switch body.GGClass {
+		case GasGiantSmall:
+			prefix = "GS"
+		case GasGiantMedium:
+			prefix = "GM"
+		case GasGiantLarge:
+			prefix = "GL"
+		default:
+			prefix = "G"
+		}
+		return prefix + body.GGDiameterCode
+	case BodyPlanetoidBelt:
+		return "000"
+	}
+	return ""
+}
+
+func renderMoonSAH(m *Body, parentInHZ bool) string {
+	if m.GGClass != NotGasGiant {
+		var prefix string
+		switch m.GGClass {
+		case GasGiantSmall:
+			prefix = "GS"
+		case GasGiantMedium:
+			prefix = "GM"
+		case GasGiantLarge:
+			prefix = "GL"
+		}
+		return prefix + m.GGDiameterCode
+	}
+	if parentInHZ {
+		return string(m.SizeCode) + "??"
+	}
+	return string(m.SizeCode)
+}
+
+func renderSub(body *Body) string {
+	if body.Kind == BodyPlanetoidBelt {
+		return "?"
+	}
+	if len(body.Children) == 0 {
+		return "0"
+	}
+	return strconv.Itoa(len(body.Children))
+}
+
+func renderObjectNotes(body *Body) string {
+	parts := []string{}
+	if body.Kind == BodyGasGiant {
+		parts = append(parts, fmt.Sprintf("%s⊕", formatMass(body.MassEarth)))
+	}
+	if body.HZ {
+		parts = append(parts, "HZ")
+	}
+	if len(body.Children) > 0 {
+		moonSAH := make([]string, 0, len(body.Children))
+		for _, child := range body.Children {
+			moonSAH = append(moonSAH, renderMoonSAH(child, body.HZ))
+		}
+		parts = append(parts, strings.Join(moonSAH, ", "))
+	}
+	if body.Belt != nil && body.Belt.Profile != "" {
+		parts = append(parts, body.Belt.Profile)
+	}
+	return strings.Join(parts, ", ")
+}
+
+func formatMass(m float64) string {
+	n := int(m + 0.5)
+	s := strconv.Itoa(n)
+	if n < 1000 {
+		return s
+	}
+	out := []byte(s)
+	for i := len(out) - 3; i > 0; i -= 3 {
+		out = append(out[:i], append([]byte{','}, out[i:]...)...)
+	}
+	return string(out)
+}
+
+func formatPeriod(p Period) string {
+	if p.Years > 0 && p.Years < 0.05 {
+		return fmt.Sprintf("%.3fd", p.Days)
+	}
+	if p.Years >= 1000 {
+		return formatMass(p.Years) + "y"
+	}
+	return fmt.Sprintf("%.3fy", p.Years)
 }
 
 func buildClass4P(u *Universe) iiss.Class4PForm {
@@ -137,32 +284,6 @@ func findMainworld(u *Universe) *Body {
 	return nil
 }
 
-func buildBodyNotes(body *Body) string {
-	parts := []string{}
-	switch body.Kind {
-	case BodyTerrestrial:
-		parts = append(parts, "Terr")
-	case BodyMoon:
-		parts = append(parts, "Moon")
-	case BodyGasGiant:
-		parts = append(parts, "GG")
-	case BodyPlanetoidBelt:
-		parts = append(parts, "Belt")
-	}
-	if body.HZ {
-		parts = append(parts, "HZ")
-	}
-	if body.SizeCode != "" {
-		parts = append(parts, fmt.Sprintf("Size %s", body.SizeCode))
-	}
-	if body.HasAtmosphere() && body.Atmosphere.Code > 0 {
-		parts = append(parts, fmt.Sprintf("Atm %X", body.Atmosphere.Code))
-	}
-	if body.HasHydrographics() {
-		parts = append(parts, fmt.Sprintf("Hyd %d", body.Hydrographics.Code))
-	}
-	if body.HasHabitability() {
-		parts = append(parts, fmt.Sprintf("Hab %d", body.Habitability.Rating))
-	}
-	return strings.Join(parts, " ")
-}
+// buildBodyNotes (cycle-11 simple Notes string) was replaced by
+// renderObjectNotes / renderObjectSAH / renderSub for full pass-1
+// fidelity in cycle 15.
