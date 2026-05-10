@@ -1,0 +1,214 @@
+package worlds_test
+
+import (
+	"strings"
+	"testing"
+
+	"wbh/worlds"
+)
+
+// generateForProperty runs the full pipeline at the given seed and
+// returns the universe, or nil on Special-Circumstances errors
+// (post-stellar primaries, giant-companion-MAO gaps, missing-class-IV
+// table cells, peculiar-primary dispatches — all out of pass-2 scope
+// per CLAUDE.md). Other errors fail the test.
+func generateForProperty(t *testing.T, seed int64) *worlds.Universe {
+	t.Helper()
+	u, err := worlds.Generate(seed)
+	if err != nil {
+		if isSpecialCircumstances(err) {
+			return nil
+		}
+		t.Fatalf("seed %d: Generate: %v", seed, err)
+	}
+	return &u
+}
+
+// isSpecialCircumstances classifies errors as Special-Circumstances
+// chapter coverage gaps (out of pass-2 scope) vs. real bugs.
+func isSpecialCircumstances(err error) bool {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "post-stellar primary"):
+		return true
+	case strings.Contains(msg, "special primary"):
+		return true
+	case strings.Contains(msg, "Special-primary"):
+		return true
+	case strings.Contains(msg, "giant primary requires MAO"):
+		return true
+	case strings.Contains(msg, "class IV missing"):
+		return true
+	}
+	return false
+}
+
+// TestProperty_HZBodyHasClimate per harness.md § Property tests.
+// Every body with HZ == true and Kind == BodyTerrestrial has non-nil
+// Atmosphere / Hydrographics / Temperature after the pipeline runs
+// (climate eligibility per ConvergeClimate). Vacuum / Size-S / Size-R
+// bodies are exempt (they don't get climate).
+func TestProperty_HZBodyHasClimate(t *testing.T) {
+	t.Parallel()
+	checked := 0
+	for iter := range 1000 {
+		seed := int64(iter)
+		u := generateForProperty(t, seed)
+		if u == nil {
+			continue
+		}
+		for body := range u.AllBodies() {
+			if body.Kind != worlds.BodyTerrestrial && body.Kind != worlds.BodyMoon {
+				continue
+			}
+			// Moons inherit HZ from parent; check via the host's HZ flag.
+			host := body
+			if body.Kind == worlds.BodyMoon && body.Parent != nil {
+				host = body.Parent
+			}
+			if !host.HZ {
+				continue
+			}
+			if body.GGClass != worlds.NotGasGiant {
+				continue // GG-cascade moons skip climate
+			}
+			switch body.SizeCode {
+			case "", "0", "R":
+				continue // sub-1 sizes don't get climate
+			}
+			checked++
+			if !body.HasAtmosphere() {
+				t.Errorf("seed %d: HZ body %s missing Atmosphere", seed, body.Designation)
+			}
+			if !body.HasHydrographics() {
+				t.Errorf("seed %d: HZ body %s missing Hydrographics", seed, body.Designation)
+			}
+			if !body.HasTemperature() {
+				t.Errorf("seed %d: HZ body %s missing Temperature", seed, body.Designation)
+			}
+		}
+	}
+	if checked < 100 {
+		t.Errorf("only %d HZ bodies checked across 1000 seeds (expected >= 100)", checked)
+	}
+}
+
+// TestProperty_MoonsHaveBodies per harness.md § Property tests.
+// Every Body with non-empty Children has those children processed
+// (not silent-zero). Specifically: each child has Kind == BodyMoon,
+// non-empty Designation, and a populated Parent pointer.
+func TestProperty_MoonsHaveBodies(t *testing.T) {
+	t.Parallel()
+	checked := 0
+	for iter := range 1000 {
+		seed := int64(iter)
+		u := generateForProperty(t, seed)
+		if u == nil {
+			continue
+		}
+		for i := range u.Detail.Bodies {
+			body := &u.Detail.Bodies[i]
+			for j, child := range body.Children {
+				checked++
+				if child.Kind != worlds.BodyMoon {
+					t.Errorf("seed %d: bodies[%d].Children[%d] Kind = %v, want BodyMoon",
+						seed, i, j, child.Kind)
+				}
+				if child.Designation == "" {
+					t.Errorf("seed %d: bodies[%d].Children[%d] missing Designation",
+						seed, i, j)
+				}
+				if child.Parent != body {
+					t.Errorf("seed %d: bodies[%d].Children[%d] Parent != &bodies[%d]",
+						seed, i, j, i)
+				}
+			}
+		}
+	}
+	if checked < 100 {
+		t.Errorf("only %d moons checked across 1000 seeds (expected >= 100)", checked)
+	}
+}
+
+// TestProperty_MainworldExists per harness.md § Property tests.
+// When the system has at least one terrestrial-or-belt body, the
+// AggregateSystem mainworld pick yields a non-empty designation.
+// (pickMainworld's priority-4 fallback returns the first terrestrial-
+// or-belt body in iteration order.)
+func TestProperty_MainworldExists(t *testing.T) {
+	t.Parallel()
+	for iter := range 1000 {
+		seed := int64(iter)
+		u := generateForProperty(t, seed)
+		if u == nil {
+			continue
+		}
+		hasCandidate := false
+		for body := range u.AllBodies() {
+			if body.Kind == worlds.BodyTerrestrial || body.Kind == worlds.BodyMoon || body.Kind == worlds.BodyPlanetoidBelt {
+				hasCandidate = true
+				break
+			}
+		}
+		if hasCandidate && u.Detail.MainworldDesignation == "" {
+			t.Errorf("seed %d: system has terrestrial/moon/belt candidates but no MainworldDesignation",
+				seed)
+		}
+	}
+}
+
+// TestProperty_BiomassImpliesAtm per harness.md § Property tests.
+// Every body with Biology.Biomass > 0 has non-nil Atmosphere — the
+// biology pass requires atmosphere as a precondition.
+func TestProperty_BiomassImpliesAtm(t *testing.T) {
+	t.Parallel()
+	checked := 0
+	for iter := range 1000 {
+		seed := int64(iter)
+		u := generateForProperty(t, seed)
+		if u == nil {
+			continue
+		}
+		for body := range u.AllBodies() {
+			if !body.HasBiology() {
+				continue
+			}
+			if body.Biology.Biomass == 0 {
+				continue
+			}
+			checked++
+			if !body.HasAtmosphere() {
+				t.Errorf("seed %d: body %s has Biomass=%d but no Atmosphere",
+					seed, body.Designation, body.Biology.Biomass)
+			}
+		}
+	}
+	if checked < 10 {
+		t.Logf("only %d biomass-bearing bodies seen across 1000 seeds (low rate, but Property invariant holds)", checked)
+	}
+}
+
+// TestProperty_ConvergenceCompletes per harness.md § Property tests.
+// Generate must complete (or fail with the documented Special-
+// Circumstances primary error) for every seed in 0..999. No
+// convergence-overflow, panic, or stall.
+func TestProperty_ConvergenceCompletes(t *testing.T) {
+	t.Parallel()
+	completed := 0
+	for iter := range 1000 {
+		seed := int64(iter)
+		_, err := worlds.Generate(seed)
+		if err == nil {
+			completed++
+			continue
+		}
+		if isSpecialCircumstances(err) {
+			continue
+		}
+		t.Errorf("seed %d: unexpected error: %v", seed, err)
+	}
+	if completed < 100 {
+		t.Errorf("only %d / 1000 seeds completed without Special-Circumstances; expected >= 100",
+			completed)
+	}
+}
