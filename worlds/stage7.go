@@ -8,19 +8,17 @@ import (
 // ApplyGeology applies the WBH pp.125-127 geology pass to every
 // non-empty non-belt body in the universe. Stage-7 orchestrator.
 //
-// Sub-stages per body:
+// Per dependency-graph.md § Stage 7, partial geology (Residual + TSF
+// + THF) is computed inside ConvergeClimate so the post-TSS Temperature
+// converges with rederived atm/hydro. Stage 7's remaining work is:
 //
-//  1. Geology (residual seismic + tidal stress + tidal heating + GG
-//     residual heat for gas giants).
-//  2. Apply inherent temperature addition to Temperature in place.
-//  3. Recompute Atmosphere.ScaleHeight against the post-TSS mean
-//     temperature.
-//  4. Roll tectonic plates (terrestrial bodies with hydro ≥ 1).
-//
-// Per dependency-graph.md § Stage 7, pass-2's design folds the TSS-
-// temperature back-edge into the climate solver. Cycle-7 MVP keeps
-// pass-1's flow (TSS computed post-climate, applied forward to the
-// already-converged temperature) — the formal fold-in is deferred.
+//   - HZ bodies (body.Geology already set by climate): roll
+//     TectonicPlates and append.
+//   - Non-HZ terrestrials and moons (body.Geology nil because climate
+//     skipped them): compute the full Geology including TectonicPlates
+//     (which will be 0 since they have no Hydrographics — the prereq).
+//   - Gas giants: compute GGResidualHeat (no plates).
+//   - Belts: skipped (Size 0).
 //
 // Per anti-pattern A.1, every moon is walked alongside its parent.
 func ApplyGeology(r roller.Roller, u *Universe) error {
@@ -30,38 +28,42 @@ func ApplyGeology(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty || body.SizeCode == "0" {
 			continue
 		}
-		body.Geology = computeBodyGeology(r, body, sys, false)
-		applyInherentTemp(body)
-
+		applyBodyGeology(r, body, sys, false)
 		for _, child := range body.Children {
-			child.Geology = computeBodyGeology(r, child, sys, true)
-			applyInherentTemp(child)
+			applyBodyGeology(r, child, sys, true)
 		}
 	}
 	return nil
 }
 
-// applyInherentTemp updates Temperature.MeanK in place via the WBH
-// p.125 formula T' = ⁴√(T⁴ + TSS⁴), then refreshes Atmosphere.ScaleHeight
-// to reflect the new mean temperature.
-func applyInherentTemp(body *Body) {
-	if body.Temperature == nil || body.Geology == nil {
+// applyBodyGeology dispatches Stage-7 work for one body. If
+// ConvergeClimate already populated body.Geology, this just adds
+// TectonicPlates; otherwise it computes the full Geology.
+func applyBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bool) {
+	if body.Kind == BodyGasGiant {
+		body.Geology = &Geology{
+			InherentTemperatureK: ComputeGGResidualHeat(body.MassEarth, sys.Primary.AgeGyr),
+		}
 		return
 	}
-	ApplyInherentTempAddition(body.Temperature, body.Geology.InherentTemperatureK)
-	if body.Atmosphere != nil && body.Physical != nil {
-		body.Atmosphere.ScaleHeight = DeriveScaleHeight(body.Temperature.MeanK, body.Physical.Gravity)
+	if body.Geology != nil {
+		// Climate solver already populated TSS factors — only plates remain.
+		body.Geology.TectonicPlates = RollTectonicPlates(r, body, body.Geology.TotalSeismicStress)
+		return
 	}
+	// Non-HZ body — climate skipped it; compute the full geology now.
+	g := computePartialGeology(body, sys, isMoon)
+	g.TectonicPlates = RollTectonicPlates(r, body, g.TotalSeismicStress)
+	body.Geology = g
 }
 
-// computeBodyGeology populates a Geology for the given body. isMoon
-// hints residual seismic stress (moon = +1 DM per WBH p.125).
-func computeBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bool) *Geology {
+// computePartialGeology populates a Geology with Residual + TSF + THF +
+// TotalSeismicStress + InherentTemperatureK for the given body, but
+// leaves TectonicPlates at 0. Called by ConvergeClimate inside the
+// climate fixed-point loop (atm/hydro-independent) and by ApplyGeology
+// for non-HZ bodies that didn't go through climate.
+func computePartialGeology(body *Body, sys stars.System, isMoon bool) *Geology {
 	g := &Geology{}
-	if body.Kind == BodyGasGiant {
-		g.InherentTemperatureK = ComputeGGResidualHeat(body.MassEarth, sys.Primary.AgeGyr)
-		return g
-	}
 	g.ResidualSeismicStress = ComputeResidualSeismicStress(body, sys.Primary.AgeGyr, isMoon)
 	g.TidalStressFactor = ComputeTidalStressFactor(body)
 	if isMoon && body.Parent != nil {
@@ -71,7 +73,6 @@ func computeBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bo
 	}
 	g.TotalSeismicStress = g.ResidualSeismicStress + g.TidalStressFactor + g.TidalHeatingFactor
 	g.InherentTemperatureK = float64(g.TotalSeismicStress)
-	g.TectonicPlates = RollTectonicPlates(r, body, g.TotalSeismicStress)
 	return g
 }
 

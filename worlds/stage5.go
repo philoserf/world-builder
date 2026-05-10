@@ -2,25 +2,21 @@ package worlds
 
 import (
 	"fmt"
+	"math"
 
 	"wbh/roller"
 	"wbh/stars"
 )
 
 // ApplyClimate runs the climate fixed-point cluster (atmosphere ↔
-// hydrographics ↔ temperature) for every eligible body in the
-// universe. Stage-5 orchestrator per WBH pp.79, 81, 96-99, 102, 108-126.
+// hydrographics ↔ temperature, with partial geology folded in) for
+// every eligible body in the universe. Stage-5 orchestrator per WBH
+// pp.79, 81, 96-99, 102, 108-126.
 //
-// Per dependency-graph.md § Stage 5, climate is a fixed-point: pass-1
-// approximated it with a 2-pass rederive after a temperature pass.
-// Cycle-5 MVP replicates that pattern (initial atm/hydro → temperature
-// → rederive → temperature → rederive) and treats it as converged.
-// Formal N-iteration assertion is a cycle-5 follow-up.
-//
-// Per docs/pass-2/spike-findings.md § Finding 6a, the panic-vs-error
-// stance for Seeded rollers in production is deferred to its own spec
-// — current behavior is to error on convergence overflow, but cycle-5
-// MVP doesn't trigger overflow because the loop count is fixed.
+// Per dependency-graph.md § Stage 7, partial-geology (Residual + TSF +
+// THF) is computed inside the climate loop so the post-TSS Temperature
+// converges with the rederived atm/hydro. Tectonic plates and GG
+// residual heat are forward-only post-climate (Stage 7).
 //
 // Per anti-pattern A.1, every HZ-planet moon is walked alongside its
 // parent.
@@ -119,13 +115,32 @@ func tempRangeMidpointK(t TempRange) float64 {
 }
 
 // ConvergeClimate is the per-body climate fixed-point solver per
-// docs/pass-2/api-surface.md § The Climate solver. Cycle-5 MVP
-// implements pass-1's 2-pass rederive flow; a formal N=3 iteration
-// loop with assertable convergence lands as cycle-5 follow-up.
+// docs/pass-2/api-surface.md § The Climate solver. Folds partial
+// geology (Residual + TSF + THF) into the loop so Temperature
+// converges including the WBH p.125 inherent-temperature addition
+// (cycle 18 / dependency-graph.md § Stage 7).
 //
-// Mutates body.Atmosphere, body.Hydrographics, body.Temperature on
-// return. No-op for ineligible bodies (non-HZ, atmosphereless,
-// gas giants, belts).
+// Loop body per iteration:
+//  1. Compute Temperature from current atm/hydro.
+//  2. Compute partial-geology (atm/hydro-independent).
+//  3. Apply TSS via T' = ⁴√(T⁴ + TSS⁴); refresh ScaleHeight.
+//  4. Rederive atm/hydro from post-TSS Temperature.
+//  5. If atm.Code, hydro.Code, and Temperature.MeanK are stable
+//     relative to the previous iteration, return early.
+//
+// Cap N = 5. If the convergence test never fires within N, the loop
+// exits silently with the last-iteration values committed — pass-2
+// inherits pass-1's behaviour of accepting the post-loop state. The
+// formal "panic / error on overflow" stance per spike-findings.md
+// § Finding 6a is deferred: empirical testing shows some seeds
+// oscillate between two atm.Code values within ±1 indefinitely, and
+// erroring on those would block cmd/wbh on legitimate-but-edgy
+// systems. Tightening the contract is a follow-up that needs deeper
+// investigation of the oscillation root cause.
+//
+// No-op for ineligible bodies (non-HZ, atmosphereless, gas giants,
+// belts). For HZ bodies, body.Geology is also populated with the
+// final TSS factors (without TectonicPlates — that's Stage 7).
 func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error {
 	atmo, eligible, err := initialAtmosphere(r, body, sys.Primary.AgeGyr)
 	if err != nil {
@@ -149,26 +164,48 @@ func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error {
 	}
 	body.Hydrographics = &hydro
 
-	// Stage-5C: temperature pass.
 	parent := body.Parent
-	temp, terr := GenerateTemperature(r, body, sys, parent)
-	if terr != nil {
-		return fmt.Errorf("temperature: %w", terr)
-	}
-	body.Temperature = temp
+	const maxIter = 5
+	const tempEpsilon = 0.5
 
-	// Stage-5D: 2-pass rederive (atm/hydro from real temperature, then
-	// recompute temperature, rederive again).
-	if err := RederiveAtmosphereHydrographics(r, body, sys, parent); err != nil {
-		return fmt.Errorf("rederive 1: %w", err)
+	prevAtmCode := -1
+	prevHydroCode := -1
+	prevMeanK := math.NaN()
+
+	for iter := range maxIter {
+		// (1) Compute Temperature from current atm/hydro.
+		temp, terr := GenerateTemperature(r, body, sys, parent)
+		if terr != nil {
+			return fmt.Errorf("temperature iter %d: %w", iter, terr)
+		}
+		body.Temperature = temp
+
+		// (2) Compute partial-geology (Residual + TSF + THF). Atm/hydro-
+		// independent — depends on body physical / orbital parameters.
+		body.Geology = computePartialGeology(body, sys, body.Kind == BodyMoon)
+
+		// (3) Apply TSS to Temperature and refresh ScaleHeight.
+		ApplyInherentTempAddition(temp, body.Geology.InherentTemperatureK)
+		if body.Physical != nil {
+			body.Atmosphere.ScaleHeight = DeriveScaleHeight(temp.MeanK, body.Physical.Gravity)
+		}
+
+		// (4) Rederive atm/hydro from post-TSS Temperature.
+		if err := RederiveAtmosphereHydrographics(r, body, sys, parent); err != nil {
+			return fmt.Errorf("rederive iter %d: %w", iter, err)
+		}
+
+		// (5) Early-exit on convergence (after first iter so prev exists).
+		if iter > 0 &&
+			body.Atmosphere.Code == prevAtmCode &&
+			body.Hydrographics.Code == prevHydroCode &&
+			math.Abs(body.Temperature.MeanK-prevMeanK) < tempEpsilon {
+			return nil
+		}
+		prevAtmCode = body.Atmosphere.Code
+		prevHydroCode = body.Hydrographics.Code
+		prevMeanK = body.Temperature.MeanK
 	}
-	temp, terr = GenerateTemperature(r, body, sys, parent)
-	if terr != nil {
-		return fmt.Errorf("temperature 2: %w", terr)
-	}
-	body.Temperature = temp
-	if err := RederiveAtmosphereHydrographics(r, body, sys, parent); err != nil {
-		return fmt.Errorf("rederive 2: %w", err)
-	}
+	// N exhausted without early exit — accept last-iteration state.
 	return nil
 }
