@@ -37,11 +37,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 
 // ApplyBiology is implemented in stage8.go.
 
-// ApplyHabitability computes per-body habitability ratings for
-// terrestrials. Pure function; no rolls. Stage-9 entry point.
-func ApplyHabitability(u *Universe) {
-	panic("unimplemented: see docs/pass-2/api-surface.md § Stage 9: Habitability")
-}
+// ApplyHabitability is implemented in stage9.go.
 
 // AggregateSystem computes the system-wide aggregations after every
 // body has converged: BaselineN backfill per allocation, ShortProfile,

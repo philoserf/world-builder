@@ -14,5 +14,4 @@ package worlds
 
 // Biology lives in biology.go (cycle 8).
 
-// Habitability — Stage 9. Rating plus contributing-DM notes.
-type Habitability struct{}
+// Habitability lives in habitability.go (cycle 9).
