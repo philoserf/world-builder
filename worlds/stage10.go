@@ -30,10 +30,9 @@ func AggregateSystem(u *Universe) {
 	u.Detail.LongProfile = buildLongProfile(u)
 
 	// Step 3 — mainworld pick.
-	u.Detail.MainworldDesignation = pickMainworld(u.Detail.Bodies)
-	u.Detail.SystemForms.MainworldDesignation = u.Detail.MainworldDesignation
-	u.Detail.SystemForms.ShortProfile = u.Detail.ShortProfile
-	u.Detail.SystemForms.LongProfile = u.Detail.LongProfile
+	mainworld := pickMainworld(u.Detail.Bodies)
+	// SystemDetail embeds iiss.SystemForms — promoted access:
+	u.Detail.MainworldDesignation = mainworld
 }
 
 // computeBaselineN returns the per-star baseline number for a group
