@@ -20,18 +20,16 @@ import (
 //   - Gas giants: compute GGResidualHeat (no plates).
 //   - Belts: skipped (Size 0).
 //
-// Per anti-pattern A.1, every moon is walked alongside its parent.
+// Per anti-pattern A.1, every moon is walked alongside its parent via
+// AllBodiesWithParent — the parent value also distinguishes moon
+// (isMoon=true) from top-level (isMoon=false) for the per-body call.
 func ApplyGeology(r roller.Roller, u *Universe) error {
 	sys := u.System
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
+	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty || body.SizeCode == "0" {
 			continue
 		}
-		applyBodyGeology(r, body, sys, false)
-		for _, child := range body.Children {
-			applyBodyGeology(r, child, sys, true)
-		}
+		applyBodyGeology(r, body, sys, parent != nil)
 	}
 	return nil
 }
