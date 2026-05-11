@@ -59,6 +59,28 @@ func (u *Universe) AllBodies() iter.Seq[*Body] {
 	}
 }
 
+// AllBodiesWithParent yields every Body together with its parent: nil for
+// top-level bodies (planets and belts), and the parent planet for moons.
+// Iteration order matches AllBodies. Per-stage procedures that need
+// parent context (host body for stellar orbit, HZ inheritance, mass
+// derivation) use this iterator so the moon-vs-planet path stays unified
+// (anti-pattern A.1 closed at the type level).
+func (u *Universe) AllBodiesWithParent() iter.Seq2[*Body, *Body] {
+	return func(yield func(*Body, *Body) bool) {
+		for i := range u.Detail.Bodies {
+			body := &u.Detail.Bodies[i]
+			if !yield(body, nil) {
+				return
+			}
+			for _, child := range body.Children {
+				if !yield(child, body) {
+					return
+				}
+			}
+		}
+	}
+}
+
 // Bodies filters AllBodies to a predicate. Iteration order is not
 // contract — consumers that need a specific order use AllBodies and
 // filter inline. This leaves room for future order-agnostic callers
