@@ -22,8 +22,8 @@ Pass 2 inverts the relationship: **the data dependency graph determines structur
 
 Pass 2 implements **one** path through WBH pp.14–146. Concretely cut:
 
-- **All `*Opts` variance fields.** No off-by-default toggles for "use richer tables instead of just a roll."
-- **All `*Opts` accuracy fields.** No `AccurateAlbedo`, no opt-in oxygen-atm biomass floor, no per-procedure precision knobs.
+- **`*Opts` variance fields — partial.** Aspirational cut walked back during cycle-13 resolution (`next-steps.md` § A3): `stars.GenerateSystemOpts.WithVariance` stays because pass-1 worked-example tests rely on it to drive the simple-roll path the book's narrated dice use. `worlds`-side variance fields (the ones that toggled "use richer tables instead of just a roll") are still cut.
+- **`*Opts` accuracy fields — partial.** Same resolution: `stars.GenerateSystemOpts.Accuracy` stays load-bearing for the ~10 `Accuracy: 1` worked-example tests (book uses the simple-1D age path). `AccurateAlbedo` and the opt-in oxygen-atm biomass floor remain cut.
 - **All optional rules from WBH.** Rare Earth Universe Variant, optional any-oxygen-atm = biomass ≥ 1, the Insidious DE hazard rule's optional branch, and any other section the book labels "Optional."
 - **Method-of-method choices.** Where WBH offers two procedures for the same value, pass 2 picks one. Default heuristic: prefer the formula or table over the roll when both are given (less interpretation latitude).
 - **Toggles for book inconsistencies.** Each of the six documented divergences gets one chosen interpretation in code with rationale in `wbh-inconsistencies.md`. No runtime switch. No `t.Logf` divergence noise.

@@ -45,7 +45,7 @@ Pass 2 inverted the relationship: **the data dependency graph determined structu
 Remaining criteria:
 
 1. **Every worked-example fixture passes** (post-decision values, per `wbh-inconsistencies.md`). ✓ — every per-procedure test is green; the six WBH inconsistencies (Compatibility "+3", gravity DM overlap, etc.) are committed to specific interpretations in the source.
-2. **Cuts list honoured pre-merge.** Partial — variance/accuracy/optional flags are still present in `stars.GenerateSystemOpts` because removing them would break ~10 pass-1 fidelity tests (the cuts list was aspirational on this point). Pass-3 referee knobs (Rare Earth, optional biomass floor, `-mainworld` override) are correctly deferred.
+2. **Cuts list honoured pre-merge.** Resolved with refinement (next-steps § A3): `stars.GenerateSystemOpts.WithVariance` and `.Accuracy` stay load-bearing (they choose between pass-1's book-fidelity dice-script paths, not speculative variants). Worlds-side variance fields, `AccurateAlbedo`, and the opt-in oxygen-atm biomass floor remain cut as designed. Pass-3 referee knobs (Rare Earth, optional biomass floor, `-mainworld` override) are correctly deferred.
 
 The gate is met — pass-2 is architecturally complete, every per-procedure test is green, the IISS forms render with full WBH-page fidelity, and the regression baseline guards future drift.
 

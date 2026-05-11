@@ -33,16 +33,13 @@ The ordering within each category roughly reflects priority — higher items unb
 
 **Recommendation.** Defer indefinitely unless `stars.Group` starts attracting unrelated coupling. The api-surface.md decision was right in principle; the cost in practice doesn't justify it for a working system.
 
-### A3. `stars.GenerateSystemOpts` cuts (cycle 13 deferred)
+### A3. `stars.GenerateSystemOpts` cuts — RESOLVED (option b: keep load-bearing)
 
-**Status.** `design-intent.md` cuts list says drop `WithVariance` / `Accuracy` from `GenerateSystemOpts`. Cycle 13 deferred because ~10 pass-1 fidelity tests rely on `Accuracy: 1` to drive the simple-1D age path that the book's worked examples use.
+**Status.** Closed. The `WithVariance` and `Accuracy` fields stay in `stars.GenerateSystemOpts` indefinitely. The original `design-intent.md` cuts-list claim that these would be cut is reclassified as aspirational — these toggles are load-bearing for ~10 pass-1 worked-example tests that drive the book's narrated dice scripts (e.g. `Accuracy: 1` selects the simple-1D age path).
 
-**Why your call.** Cutting requires re-deriving expected values for those tests under `Accuracy: 2`. Two options:
+**Resolution.** No code change. The cuts list in `design-intent.md` updated to mark these as preserved-not-cut, with the worlds-side variance fields and `AccurateAlbedo` / oxygen-atm biomass floor still genuinely cut.
 
-- **(a) Cut the toggle; update the tests.** Tests assert new values; book fidelity is preserved at the production-default behaviour, not at the historical-test-fixture behaviour.
-- **(b) Keep the toggle as load-bearing.** The cuts list was aspirational; calling it now is a design refinement.
-
-**Recommendation.** Option (b). The toggle is small (two fields on one struct); removing it doesn't simplify anything meaningfully; the test-update work is real. Defer indefinitely.
+**Why this is honest, not a regression.** Pass-2's cuts-list intent was to reduce the API surface by removing toggles that gated speculative variants. The variance and accuracy toggles on `stars.GenerateSystemOpts` are book-fidelity load-bearing, not speculative variants — they choose between two equally-correct pass-1 procedures specified by WBH. Removing them would erase book-fidelity tests; preserving them adds zero ambiguity to callers (production sets `WithVariance: true, Accuracy: 2` and is done).
 
 ### A4. Belt-mainworld worked example
 
