@@ -42,14 +42,16 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		body.DayLength = dl
 	}
 
-	// Sub-stage 2: axial tilt.
-	for body := range u.AllBodies() {
+	// Sub-stage 2: axial tilt. GenerateAxialTilt itself is
+	// parent-independent; the parent here is used only to keep the
+	// "moon "-prefixed error message consistent with the other sub-stages.
+	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty {
 			continue
 		}
 		at, err := GenerateAxialTilt(r, body)
 		if err != nil {
-			return fmt.Errorf("worlds: stage4 axial tilt %s: %w", body.Designation, err)
+			return fmt.Errorf("worlds: stage4 axial tilt %s%s: %w", moonTag(parent), body.Designation, err)
 		}
 		body.AxialTilt = at
 	}
