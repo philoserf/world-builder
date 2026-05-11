@@ -4,6 +4,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -45,12 +46,16 @@ func run(args []string, stdout, stderr io.Writer) error {
 		_, err := fmt.Fprint(stdout, iiss.MarkdownSystem(u.Detail.SystemForms))
 		return err
 	case "json":
-		out, err := iiss.JSONClass23(u.Detail.Class23)
-		if err != nil {
+		// Emit the full SystemForms aggregate (Class0I + Class23 + Class4P
+		// plus profile strings and mainworld designation) so downstream
+		// tooling has everything in one document. Per docs/pass-2/
+		// next-steps.md § B3.
+		enc := json.NewEncoder(stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(u.Detail.SystemForms); err != nil {
 			return fmt.Errorf("json: %w", err)
 		}
-		_, err = fmt.Fprintln(stdout, string(out))
-		return err
+		return nil
 	case "short":
 		_, err := fmt.Fprintln(stdout, u.Detail.ShortProfile)
 		return err

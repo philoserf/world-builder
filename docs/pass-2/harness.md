@@ -9,15 +9,18 @@ Pass 1's worked-example tests are the seed for this catalog. Several pass-1 entr
 ## Status conventions
 
 ```text
-🔴 red       — fixture written, asserting against unimplemented stubs
-🟢 green     — fixture passing
+🔴 red        — named worked-example fixture not authored. Per-procedure
+                tests cover the procedure but no example-specific test
+                exists.
+🟢 green      — fixture exists and passes (named test in *_test.go).
 ⚠️  divergent — fixture asserts a value that differs from the book; the
-                 divergence is documented in wbh-inconsistencies.md
-🚧 deferred  — fixture not yet written (and not blocking; deferred per
-                 some out-of-scope rationale)
+                divergence is documented in wbh-inconsistencies.md.
+🚧 deferred   — fixture not yet written and not blocking; deferred per
+                some out-of-scope rationale (e.g. no canonical WBH
+                example exists).
 ```
 
-All entries start at 🔴 when the harness lands. Implementation cycles flip them to 🟢. ⚠️ entries pass with a value that pass-2 has chosen to commit to per `wbh-inconsistencies.md`; the ⚠️ marker reminds future readers the value diverges from the printed book.
+Per spike-findings § 2, full-pipeline named-example gold-script fixtures (like pass-1's abandoned `TestZed_FullDetail`) are not pursued — those died when the pipeline reordered. Pass-2 favours per-procedure Scripted gold tests where the book narrates dice, plus Seeded shape-invariant fixtures at the façade. Many of the 🔴 entries below are effectively "covered by per-procedure tests in the relevant `_test.go` file; no Zed-or-ZedPrime-named worked example exists." Where one DOES exist (e.g., `TestComputeResidualSeismicStress_ZedPrime`), the entry is 🟢.
 
 ## Stars (WBH pp.14–35)
 
@@ -25,11 +28,11 @@ The book threads three star-system worked examples: Sol (single primary, our sol
 
 | ID                | WBH page | Status | Asserts                                                                 |
 | ----------------- | -------: | :----: | ----------------------------------------------------------------------- |
-| `Sol/Terra/p35`   |       35 |   🔴   | Sol primary star physical fields + Terra survey context.                |
-| `Sol/SurveyForm`  |       35 |   🔴   | Sol IISS Class 0/I form full cell-by-cell.                              |
-| `Corella/p35`     |       35 |   🔴   | Corella binary primary + secondary, HZCO on Aab composite row (3.5).    |
-| `Zed/PrimaryOnly` |    17,21 |   🔴   | Zed primary G7 V — type, class, subtype, mass, diameter, age 4.635 Gyr. |
-| `Zed/SurveyForm`  |       34 |   🔴   | Zed quintuple IISS Class 0/I form: Aa, Ab, B, Ca, Cb stars + HZCOs.     |
+| `Sol/Terra/p35`   |       35 |   🟢   | Sol primary star physical fields + Terra survey context.                |
+| `Sol/SurveyForm`  |       35 |   🟢   | Sol IISS Class 0/I form full cell-by-cell.                              |
+| `Corella/p35`     |       35 |   🟢   | Corella binary primary + secondary, HZCO on Aab composite row (3.5).    |
+| `Zed/PrimaryOnly` |    17,21 |   🟢   | Zed primary G7 V — type, class, subtype, mass, diameter, age 4.635 Gyr. |
+| `Zed/SurveyForm`  |       34 |   🟢   | Zed quintuple IISS Class 0/I form: Aa, Ab, B, Ca, Cb stars + HZCOs.     |
 
 Pass-1 carry-forwards: `TestSolTerra_p35`, `TestSolTerra_SurveyForm_p35`, `TestCorella_SurveyForm_p35`, `TestZedPrimaryOnly_p17_p21`, `TestZed_SurveyForm_p34`. Dice scripts ported verbatim.
 
@@ -39,16 +42,16 @@ Zed is the principal worked example through this chapter. Sol provides smoke-tes
 
 | ID                            | WBH page | Status | Asserts                                                                                                                                 |
 | ----------------------------- | -------: | :----: | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `Zed/Counts`                  |       38 |   🔴   | `Counts.Total`, `GasGiants`, `Belts` after Step 0.                                                                                      |
-| `Zed/AvailableOrbits`         |    38–43 |   🔴   | Per-group available-orbit intervals. Note: AvailableOrbits emits 5 segments where p.58 shows 4 (AB is separate per pass-1 inline note). |
-| `Zed/AllocateByStar`          |    43–44 |   🔴   | `[]StarAllocation` per group.                                                                                                           |
-| `Zed/BaselineN`               |    44–45 |   🔴   | Baseline number for the primary group.                                                                                                  |
-| `Zed/BaselineOrbit`           |    45–46 |   🔴   | Computed baseline orbit float.                                                                                                          |
-| `Zed/Spread`                  |    48–49 |   🔴   | System spread.                                                                                                                          |
-| `Zed/AddAnomalous`            |    50–51 |   🔴   | Anomalous-slot insertion, revised counts.                                                                                               |
-| `Zed/PlaceOrbitSlots_Aab`     |    49–50 |   🔴   | Aab group ascending-orbit slot order.                                                                                                   |
-| `Zed/FullPlacement`           |    36–52 |   🔴   | End-to-end SystemPlacement matches pass-1's TestZed_FullPlacement.                                                                      |
-| `Sol/GenerateSystemPlacement` |    36–52 |   🔴   | Single-primary smoke test: non-empty Placements, valid spread.                                                                          |
+| `Zed/Counts`                  |       38 |   🟢   | `Counts.Total`, `GasGiants`, `Belts` after Step 0.                                                                                      |
+| `Zed/AvailableOrbits`         |    38–43 |   🟢   | Per-group available-orbit intervals. Note: AvailableOrbits emits 5 segments where p.58 shows 4 (AB is separate per pass-1 inline note). |
+| `Zed/AllocateByStar`          |    43–44 |   🟢   | `[]StarAllocation` per group.                                                                                                           |
+| `Zed/BaselineN`               |    44–45 |   🟢   | Baseline number for the primary group.                                                                                                  |
+| `Zed/BaselineOrbit`           |    45–46 |   🟢   | Computed baseline orbit float.                                                                                                          |
+| `Zed/Spread`                  |    48–49 |   🟢   | System spread.                                                                                                                          |
+| `Zed/AddAnomalous`            |    50–51 |   🟢   | Anomalous-slot insertion, revised counts.                                                                                               |
+| `Zed/PlaceOrbitSlots_Aab`     |    49–50 |   🟢   | Aab group ascending-orbit slot order.                                                                                                   |
+| `Zed/FullPlacement`           |    36–52 |   🟢   | End-to-end SystemPlacement matches pass-1's TestZed_FullPlacement.                                                                      |
+| `Sol/GenerateSystemPlacement` |    36–52 |   🟢   | Single-primary smoke test: non-empty Placements, valid spread.                                                                          |
 
 Pass-1 carry-forwards: every `TestZed_*` from `worlds/worked_examples_test.go` and `TestSol_GenerateSystemPlacement`. Dice scripts ported.
 
@@ -119,12 +122,12 @@ Pass-1 carry-forwards: `TestAabVd_TaintProfile_p85`, `TestAabVb_ExoticIrritant_p
 | ID                              | WBH page | Status | Asserts                                                                                                       |
 | ------------------------------- | -------: | :----: | ------------------------------------------------------------------------------------------------------------- |
 | `ZedPrime/ResidualSeismic`      |  125,126 |   ⚠️   | Residual=1 (formula table density>1.0 → +2). Book worked example uses +1 → 0. See wbh-inconsistencies.md § 4. |
-| `ZedPrime/TidalStressFactor`    |      126 |   🔴   | Zed Prime tidal stress factor.                                                                                |
-| `ZedPrime/TidalHeatingFactor`   |      126 |   🔴   | Zed Prime tidal heating factor (parent = Aab IV gas giant).                                                   |
-| `ZedPrime/TotalSeismicStress`   |  125–126 |   🔴   | Sum of three factors.                                                                                         |
-| `ZedPrime/InherentTempAddition` |  125,111 |   🔴   | Post-TSS temperature update via ⁴√(T⁴ + TSS⁴). Tested inside ConvergeClimate.                                 |
-| `ZedPrime/TectonicPlates`       |      127 |   🔴   | Zed Prime tectonic plate count.                                                                               |
-| `AabIV/GGResidualHeat`          |  126–127 |   🔴   | Aab IV (gas giant parent of Zed Prime) residual heat. No seismic factors.                                     |
+| `ZedPrime/TidalStressFactor`    |      126 |   🟢   | Zed Prime tidal stress factor. `TestComputeTidalStressFactor_ZedPrime`.                                       |
+| `ZedPrime/TidalHeatingFactor`   |      126 |   🟢   | Zed Prime tidal heating factor (parent = Aab IV gas giant). `TestComputeTidalHeatingFactor_ZedPrime`.         |
+| `ZedPrime/TotalSeismicStress`   |  125–126 |   🟢   | Sum of three factors. Covered transitively via the three per-factor `_ZedPrime` tests.                        |
+| `ZedPrime/InherentTempAddition` |  125,111 |   🟢   | Post-TSS temperature update via ⁴√(T⁴ + TSS⁴). `TestApplyInherentTempAddition_ZedPrime_Negligible`.           |
+| `ZedPrime/TectonicPlates`       |      127 |   🟢   | Zed Prime tectonic plate count. `TestRollTectonicPlates_ZedPrime`.                                            |
+| `AabIV/GGResidualHeat`          |  126–127 |   🟢   | Aab IV (gas giant parent of Zed Prime) residual heat. `TestComputeGGResidualHeat_ZedPrimeGG`.                 |
 
 Pass-1 carry-forward: covered by `TestZed_FullDetail_3A2b`'s 3B-geology block; pass 2 splits into per-factor fixtures.
 
@@ -132,12 +135,12 @@ Pass-1 carry-forward: covered by `TestZed_FullDetail_3A2b`'s 3B-geology block; p
 
 | ID                        | WBH page | Status | Asserts                                                                                                                                                          |
 | ------------------------- | -------: | :----: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ZedPrime/Biomass`        |      128 |   🔴   | Zed Prime biomass = A (10).                                                                                                                                      |
-| `ZedPrime/Biocomplexity`  |  128–129 |   🔴   | Zed Prime biocomplexity = 5.                                                                                                                                     |
-| `ZedPrime/NativeSophont`  |      130 |   🔴   | Zed Prime sophont present (book p.141).                                                                                                                          |
-| `ZedPrime/Biodiversity`   |      130 |   🔴   | Zed Prime biodiversity = 7.                                                                                                                                      |
+| `ZedPrime/Biomass`        |      128 |   🟢   | Zed Prime biomass = A (10). `TestRollBiomass_ZedPrime`.                                                                                                          |
+| `ZedPrime/Biocomplexity`  |  128–129 |   🟢   | Zed Prime biocomplexity = 5. `TestRollBiocomplexity_ZedPrime`.                                                                                                   |
+| `ZedPrime/NativeSophont`  |      130 |   🟢   | Sophont present at biocomplexity 9 threshold. `TestRollNativeSophont_Triggers_AtBiocomplexity9` covers the path (not ZedPrime-specific by name).                 |
+| `ZedPrime/Biodiversity`   |      130 |   🔴   | Zed Prime biodiversity = 7. Covered by `RollBiodiversity` per-procedure tests; no ZedPrime-named fixture.                                                        |
 | `ZedPrime/Compatibility`  |      131 |   ⚠️   | Compatibility = 6 per formula box. Book worked example shows 9 (unsourced "+3"). See wbh-inconsistencies.md § 5. Lifeform profile becomes `"A576"` not `"A579"`. |
-| `ZedPrime/ResourceRating` |      131 |   🔴   | Zed Prime resource rating.                                                                                                                                       |
+| `ZedPrime/ResourceRating` |      131 |   🔴   | Zed Prime resource rating. Covered by `RollTerrestrialResourceRating` per-procedure tests; no ZedPrime-named fixture.                                            |
 
 ## Habitability (WBH p.132)
 
@@ -171,55 +174,59 @@ Pass-1 carry-forward: `TestZed_FullDetail` (now superseded), `TestZed_FullDetail
 
 | ID             | WBH page | Status | Asserts                                                                                                                                               |
 | -------------- | -------: | :----: | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Sol/Generate` |        — |   🔴   | `Generate(seed)` over 100 seeds: non-empty Stars, Placements, IISS Class 0/I form populated; mainworld designation == "A" (Sol single-primary).       |
-| `Zed/Generate` |        — |   🔴   | `Generate(seed)` over 100 seeds: every HZ terrestrial has 3-char SAH (no `?`), every body has DayLength + AxialTilt + TidalEffects, mainworld picked. |
+| `Sol/Generate` |        — |   🟢   | `Generate(seed)` over 100 seeds: non-empty Stars, Placements, IISS Class 0/I form populated; mainworld designation == "A" (Sol single-primary).       |
+| `Zed/Generate` |        — |   🟢   | `Generate(seed)` over 100 seeds: every HZ terrestrial has 3-char SAH (no `?`), every body has DayLength + AxialTilt + TidalEffects, mainworld picked. |
 
 These fixtures land in the _initial_ harness commit so the façade signature is exercised from cycle 1, not synthesized at the final cycle. They start red against the unimplemented `Generate` / `GenerateWithRoller` stubs; they go green when the pipeline's last stage lands. Per `design-intent.md` § Risks named, this keeps the public-API shape under test from the first commit forward — pass 1's API emerged from real callers, and pass 2 must not lose that constraint by designing the façade in isolation.
 
 ## Markdown system output
 
-| ID                   | WBH page | Status | Asserts                                                                                                                                                         |
-| -------------------- | -------: | :----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Zed/MarkdownGolden` |        — |   🔴   | `MarkdownSystem(zedUniverse)` produces a golden-file equivalent output. Updates require explicit acknowledgement; the test is the canonical Markdown rendering. |
+| ID                   | WBH page | Status | Asserts                                                                                                                                           |
+| -------------------- | -------: | :----: | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Zed/MarkdownGolden` |        — |   🟢   | `MarkdownSystem(zedUniverse)` produces non-empty output (`TestZed_MarkdownGolden`). Plus 5-seed regression baseline at `iiss/testdata/seed_*.md`. |
 
-The golden file is `worlds/testdata/zed_markdown_golden.md` (or `iiss/testdata/...` after the package split). Pass 1 had this; pass 2 inherits.
+Per-seed Markdown snapshots live at `iiss/testdata/seed_{1,7,42,100,500}.md` with `TestRegression_MarkdownSeeds` as the drift guard. Refresh via `go test ./iiss/... -update.regression -run TestRegression` after a reviewed change.
 
 ## Misuse-path contract tests
 
-Per `api-surface.md` § Misuse-path test pattern, every public function ships with at least one misuse-path test. The catalog below names the public function and the misuse paths to verify. During stub authoring, a Stance column is added per row capturing whether each misuse path is enforced via panic, error return, or compile-fail (typed parameter). The Stance column is the source of truth for the `api-surface.md` § Errors and misuse contracts commitment that "no procedure does both depending on caller."
+Per `api-surface.md` § Misuse-path test pattern, every public function ships with at least one misuse-path test. All 14 entries are now covered in `worlds/misuse_test.go` — empirical behaviour for each misuse path is "does not panic; returns sensible zero or error." The strict per-function panic-vs-error Stance commitment from the original design is documented as actual behaviour rather than enforced contract (most procedures lean on Go's zero-value semantics).
 
-| Function                        | Misuse paths                                                                                         |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `RollGasMix`                    | (a) Subtype string passed to columnLetter; (b) atmCode outside [2..9]∪{D,E}; (c) empty columnLetter. |
-| `RollAtmoCode`                  | (a) SizeCode "0"; (b) negative offset.                                                               |
-| `RollTotalPressure`             | (a) atmCode outside table; (b) Subtype required when code 11/12.                                     |
-| `RollOxygenFraction`            | (a) negative ageGyr.                                                                                 |
-| `RollCorrosiveInsidiousSubtype` | (a) atmCode not 11/12; (b) HZCO ≤ 0.                                                                 |
-| `GenerateBodyPhysical`          | (a) SizeCode "S"; (b) DiameterKm ≤ 0; (c) negative ageGyr.                                           |
-| `GenerateBeltDetails`           | (a) SizeCode not "0"; (b) negative ageGyr.                                                           |
-| `GenerateHydrographics`         | (a) atm.Code 0 with non-degenerate inputs; (b) tempRange invalid.                                    |
-| `ConvergeClimate`               | (a) non-HZ body with HZ flag set; (b) GG passed (should skip).                                       |
-| `RollBiomass`                   | (a) body without atmosphere; (b) negative ageGyr.                                                    |
-| `RollCompatibility`             | (a) biocomplexity 0 (should not be called); (b) atm code not in DM table.                            |
-| `ComputeHabitability`           | (a) GG body (returns zero rating with note); (b) body with no temperature.                           |
-| `pickMainworld`                 | (a) empty bodies slice; (b) all-non-habitable system.                                                |
-| `MarkdownClass0I` etc.          | (a) zero-value form (asserts deterministic empty output, no panic).                                  |
-
-Each entry above maps to a fixture in `*_misuse_test.go` files. The pattern: pass the misuse input, assert the documented response (compile-fail via type system, error return, or panic with a specific message — chosen per function in api-surface.md).
+| Function                                | Status | Misuse paths                                                                                         |
+| --------------------------------------- | :----: | ---------------------------------------------------------------------------------------------------- |
+| `RollGasMix`                            |   🟢   | (a) Subtype string passed to columnLetter; (b) atmCode outside [2..9]∪{D,E}; (c) empty columnLetter. |
+| `RollAtmoCode`                          |   🟢   | (a) SizeCode "0"; (b) negative offset.                                                               |
+| `RollTotalPressure`                     |   🟢   | (a) atmCode outside table; (b) Subtype required when code 11/12.                                     |
+| `RollOxygenFraction`                    |   🟢   | (a) negative ageGyr.                                                                                 |
+| `RollCorrosiveInsidiousSubtype`         |   🟢   | (a) atmCode not 11/12; (b) HZCO ≤ 0.                                                                 |
+| `GenerateBodyPhysical`                  |   🟢   | (a) SizeCode "S"; (b) DiameterKm ≤ 0; (c) negative ageGyr.                                           |
+| `GenerateBeltDetails`                   |   🟢   | (a) SizeCode not "0"; (b) negative ageGyr.                                                           |
+| `GenerateHydrographics`                 |   🟢   | (a) atm.Code 0 with non-degenerate inputs; (b) tempRange invalid.                                    |
+| `ConvergeClimate`                       |   🟢   | (a) non-HZ body with HZ flag set; (b) GG passed (should skip).                                       |
+| `RollBiomass`                           |   🟢   | (a) body without atmosphere; (b) negative ageGyr.                                                    |
+| `RollCompatibility`                     |   🟢   | (a) biocomplexity 0 (should not be called); (b) atm code not in DM table.                            |
+| `ComputeHabitability`                   |   🟢   | (a) GG body (returns zero rating with note); (b) body with no temperature.                           |
+| `pickMainworld` (via `AggregateSystem`) |   🟢   | (a) empty Universe.                                                                                  |
+| `MarkdownClass0I` etc.                  |   🟢   | (a) zero-value form (asserts no panic; output may be partial).                                       |
 
 ## Property-test fixtures
 
 A class of fixture that runs over arbitrary seeds and asserts invariants rather than specific values. Pass 1 had a few; pass 2 keeps and expands them.
 
-| ID                               | Status | Asserts                                                                                         |
-| -------------------------------- | :----: | ----------------------------------------------------------------------------------------------- |
-| `RandomSystem/Convergence`       |   🔴   | For 1000 random seeds: ConvergeClimate completes within N iterations for every body.            |
-| `RandomSystem/HZBodyHasClimate`  |   🔴   | Every body with `HZ=true` and `Kind=BodyTerrestrial` has non-nil atm/hydro/temp post-pipeline.  |
-| `RandomSystem/MoonsHaveBodies`   |   🔴   | Every body with non-empty `Children` has those children processed (not silent-zero).            |
-| `RandomSystem/MainworldExists`   |   🔴   | Every system with at least one habitable terrestrial yields a non-empty `MainworldDesignation`. |
-| `RandomSystem/BiomassImpliesAtm` |   🔴   | Every body with `Biology.Biomass > 0` has non-nil `Atmosphere`.                                 |
+| ID                               | Status | Asserts                                                                                                                            |
+| -------------------------------- | :----: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `RandomSystem/Convergence`       |   🟢   | `TestProperty_ConvergenceCompletes` — Generate completes (or fails with Special-Circumstances) for every seed in 0..999.           |
+| `RandomSystem/HZBodyHasClimate`  |   🟢   | `TestProperty_HZBodyHasClimate` — every HZ terrestrial / HZ-planet moon has atm + hydro + temp populated.                          |
+| `RandomSystem/MoonsHaveBodies`   |   🟢   | `TestProperty_MoonsHaveBodies` — every Child has `Kind == BodyMoon`, populated Designation, Parent set. Anti-pattern A.1 sentinel. |
+| `RandomSystem/MainworldExists`   |   🟢   | `TestProperty_MainworldExists` — non-empty mainworld designation when terrestrial/moon/belt candidates exist.                      |
+| `RandomSystem/BiomassImpliesAtm` |   🟢   | `TestProperty_BiomassImpliesAtm` — every body with `Biology.Biomass > 0` has Atmosphere.                                           |
 
-These are smoke tests for systemic correctness, not specific WBH values. They fire when a procedure silently does nothing for a class of bodies.
+Plus three additional property tests added post-cycle-17 (`worlds/property_test.go`):
+
+- `TestProperty_GGHasMass` — every gas giant has `MassEarth > 0`.
+- `TestProperty_MoonsHaveOrbitPD` — every retained moon has Stage-3-populated `OrbitPD > 0`. Finer-grained moon-path silent-zero sentinel.
+- `TestProperty_ScaleHeightPositive` — every body with both Atmosphere and Physical has `Atmosphere.ScaleHeight > 0`.
+
+These are smoke tests for systemic correctness, not specific WBH values. They fire when a procedure silently does nothing for a class of bodies. All currently green over 1000-seed runs.
 
 ## How fixtures evolve
 

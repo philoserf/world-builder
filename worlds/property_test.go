@@ -188,6 +188,96 @@ func TestProperty_BiomassImpliesAtm(t *testing.T) {
 	}
 }
 
+// (TestProperty_HabitabilityImpliesAtm was considered but is incorrect
+// per WBH p.132 — vacuum worlds with atm code 0 can have positive
+// Habitability ratings for size / temperature / gravity contributions.
+// The natural-language intuition "habitable → has atmosphere" does
+// not hold.)
+
+// TestProperty_GGHasMass — every gas giant has MassEarth > 0.
+// Pass-2 stage-2 RollGasGiantSize always returns a positive mass per
+// WBH p.55.
+func TestProperty_GGHasMass(t *testing.T) {
+	t.Parallel()
+	checked := 0
+	for iter := range 1000 {
+		seed := int64(iter)
+		u := generateForProperty(t, seed)
+		if u == nil {
+			continue
+		}
+		for body := range u.AllBodies() {
+			if body.Kind != worlds.BodyGasGiant {
+				continue
+			}
+			checked++
+			if body.MassEarth <= 0 {
+				t.Errorf("seed %d: GG %s has MassEarth = %v", seed, body.Designation, body.MassEarth)
+			}
+		}
+	}
+	if checked < 50 {
+		t.Errorf("only %d gas giants seen across 1000 seeds (expected >= 50)", checked)
+	}
+}
+
+// TestProperty_MoonsHaveOrbitPD — every retained moon has its OrbitPD
+// populated by Stage 3's RefineMoons walk. Anti-pattern A.1 sentinel
+// at a finer granularity than MoonsHaveBodies — catches "moon-path
+// silent-zero" specifically in the orbital-refinement step.
+func TestProperty_MoonsHaveOrbitPD(t *testing.T) {
+	t.Parallel()
+	checked := 0
+	for iter := range 1000 {
+		seed := int64(iter)
+		u := generateForProperty(t, seed)
+		if u == nil {
+			continue
+		}
+		for i := range u.Detail.Bodies {
+			body := &u.Detail.Bodies[i]
+			for j, child := range body.Children {
+				checked++
+				if child.OrbitPD <= 0 {
+					t.Errorf("seed %d: bodies[%d].Children[%d] (%s) OrbitPD = %v",
+						seed, i, j, child.Designation, child.OrbitPD)
+				}
+			}
+		}
+	}
+	if checked < 50 {
+		t.Errorf("only %d moons checked across 1000 seeds (expected >= 50)", checked)
+	}
+}
+
+// TestProperty_ScaleHeightPositive — every body with Atmosphere and
+// Physical has Atmosphere.ScaleHeight > 0. DeriveScaleHeight reads
+// post-TSS MeanK and gravity; either degenerate input drives it to 0.
+func TestProperty_ScaleHeightPositive(t *testing.T) {
+	t.Parallel()
+	checked := 0
+	for iter := range 1000 {
+		seed := int64(iter)
+		u := generateForProperty(t, seed)
+		if u == nil {
+			continue
+		}
+		for body := range u.AllBodies() {
+			if !body.HasAtmosphere() || !body.HasPhysical() {
+				continue
+			}
+			checked++
+			if body.Atmosphere.ScaleHeight <= 0 {
+				t.Errorf("seed %d: body %s has Atmosphere + Physical but ScaleHeight = %v",
+					seed, body.Designation, body.Atmosphere.ScaleHeight)
+			}
+		}
+	}
+	if checked < 50 {
+		t.Errorf("only %d bodies with both Atm+Physical seen across 1000 seeds (expected >= 50)", checked)
+	}
+}
+
 // TestProperty_ConvergenceCompletes per harness.md § Property tests.
 // Generate must complete (or fail with the documented Special-
 // Circumstances primary error) for every seed in 0..999. No

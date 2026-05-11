@@ -56,55 +56,23 @@ Without a book reference, this is design fiat. Pass-2 chose to defer rather than
 
 **Recommendation.** Defer until a real belt-mainworld scenario surfaces in a campaign. The PART P.B renderer works; a fixture is nice-to-have, not critical.
 
-## B. Mechanical items (no judgement needed)
+## B. Mechanical items — all resolved
 
-### B1. Remaining 9 misuse-path tests
+### B1. Remaining 9 misuse-path tests — RESOLVED
 
-Post-cycle-17 added 5 of the 14 entries in `harness.md` § Misuse-path tests. The remaining 9:
+All 14 entries from `harness.md` § Misuse-path tests now have coverage in `worlds/misuse_test.go`. Empirical finding: most procedures lean on Go's zero-value semantics (return zero, return error) rather than enforce a strict panic-vs-error contract. The Stance commitment from the original design is documented as actual behaviour rather than enforced.
 
-- `RollAtmoCode`: SizeCode "0", negative offset
-- `RollTotalPressure`: atmCode outside table, Subtype required when code 11/12
-- `RollOxygenFraction`: negative ageGyr
-- `RollCorrosiveInsidiousSubtype`: atmCode not 11/12, HZCO ≤ 0
-- `GenerateBodyPhysical`: SizeCode "S", DiameterKm ≤ 0, negative ageGyr
-- `GenerateBeltDetails`: SizeCode not "0", negative ageGyr
-- `GenerateHydrographics`: atm.Code 0 with non-degenerate inputs, tempRange invalid
-- `RollBiomass`: body without atmosphere, negative ageGyr
-- `RollCompatibility`: biocomplexity 0, atm code not in DM table
-- `MarkdownClass0I` / `MarkdownClass23` / `MarkdownClass4P`: zero-value form asserts deterministic empty output
+### B2. Harness.md status update — RESOLVED
 
-**Effort.** ~3-5 lines per test × ~25 misuse cases = ~100 lines of test code, ~1-2 hours.
+Worked through `harness.md`. Stars, Placement, Geology (per-procedure ZedPrime tests), Biology (per-procedure ZedPrime tests), Façade end-to-end, Markdown golden, misuse-path tests, property tests — all marked 🟢 where named tests exist. Status conventions section updated to clarify that 🔴 entries denote "no Zed-or-ZedPrime-named worked-example fixture" rather than "missing coverage" (per-procedure tests cover the procedure; spike-findings § 2 ruled that full-pipeline gold scripts don't survive pipeline reorders, so most 🔴 entries are deferred-by-design).
 
-**Value.** Low — most assert current behaviour rather than enforce a contract. The high-value ones (the 5 already done) were the ones that found real edge cases.
+### B3. cmd/wbh JSON output — RESOLVED
 
-### B2. Harness.md status update
+`cmd/wbh -format json` now emits the full `iiss.SystemForms` aggregate (Class0I + Class23 + Class4P + ShortProfile + LongProfile + MainworldDesignation) via `json.MarshalIndent`. Downstream tooling sees the whole system in one document.
 
-`harness.md` lists 50+ fixture entries all marked 🔴. Many are now green via per-procedure tests in `worlds/*_test.go` and `stars/worked_examples_test.go`. The catalog should reflect actual status.
+### B4. Property test expansion — RESOLVED
 
-**Effort.** ~30 minutes of crossing 🔴 to 🟢 in the markdown tables, with a note pointing to the per-procedure test file for each.
-
-**Value.** Medium — `harness.md` is the project's fixture catalog; if it's stale, future developers won't trust it.
-
-### B3. cmd/wbh JSON output
-
-Cycle 11 ships `cmd/wbh -format json` that emits only the Class II/III form. The full Universe is more useful for tooling integration (a future webservice per CLAUDE.md § Output).
-
-**Effort.** Add a top-level JSON struct that aggregates Class0I, Class23, Class4P, ShortProfile, LongProfile, MainworldDesignation. Maybe 30 lines.
-
-**Value.** Low until a downstream consumer wants it. Defer.
-
-### B4. Property test expansion
-
-Five property tests run over 1000 seeds. Could add more:
-
-- Every body with `Habitability.Rating > 0` has an Atmosphere with `Pressure > 0`.
-- Every GG has `MassEarth > 0`.
-- Every body with `Children` has at least one child with `OrbitPD > 0`.
-- ScaleHeight is positive for every body with Atmosphere + Physical.
-
-**Effort.** ~5 lines per test, ~20 minutes.
-
-**Value.** Low — the existing five cover the high-risk invariants. Diminishing returns.
+Added three property tests beyond the original five: `TestProperty_GGHasMass`, `TestProperty_MoonsHaveOrbitPD` (finer-grained moon-path silent-zero sentinel than `MoonsHaveBodies`), `TestProperty_ScaleHeightPositive`. A `TestProperty_HabitabilityImpliesAtm` candidate was considered and dropped — premise was wrong (WBH p.132 credits positive Habitability ratings to vacuum worlds via size / temperature / gravity contributions; the natural-language "habitable → has atm" intuition doesn't hold).
 
 ## C. Strategic / scope items
 
