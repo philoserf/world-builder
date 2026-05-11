@@ -45,21 +45,21 @@ Pass 2 inverted the relationship: **the data dependency graph determined structu
 Remaining criteria:
 
 1. **Every worked-example fixture passes** (post-decision values, per `wbh-inconsistencies.md`). ✓ — every per-procedure test is green; the six WBH inconsistencies (Compatibility "+3", gravity DM overlap, etc.) are committed to specific interpretations in the source.
-2. **Cuts list honoured pre-merge.** Resolved with refinement (next-steps § A3): `stars.GenerateSystemOpts.WithVariance` and `.Accuracy` stay load-bearing (they choose between pass-1's book-fidelity dice-script paths, not speculative variants). Worlds-side variance fields, `AccurateAlbedo`, and the opt-in oxygen-atm biomass floor remain cut as designed. Pass-3 referee knobs (Rare Earth, optional biomass floor, `-mainworld` override) are correctly deferred.
+2. **Cuts list honoured pre-merge.** Resolved with refinement (next-steps § A3): `stars.GenerateSystemOpts.WithVariance` and `.Accuracy` stay load-bearing (they choose between pass-1's book-fidelity dice-script paths, not speculative variants). Worlds-side variance fields, `AccurateAlbedo`, and the opt-in oxygen-atm biomass floor remain cut as designed. Optional referee knobs (Rare Earth, optional biomass floor, `-mainworld` override) are deferred to post-merge polish; no pass-3 is planned.
 
 The gate is met — pass-2 is architecturally complete, every per-procedure test is green, the IISS forms render with full WBH-page fidelity, and the regression baseline guards future drift.
 
 ### Carry-over deferrals
 
-These are named explicitly in `next-steps.md` and called out in their commit messages, not hidden:
+These are named explicitly in `next-steps.md` and called out in their commit messages, not hidden. Most are resolved post-pass-2-merge; the rest are open as 1.0-vetting candidates or recommended-defer-indefinitely.
 
-- **Strict `ConvergeClimate` convergence** — empirically some seeds oscillate; the current N=5 / accept-last-state behaviour is a pragmatic compromise.
-- **Pass-1-vs-pass-2 byte comparison tool** — building it is mechanical; triaging the divergences it surfaces needs design opinion.
-- **`stars.Group` migration to `stars/`** (cycle 12 deferred) — `api-surface.md` § Open questions decided this should move but `worlds.Group`'s unexported fields are referenced by tests; export-vs-getter is a real trade-off.
-- **`stars.GenerateSystemOpts` cuts** (cycle 13 deferred) — would break ~10 Accuracy:1 fidelity tests; the cuts list was aspirational on this point.
-- **Belt-mainworld worked example** — no canonical WBH source; constructing one needs design opinion.
-- **Special Circumstances chapter** (WBH pp.147+) — explicitly out of pass-2 scope per CLAUDE.md.
-- **Pass-3 referee knobs** — named in `design-intent.md` § Post-parity work; not in pass-2.
+- **Strict `ConvergeClimate` convergence** — resolved (A1, climate is not a fixed point; 2-pass).
+- **Pass-1-vs-pass-2 byte comparison tool** — dropped (A0).
+- **`stars.Group` migration to `stars/`** (cycle 12) — open; recommendation: defer indefinitely.
+- **`stars.GenerateSystemOpts` cuts** (cycle 13) — resolved (A3, keep load-bearing).
+- **Belt-mainworld worked example** — open; no canonical WBH source.
+- **Special Circumstances chapter** (WBH pp.147+) — explicitly out of scope per CLAUDE.md.
+- **Optional referee knobs** — named in `design-intent.md` § Post-parity work; candidates for post-merge polish if vetting motivates them. No pass-3 is planned — pass 2 is the end-state design and the next milestone is v1.0 after vetting.
 
 ## Numbers
 

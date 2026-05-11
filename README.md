@@ -98,7 +98,9 @@ The pass-1 implementation is preserved on tag `pass-1-final` for archival.
 
 ## Status
 
-Pass 2 is on main. All gates green:
+Pass 2 is on main; the architectural rebuild is the end-state design. **No pass 3 is planned.** The project's next milestone is **v1.0** after a vetting period: run the CLI across many seeds, watch for human-spottable bugs, fix what surfaces, then tag `v1.0`. See `docs/pass-2/next-steps.md` for the open items (most are recommended-defer-indefinitely or optional-polish).
+
+All gates currently green:
 
 ```bash
 task        # check + test (modernizer + gofumpt + vet + golangci-lint + go test -race)

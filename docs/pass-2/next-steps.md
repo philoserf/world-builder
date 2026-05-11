@@ -1,6 +1,12 @@
 # Pass 2 — Next Steps
 
-Three categories: items requiring user judgement (the trade-offs are real and pass-2-side automation can't resolve them); mechanical items (need labor, no design decision); strategic / scope items (merge planning, pass-3 outlook).
+## Path to 1.0
+
+**No pass 3 is planned.** Pass 2's architectural rebuild is the end-state design; the project's next milestone is **v1.0** after a vetting period on the merged code. Vetting means running the CLI across many seeds, watching for output that looks wrong to a human reader, surfacing edge cases the test suite hasn't caught, and fixing whatever genuinely-bug-level issues surface. Once vetting is satisfied, tag `v1.0` on main.
+
+The items below catalog open work that may or may not happen on the path to 1.0. Some are decisions-already-made (A2, A4); some are optional polish (C2, C3, C4); some are explicitly out of scope (C5).
+
+Three categories: items requiring user judgement (the trade-offs are real and pass-2-side automation can't resolve them); mechanical items (need labor, no design decision); strategic / scope items (merge planning, optional polish).
 
 The ordering within each category roughly reflects priority — higher items unblock or de-risk lower ones.
 
@@ -82,20 +88,20 @@ Added three property tests beyond the original five: `TestProperty_GGHasMass`, `
 
 **Plan.** Merge `pass-2` to `main` when ready. The pass-2 branch is shippable: every test green, end-to-end CLI works, full IISS form fidelity, the within-pass-2 regression baseline guards drift. Tag `pre-pass-2` on `main`'s current HEAD before the merge so the historical pass-1 binary stays buildable from a known reference. Then either fast-forward `main` to `pass-2`'s HEAD or use `git merge --no-ff` for a marked merge commit; the choice is preference. Time: ~30 minutes including the tag, the merge, the push, and a sanity-run of `cmd/wbh` from `main`.
 
-### C2. Pass-3 referee knobs
+### C2. Optional referee knobs
 
-`design-intent.md` § Post-parity work names four referee-facing items deferred from pass-2:
+`design-intent.md` § Post-parity work names four referee-facing items originally deferred from pass-2:
 
 - Rare Earth Universe Variant
 - Optional any-oxygen-atm biomass floor
 - Optional Insidious DE hazard rule's optional branch
 - `-mainworld <designation>` override flag
 
-These reintroduce the variance/accuracy/optional-rule toggles the cuts list removed. Each is a small individual change (an `Opts` field on the relevant `Generate*` or `cmd/wbh` flag) but together they're a coherent "give the referee back the knobs WBH ships with" cycle.
+These reintroduce the variance/accuracy/optional-rule toggles the cuts list removed. Each is a small individual change (an `Opts` field on the relevant `Generate*` or `cmd/wbh` flag).
 
 **Effort.** ~1 day total for all four, including tests and a `cmd/wbh -help` update.
 
-**Value.** Medium — referee facing. Whether to do this depends on whether actual referees will use the tool.
+**Value.** Medium — referee facing. With no pass 3 planned, these are optional polish items for the 1.0-or-after timeframe. Whether to do them depends on whether actual referees ask for them during vetting.
 
 ### C3. Notable Features Markdown block
 
@@ -109,7 +115,7 @@ The data is all in `Universe.Detail.Bodies`. A Markdown block that scans the uni
 
 ### C4. Special-object detail (Brown Dwarf, White Dwarf, Neutron Star, etc.)
 
-`design-intent.md` § Post-parity work also lists special-object detail. Currently these companion types get minimum-useful values (type/mass/age) but no detailed physics. Detailed physics (accretion, degenerate-matter equations, jet behaviour) is "post-parity but pre-pass-3."
+`design-intent.md` § Post-parity work also lists special-object detail. Currently these companion types get minimum-useful values (type/mass/age) but no detailed physics. Detailed physics (accretion, degenerate-matter equations, jet behaviour) is post-merge polish.
 
 **Effort.** Unknown — depends on which special objects to detail and to what depth. WBH's Special Circumstances chapter has the rules.
 
@@ -123,23 +129,23 @@ Explicitly out of pass-2 scope per CLAUDE.md. Includes social characteristics, g
 
 **Value.** Depends on project goal. CLAUDE.md says "Do not start work in those chapters; do not add code that anticipates them." Pass-2 honours this.
 
-## Suggested ordering
+## What's actually open
 
-If the goal is "close pass-2 fully":
+Of the original A/B/C inventory:
 
-1. **C1** (merge to main) — pass-2 becomes the trunk.
-2. **B2** (harness.md status update) — final hygiene.
-3. **A1** (strict convergence investigation) — only if appetite remains.
+- **C1 merged.** Pass-2 is now main as of merge commit `a65a412`; tag `pass-2-final` marks the post-merge state. Pass-1's pre-merge state is preserved on tag `pass-1-final`.
+- **A0 (pass-1 comparison)** — dropped.
+- **A1 (strict ConvergeClimate convergence)** — resolved (climate is not a fixed point; 2-pass).
+- **A3 (`Opts` cuts)** — resolved (keep load-bearing).
+- **B1, B2, B3, B4** — all resolved.
 
-If the goal is "ship a useful tool":
+Still open:
 
-1. **C3** (Notable Features Markdown block) — biggest user-facing win.
-2. **C2** (Pass-3 referee knobs) — gives referees the variants.
-3. **C1** (merge) — make it the default branch.
+- **A2 (`stars.Group` migration)** — recommendation: defer indefinitely.
+- **A4 (belt-mainworld worked example)** — recommendation: defer indefinitely (no canonical WBH source).
+- **C2 (optional referee knobs)** — optional polish, drive by vetting feedback.
+- **C3 (Notable Features Markdown block)** — high-value referee-UX win; can land in the 1.0 vetting window.
+- **C4 (special-object detail)** — optional, scope to be determined.
+- **C5 (Special Circumstances chapter)** — out of scope per CLAUDE.md.
 
-If the goal is "preserve pass-2 indefinitely as the v2 design":
-
-1. **C1** (merge with regression baseline as the canonical output).
-2. Defer everything else; pass-2 is the new baseline.
-
-With A0 (pass-1 comparison) dropped, the close-pass-2-fully path is dramatically shorter. Pass 2 reached architectural completeness. What remains is choice of direction.
+The path to **v1.0** is: vet the current build (run, look at output, fix surprises); land any of C2/C3/C4 that vetting motivates; tag `v1.0` on main. None of the open items block tagging — they're all optional or out-of-scope.

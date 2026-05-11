@@ -31,7 +31,7 @@ Pass 2 implements **one** path through WBH pp.14–146. Concretely cut:
 
 The API surface shrinks dramatically. Most `Generate*` functions become `(inputs..., r Roller) → result`, no Opts struct. That's a much smaller surface to design up front and to test for misuse.
 
-**The cuts are pre-parity discipline, not permanent design.** Several cuts are referee-facing — Rare Earth Universe Variant, the optional any-oxygen-atm biomass floor, the `-mainworld <designation>` override — and exist in WBH because campaigns differ. They come back after fidelity is reached, as a Pass-3 referee-knobs sub-project. The cuts list is the shape of pass-2's first merge, not the shape of the long-term tool.
+**The cuts are pre-parity discipline, not permanent design.** Several cuts are referee-facing — Rare Earth Universe Variant, the optional any-oxygen-atm biomass floor, the `-mainworld <designation>` override — and exist in WBH because campaigns differ. They are candidates for post-merge polish items if vetting motivates them. (Originally framed as a "Pass-3 referee knobs" cycle; that framing is retired since there is no pass 3 — pass 2 is the end-state design.)
 
 ### Full stub interface designed up front
 
@@ -121,9 +121,9 @@ Brooks' second-system warning applies. Specific cleverness traps for this projec
 
 Pass 2 is small on purpose. These items are _not_ cuts forever — they're queued for after the fidelity gate clears. Naming them here means they cannot quietly become "we should never do this" by absence. They are deferred, not refused.
 
-- **Referee knobs.** Rare Earth Universe Variant, optional biomass floor, optional Insidious DE branch, `-mainworld <designation>` override. WBH ships these because campaigns differ; pass-3 reintroduces them as `*Opts` fields with explicit per-call rationale.
+- **Referee knobs.** Rare Earth Universe Variant, optional biomass floor, optional Insidious DE branch, `-mainworld <designation>` override. WBH ships these because campaigns differ; they remain candidates for post-merge polish (`next-steps.md` § C2) but no pass-3 cycle is planned.
 - **Notable Features Markdown block.** A referee-facing summary above the IISS forms: tidal-lock zones, WorstLow cold snaps, high-gravity/high-atm crush worlds, taint chains, mainworld habitability rationale. Post-parity sub-project; the IISS forms alone are canon-good but referee-hostile for at-a-glance use.
-- **Special-object detail.** Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, Nebula, Protostar, Star Cluster, Anomaly currently get minimum-useful values (type/mass/age). Detailed physics — accretion, degenerate-matter equations — is post-parity but pre-Pass-3.
+- **Special-object detail.** Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, Nebula, Protostar, Star Cluster, Anomaly currently get minimum-useful values (type/mass/age). Detailed physics — accretion, degenerate-matter equations — is post-merge polish if it's wanted at all.
 - **Belt-mainworld worked example.** No canonical WBH example exists; harness defers (`harness.md` § `ZedPrime/Class4P/PartPB`). Post-parity, the belt mainworld branch gets an internally-constructed example fixture so PART P.B does not ship dark.
 
 ## Risks named
