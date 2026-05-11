@@ -25,31 +25,25 @@ import (
 func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 	sys := u.System
 
-	// Sub-stage 1: day length.
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
+	// Sub-stage 1: day length. Moons inherit the parent's stellar period
+	// before the per-body call (their year around the star equals the
+	// parent's).
+	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty {
 			continue
 		}
+		if parent != nil {
+			body.Period.Hours = parent.Period.Hours
+		}
 		dl, err := GenerateDayLength(r, body, sys)
 		if err != nil {
-			return fmt.Errorf("worlds: stage4 day length %s: %w", body.Designation, err)
+			return fmt.Errorf("worlds: stage4 day length %s%s: %w", moonTag(parent), body.Designation, err)
 		}
 		body.DayLength = dl
-
-		for _, child := range body.Children {
-			child.Period.Hours = body.Period.Hours
-			dl, err := GenerateDayLength(r, child, sys)
-			if err != nil {
-				return fmt.Errorf("worlds: stage4 moon day length %s: %w", child.Designation, err)
-			}
-			child.DayLength = dl
-		}
 	}
 
 	// Sub-stage 2: axial tilt.
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
+	for body := range u.AllBodies() {
 		if body.Kind == BodyEmpty {
 			continue
 		}
@@ -58,58 +52,53 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 			return fmt.Errorf("worlds: stage4 axial tilt %s: %w", body.Designation, err)
 		}
 		body.AxialTilt = at
-
-		for _, child := range body.Children {
-			at, err := GenerateAxialTilt(r, child)
-			if err != nil {
-				return fmt.Errorf("worlds: stage4 moon axial tilt %s: %w", child.Designation, err)
-			}
-			child.AxialTilt = at
-		}
 	}
 
 	// Sub-stage 3: tidal lock. Planet uses its own Period.Hours; moon
-	// uses its PeriodHours (orbit around planet).
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
+	// uses its PeriodHours (orbit around planet) and passes the parent
+	// planet so GenerateTidalLock can resolve the moon-vs-planet branch.
+	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty {
 			continue
 		}
-		tl, err := GenerateTidalLock(r, body, nil, sys, nil, body.Period.Hours)
+		var moonRef *Body
+		hours := body.Period.Hours
+		if parent != nil {
+			moonRef = body
+			hours = body.PeriodHours
+		}
+		tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, hours)
 		if err != nil {
-			return fmt.Errorf("worlds: stage4 tidal lock %s: %w", body.Designation, err)
+			return fmt.Errorf("worlds: stage4 tidal lock %s%s: %w", moonTag(parent), body.Designation, err)
 		}
 		body.TidalLock = tl
-
-		for _, child := range body.Children {
-			tl, err := GenerateTidalLock(r, child, child, sys, body, child.PeriodHours)
-			if err != nil {
-				return fmt.Errorf("worlds: stage4 moon tidal lock %s: %w", child.Designation, err)
-			}
-			child.TidalLock = tl
-		}
 	}
 
 	// Sub-stage 4: surface tidal effects.
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
+	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty {
 			continue
 		}
-		ste, err := GenerateSurfaceTidalEffects(body, nil, sys, nil)
+		var moonRef *Body
+		if parent != nil {
+			moonRef = body
+		}
+		ste, err := GenerateSurfaceTidalEffects(body, moonRef, sys, parent)
 		if err != nil {
-			return fmt.Errorf("worlds: stage4 surface tidal %s: %w", body.Designation, err)
+			return fmt.Errorf("worlds: stage4 surface tidal %s%s: %w", moonTag(parent), body.Designation, err)
 		}
 		body.TidalEffects = ste
-
-		for _, child := range body.Children {
-			ste, err := GenerateSurfaceTidalEffects(child, child, sys, body)
-			if err != nil {
-				return fmt.Errorf("worlds: stage4 moon surface tidal %s: %w", child.Designation, err)
-			}
-			child.TidalEffects = ste
-		}
 	}
 
 	return nil
+}
+
+// moonTag yields "moon " when the iterating body is a moon (parent
+// non-nil), empty otherwise. Used to preserve the moon-vs-planet split
+// in Stage 4 error message prefixes after the loop unification.
+func moonTag(parent *Body) string {
+	if parent != nil {
+		return "moon "
+	}
+	return ""
 }

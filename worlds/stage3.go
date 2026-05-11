@@ -13,20 +13,15 @@ import (
 // and Body.MassEarth in place.
 //
 // Per anti-pattern A.1, every terrestrial moon is walked alongside its
-// planet. GG-cascade moons (Body.SizeCode == "G", GGClass != NotGasGiant)
+// planet via AllBodies — body.Host() supplies the parent for moons and
+// the body itself for planets so HZ inheritance flows uniformly.
+// GG-cascade moons (Body.SizeCode == "G", GGClass != NotGasGiant)
 // already have MassEarth from Stage 2's gasGiantSpecialMoon and skip
 // physical generation. Belts (Size 0) handled by ApplyBeltDetails.
 func ApplyBodyPhysical(r roller.Roller, u *Universe) error {
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
-		if err := generateBodyPhysicalIfTerrestrial(r, body, body, u.System); err != nil {
+	for body := range u.AllBodies() {
+		if err := generateBodyPhysicalIfTerrestrial(r, body, body.Host(), u.System); err != nil {
 			return err
-		}
-		for j := range body.Children {
-			child := body.Children[j]
-			if err := generateBodyPhysicalIfTerrestrial(r, child, body, u.System); err != nil {
-				return err
-			}
 		}
 	}
 	return nil
