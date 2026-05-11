@@ -17,14 +17,11 @@ import (
 //     persistence rolls.
 //  3. Insidious Atmosphere Hazard typology for atm C (Insidious).
 //
-// Per anti-pattern A.1, every moon is walked alongside its parent.
+// Per anti-pattern A.1, every moon is walked alongside its parent —
+// AllBodies descends into Children automatically.
 func ApplyTaintTypology(r roller.Roller, u *Universe) error {
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
+	for body := range u.AllBodies() {
 		applyBodyTaints(r, body)
-		for _, child := range body.Children {
-			applyBodyTaints(r, child)
-		}
 	}
 	return nil
 }
@@ -55,26 +52,18 @@ func applyBodyTaints(r roller.Roller, body *Body) {
 // orchestrator. Runs after ApplyClimate so hydrographics is final
 // (per dependency-graph.md § Stage 6).
 //
-// Per anti-pattern A.1, every moon is walked alongside its parent.
+// Per anti-pattern A.1, every moon is walked alongside its parent —
+// AllBodies descends into Children automatically.
 func ApplySurfaceDistribution(r roller.Roller, u *Universe) error {
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
-		if body.HasHydrographics() {
-			sd, err := GenerateSurfaceDistribution(r, body.Hydrographics)
-			if err != nil {
-				return fmt.Errorf("worlds: stage6 surface distribution %s: %w", body.Designation, err)
-			}
-			body.SurfaceDistribution = sd
+	for body := range u.AllBodies() {
+		if !body.HasHydrographics() {
+			continue
 		}
-		for _, child := range body.Children {
-			if child.HasHydrographics() {
-				sd, err := GenerateSurfaceDistribution(r, child.Hydrographics)
-				if err != nil {
-					return fmt.Errorf("worlds: stage6 moon surface distribution %s: %w", child.Designation, err)
-				}
-				child.SurfaceDistribution = sd
-			}
+		sd, err := GenerateSurfaceDistribution(r, body.Hydrographics)
+		if err != nil {
+			return fmt.Errorf("worlds: stage6 surface distribution %s: %w", body.Designation, err)
 		}
+		body.SurfaceDistribution = sd
 	}
 	return nil
 }
