@@ -99,10 +99,7 @@ func ApplyMoonRefinement(r roller.Roller, u *Universe) error {
 // refineParentMoons applies WBH pp.75-77 to one parent body. No-op
 // for parents without resolvable mass.
 func refineParentMoons(r roller.Roller, parent *Body) {
-	planetMass := parent.MassEarth
-	if planetMass == 0 && parent.Physical != nil {
-		planetMass = DeriveMass(parent.Physical.Density, parent.DiameterKm)
-	}
+	planetMass := parent.MassOrDerived()
 	if planetMass == 0 {
 		return
 	}
