@@ -7,32 +7,25 @@ import (
 	"wbh/stars"
 )
 
-// ApplyClimate runs the climate fixed-point cluster (atmosphere ↔
-// hydrographics ↔ temperature, with partial geology folded in) for
-// every eligible body in the universe. Stage-5 orchestrator per WBH
-// pp.79, 81, 96-99, 102, 108-126.
+// ApplyClimate runs the climate cluster (atmosphere ↔ hydrographics ↔
+// temperature, with partial geology folded in) for every eligible body
+// in the universe. Stage-5 orchestrator per WBH pp.79, 81, 96-99, 102,
+// 108-126.
 //
 // Per dependency-graph.md § Stage 7, partial-geology (Residual + TSF +
-// THF) is computed inside the climate loop so the post-TSS Temperature
-// converges with the rederived atm/hydro. Tectonic plates and GG
-// residual heat are forward-only post-climate (Stage 7).
+// THF) is computed inside ConvergeClimate so the post-TSS Temperature
+// re-derives atm/hydro consistently. Tectonic plates and GG residual
+// heat are forward-only post-climate (Stage 7).
 //
-// Per anti-pattern A.1, every HZ-planet moon is walked alongside its
-// parent.
+// Every body is walked uniformly via Universe.AllBodies(); eligibility
+// (HZ-orbit terrestrials and HZ-planet moons) is enforced inside
+// ConvergeClimate's initialAtmosphere check — ineligible bodies
+// short-circuit at zero cost. Per anti-pattern A.1, every HZ-planet
+// moon is walked alongside its parent.
 func ApplyClimate(r roller.Roller, u *Universe) error {
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
+	for body := range u.AllBodies() {
 		if err := ConvergeClimate(r, body, u.System); err != nil {
 			return fmt.Errorf("worlds: stage5 climate %s: %w", body.Designation, err)
-		}
-		// Walk moons of HZ planets only (per pass-1 5A).
-		if !body.HZ {
-			continue
-		}
-		for _, child := range body.Children {
-			if err := ConvergeClimate(r, child, u.System); err != nil {
-				return fmt.Errorf("worlds: stage5 moon climate %s: %w", child.Designation, err)
-			}
 		}
 	}
 	return nil

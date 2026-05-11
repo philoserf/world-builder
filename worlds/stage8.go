@@ -10,22 +10,16 @@ import (
 //
 // Per dependency-graph.md § Stage 8, the optional any-oxygen-atm
 // biomass floor is cut (design-intent.md cuts list). Per anti-pattern
-// A.1, every moon is walked alongside its parent — a terrestrial moon
-// with atmosphere gets biology regardless of its parent type (Zed
-// Prime canonical example: moon of Aab IV gas giant).
+// A.1, every body is walked uniformly via Universe.AllBodies() — a
+// terrestrial moon with atmosphere gets biology regardless of its
+// parent type (Zed Prime canonical example: moon of Aab IV gas giant).
 func ApplyBiology(r roller.Roller, u *Universe) error {
 	ageGyr := u.System.Primary.AgeGyr
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
-		if biologyApplies(body) {
-			body.Biology = computeBiology(r, body, ageGyr)
+	for body := range u.AllBodies() {
+		if !biologyApplies(body) {
+			continue
 		}
-		for _, child := range body.Children {
-			if child.Atmosphere == nil {
-				continue
-			}
-			child.Biology = computeBiology(r, child, ageGyr)
-		}
+		body.Biology = computeBiology(r, body, ageGyr)
 	}
 	return nil
 }

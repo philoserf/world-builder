@@ -12,19 +12,12 @@ package worlds
 //
 // Pure function — no rolls. Per docs/pass-2/api-surface.md § Stage 9.
 func ApplyHabitability(u *Universe) {
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
-		if habitabilityApplies(body) {
-			h := ComputeHabitability(body)
-			body.Habitability = &h
+	for body := range u.AllBodies() {
+		if !habitabilityApplies(body) {
+			continue
 		}
-		for _, child := range body.Children {
-			if !habitabilityApplies(child) {
-				continue
-			}
-			ch := ComputeHabitability(child)
-			child.Habitability = &ch
-		}
+		h := ComputeHabitability(body)
+		body.Habitability = &h
 	}
 }
 
