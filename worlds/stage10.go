@@ -25,7 +25,7 @@ func AggregateSystem(u *Universe) {
 	u.Detail.LongProfile = buildLongProfile(u)
 
 	// Step 3 — mainworld pick.
-	designation, body := pickMainworld(u.Detail.Bodies)
+	designation, body := pickMainworld(u)
 	u.Detail.MainworldDesignation = designation
 	u.Detail.Mainworld = body
 }
@@ -106,7 +106,7 @@ func buildLongProfile(u *Universe) string {
 		})
 	}
 
-	for _, body := range u.Detail.Bodies {
+	for body := range u.AllBodies() {
 		idx, ok := groupIdx[body.Group.Designation]
 		if !ok {
 			continue
@@ -147,9 +147,10 @@ func formatSpread(s float64) string {
 //  3. Highest ResourceRating > 0 (admits belts).
 //  4. First terrestrial / moon / belt body in iteration order.
 //
-// Walks both Body and Children (moons). Returns ("", nil) only when
-// the system has no terrestrial / moon / belt bodies whatsoever.
-func pickMainworld(bodies []Body) (string, *Body) {
+// Walks every Body in the universe via AllBodies (planets, moons,
+// belts). Returns ("", nil) only when the system has no terrestrial /
+// moon / belt bodies whatsoever.
+func pickMainworld(u *Universe) (string, *Body) {
 	type candidate struct {
 		body         *Body
 		habitability int
@@ -157,9 +158,10 @@ func pickMainworld(bodies []Body) (string, *Body) {
 		hasSophont   bool
 	}
 	var candidates []candidate
-	collect := func(body *Body, belt *BeltDetails) {
+
+	for body := range u.AllBodies() {
 		if body.Kind != BodyTerrestrial && body.Kind != BodyMoon && body.Kind != BodyPlanetoidBelt {
-			return
+			continue
 		}
 		c := candidate{body: body}
 		if body.Habitability != nil {
@@ -169,18 +171,10 @@ func pickMainworld(bodies []Body) (string, *Body) {
 			c.resource = body.Biology.ResourceRating
 			c.hasSophont = body.Biology.HasNativeSophont || body.Biology.HadExtinctSophont
 		}
-		if body.Kind == BodyPlanetoidBelt && belt != nil {
-			c.resource = belt.ResourceRating
+		if body.Kind == BodyPlanetoidBelt && body.Belt != nil {
+			c.resource = body.Belt.ResourceRating
 		}
 		candidates = append(candidates, c)
-	}
-
-	for i := range bodies {
-		body := &bodies[i]
-		collect(body, body.Belt)
-		for _, child := range body.Children {
-			collect(child, nil)
-		}
 	}
 
 	if len(candidates) == 0 {
