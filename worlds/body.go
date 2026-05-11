@@ -147,3 +147,15 @@ func (b *Body) StellarOrbit() float64 {
 	}
 	return b.Orbit
 }
+
+// Host returns the body that orbits a star directly: the parent planet
+// for moons, the body itself for planets and belts. Use this when a
+// procedure needs the star-facing reference body (HZ flag, stellar
+// orbit, parent mass for tidal effects) without re-implementing the
+// moon-vs-planet branch.
+func (b *Body) Host() *Body {
+	if b.Kind == BodyMoon && b.Parent != nil {
+		return b.Parent
+	}
+	return b
+}
