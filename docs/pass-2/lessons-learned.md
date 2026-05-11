@@ -128,6 +128,23 @@ Post-cycle-17 investigation (A1 option (b) per `next-steps.md`):
 
 The agent-vault entry [[2026-05-10-empirical-convergence-validates-spec]] captures this lesson cross-project: validate convergence empirically before specing N-iteration.
 
+## L14 — External evaluation reveals what a solo maintainer's perspective misses
+
+Late in the pass-2-to-1.0 transition, three AI-generated evaluations were filed as GitHub issues (#35, #36, #37). Two were high-level positive assessments; one (#36) surfaced three concrete actionable findings that the solo maintainer's perspective had missed:
+
+- A **dead `worlds.Climate` struct** that had survived from cycle-0's stub design into cycle 17's redesign. Cycle 17 reverted to direct `Body` mutation; the speculatively-created `Climate` value type became zombie code but stayed because no test exercised it and no human re-read `climate.go` end-to-end after the redesign. Anti-pattern A.4 in plain sight.
+- **Orchestrator iteration duplication.** `Universe.AllBodies()` existed and was used in property tests but not in the stage orchestrators — those re-implemented the planet/child iteration five times with subtly different gating. A.1's "moons walked alongside planets" was honoured, but its implementation was duplicated. The unifier (`AllBodies()`) was shipped but not used in the code it was supposed to simplify.
+- **A.7 file-size threshold not applied** to several files exceeding 500 lines. The pre-flight checklist was written; the post-implementation audit wasn't done.
+
+**Generalizable lessons:**
+
+- After a major architectural pivot (like cycle 17's climate redesign), do a zombie sweep — read every file touched by the pivot and ask "is anything in here only because the pre-pivot design wanted it?"
+- When you ship a unifying type or method (like `AllBodies()`), grep for places that should use it and audit the ones that don't. The iterator existing isn't enough; it has to be used where the duplication was supposed to disappear.
+- Pre-flight checklists (like `anti-patterns.md`) need a matching post-flight audit. A.7 was written but never applied after cycles 5-9 grew the files.
+- **External evaluation is high-ROI** even when the reviewer is an LLM with no prior context. The reviewer doesn't know the project's history, so they read what's actually there rather than what the maintainer remembers should be there. The signal-to-noise on AI evaluations is variable, but the concrete actionable findings tend to be real.
+
+The two non-actionable evaluations (#35, #37) had value too: they confirmed the architectural decisions were legible to a cold reader, which is a useful signal for a project approaching a 1.0 tag.
+
 ## Closing — what changed from pass 1 vs what survived
 
 What changed: the type system (unified Body), the iteration pattern (`iter.Seq[*Body]`), the architectural layering (`iiss/` split, ConvergeClimate as a per-body entry, TSS folded into climate), the test fixture pattern (Seeded shape-invariant for façades), the orchestrator code (every Apply\* function), the cycle cadence (per-stage instead of per-WBH-page).

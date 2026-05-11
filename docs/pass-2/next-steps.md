@@ -2,7 +2,15 @@
 
 ## Path to 1.0
 
-**No pass 3 is planned.** Pass 2's architectural rebuild is the end-state design; the project's next milestone is **v1.0** after a vetting period on the merged code. Vetting means running the CLI across many seeds, watching for output that looks wrong to a human reader, surfacing edge cases the test suite hasn't caught, and fixing whatever genuinely-bug-level issues surface. Once vetting is satisfied, tag `v1.0` on main.
+**No pass 3 is planned.** Pass 2's architectural rebuild is the end-state design; the project's next milestone is **v1.0** after a vetting period on the merged code. Once vetting is satisfied, tag `v1.0` on main.
+
+**What vetting looks like** (in any order):
+
+- Run `cmd/wbh` across many seeds; eyeball output for human-spottable bugs.
+- Solicit external evaluation (AI-generated review of architecture / tests / docs, GitHub issues, asking a referee to try it). The pre-1.0 push surfaced three evaluation issues (#35, #36, #37) that found real polish items the solo-maintainer perspective had missed — see `lessons-learned.md` § L14.
+- After any major refactor or redesign, audit for zombie types and unused unifiers (the `worlds.Climate` struct and the unused `AllBodies()` iterator were both flagged by external review, not by the test suite — tests passed without exercising either).
+- Apply the post-flight anti-patterns sweep that the pre-flight checklist didn't cover: file sizes (A.7), shallow forwarding layers, accidental duplication where a unifying helper exists.
+- File issues for anything that looks wrong; address concrete findings; close non-actionable items honestly with comments rather than ignoring them.
 
 The items below catalog open work that may or may not happen on the path to 1.0. Some are decisions-already-made (A2, A4); some are optional polish (C2, C3, C4); some are explicitly out of scope (C5).
 
