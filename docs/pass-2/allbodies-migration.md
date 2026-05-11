@@ -2,7 +2,7 @@
 
 ## What it is
 
-`worlds.Universe` has an `AllBodies() iter.Seq[*Body]` method (`worlds/universe.go:40`) that yields every body in the universe — planets, then each planet's children (moons), in ascending-orbit order within each star group. It is the _contract_ iterator: `LongProfile` and `AssignPlanetDesignations` rely on its ordering.
+`worlds.Universe` has an `AllBodies() iter.Seq[*Body]` method (in `worlds/universe.go`) that yields every body in the universe — planets, then each planet's children (moons), in ascending-orbit order within each star group. It is the _contract_ iterator: `LongProfile` and `AssignPlanetDesignations` rely on its ordering.
 
 But only stages 5, 8, and 9 actually use it. Stages **3, 4, 6, and 7** still hand-walk `u.Detail.Bodies` and `body.Children` with paired loops:
 

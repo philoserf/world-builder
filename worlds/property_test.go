@@ -167,6 +167,14 @@ func TestProperty_MainworldExists(t *testing.T) {
 			t.Errorf("seed %d: system has no candidates but Mainworld pointer is non-nil (%s)",
 				seed, u.Detail.Mainworld.Designation)
 		}
+		if !hasCandidate && u.Detail.MainworldDesignation != "" {
+			t.Errorf("seed %d: system has no candidates but MainworldDesignation=%q is set",
+				seed, u.Detail.MainworldDesignation)
+		}
+		if u.Detail.Mainworld == nil && u.Detail.MainworldDesignation != "" {
+			t.Errorf("seed %d: Mainworld pointer is nil but MainworldDesignation=%q is set",
+				seed, u.Detail.MainworldDesignation)
+		}
 		if u.Detail.Mainworld != nil && u.Detail.Mainworld.Designation != u.Detail.MainworldDesignation {
 			t.Errorf("seed %d: Mainworld.Designation=%q does not match MainworldDesignation=%q",
 				seed, u.Detail.Mainworld.Designation, u.Detail.MainworldDesignation)
