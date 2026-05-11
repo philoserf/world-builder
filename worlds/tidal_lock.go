@@ -53,10 +53,10 @@ const (
 // Per WBH p.106: "In 'edge' conditions where a value corresponds to more than
 // one DM or falls between two DMs, use the DM closer to 0."
 func EvaluateTidalLockDMs(
-	body *DetailedPlacement,
+	body *Body,
 	sys stars.System,
-	parentPlanet *DetailedPlacement,
-	moonRef *Moon,
+	parentPlanet *Body,
+	moonRef *Body,
 ) map[TidalLockCase]int {
 	common := commonTidalLockDMs(body, sys)
 	out := make(map[TidalLockCase]int, 3)
@@ -78,7 +78,7 @@ func EvaluateTidalLockDMs(
 }
 
 // commonTidalLockDMs computes DMs that apply to all three cases per WBH p.106.
-func commonTidalLockDMs(body *DetailedPlacement, sys stars.System) int {
+func commonTidalLockDMs(body *Body, sys stars.System) int {
 	dm := 0
 
 	// Size 1 or more: DM+Size÷3 (round up).
@@ -127,7 +127,7 @@ func commonTidalLockDMs(body *DetailedPlacement, sys stars.System) int {
 }
 
 // planetToStarDMs computes the planet→star case-specific DMs per WBH p.106.
-func planetToStarDMs(body *DetailedPlacement, sys stars.System) int {
+func planetToStarDMs(body *Body, sys stars.System) int {
 	dm := -4 // Base
 
 	// Orbit# DM ladder.
@@ -174,7 +174,7 @@ func planetToStarDMs(body *DetailedPlacement, sys stars.System) int {
 }
 
 // moonToPlanetDMs computes the moon→planet case-specific DMs per WBH p.106.
-func moonToPlanetDMs(moonRef *Moon, parent *DetailedPlacement) int {
+func moonToPlanetDMs(moonRef, parent *Body) int {
 	dm := 6 // Base
 
 	// Moon orbit greater than 20 PD: DM-PD÷20 (round down).
@@ -207,17 +207,17 @@ func moonToPlanetDMs(moonRef *Moon, parent *DetailedPlacement) int {
 // The book does not publish a complete DM table for this case in the same
 // detail as the other two; this implements the structure analogous to p.106's
 // listed parameters. Only called when hasSignificantMoon is true.
-func planetToMoonDMs(body *DetailedPlacement) int {
+func planetToMoonDMs(body *Body) int {
 	dm := -10 // Base
 
 	// Use the closest significant moon (smallest OrbitPD with Size 1+).
-	var closest *Moon
-	for i := range body.Moons {
-		if nForSizeCode(body.Moons[i].SizeCode) < 1 {
+	var closest *Body
+	for i := range body.Children {
+		if nForSizeCode(body.Children[i].SizeCode) < 1 {
 			continue
 		}
-		if closest == nil || body.Moons[i].OrbitPD < closest.OrbitPD {
-			closest = &body.Moons[i]
+		if closest == nil || body.Children[i].OrbitPD < closest.OrbitPD {
+			closest = body.Children[i]
 		}
 	}
 	if closest == nil {
@@ -257,7 +257,7 @@ func planetToMoonDMs(body *DetailedPlacement) int {
 //   - On ties between multiple moons (future: moonToPlanet for multiple moons),
 //     closest moon first — handled at orchestration level via per-moon iteration.
 //   - Returns TidalLockCaseNone if no case applies.
-func SelectHighestDMCase(dms map[TidalLockCase]int, _ *DetailedPlacement) (TidalLockCase, int) {
+func SelectHighestDMCase(dms map[TidalLockCase]int, _ *Body) (TidalLockCase, int) {
 	bestCase := TidalLockCaseNone
 	bestDM := -10 // exclusive lower bound
 	// Order: MoonToPlanet > PlanetToMoon > PlanetToStar.
@@ -295,24 +295,24 @@ func RollTidalLockStatus(r roller.Roller, dm int) int {
 
 // --- helpers ---
 
-func hasSignificantMoon(body *DetailedPlacement) bool {
+func hasSignificantMoon(body *Body) bool {
 	return countSignificantMoons(body) > 0
 }
 
-func countSignificantMoons(body *DetailedPlacement) int {
+func countSignificantMoons(body *Body) int {
 	n := 0
-	for i := range body.Moons {
-		if nForSizeCode(body.Moons[i].SizeCode) >= 1 {
+	for i := range body.Children {
+		if nForSizeCode(body.Children[i].SizeCode) >= 1 {
 			n++
 		}
 	}
 	return n
 }
 
-func sumSignificantMoonSizes(body *DetailedPlacement) int {
+func sumSignificantMoonSizes(body *Body) int {
 	total := 0
-	for i := range body.Moons {
-		if n := nForSizeCode(body.Moons[i].SizeCode); n >= 1 {
+	for i := range body.Children {
+		if n := nForSizeCode(body.Children[i].SizeCode); n >= 1 {
 			total += n
 		}
 	}
@@ -349,8 +349,8 @@ func countStarsOrbited(sys stars.System) int {
 // parentMassEarth returns the parent planet's mass in Earth masses.
 // For gas giants, reads MassEarth directly (set by the GG sizing step).
 // For terrestrial parents with BodyPhysical, derives mass from density and diameter.
-func parentMassEarth(parent *DetailedPlacement) float64 {
-	if parent.Body == BodyGasGiant {
+func parentMassEarth(parent *Body) float64 {
+	if parent.Kind == BodyGasGiant {
 		return parent.MassEarth
 	}
 	if parent.Physical != nil {
@@ -372,8 +372,8 @@ func parentMassEarth(parent *DetailedPlacement) float64 {
 // Recomputes YearDays + SolarHours after SiderealHours mutation.
 func ApplyTidalLockEffect(
 	r roller.Roller,
-	body *DetailedPlacement,
-	_ *Moon,
+	body *Body,
+	_ *Body,
 	kase TidalLockCase,
 	initialResult int,
 	yearHours float64,
@@ -495,13 +495,13 @@ func rerollEccentricityDMMinus2(r roller.Roller) (float64, error) {
 // Mutates body's DayLength, AxialTilt, and Eccentricity in place when an effect applies.
 func GenerateTidalLock(
 	r roller.Roller,
-	body *DetailedPlacement,
-	moonRef *Moon,
+	body *Body,
+	moonRef *Body,
 	sys stars.System,
-	parentPlanet *DetailedPlacement,
+	parentPlanet *Body,
 	yearHours float64,
 ) (*TidalLock, error) {
-	if body.Body == BodyEmpty {
+	if body.Kind == BodyEmpty {
 		return nil, nil
 	}
 

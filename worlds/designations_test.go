@@ -15,27 +15,27 @@ func TestAssignPlanetDesignations_BeltSkip(t *testing.T) {
 	t.Parallel()
 
 	g := Group{Designation: "Aab"}
-	dps := []DetailedPlacement{
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 1.0, Group: g}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 1.6, Group: g}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 2.1, Group: g}}}},
-		{Placement: Placement{Body: BodyPlanetoidBelt, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 2.7, Group: g}}}},
-		{Placement: Placement{Body: BodyGasGiant, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 3.1, Group: g}}}},
-		{Placement: Placement{Body: BodyGasGiant, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 3.5, Group: g}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 4.1, Group: g}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 4.6, Group: g}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 5.2, Group: g}}}},
+	bodies := []Body{
+		{Kind: BodyTerrestrial, Group: g, Orbit: 1.0},
+		{Kind: BodyTerrestrial, Group: g, Orbit: 1.6},
+		{Kind: BodyTerrestrial, Group: g, Orbit: 2.1},
+		{Kind: BodyPlanetoidBelt, Group: g, Orbit: 2.7},
+		{Kind: BodyGasGiant, Group: g, Orbit: 3.1},
+		{Kind: BodyGasGiant, Group: g, Orbit: 3.5},
+		{Kind: BodyTerrestrial, Group: g, Orbit: 4.1},
+		{Kind: BodyTerrestrial, Group: g, Orbit: 4.6},
+		{Kind: BodyTerrestrial, Group: g, Orbit: 5.2},
 	}
 
-	AssignPlanetDesignations(dps)
+	AssignPlanetDesignations(bodies)
 
 	want := []string{
 		"Aab I", "Aab II", "Aab III", "Aab PI",
 		"Aab IV", "Aab V", "Aab VI", "Aab VII", "Aab VIII",
 	}
 	for i, w := range want {
-		if dps[i].Designation != w {
-			t.Errorf("dps[%d].Designation = %q, want %q", i, dps[i].Designation, w)
+		if bodies[i].Designation != w {
+			t.Errorf("bodies[%d].Designation = %q, want %q", i, bodies[i].Designation, w)
 		}
 	}
 }
@@ -50,22 +50,22 @@ func TestAssignPlanetDesignations_PerGroupReset(t *testing.T) {
 	gB := Group{Designation: "B"}
 	gCab := Group{Designation: "Cab"}
 
-	dps := []DetailedPlacement{
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 1.0, Group: gAab}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 7.2, Group: gAB}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 7.8, Group: gAB}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 0.52, Group: gB}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 1.0, Group: gB}}}},
-		{Placement: Placement{Body: BodyPlanetoidBelt, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 1.4, Group: gCab}}}},
-		{Placement: Placement{Body: BodyTerrestrial, AnomalousSlot: AnomalousSlot{Slot: Slot{Orbit: 2.3, Group: gCab}}}},
+	bodies := []Body{
+		{Kind: BodyTerrestrial, Group: gAab, Orbit: 1.0},
+		{Kind: BodyTerrestrial, Group: gAB, Orbit: 7.2},
+		{Kind: BodyTerrestrial, Group: gAB, Orbit: 7.8},
+		{Kind: BodyTerrestrial, Group: gB, Orbit: 0.52},
+		{Kind: BodyTerrestrial, Group: gB, Orbit: 1.0},
+		{Kind: BodyPlanetoidBelt, Group: gCab, Orbit: 1.4},
+		{Kind: BodyTerrestrial, Group: gCab, Orbit: 2.3},
 	}
 
-	AssignPlanetDesignations(dps)
+	AssignPlanetDesignations(bodies)
 
 	want := []string{"Aab I", "AB I", "AB II", "B I", "B II", "Cab PI", "Cab I"}
 	for i, w := range want {
-		if dps[i].Designation != w {
-			t.Errorf("dps[%d].Designation = %q, want %q", i, dps[i].Designation, w)
+		if bodies[i].Designation != w {
+			t.Errorf("bodies[%d].Designation = %q, want %q", i, bodies[i].Designation, w)
 		}
 	}
 }
@@ -75,42 +75,44 @@ func TestAssignPlanetDesignations_PerGroupReset(t *testing.T) {
 func TestAssignMoonDesignations_AlphabeticOrder(t *testing.T) {
 	t.Parallel()
 
-	dps := []DetailedPlacement{
+	bodies := []Body{
 		{
 			Designation: "Aab IV",
-			Moons: []Moon{
-				{SizeCode: "2"}, // a
-				{SizeCode: "S"}, // b
-				{SizeCode: "S"}, // c
-				{SizeCode: "5"}, // d
-				{SizeCode: "S"}, // e
+			Children: []*Body{
+				{Kind: BodyMoon, SizeCode: "2"}, // a
+				{Kind: BodyMoon, SizeCode: "S"}, // b
+				{Kind: BodyMoon, SizeCode: "S"}, // c
+				{Kind: BodyMoon, SizeCode: "5"}, // d
+				{Kind: BodyMoon, SizeCode: "S"}, // e
 			},
 		},
 		{
 			Designation: "Aab V",
-			Moons: []Moon{
-				{SizeCode: "S"},
-				{SizeCode: "A"},
-				{SizeCode: "1"},
-				{SizeCode: "3"},
-				{SizeCode: "S"},
-				{SizeCode: "S"},
+			Children: []*Body{
+				{Kind: BodyMoon, SizeCode: "S"},
+				{Kind: BodyMoon, SizeCode: "A"},
+				{Kind: BodyMoon, SizeCode: "1"},
+				{Kind: BodyMoon, SizeCode: "3"},
+				{Kind: BodyMoon, SizeCode: "S"},
+				{Kind: BodyMoon, SizeCode: "S"},
 			},
 		},
 	}
 
-	AssignMoonDesignations(dps)
+	AssignMoonDesignations(bodies)
 
 	wantAabIV := []string{"Aab IV a", "Aab IV b", "Aab IV c", "Aab IV d", "Aab IV e"}
 	for i, w := range wantAabIV {
-		if dps[0].Moons[i].Designation != w {
-			t.Errorf("dps[0].Moons[%d].Designation = %q, want %q", i, dps[0].Moons[i].Designation, w)
+		if bodies[0].Children[i].Designation != w {
+			t.Errorf("bodies[0].Children[%d].Designation = %q, want %q",
+				i, bodies[0].Children[i].Designation, w)
 		}
 	}
 	wantAabV := []string{"Aab V a", "Aab V b", "Aab V c", "Aab V d", "Aab V e", "Aab V f"}
 	for i, w := range wantAabV {
-		if dps[1].Moons[i].Designation != w {
-			t.Errorf("dps[1].Moons[%d].Designation = %q, want %q", i, dps[1].Moons[i].Designation, w)
+		if bodies[1].Children[i].Designation != w {
+			t.Errorf("bodies[1].Children[%d].Designation = %q, want %q",
+				i, bodies[1].Children[i].Designation, w)
 		}
 	}
 }
@@ -119,9 +121,45 @@ func TestAssignMoonDesignations_AlphabeticOrder(t *testing.T) {
 // doesn't panic and leaves Designation empty.
 func TestAssignMoonDesignations_NoMoonsNoPanic(t *testing.T) {
 	t.Parallel()
-	dps := []DetailedPlacement{
-		{Designation: "Aab III", Moons: nil},
-		{Designation: "Aab VII", Moons: []Moon{}},
+	bodies := []Body{
+		{Designation: "Aab III", Children: nil},
+		{Designation: "Aab VII", Children: []*Body{}},
 	}
-	AssignMoonDesignations(dps) // must not panic
+	AssignMoonDesignations(bodies) // must not panic
+}
+
+// TestMarkHZ exercises the WBH p.58 HZ-tagging rule: a body is in the
+// habitable zone when its orbit lies within HZCO ± 1.0 of the host
+// group.
+func TestMarkHZ(t *testing.T) {
+	t.Parallel()
+
+	g := Group{Designation: "Aab"}
+	// Group.HZCO() reads from group's primary star; for tests we
+	// drive the boundaries directly via Group's HZCO method by
+	// composing a Group with known intervals; HZ is set per orbit
+	// vs. that group's HZCO. Use a synthetic group whose HZCO
+	// resolves to a known value via its computed primary.
+	//
+	// For this unit test we instead exercise the boundary logic
+	// via the Group's HZCO() return — a Group with Members[0] set
+	// to a star with a known HZCO. The simpler smoke test below
+	// uses an empty Group (HZCO == 0) and asserts orbit-zero is HZ.
+	bodies := []Body{
+		{Kind: BodyTerrestrial, Group: g, Orbit: 0.0}, // empty Group → HZCO 0; in-HZ at 0±1
+		{Kind: BodyTerrestrial, Group: g, Orbit: 1.5}, // out of [-1, 1]
+		{Kind: BodyEmpty, Group: g, Orbit: 0.0},       // empty kind never tagged
+	}
+
+	MarkHZ(bodies)
+
+	if !bodies[0].HZ {
+		t.Errorf("orbit 0 with HZCO 0 should be HZ-tagged")
+	}
+	if bodies[1].HZ {
+		t.Errorf("orbit 1.5 with HZCO 0 should not be HZ-tagged")
+	}
+	if bodies[2].HZ {
+		t.Errorf("BodyEmpty should never be HZ-tagged")
+	}
 }

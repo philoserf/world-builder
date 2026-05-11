@@ -105,8 +105,8 @@ func addAxialTiltPrecision(r roller.Roller) float64 {
 //
 // Linear-variance precision (extra degrees + arcminutes) is added only when
 // the basic roll dispatched to the Extreme table per WBH p.104.
-func GenerateAxialTilt(r roller.Roller, dp *DetailedPlacement) (*AxialTilt, error) {
-	if dp.Body == BodyEmpty {
+func GenerateAxialTilt(r roller.Roller, dp *Body) (*AxialTilt, error) {
+	if dp.Kind == BodyEmpty {
 		return nil, nil
 	}
 

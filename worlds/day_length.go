@@ -118,8 +118,8 @@ func tensOnesValue(r roller.Roller) int {
 // For Size 0/S/R terrestrials and gas giants: × 2 modifier applied via DayLengthDMs.IsGGOrSizeS.
 //
 // Year input comes from dp.Period.Hours (1 standard year = 8766 hours).
-func GenerateDayLength(r roller.Roller, dp *DetailedPlacement, sys stars.System) (*DayLength, error) {
-	if dp.Body == BodyEmpty {
+func GenerateDayLength(r roller.Roller, dp *Body, sys stars.System) (*DayLength, error) {
+	if dp.Kind == BodyEmpty {
 		return nil, nil
 	}
 	dms := DayLengthDMs{

@@ -26,8 +26,8 @@ func TestEvaluateTidalLockDMs_PlanetToStar_Mercury(t *testing.T) {
 	//     Single star, no significant moons → 0
 	//   specific total: -1
 	//   Total: +2 + (-1) = +1
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "4"
 	body.Orbit = 1.5
 	body.Eccentricity = 0.21
@@ -62,19 +62,20 @@ func TestEvaluateTidalLockDMs_MoonToPlanet_ZedPrime(t *testing.T) {
 	//     Planet mass 1200 ≥ 1000 → +8
 	//   specific total: +11
 	//   Total: -4 + 11 = +7
-	moonRef := &Moon{
+	moonRef := &Body{
+		Kind:         BodyMoon,
 		SizeCode:     "5",
 		OrbitPD:      22,
 		Retrograde:   true,
 		Eccentricity: 0.25,
 	}
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.MassEarth = 1200
 	parent.Orbit = 1.06
 
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Eccentricity = 0.25
 	body.AxialTilt = &AxialTilt{Degrees: 73.65}
@@ -94,8 +95,8 @@ func TestEvaluateTidalLockDMs_MoonToPlanet_ZedPrime(t *testing.T) {
 
 func TestEvaluateTidalLockDMs_PlanetToMoon_OnlyIfHasSignificantMoon(t *testing.T) {
 	// Planet→moon case is absent when the planet has no significant (Size 1+) moons.
-	body := &DetailedPlacement{SizeCode: "3"}
-	body.Body = BodyTerrestrial
+	body := &Body{SizeCode: "3"}
+	body.Kind = BodyTerrestrial
 	body.AxialTilt = &AxialTilt{Degrees: 0}
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
 
@@ -108,8 +109,8 @@ func TestEvaluateTidalLockDMs_PlanetToMoon_OnlyIfHasSignificantMoon(t *testing.T
 
 func TestEvaluateTidalLockDMs_NoMoonCases_NotAMoon(t *testing.T) {
 	// A planet (parentPlanet=nil, moonRef=nil) cannot be locked to a planet.
-	body := &DetailedPlacement{SizeCode: "5"}
-	body.Body = BodyTerrestrial
+	body := &Body{SizeCode: "5"}
+	body.Kind = BodyTerrestrial
 	body.AxialTilt = &AxialTilt{Degrees: 0}
 	body.Eccentricity = 0.0
 	body.Orbit = 5.0
@@ -127,7 +128,7 @@ func TestSelectHighestDMCase_FilterBelowMinusTen(t *testing.T) {
 		TidalLockCasePlanetToStar: -12,
 		TidalLockCaseMoonToPlanet: 5,
 	}
-	body := &DetailedPlacement{}
+	body := &Body{}
 	kase, dm := SelectHighestDMCase(dms, body)
 	if kase != TidalLockCaseMoonToPlanet {
 		t.Errorf("got case %v, want MoonToPlanet (planet→star filtered as ≤-10)", kase)
@@ -142,7 +143,7 @@ func TestSelectHighestDMCase_AllFiltered_ReturnsNone(t *testing.T) {
 		TidalLockCasePlanetToStar: -15,
 		TidalLockCaseMoonToPlanet: -11,
 	}
-	body := &DetailedPlacement{}
+	body := &Body{}
 	kase, _ := SelectHighestDMCase(dms, body)
 	if kase != TidalLockCaseNone {
 		t.Errorf("got case %v, want None", kase)
@@ -155,7 +156,7 @@ func TestSelectHighestDMCase_TieMoonFirst(t *testing.T) {
 		TidalLockCasePlanetToStar: 5,
 		TidalLockCaseMoonToPlanet: 5,
 	}
-	body := &DetailedPlacement{}
+	body := &Body{}
 	kase, _ := SelectHighestDMCase(dms, body)
 	if kase != TidalLockCaseMoonToPlanet {
 		t.Errorf("got case %v, want MoonToPlanet (moon-cases first on tie)", kase)
@@ -181,7 +182,7 @@ func TestRollTidalLockStatus_NegativeDMs(t *testing.T) {
 }
 
 func TestApplyTidalLockEffect_NoEffectResult2(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
 	body.AxialTilt = &AxialTilt{Degrees: 30}
 	body.Eccentricity = 0.05
@@ -200,7 +201,7 @@ func TestApplyTidalLockEffect_NoEffectResult2(t *testing.T) {
 }
 
 func TestApplyTidalLockEffect_DayMultiplier_Result4(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 42.37, BaselineSiderealHours: 42.37}
 	r := roller.NewScripted() // result 4 doesn't roll any further dice
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCaseMoonToPlanet, 4, 7056.63)
@@ -216,7 +217,7 @@ func TestApplyTidalLockEffect_DayMultiplier_Result4(t *testing.T) {
 }
 
 func TestApplyTidalLockEffect_OneToOneLock_StarCase_TwilightZone(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
 	body.AxialTilt = &AxialTilt{Degrees: 0, BaselineDegrees: 0}
 	body.Eccentricity = 0.0
@@ -246,7 +247,7 @@ func TestApplyTidalLockEffect_OneToOneLock_StarCase_TwilightZone(t *testing.T) {
 func TestApplyTidalLockEffect_NaturalTwelve_BreaksLock_ZedPath(t *testing.T) {
 	// Zed Prime path: InitialResult=13 (1:1 lock pending) → verification 2D=12 (natural 12)
 	// → reroll TidalLockStatus with no DMs → 2D=4 → result 4 → day × 2 effect.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 42.37, BaselineSiderealHours: 42.37}
 	body.AxialTilt = &AxialTilt{Degrees: 73.65, BaselineDegrees: 73.65}
 	body.Eccentricity = 0.25
@@ -289,7 +290,7 @@ func TestApplyTidalLockEffect_NaturalTwelve_BreaksLock_ZedPath(t *testing.T) {
 
 func TestApplyTidalLockEffect_OneToOneLock_AxialTiltReroll(t *testing.T) {
 	// 1:1 lock with old tilt > 3° → reroll as (2D-2)/10. Verification doesn't reroll.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
 	body.AxialTilt = &AxialTilt{Degrees: 25, BaselineDegrees: 25}
 	body.Eccentricity = 0.0
@@ -321,7 +322,7 @@ func TestApplyTidalLockEffect_OneToOneLock_EccentricityReroll(t *testing.T) {
 	// Verification: 2D=10 (not natural 12) → lock stands.
 	// No axial tilt reroll (tilt < 3°).
 	// Ecc reroll: 2D=5 → row = max(5, 5-2=3)=5 → SecondRoll="1D"=3 → v=-0.001+3/1000=0.002.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Eccentricity = 0.25
 	body.AxialTilt = &AxialTilt{Degrees: 0, BaselineDegrees: 0}
 	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
@@ -354,7 +355,7 @@ func TestApplyTidalLockEffect_OneToOneLock_EccentricityReroll(t *testing.T) {
 // the post-process should flip degrees to 180-30 = 150 and set Retrograde=true.
 // FinalResult=9 also rolls 1D for NewSiderealHours = 1D × 5 × 24h.
 func TestApplyTidalLockEffect_BecomesRetrograde_LowTiltFlips(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
 	body.AxialTilt = &AxialTilt{Degrees: 30, BaselineDegrees: 30}
 
@@ -388,7 +389,7 @@ func TestApplyTidalLockEffect_BecomesRetrograde_LowTiltFlips(t *testing.T) {
 // branch where a body already has tilt >= 90°. The post-process must NOT flip
 // (no 180-degrees mutation) and must set Retrograde=true.
 func TestApplyTidalLockEffect_BecomesRetrograde_HighTiltNoFlip(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
 	body.AxialTilt = &AxialTilt{Degrees: 120, BaselineDegrees: 120}
 
@@ -416,7 +417,7 @@ func TestApplyTidalLockEffect_BecomesRetrograde_HighTiltNoFlip(t *testing.T) {
 // post-process safely no-ops when body.AxialTilt is nil — a body with no
 // rolled tilt must not panic on the BecomesRetrograde flag.
 func TestApplyTidalLockEffect_BecomesRetrograde_NilAxialTilt(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
 	// AxialTilt deliberately nil.
 
@@ -446,19 +447,20 @@ func TestGenerateTidalLock_ZedPrime_FullPath(t *testing.T) {
 	//   2D for verification: 12
 	//   2D for status reroll (no DMs): 4
 
-	moonRef := &Moon{
+	moonRef := &Body{
+		Kind:         BodyMoon,
 		SizeCode:     "5",
 		OrbitPD:      22,
 		Retrograde:   true,
 		Eccentricity: 0.25,
 	}
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.MassEarth = 1200
 	parent.Orbit = 1.06
 
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Eccentricity = 0.25
 	body.AxialTilt = &AxialTilt{Degrees: 73.65, BaselineDegrees: 73.65}
@@ -500,19 +502,20 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 	// Pluto-side check: planet→moon case applies because the planet has a
 	// significant moon. With a high-mass moon at close orbit, planet→moon DM
 	// can rival or exceed planet→star, exercising the case 3 path.
-	plutoMoon := Moon{
+	plutoMoon := Body{
+		Kind:     BodyMoon,
 		SizeCode: "1",
 		OrbitPD:  5,
 	}
-	pluto := &DetailedPlacement{}
-	pluto.Body = BodyTerrestrial
+	pluto := &Body{}
+	pluto.Kind = BodyTerrestrial
 	pluto.SizeCode = "3"
 	pluto.Orbit = 30 // far from sun
 	pluto.Eccentricity = 0.05
 	pluto.AxialTilt = &AxialTilt{Degrees: 0}
 	pluto.DayLength = &DayLength{SiderealHours: 24, BaselineSiderealHours: 24}
 	pluto.Period = Period{Years: 248, Hours: 248 * 8766}
-	pluto.Moons = []Moon{plutoMoon}
+	pluto.Children = []*Body{&plutoMoon}
 
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
 

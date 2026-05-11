@@ -48,7 +48,7 @@ type Geology struct {
 //   - body.Physical.Density < 0.5 → −1
 //
 // ageGyr is the system age in billions of years.
-func ComputeResidualSeismicStress(body *DetailedPlacement, ageGyr float64, isMoon bool) int {
+func ComputeResidualSeismicStress(body *Body, ageGyr float64, isMoon bool) int {
 	if body == nil {
 		return 0
 	}
@@ -58,7 +58,7 @@ func ComputeResidualSeismicStress(body *DetailedPlacement, ageGyr float64, isMoo
 		dm++
 	}
 	moonDM := 0
-	for _, m := range body.Moons {
+	for _, m := range body.Children {
 		if SizeAsInt(m.SizeCode) >= 1 {
 			moonDM++
 		}
@@ -82,7 +82,7 @@ func ComputeResidualSeismicStress(body *DetailedPlacement, ageGyr float64, isMoo
 // ComputeTidalStressFactor per WBH p.126: floor(ΣTidalEffects / 10).
 // Reads body.TidalEffects.Total (metres, populated in Step 5B.5).
 // Returns 0 if body or TidalEffects is nil.
-func ComputeTidalStressFactor(body *DetailedPlacement) int {
+func ComputeTidalStressFactor(body *Body) int {
 	if body == nil || body.TidalEffects == nil {
 		return 0
 	}
@@ -204,7 +204,7 @@ func ComputeGGResidualHeat(massEarth, ageGyr float64) float64 {
 // If the rolled result ≤ 1, returns 0 (no tectonic activity).
 //
 // Worked: Zed Prime (S=5, Hydro=6, TSS=17, 2D=8) → 5 + 6 − 8 + 1 = 4.
-func RollTectonicPlates(r roller.Roller, body *DetailedPlacement, tss int) int {
+func RollTectonicPlates(r roller.Roller, body *Body, tss int) int {
 	if body == nil || body.Hydrographics == nil {
 		return 0
 	}

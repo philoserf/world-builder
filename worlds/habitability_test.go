@@ -5,7 +5,7 @@ import "testing"
 func TestComputeHabitability_BaselineNoDMs(t *testing.T) {
 	// Size 5, Atm 6 (no DM), Hydro 5 (no DM), no tidal lock, no temp/gravity DMs.
 	// Result: 10 + 0 = 10.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -16,7 +16,7 @@ func TestComputeHabitability_BaselineNoDMs(t *testing.T) {
 }
 
 func TestComputeHabitability_SmallSize_DMMinus1(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "4"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -28,7 +28,7 @@ func TestComputeHabitability_SmallSize_DMMinus1(t *testing.T) {
 }
 
 func TestComputeHabitability_LargeSize_DMPlus1(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "9"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -40,7 +40,7 @@ func TestComputeHabitability_LargeSize_DMPlus1(t *testing.T) {
 }
 
 func TestComputeHabitability_AtmVacuum_DMMinus8(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 0}
 	body.Hydrographics = &Hydrographics{Code: 0}
@@ -52,7 +52,7 @@ func TestComputeHabitability_AtmVacuum_DMMinus8(t *testing.T) {
 }
 
 func TestComputeHabitability_NilAtmosphere_TreatedAsAtm0(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = nil
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -64,7 +64,7 @@ func TestComputeHabitability_NilAtmosphere_TreatedAsAtm0(t *testing.T) {
 }
 
 func TestComputeHabitability_AtmHostile_DMMinus10(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 11} // B
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -76,7 +76,7 @@ func TestComputeHabitability_AtmHostile_DMMinus10(t *testing.T) {
 }
 
 func TestComputeHabitability_AtmVeryHostile_DMMinus12(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 12} // C
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -88,7 +88,7 @@ func TestComputeHabitability_AtmVeryHostile_DMMinus12(t *testing.T) {
 }
 
 func TestComputeHabitability_HydroDesert_DMMinus2(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 2}
@@ -100,7 +100,7 @@ func TestComputeHabitability_HydroDesert_DMMinus2(t *testing.T) {
 }
 
 func TestComputeHabitability_HydroFull_DMMinus2(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 10} // A
@@ -112,7 +112,7 @@ func TestComputeHabitability_HydroFull_DMMinus2(t *testing.T) {
 }
 
 func TestComputeHabitability_TidalLock1to1_DMMinus2(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -129,7 +129,7 @@ func TestComputeHabitability_TidalLock1to1_DMMinus2(t *testing.T) {
 }
 
 func TestComputeHabitability_TidalLockNot1to1_NoDM(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -159,7 +159,7 @@ func TestComputeHabitability_ZedPrime(t *testing.T) {
 	// Gravity 0.66 (0.4-0.7 narrower band wins → -1).
 	// DMs: 0 + 0 + 0 + 0 + (-2) + 0 + 0 + (-1) = -3
 	// Habitability = 10 - 3 = 7.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 6}
@@ -173,7 +173,7 @@ func TestComputeHabitability_ZedPrime(t *testing.T) {
 
 func TestComputeHabitability_TerraEquivalent(t *testing.T) {
 	// Size 8, Atm 6, Hydro 7 (no DM), no temp DMs, Gravity 1.0 (no DM).
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 7}
@@ -186,7 +186,7 @@ func TestComputeHabitability_TerraEquivalent(t *testing.T) {
 }
 
 func TestComputeHabitability_HighTempHotBand(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -200,7 +200,7 @@ func TestComputeHabitability_HighTempHotBand(t *testing.T) {
 }
 
 func TestComputeHabitability_HighTempColdBand(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -214,7 +214,7 @@ func TestComputeHabitability_HighTempColdBand(t *testing.T) {
 }
 
 func TestComputeHabitability_MeanTempHottest(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -228,7 +228,7 @@ func TestComputeHabitability_MeanTempHottest(t *testing.T) {
 }
 
 func TestComputeHabitability_MeanTempBoundary323(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -243,7 +243,7 @@ func TestComputeHabitability_MeanTempBoundary323(t *testing.T) {
 }
 
 func TestComputeHabitability_MeanTempBoundary324(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -257,7 +257,7 @@ func TestComputeHabitability_MeanTempBoundary324(t *testing.T) {
 }
 
 func TestComputeHabitability_LowTempBelow200(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -272,7 +272,7 @@ func TestComputeHabitability_LowTempBelow200(t *testing.T) {
 
 func TestComputeHabitability_GravityNarrowerBandWins(t *testing.T) {
 	// Gravity 0.5 → in BOTH 0.2-0.7 (-2) AND 0.4-0.7 (-1) → narrower wins → -1.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -285,7 +285,7 @@ func TestComputeHabitability_GravityNarrowerBandWins(t *testing.T) {
 
 func TestComputeHabitability_GravityResidualLowBand(t *testing.T) {
 	// Gravity 0.3 → in 0.2-0.7 only (NOT in 0.4-0.7) → residual band → -2.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -298,7 +298,7 @@ func TestComputeHabitability_GravityResidualLowBand(t *testing.T) {
 
 func TestComputeHabitability_GravityComfortable(t *testing.T) {
 	// Gravity 0.8 → in 0.7-0.9 → DM+1.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -311,7 +311,7 @@ func TestComputeHabitability_GravityComfortable(t *testing.T) {
 
 func TestComputeHabitability_GravityHigh(t *testing.T) {
 	// Gravity 1.5 → in 1.4-2.0 → DM-3.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -324,7 +324,7 @@ func TestComputeHabitability_GravityHigh(t *testing.T) {
 
 func TestComputeHabitability_GravityCrushing(t *testing.T) {
 	// Gravity 2.5 → > 2.0 → DM-6.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -337,7 +337,7 @@ func TestComputeHabitability_GravityCrushing(t *testing.T) {
 
 func TestComputeHabitability_GravityVeryLow(t *testing.T) {
 	// Gravity 0.1 → < 0.2 → DM-4.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -350,7 +350,7 @@ func TestComputeHabitability_GravityVeryLow(t *testing.T) {
 
 func TestComputeHabitability_GravityEarthBaseline(t *testing.T) {
 	// Gravity 1.0 → in 0.9-1.1 → no DM.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -363,7 +363,7 @@ func TestComputeHabitability_GravityEarthBaseline(t *testing.T) {
 
 func TestComputeHabitability_UndefinedGravity_Size6(t *testing.T) {
 	// Physical nil, Size 6 → +1 - |6-6| = +1.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "6"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -377,7 +377,7 @@ func TestComputeHabitability_UndefinedGravity_Size6(t *testing.T) {
 func TestComputeHabitability_UndefinedGravity_Size0(t *testing.T) {
 	// Physical nil, Size 0 → +1 - |6-0| = -5.
 	// Plus Size 0 (in 0-4) → -1.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "0"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
@@ -392,7 +392,7 @@ func TestComputeHabitability_UndefinedGravity_Size0(t *testing.T) {
 func TestComputeHabitability_HabitabilityCannotExceed12(t *testing.T) {
 	// Synthetic max-positive: Size 9 (+1), Atm 6 (0), Hydro 7 (0), Gravity 0.8 (+1).
 	// 10 + 2 = 12.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "9"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 7}
@@ -406,13 +406,13 @@ func TestComputeHabitability_HabitabilityCannotExceed12(t *testing.T) {
 func TestComputeHabitability_Notes(t *testing.T) {
 	cases := []struct {
 		name      string
-		setup     func() *DetailedPlacement
+		setup     func() *Body
 		wantNotes string
 	}{
 		{
 			name: "Terra baseline (no DMs fire)",
-			setup: func() *DetailedPlacement {
-				body := &DetailedPlacement{}
+			setup: func() *Body {
+				body := &Body{}
 				body.SizeCode = "8"
 				body.Atmosphere = &Atmosphere{Code: 6}
 				body.Hydrographics = &Hydrographics{Code: 7}
@@ -424,8 +424,8 @@ func TestComputeHabitability_Notes(t *testing.T) {
 		},
 		{
 			name: "Zed Prime (HighK > 323 + low gravity)",
-			setup: func() *DetailedPlacement {
-				body := &DetailedPlacement{}
+			setup: func() *Body {
+				body := &Body{}
 				body.SizeCode = "5"
 				body.Atmosphere = &Atmosphere{Code: 6}
 				body.Hydrographics = &Hydrographics{Code: 5}
@@ -437,8 +437,8 @@ func TestComputeHabitability_Notes(t *testing.T) {
 		},
 		{
 			name: "Hostile (atm B + tidal lock 1:1)",
-			setup: func() *DetailedPlacement {
-				body := &DetailedPlacement{}
+			setup: func() *Body {
+				body := &Body{}
 				body.SizeCode = "8"
 				body.Atmosphere = &Atmosphere{Code: 11}
 				body.Hydrographics = &Hydrographics{Code: 7}
@@ -455,8 +455,8 @@ func TestComputeHabitability_Notes(t *testing.T) {
 		},
 		{
 			name: "Multi-temp (HighK and MeanK both > 323)",
-			setup: func() *DetailedPlacement {
-				body := &DetailedPlacement{}
+			setup: func() *Body {
+				body := &Body{}
 				body.SizeCode = "8"
 				body.Atmosphere = &Atmosphere{Code: 6}
 				body.Hydrographics = &Hydrographics{Code: 7}

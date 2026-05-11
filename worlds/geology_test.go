@@ -5,16 +5,15 @@ import (
 	"testing"
 
 	"wbh/roller"
-	"wbh/stars"
 )
 
 func TestComputeResidualSeismicStress_Terra(t *testing.T) {
 	// Terra: Size 8, Age 4.568, density 1.0 (no density DM), 2 moons (Size 1+).
 	// Per formula: 8 - 4.568 + 2 = 5.4322 → floor 5 → 5² = 25.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Physical = &BodyPhysical{Density: 1.0}
-	body.Moons = []Moon{{SizeCode: "1"}, {SizeCode: "1"}}
+	body.Children = []*Body{{Kind: BodyMoon, SizeCode: "1"}, {Kind: BodyMoon, SizeCode: "1"}}
 	got := ComputeResidualSeismicStress(body, 4.568, false)
 	if got != 25 {
 		t.Errorf("Terra: got %d, want 25", got)
@@ -25,7 +24,7 @@ func TestComputeResidualSeismicStress_Luna(t *testing.T) {
 	// Luna: Size 2, Age 4.568, density 0.6 (between 0.5 and 1.0 → no density DM),
 	// IS a moon → +1.
 	// Per formula: 2 - 4.568 + 1 = -1.5 → < 1 → 0.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "2"
 	body.Physical = &BodyPhysical{Density: 0.6}
 	got := ComputeResidualSeismicStress(body, 4.568, true)
@@ -43,7 +42,7 @@ func TestComputeResidualSeismicStress_ZedPrime(t *testing.T) {
 	// of +2 per the formula table. We follow the formula as written in the
 	// table, not the worked example. This is a book inconsistency — log a
 	// feedback memory at end of branch.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.03}
 	got := ComputeResidualSeismicStress(body, 6.3, true)
@@ -54,7 +53,7 @@ func TestComputeResidualSeismicStress_ZedPrime(t *testing.T) {
 
 func TestComputeResidualSeismicStress_PreSquareClampLessThanOne(t *testing.T) {
 	// Inner expression goes below 1 — verifies < 1 → 0 clamp (NOT (-4)² = 16).
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "1"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	got := ComputeResidualSeismicStress(body, 5.0, false)
@@ -65,12 +64,12 @@ func TestComputeResidualSeismicStress_PreSquareClampLessThanOne(t *testing.T) {
 
 func TestComputeResidualSeismicStress_DensityMaxMoonDM(t *testing.T) {
 	// 15 Size-1+ moons → cap at +12.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Physical = &BodyPhysical{Density: 1.0}
-	body.Moons = make([]Moon, 15)
-	for i := range body.Moons {
-		body.Moons[i].SizeCode = "1"
+	body.Children = make([]*Body, 15)
+	for i := range body.Children {
+		body.Children[i] = &Body{Kind: BodyMoon, SizeCode: "1"}
 	}
 	got := ComputeResidualSeismicStress(body, 4.0, false)
 	// 8 - 4.0 + 12 = 16 → 16² = 256
@@ -80,7 +79,7 @@ func TestComputeResidualSeismicStress_DensityMaxMoonDM(t *testing.T) {
 }
 
 func TestComputeResidualSeismicStress_DensityLessThanHalf(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 0.4}
 	got := ComputeResidualSeismicStress(body, 1.0, false)
@@ -98,7 +97,7 @@ func TestComputeResidualSeismicStress_NilBody_Zero(t *testing.T) {
 
 func TestComputeTidalStressFactor_ZedPrime(t *testing.T) {
 	// Zed Prime: TidalEffects.Total ≈ 30m → 30/10 = 3.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.TidalEffects = &SurfaceTidalEffects{Total: 30.0}
 	got := ComputeTidalStressFactor(body)
 	if got != 3 {
@@ -107,7 +106,7 @@ func TestComputeTidalStressFactor_ZedPrime(t *testing.T) {
 }
 
 func TestComputeTidalStressFactor_FloorRounding(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.TidalEffects = &SurfaceTidalEffects{Total: 39.9}
 	got := ComputeTidalStressFactor(body)
 	// 39.9 / 10 = 3.99 → floor → 3
@@ -117,7 +116,7 @@ func TestComputeTidalStressFactor_FloorRounding(t *testing.T) {
 }
 
 func TestComputeTidalStressFactor_NilTidalEffects_Zero(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.TidalEffects = nil
 	if got := ComputeTidalStressFactor(body); got != 0 {
 		t.Errorf("got %d, want 0 (nil TidalEffects)", got)
@@ -125,7 +124,7 @@ func TestComputeTidalStressFactor_NilTidalEffects_Zero(t *testing.T) {
 }
 
 func TestComputeTidalStressFactor_LessThanTen_Zero(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.TidalEffects = &SurfaceTidalEffects{Total: 9.5}
 	// 9.5 / 10 = 0.95 → floor → 0
 	if got := ComputeTidalStressFactor(body); got != 0 {
@@ -141,7 +140,7 @@ func TestComputeTidalStressFactor_NilBody_Zero(t *testing.T) {
 
 func TestComputeTidalStressFactor_HighTotal(t *testing.T) {
 	// 1000m total → 100 (high TSS, near volcanic territory).
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.TidalEffects = &SurfaceTidalEffects{Total: 1000.0}
 	if got := ComputeTidalStressFactor(body); got != 100 {
 		t.Errorf("got %d, want 100", got)
@@ -405,7 +404,7 @@ func TestApplyInherentTempAddition_NilTemperature_Safe(t *testing.T) {
 
 func TestRollTectonicPlates_ZedPrime(t *testing.T) {
 	// Size=5, Hydro=6, TSS=17 (DM+1), 2D=8 → 5 + 6 - 8 + 1 = 4.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Hydrographics = &Hydrographics{Code: 6}
 	r := roller.NewScripted(8)
@@ -416,7 +415,7 @@ func TestRollTectonicPlates_ZedPrime(t *testing.T) {
 }
 
 func TestRollTectonicPlates_TSSZero_NoActivity(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Hydrographics = &Hydrographics{Code: 7}
 	r := roller.NewScripted() // empty — must NOT consume dice
@@ -427,7 +426,7 @@ func TestRollTectonicPlates_TSSZero_NoActivity(t *testing.T) {
 }
 
 func TestRollTectonicPlates_HydroZero_NoActivity(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Hydrographics = &Hydrographics{Code: 0}
 	r := roller.NewScripted()
@@ -438,7 +437,7 @@ func TestRollTectonicPlates_HydroZero_NoActivity(t *testing.T) {
 }
 
 func TestRollTectonicPlates_NilHydrographics_NoActivity(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Hydrographics = nil
 	r := roller.NewScripted()
@@ -450,7 +449,7 @@ func TestRollTectonicPlates_NilHydrographics_NoActivity(t *testing.T) {
 
 func TestRollTectonicPlates_ResultLessThanOrEqualOne_NoActivity(t *testing.T) {
 	// Force result ≤ 1: small Size + small Hydro + worst roll.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "1"
 	body.Hydrographics = &Hydrographics{Code: 1}
 	// 1 + 1 - 12 + 0 = -10 → ≤ 1 → 0
@@ -462,7 +461,7 @@ func TestRollTectonicPlates_ResultLessThanOrEqualOne_NoActivity(t *testing.T) {
 }
 
 func TestRollTectonicPlates_TSS10to100_DM1(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Hydrographics = &Hydrographics{Code: 6}
 	r := roller.NewScripted(8)
@@ -474,7 +473,7 @@ func TestRollTectonicPlates_TSS10to100_DM1(t *testing.T) {
 }
 
 func TestRollTectonicPlates_TSSAbove100_DM2(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Hydrographics = &Hydrographics{Code: 6}
 	r := roller.NewScripted(8)
@@ -487,7 +486,7 @@ func TestRollTectonicPlates_TSSAbove100_DM2(t *testing.T) {
 
 func TestRollTectonicPlates_TSSBoundary10_DM1(t *testing.T) {
 	// TSS exactly 10 → DM+1 (boundary inclusive on lower end of [10, 100]).
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Hydrographics = &Hydrographics{Code: 6}
 	r := roller.NewScripted(8)
@@ -502,174 +501,5 @@ func TestRollTectonicPlates_NilBody_NoActivity(t *testing.T) {
 	got := RollTectonicPlates(r, nil, 17)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (nil body)", got)
-	}
-}
-
-func TestRunStep5E_Terrestrial_PopulatesGeology(t *testing.T) {
-	// Build a synthetic terrestrial body with full prerequisite state.
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "5"
-	dp.Designation = "Aab III"
-	dp.Eccentricity = 0.05
-	dp.Orbit = 3.0
-	dp.MassEarth = 0.55
-	dp.Period = Period{Hours: 365.25 * 24}
-	dp.Physical = &BodyPhysical{Density: 1.03}
-	dp.Hydrographics = &Hydrographics{Code: 6}
-	dp.TidalEffects = &SurfaceTidalEffects{Total: 30.0}
-	dp.Temperature = &Temperature{MeanK: 300, HighK: 320, LowK: 280}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 4.5, Mass: 1.0}}
-
-	r := roller.NewScripted(8) // tectonic plates 2D
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5E(r, detailed, sys); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Geology == nil {
-		t.Fatal("Geology is nil")
-	}
-	g := detailed[0].Geology
-	if g.TidalStressFactor != 3 {
-		t.Errorf("TidalStressFactor: got %d, want 3", g.TidalStressFactor)
-	}
-	if g.TotalSeismicStress != g.ResidualSeismicStress+g.TidalStressFactor+g.TidalHeatingFactor {
-		t.Error("TotalSeismicStress is not the sum of components")
-	}
-	if g.InherentTemperatureK != float64(g.TotalSeismicStress) {
-		t.Errorf("InherentTemperatureK: got %.2f, want %d (terrestrial = float64(TSS))",
-			g.InherentTemperatureK, g.TotalSeismicStress)
-	}
-}
-
-func TestRunStep5E_GasGiant_OnlyInherentHeat(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyGasGiant
-	dp.GGClass = GasGiantSmall
-	dp.Designation = "Aab IV"
-	dp.MassEarth = 1200
-	dp.Temperature = &Temperature{MeanK: 200}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 6.336, Mass: 1.0}}
-
-	r := roller.NewScripted()
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5E(r, detailed, sys); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Geology == nil {
-		t.Fatal("Geology is nil")
-	}
-	g := detailed[0].Geology
-	if g.ResidualSeismicStress != 0 || g.TidalStressFactor != 0 ||
-		g.TidalHeatingFactor != 0 || g.TotalSeismicStress != 0 ||
-		g.TectonicPlates != 0 {
-		t.Errorf("GG seismic fields should be 0; got %+v", g)
-	}
-	// GG residual heat for MassEarth=1200, Age=6.336 ≈ 187K.
-	if g.InherentTemperatureK < 186 || g.InherentTemperatureK > 188 {
-		t.Errorf("InherentTemperatureK: got %.2f, want ~187", g.InherentTemperatureK)
-	}
-}
-
-func TestRunStep5E_BodyEmpty_NoOp(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyEmpty
-	r := roller.NewScripted()
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5E(r, detailed, stars.System{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Geology != nil {
-		t.Error("Empty body should not get Geology")
-	}
-}
-
-func TestRunStep5E_BeltSize0_NoGeology(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyPlanetoidBelt
-	dp.SizeCode = "0"
-	dp.Designation = "Aab Belt"
-	r := roller.NewScripted()
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5E(r, detailed, stars.System{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Geology != nil {
-		t.Error("Belt should not get Geology")
-	}
-}
-
-func TestRunStep5E_TempRecomputeApplied(t *testing.T) {
-	// Verify temperature mutated in place by the addition equation.
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "5"
-	dp.Designation = "Aab III"
-	dp.Eccentricity = 0.05
-	dp.Orbit = 3.0
-	dp.MassEarth = 0.55
-	dp.Period = Period{Hours: 365.25 * 24}
-	dp.Physical = &BodyPhysical{Density: 1.03}
-	dp.Hydrographics = &Hydrographics{Code: 6}
-	dp.TidalEffects = &SurfaceTidalEffects{Total: 30.0}
-	preMean := 300.0
-	dp.Temperature = &Temperature{MeanK: preMean}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 4.5, Mass: 1.0}}
-
-	r := roller.NewScripted(8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5E(r, detailed, sys); err != nil {
-		t.Fatal(err)
-	}
-	// MeanK should be ≥ preMean (recompute monotonically increases or stays same).
-	if detailed[0].Temperature.MeanK < preMean {
-		t.Errorf("MeanK decreased: pre=%.4f post=%.4f", preMean, detailed[0].Temperature.MeanK)
-	}
-}
-
-func TestRunStep5E_MoonRecursion(t *testing.T) {
-	// Parent body with one moon; moon should also get Geology.
-	dp := DetailedPlacement{}
-	dp.Body = BodyGasGiant
-	dp.GGClass = GasGiantSmall
-	dp.Designation = "Aab IV"
-	dp.MassEarth = 1200
-	dp.Temperature = &Temperature{MeanK: 200}
-	dp.Moons = []Moon{
-		{
-			Designation:   "Aab IV a",
-			SizeCode:      "5",
-			DiameterKm:    5000,
-			MassEarth:     0.55,
-			Eccentricity:  0.1,
-			OrbitKm:       3_920_000,
-			PeriodHours:   48.0,
-			Physical:      &BodyPhysical{Density: 1.03},
-			Hydrographics: &Hydrographics{Code: 6},
-			TidalEffects:  &SurfaceTidalEffects{Total: 30.0},
-			Temperature:   &Temperature{MeanK: 250},
-		},
-	}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 6.336, Mass: 1.0}}
-
-	r := roller.NewScripted(8) // tectonic plates 2D for the moon
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5E(r, detailed, sys); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Geology == nil {
-		t.Fatal("Parent Geology is nil")
-	}
-	if detailed[0].Moons[0].Geology == nil {
-		t.Fatal("Moon Geology is nil")
-	}
-	// Moon is terrestrial (not GG), so should have full seismic profile.
-	moonG := detailed[0].Moons[0].Geology
-	if moonG.TotalSeismicStress != moonG.ResidualSeismicStress+moonG.TidalStressFactor+moonG.TidalHeatingFactor {
-		t.Error("Moon TotalSeismicStress not sum of components")
 	}
 }

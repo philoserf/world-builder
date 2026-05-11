@@ -97,7 +97,7 @@ func TestMeanKToTempRange_Boundaries(t *testing.T) {
 }
 
 func TestCheckRunawayGreenhouse_BelowTempThreshold(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Temperature = &Temperature{MeanK: 300}
 	sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
@@ -109,7 +109,7 @@ func TestCheckRunawayGreenhouse_BelowTempThreshold(t *testing.T) {
 }
 
 func TestCheckRunawayGreenhouse_LowAtmCode(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 1}
 	body.Temperature = &Temperature{MeanK: 400}
 	sys := stars.System{Primary: stars.Star{AgeGyr: 5}}
@@ -140,7 +140,7 @@ func TestCheckRunawayGreenhouse_AtmAlreadyExtreme_BoilingOnly(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			body := &DetailedPlacement{}
+			body := &Body{}
 			body.Atmosphere = &Atmosphere{Code: c.code}
 			body.SizeCode = "8"
 			body.Temperature = &Temperature{MeanK: 400}
@@ -163,7 +163,7 @@ func TestCheckRunawayGreenhouse_AtmAlreadyExtreme_BoilingOnly(t *testing.T) {
 
 func TestCheckRunawayGreenhouse_LowDiceRoll(t *testing.T) {
 	// atm 6, meanK=400, sysAge=1 → DM age+1 (ceil), boil+4 (400≥388). 2D=2 + 5 = 7 < 12 → false.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Temperature = &Temperature{MeanK: 400}
 	sys := stars.System{Primary: stars.Star{AgeGyr: 1}}
@@ -177,7 +177,7 @@ func TestCheckRunawayGreenhouse_LowDiceRoll(t *testing.T) {
 func TestCheckRunawayGreenhouse_Triggered_AtmA(t *testing.T) {
 	// atm 6, meanK=400 (boiling +4), sysAge=5 (round up +5).
 	// 2D=3 + 5 + 4 = 12 → trigger. 1D=1 → atm becomes A (10).
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.SizeCode = "8"
 	body.Temperature = &Temperature{MeanK: 400}
@@ -193,7 +193,7 @@ func TestCheckRunawayGreenhouse_Triggered_AtmA(t *testing.T) {
 }
 
 func TestCheckRunawayGreenhouse_Triggered_AtmB(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.SizeCode = "8"
 	body.Temperature = &Temperature{MeanK: 400}
@@ -209,7 +209,7 @@ func TestCheckRunawayGreenhouse_Triggered_AtmB(t *testing.T) {
 }
 
 func TestCheckRunawayGreenhouse_Triggered_AtmC(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.SizeCode = "8"
 	body.Temperature = &Temperature{MeanK: 400}
@@ -227,7 +227,7 @@ func TestCheckRunawayGreenhouse_Triggered_AtmC(t *testing.T) {
 func TestCheckRunawayGreenhouse_TaintedDM(t *testing.T) {
 	// atm 7 (tainted), meanK=400, sysAge=2 → DM age+2, boil+4, taint+1, size 8 no penalty = +7.
 	// 2D=4 + 7 = 11 < 12 → false. Confirms tainted DM applied (without taint mod=10; with taint mod=11).
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 7}
 	body.SizeCode = "8"
 	body.Temperature = &Temperature{MeanK: 400}
@@ -242,7 +242,7 @@ func TestCheckRunawayGreenhouse_TaintedDM(t *testing.T) {
 func TestCheckRunawayGreenhouse_SizeDM(t *testing.T) {
 	// Size 4 → DM-2. atm 6, meanK=400, sysAge=10 → DM age+10, boil+4, size-2 = +12.
 	// 2D=2 + 12 = 14 → trigger.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.SizeCode = "4"
 	body.Temperature = &Temperature{MeanK: 400}
@@ -304,8 +304,8 @@ func TestDeriveHydrographicsProfile_ExoticAtm_NoCandidate(t *testing.T) {
 
 func TestRederive_TerraLike_StableInTemperate(t *testing.T) {
 	// Terra-like body; rederive doesn't dramatically shift atm/hydro.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
 	body.Hydrographics = &Hydrographics{Code: 7}
@@ -337,8 +337,8 @@ func TestRederive_TerraLike_StableInTemperate(t *testing.T) {
 }
 
 func TestRederive_NilTemperature_NoOp(t *testing.T) {
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.Atmosphere = &Atmosphere{Code: 6}
 	// body.Temperature is nil
 	sys := stars.System{Primary: stars.Star{}}
@@ -355,8 +355,8 @@ func TestRederive_NilTemperature_NoOp(t *testing.T) {
 }
 
 func TestRederive_BodyEmpty_NoOp(t *testing.T) {
-	body := &DetailedPlacement{}
-	body.Body = BodyEmpty
+	body := &Body{}
+	body.Kind = BodyEmpty
 	body.Temperature = &Temperature{MeanK: 288}
 	sys := stars.System{Primary: stars.Star{}}
 
@@ -370,8 +370,8 @@ func TestRederive_BodyEmpty_NoOp(t *testing.T) {
 func TestRederive_ScaleHeightUpdate(t *testing.T) {
 	// Cold body: meanK=200 → ScaleHeight should scale lower than at 288K.
 	// 8.5 × 200/288 / 1.0 ≈ 5.9 km.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
 	body.Hydrographics = &Hydrographics{Code: 7}
@@ -393,8 +393,8 @@ func TestRederive_ScaleHeightUpdate(t *testing.T) {
 
 func TestRederive_AtmosphereB_NoRunaway_NoSubtypeChange(t *testing.T) {
 	// Atm B (11) without runaway → subtype stays unchanged.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Atmosphere = &Atmosphere{Code: 11, Subtype: "5", Pressure: 1.5, ScaleHeight: 8.5}
@@ -424,7 +424,7 @@ func TestRederive_AtmosphereB_NoRunaway_NoSubtypeChange(t *testing.T) {
 
 func TestRerollAtmSubtypeAndPressure_AtmBDirectCall(t *testing.T) {
 	// Direct call to verify helper exists and runs; full integration tested in Task 9.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Atmosphere = &Atmosphere{Code: 11, Subtype: "5", Pressure: 1.5}
@@ -445,8 +445,8 @@ func TestRederive_AtmProfile_ExoticC(t *testing.T) {
 	// hydro 4 → RollGasMix uses column letter "C" (mapped from Code, NOT Subtype).
 	// Profile should be populated with named gases from the C-column of the
 	// gas-mix table — not a fallback "Other"-only profile.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Atmosphere = &Atmosphere{Code: 12, Subtype: "5", Pressure: 5.0, ScaleHeight: 8.5}
@@ -481,8 +481,8 @@ func TestRederive_AtmProfile_ExoticC(t *testing.T) {
 
 func TestRederive_AtmProfile_StandardAtm_NotMutated(t *testing.T) {
 	// Atm 6 (standard) → Atm.Profile NOT touched by rederive (gas mix only for exotic).
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Atmosphere = &Atmosphere{Code: 6, Subtype: "5", Pressure: 1.0, ScaleHeight: 8.5}
 	body.Hydrographics = &Hydrographics{Code: 7}
@@ -506,8 +506,8 @@ func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
 	// Construct dice so post-rederive hydro stays 0 (genuine "no hydro" scenario).
 	// With atm A (code 10), size 8, Temperate, no atm taint: digit = roll-7+10-4 = roll-1.
 	// Need digit ≤ 0, so roll ≤ 1. NewScripted(1) → digit = 0, hydrographics stays 0.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Atmosphere = &Atmosphere{Code: 10, Subtype: "A", Pressure: 1.0, ScaleHeight: 8.5}
 	body.Hydrographics = &Hydrographics{Code: 0}
@@ -533,8 +533,8 @@ func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
 func TestRederive_RunawayFires_AtmAndHydroMutate(t *testing.T) {
 	// Atm 6 + meanK=400 + sysAge=10 + size 8 (no size DM) → very easy trigger.
 	// Body must be HZ — set body.HZ=true.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.HZ = true
@@ -574,8 +574,8 @@ func TestRederive_RunawayFires_AtmAndHydroMutate(t *testing.T) {
 
 func TestRederive_RunawayDoesNotFire_NoBoilingDM(t *testing.T) {
 	// Same body but low dice → runaway doesn't trigger; hydro re-rolled with normal Temperate range.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.HZ = true
@@ -600,8 +600,8 @@ func TestRederive_RunawayDoesNotFire_NoBoilingDM(t *testing.T) {
 
 func TestRederive_NonHZBody_NoRunawayCheck(t *testing.T) {
 	// Non-HZ body → CheckRunawayGreenhouse not called even if temp > 303K.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.HZ = false // explicit non-HZ
@@ -629,8 +629,8 @@ func TestRederive_AtmosphereB_RunawayBoilingOnly_PreservesSubtype(t *testing.T) 
 	// runaway-greenhouse roll. Per WBH p.79, atm B's only runaway effect
 	// is the "considered boiling" hydro DM — atm.Code/Subtype/Pressure
 	// must NOT change.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.HZ = true
 	body.SizeCode = "8"
 	body.Orbit = 3.0

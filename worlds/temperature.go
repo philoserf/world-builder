@@ -103,7 +103,7 @@ type Temperature struct {
 
 // GenerateTemperature is the per-body 3A2b-temp orchestrator. Returns nil
 // (no error) for empty bodies. For a moon, parent is the parent planet's
-// DetailedPlacement (its Temperature field, if populated, is read for
+// Body (its Temperature field, if populated, is read for
 // multi-source IR addition).
 //
 // Currently populates: Luminosity, AU, ScaleHeight, Albedo, GreenhouseFactor,
@@ -114,11 +114,11 @@ type Temperature struct {
 // elevated MeanK/HighK/LowK for moons of warm gas giants (Task 9).
 func GenerateTemperature(
 	r roller.Roller,
-	body *DetailedPlacement,
+	body *Body,
 	sys stars.System,
-	parent *DetailedPlacement,
+	parent *Body,
 ) (*Temperature, error) {
-	if body.Body == BodyEmpty {
+	if body.Kind == BodyEmpty {
 		return nil, nil
 	}
 
@@ -264,7 +264,7 @@ func totalStellarLuminosity(sys stars.System) float64 {
 // Modified roll above 12: per book "another +50° per result above 12".
 // Modified roll below 0: per book "another -5° per result below 0", with
 // special recompute "as 1D+5" if value would be < 10K.
-func BasicTemperatureRoll(r roller.Roller, body *DetailedPlacement, sys stars.System) (modifiedRoll int, kelvin float64) {
+func BasicTemperatureRoll(r roller.Roller, body *Body, sys stars.System) (modifiedRoll int, kelvin float64) {
 	raw := r.Roll("2D")
 	dm := 0
 
@@ -312,7 +312,7 @@ func BasicTemperatureRoll(r roller.Roller, body *DetailedPlacement, sys stars.Sy
 // Short-year halving: if local year < 0.1 std year, halve (per WBH p.113 — for moons
 // "local year" means the moon's orbit period around its planet, NOT the parent's stellar year).
 // Long-year boost: if year > 2 std years, +0.01 per std year (max +0.25, cap factor at 1.0).
-func computeAxialTiltFactor(body *DetailedPlacement) float64 {
+func computeAxialTiltFactor(body *Body) float64 {
 	tilt := 0.0
 	if body.AxialTilt != nil {
 		tilt = body.AxialTilt.Degrees
@@ -351,7 +351,7 @@ func computeAxialTiltFactor(body *DetailedPlacement) float64 {
 //	Rotation Factor = √|solar_day_hours| / 50
 //
 // Exceptions: solar_day > 2500h → 1.0; 1:1 star-locked → 1.0.
-func computeRotationFactor(body *DetailedPlacement) float64 {
+func computeRotationFactor(body *Body) float64 {
 	if body.DayLength == nil {
 		return 0
 	}
@@ -381,7 +381,7 @@ func computeRotationFactor(body *DetailedPlacement) float64 {
 // "Very Concentrated" (+0.1) or "Very Dispersed" (-0.1).
 // Note: the p.100 table uses "Very Dispersed" (code 1) as the low extreme;
 // the plan draft said "Very Distributed" — corrected here to match actual table values.
-func computeGeographicFactor(body *DetailedPlacement) float64 {
+func computeGeographicFactor(body *Body) float64 {
 	if body.Hydrographics == nil {
 		return 0.5 // (10-0)/20 = 0.5 default for missing hydrographics
 	}

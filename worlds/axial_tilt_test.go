@@ -136,8 +136,8 @@ func TestGenerateAxialTilt_ZedPrime(t *testing.T) {
 		1, 3, // degree precision: 1D=1 (tens=0), d10=3 → +3°
 		4, 9, // arcminute precision: 1D=4 (tens=3), d10=9 → +39'
 	)
-	dp := &DetailedPlacement{}
-	dp.Body = BodyTerrestrial
+	dp := &Body{}
+	dp.Kind = BodyTerrestrial
 	dp.SizeCode = "5"
 
 	at, err := GenerateAxialTilt(r, dp)
@@ -167,8 +167,8 @@ func TestGenerateAxialTilt_RetrogradeAbove90(t *testing.T) {
 		1, 0, // degrees: 1D=1, d10=0 → +0°
 		1, 0, // arcminutes: 1D=1, d10=0 → +0'
 	)
-	dp := &DetailedPlacement{SizeCode: "5"}
-	dp.Body = BodyTerrestrial
+	dp := &Body{SizeCode: "5"}
+	dp.Kind = BodyTerrestrial
 	at, err := GenerateAxialTilt(r, dp)
 	if err != nil {
 		t.Fatal(err)
@@ -183,7 +183,7 @@ func TestGenerateAxialTilt_RetrogradeAbove90(t *testing.T) {
 
 func TestGenerateAxialTilt_NilForEmptyBody(t *testing.T) {
 	r := roller.NewScripted()
-	dp := &DetailedPlacement{}
+	dp := &Body{}
 	at, err := GenerateAxialTilt(r, dp)
 	if err != nil {
 		t.Fatal(err)

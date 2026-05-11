@@ -4,13 +4,12 @@ import (
 	"testing"
 
 	"wbh/roller"
-	"wbh/stars"
 )
 
 func TestRollBiomass_ZedPrime(t *testing.T) {
 	// Atm 6 (no DM), Hydro 6 (+1), Age 6.3 (+1), MeanK 300 (+2), HighK 346 (no DM).
 	// DMs total +4 (at cap), 2D=6 → 6+4 = 10 → biomass A.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 6}
 	body.Temperature = &Temperature{MeanK: 300, HighK: 346}
@@ -24,7 +23,7 @@ func TestRollBiomass_ZedPrime(t *testing.T) {
 func TestRollBiomass_DMCap_AtPositiveCeiling(t *testing.T) {
 	// Atm 8 (+2) + Hydro A (+2) + Age > 4 (+1) + MeanK 290 (+2) = +7, clamp +4.
 	// 2D=10 → 10+4 = 14 → biomass E.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 8}
 	body.Hydrographics = &Hydrographics{Code: 10}
 	body.Temperature = &Temperature{MeanK: 290}
@@ -39,7 +38,7 @@ func TestRollBiomass_DMCap_AtNegativeFloor(t *testing.T) {
 	// Vacuum atm 0 (-6) + Hydro 0 (-4) + Age < 0.2 (-6) + MeanK 100 (-2) + HighK 100 (-4)
 	// = -22, clamp to -12.
 	// 2D=2 → 2-12 = -10 → biomass clamped to 0.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 0}
 	body.Hydrographics = &Hydrographics{Code: 0}
 	body.Temperature = &Temperature{MeanK: 100, HighK: 100}
@@ -54,7 +53,7 @@ func TestRollBiomass_ExoticAtm_BonusApplied_AtmB(t *testing.T) {
 	// Atm B (-5) + Hydro 6 (+1) + Age 5 (+1) + MeanK 290 (+2) = -1, no clamp needed.
 	// 2D=8 → 8 - 1 = 7 (biomass ≥ 1).
 	// Exotic-atm bonus for atm B: |−5| − 1 = +4 → final 11.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 11}
 	body.Hydrographics = &Hydrographics{Code: 6}
 	body.Temperature = &Temperature{MeanK: 290}
@@ -68,7 +67,7 @@ func TestRollBiomass_ExoticAtm_BonusApplied_AtmB(t *testing.T) {
 func TestRollBiomass_ExoticAtm_BonusSkipped_AtmBZero(t *testing.T) {
 	// Atm B (-5), no other DMs, 2D=2 → 2-5 = -3 → biomass 0.
 	// Bonus NOT applied because rolled biomass is 0.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 11}
 	body.Hydrographics = &Hydrographics{Code: 0}
 	r := roller.NewScripted(2)
@@ -82,7 +81,7 @@ func TestRollBiomass_VacuumAtm_BonusApplied(t *testing.T) {
 	// Atm 0 (-6) + Hydro 9 (+2) + Age 5.0 (+1) = -3, no clamp.
 	// 2D=12 → 12 - 3 = 9 (biomass ≥ 1).
 	// Bonus for atm 0: |−6| − 1 = +5 → final 14.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 0}
 	body.Hydrographics = &Hydrographics{Code: 9}
 	r := roller.NewScripted(12)
@@ -93,7 +92,7 @@ func TestRollBiomass_VacuumAtm_BonusApplied(t *testing.T) {
 }
 
 func TestRollBiomass_NilAtmosphere_Zero(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	r := roller.NewScripted(7)
 	got := RollBiomass(r, body, 5.0)
@@ -105,7 +104,7 @@ func TestRollBiomass_NilAtmosphere_Zero(t *testing.T) {
 func TestRollBiomass_NilHydrographics_HydroZeroDM(t *testing.T) {
 	// Atm 6 (no DM), nil hydro treated as DM-4, MeanK 290 (+2), Age 5 (+1) = -1.
 	// 2D=10 → 10 - 1 = 9.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Temperature = &Temperature{MeanK: 290}
 	r := roller.NewScripted(10)
@@ -118,7 +117,7 @@ func TestRollBiomass_NilHydrographics_HydroZeroDM(t *testing.T) {
 func TestRollBiomass_NilTemperature_NoTempDMs(t *testing.T) {
 	// Atm 6 + Hydro 5 (no DM) + Age 5 (+1), no temp DMs (nil temp).
 	// 2D=8 → 8 + 1 = 9.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	r := roller.NewScripted(8)
@@ -131,7 +130,7 @@ func TestRollBiomass_NilTemperature_NoTempDMs(t *testing.T) {
 func TestRollBiocomplexity_ZedPrime(t *testing.T) {
 	// Biomass=10 (clamped to 9), Atm 6 (in 4-9 → no DM), Age 6.3 (no age DM since > 4).
 	// 2D=3 → 3 - 7 + 9 = 5.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(3)
 	got := RollBiocomplexity(r, body, 10, 6.3)
@@ -141,7 +140,7 @@ func TestRollBiocomplexity_ZedPrime(t *testing.T) {
 }
 
 func TestRollBiocomplexity_BiomassZero_Zero(t *testing.T) {
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted() // empty — must NOT consume dice
 	got := RollBiocomplexity(r, body, 0, 6.3)
@@ -153,7 +152,7 @@ func TestRollBiocomplexity_BiomassZero_Zero(t *testing.T) {
 func TestRollBiocomplexity_BiomassClamp_Above9(t *testing.T) {
 	// Biomass=15 should be clamped to 9 in the formula.
 	// 2D=2, Atm 6, Age > 4 → 2 - 7 + 9 + 0 = 4.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(2)
 	got := RollBiocomplexity(r, body, 15, 5.0)
@@ -165,7 +164,7 @@ func TestRollBiocomplexity_BiomassClamp_Above9(t *testing.T) {
 func TestRollBiocomplexity_AgeBoundary_Exactly4_UsesWorseDM(t *testing.T) {
 	// Age = 4.0 exactly → 3-4 band → DM-2 (the worst at the boundary).
 	// Biomass=9, Atm 6, 2D=10 → 10 - 7 + 9 - 2 = 10.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(10)
 	got := RollBiocomplexity(r, body, 9, 4.0)
@@ -177,7 +176,7 @@ func TestRollBiocomplexity_AgeBoundary_Exactly4_UsesWorseDM(t *testing.T) {
 func TestRollBiocomplexity_AgeBoundary_Exactly1_UsesWorseDM(t *testing.T) {
 	// Age = 1.0 exactly → < 1 band → DM-10 (the worst at the boundary).
 	// Biomass=9, Atm 6, 2D=12 → 12 - 7 + 9 - 10 = 4.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(12)
 	got := RollBiocomplexity(r, body, 9, 1.0)
@@ -189,7 +188,7 @@ func TestRollBiocomplexity_AgeBoundary_Exactly1_UsesWorseDM(t *testing.T) {
 func TestRollBiocomplexity_AtmNotIn4to9_DMMinus2(t *testing.T) {
 	// Atm 11 (B) → not in 4-9 → DM-2. Biomass=9, Age 5.
 	// 2D=10 → 10 - 7 + 9 - 2 = 10.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 11}
 	r := roller.NewScripted(10)
 	got := RollBiocomplexity(r, body, 9, 5.0)
@@ -201,7 +200,7 @@ func TestRollBiocomplexity_AtmNotIn4to9_DMMinus2(t *testing.T) {
 func TestRollBiocomplexity_ResultLessThanOne_PromotedToOne(t *testing.T) {
 	// Force a result < 1 with biomass > 0: 2D=2, Biomass=1, Atm 11 (DM-2), Age 0.5 (DM-10 from biocomplexity table).
 	// 2 - 7 + 1 - 2 - 10 = -16 → < 1 → 1.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 11}
 	r := roller.NewScripted(2)
 	got := RollBiocomplexity(r, body, 1, 0.5)
@@ -212,7 +211,7 @@ func TestRollBiocomplexity_ResultLessThanOne_PromotedToOne(t *testing.T) {
 
 func TestRollBiocomplexity_NilAtmosphere_NoAtmDM(t *testing.T) {
 	// Defensive: nil atmosphere is not in 4-9, so still gets DM-2.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = nil
 	r := roller.NewScripted(10)
 	got := RollBiocomplexity(r, body, 9, 5.0)
@@ -346,7 +345,7 @@ func TestRollCompatibility_ZedPrime_FollowsFormula(t *testing.T) {
 	// NOTE: WBH p.131 worked example shows 7 + 3 - 2.5 + 2 = 9.5 → 9. The
 	// "+3" has no source in the formula box. Implementation follows formula
 	// → Zed Prime gets 6 (book says 9). Logged as feedback memory after merge.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(7)
 	got := RollCompatibility(r, body, 5, 6.3)
@@ -359,7 +358,7 @@ func TestRollCompatibility_BiomassDependsOnPrereq_NoDirectGate(t *testing.T) {
 	// The Compatibility function itself doesn't gate on biomass — caller
 	// should check biomass > 0 before calling. This test verifies the
 	// function still returns the formula result for any inputs.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(7)
 	got := RollCompatibility(r, body, 5, 5.0)
@@ -370,7 +369,7 @@ func TestRollCompatibility_BiomassDependsOnPrereq_NoDirectGate(t *testing.T) {
 
 func TestRollCompatibility_NegativeResult_ClampedToZero(t *testing.T) {
 	// Atm C (DM-10), Biocomplexity=10, 2D=2 → 2 - 5 - 10 = -13 → ≤ 0 → 0.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 12}
 	r := roller.NewScripted(2)
 	got := RollCompatibility(r, body, 10, 5.0)
@@ -381,7 +380,7 @@ func TestRollCompatibility_NegativeResult_ClampedToZero(t *testing.T) {
 
 func TestRollCompatibility_AtmCRich_DMMinus10(t *testing.T) {
 	// Atm C (DM-10), Biocomplexity=4, 2D=12 → 12 - 2 - 10 = 0 → 0.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 12}
 	r := roller.NewScripted(12)
 	got := RollCompatibility(r, body, 4, 5.0)
@@ -392,7 +391,7 @@ func TestRollCompatibility_AtmCRich_DMMinus10(t *testing.T) {
 
 func TestRollCompatibility_AgeOver8_DMMinus2(t *testing.T) {
 	// Atm 6 (+2), Biocomplexity=4, Age=9 (DM-2), 2D=10 → 10 - 2 + 2 - 2 = 8.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(10)
 	got := RollCompatibility(r, body, 4, 9.0)
@@ -403,7 +402,7 @@ func TestRollCompatibility_AgeOver8_DMMinus2(t *testing.T) {
 
 func TestRollCompatibility_FloorRounding(t *testing.T) {
 	// Biocomplexity=3 → 3/2 = 1.5. 2D=10, Atm 6 (+2) → 10 - 1.5 + 2 = 10.5 → floor → 10.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	r := roller.NewScripted(10)
 	got := RollCompatibility(r, body, 3, 5.0)
@@ -414,7 +413,7 @@ func TestRollCompatibility_FloorRounding(t *testing.T) {
 
 func TestRollCompatibility_NilAtmosphere_NoAtmDM(t *testing.T) {
 	// Defensive: nil atm → no atm DM applied. Biocomplexity=4, Age 5, 2D=10 → 10 - 2 = 8.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	r := roller.NewScripted(10)
 	got := RollCompatibility(r, body, 4, 5.0)
 	if got != 8 {
@@ -427,13 +426,13 @@ func TestRollCompatibility_OtherwiseTaintedDM(t *testing.T) {
 	// Biocomplexity 4. 2D=8.
 	// Without taint: 8 - 4/2 + 1 = 7
 	// With taint: 8 - 2 + 1 - 2 = 5
-	withTaint := &DetailedPlacement{
+	withTaint := &Body{
 		Atmosphere: &Atmosphere{
 			Code:   5,
 			Taints: []Taint{{Code: "P", Severity: 5, Persistence: 5}},
 		},
 	}
-	withoutTaint := &DetailedPlacement{
+	withoutTaint := &Body{
 		Atmosphere: &Atmosphere{Code: 5},
 	}
 	rA := roller.NewScripted(8)
@@ -452,7 +451,7 @@ func TestRollCompatibility_TaintOnInherentlyTaintedAtmsNoDoubleDM(t *testing.T) 
 	// Atm 4 (code already in {2,4,7,9}) with P taint. Should NOT double-count.
 	// Atm 4 → -2 from atm table. P taint NOT additionally counted because atm 4 is in the set.
 	// 2D=8, biocomplexity=4: 8 - 2 - 2 = 4.
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{
 			Code:   4,
 			Taints: []Taint{{Code: "P", Severity: 5, Persistence: 5}},
@@ -468,7 +467,7 @@ func TestRollCompatibility_TaintOnInherentlyTaintedAtmsNoDoubleDM(t *testing.T) 
 func TestRollTerrestrialResourceRating_TerrestrialNoLife(t *testing.T) {
 	// Size 5, Density 1.0 (no DM), no biology.
 	// 2D=8 → 8 - 7 + 5 = 6.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	r := roller.NewScripted(8)
@@ -480,7 +479,7 @@ func TestRollTerrestrialResourceRating_TerrestrialNoLife(t *testing.T) {
 
 func TestRollTerrestrialResourceRating_HighDensity_PlusTwo(t *testing.T) {
 	// Size 5, Density 1.5 (>1.12 → +2). 2D=8 → 8 - 7 + 5 + 2 = 8.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.5}
 	r := roller.NewScripted(8)
@@ -492,7 +491,7 @@ func TestRollTerrestrialResourceRating_HighDensity_PlusTwo(t *testing.T) {
 
 func TestRollTerrestrialResourceRating_LowDensity_MinusTwo(t *testing.T) {
 	// Size 5, Density 0.4 (<0.5 → -2). 2D=8 → 8 - 7 + 5 - 2 = 4.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 0.4}
 	r := roller.NewScripted(8)
@@ -505,7 +504,7 @@ func TestRollTerrestrialResourceRating_LowDensity_MinusTwo(t *testing.T) {
 func TestRollTerrestrialResourceRating_HighBiomass_PlusTwo(t *testing.T) {
 	// Size 5, Density 1.0, Biomass=5 (≥3 → +2), Compatibility=5 (mid-range,
 	// no DM — explicit to avoid triggering the 0-3 -1 DM). 2D=8 → 8-7+5+2 = 8.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	bio := &Biology{Biomass: 5, Compatibility: 5}
@@ -520,7 +519,7 @@ func TestRollTerrestrialResourceRating_HighBiodiversity_PlusOne_8toA(t *testing.
 	// Size 5, Density 1.0, Biomass=1 (no biomass DM since <3),
 	// Biodiversity=8 (8-A → +1), Compatibility=5 (mid-range, no DM — explicit
 	// to avoid triggering the 0-3 -1 DM). 2D=8 → 8-7+5+1 = 7.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	bio := &Biology{Biomass: 1, Biodiversity: 8, Compatibility: 5}
@@ -535,7 +534,7 @@ func TestRollTerrestrialResourceRating_HighBiodiversity_PlusTwo_BPlus(t *testing
 	// Biodiversity=11 (B+ → +2). Size 5, Density 1.0. Compatibility=5
 	// (mid-range, no DM — explicit to avoid triggering the 0-3 -1 DM).
 	// 2D=8 → 8-7+5+2 = 8.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	bio := &Biology{Biomass: 1, Biodiversity: 11, Compatibility: 5}
@@ -549,7 +548,7 @@ func TestRollTerrestrialResourceRating_HighBiodiversity_PlusTwo_BPlus(t *testing
 func TestRollTerrestrialResourceRating_LowCompatibilityWithLife_MinusOne(t *testing.T) {
 	// Compatibility 0-3 + Biomass ≥ 1 → -1. Size 5, Density 1.0.
 	// 2D=8, Biomass=1, Compatibility=2 → 8-7+5-1 = 5.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	bio := &Biology{Biomass: 1, Compatibility: 2}
@@ -566,7 +565,7 @@ func TestRollTerrestrialResourceRating_CompatibilityZeroWithLife_MinusOne(t *tes
 	// This test verifies that — protects against a regression where the
 	// formula's lower bound is incorrectly excluded.
 	// Size 5, Density 1.0, Biomass=1, Compatibility=0 → 2D=8 → 8-7+5-1 = 5.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	bio := &Biology{Biomass: 1, Compatibility: 0}
@@ -580,7 +579,7 @@ func TestRollTerrestrialResourceRating_CompatibilityZeroWithLife_MinusOne(t *tes
 func TestRollTerrestrialResourceRating_LowCompatibilityNoLife_NoDMSkipped(t *testing.T) {
 	// Biomass=0 → the compatibility-0-3 -1 DM does NOT apply.
 	// Size 5, Density 1.0, 2D=8 → 8-7+5 = 6.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	bio := &Biology{Biomass: 0, Compatibility: 2}
@@ -593,7 +592,7 @@ func TestRollTerrestrialResourceRating_LowCompatibilityNoLife_NoDMSkipped(t *tes
 
 func TestRollTerrestrialResourceRating_HighCompatibility_PlusTwo(t *testing.T) {
 	// Compatibility 8+ → +2. Size 5, Density 1.0, 2D=8, Biomass=1 → 8-7+5+2 = 8.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	bio := &Biology{Biomass: 1, Compatibility: 8}
@@ -606,7 +605,7 @@ func TestRollTerrestrialResourceRating_HighCompatibility_PlusTwo(t *testing.T) {
 
 func TestRollTerrestrialResourceRating_ResultBelowTwo_ClampedToTwo(t *testing.T) {
 	// Force result < 2: Size 1, Density 0.4 (-2), 2D=2 → 2-7+1-2 = -6 → < 2 → 2.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "1"
 	body.Physical = &BodyPhysical{Density: 0.4}
 	r := roller.NewScripted(2)
@@ -619,7 +618,7 @@ func TestRollTerrestrialResourceRating_ResultBelowTwo_ClampedToTwo(t *testing.T)
 func TestRollTerrestrialResourceRating_ResultAboveTwelve_ClampedToTwelve(t *testing.T) {
 	// Force result > 12: Size 15 (F), Density 1.5 (+2), Biomass=5 (+2),
 	// Biodiversity=11 (+2), Compatibility=10 (+2), 2D=12 → 12-7+15+2+2+2+2 = 28 → > 12 → 12.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "F"
 	body.Physical = &BodyPhysical{Density: 1.5}
 	bio := &Biology{Biomass: 5, Biodiversity: 11, Compatibility: 10}
@@ -682,446 +681,3 @@ func TestBiology_Profile_NilReceiver_Empty(t *testing.T) {
 }
 
 // ---- runStep5F orchestrator tests -------------------------------------------
-
-func TestRunStep5F_TerrestrialWithLife_PopulatesAll(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "5"
-	dp.Designation = "Aab III"
-	dp.Atmosphere = &Atmosphere{Code: 6}
-	dp.Hydrographics = &Hydrographics{Code: 6}
-	dp.Physical = &BodyPhysical{Density: 1.0}
-	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
-
-	// Dice budget for biomass > 0 + biocomplexity ≥ 8 path:
-	// Biomass + Biocomplexity + 2 sophont + Biodiversity + Compatibility + Resource = 7 dice.
-	r := roller.NewScripted(10, 10, 11, 11, 8, 7, 8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Biology == nil {
-		t.Fatal("Biology is nil")
-	}
-	bio := detailed[0].Biology
-	if bio.Biomass <= 0 {
-		t.Errorf("Biomass: got %d, want > 0", bio.Biomass)
-	}
-	if bio.ResourceRating < 2 || bio.ResourceRating > 12 {
-		t.Errorf("ResourceRating: got %d, want in [2, 12]", bio.ResourceRating)
-	}
-}
-
-func TestRunStep5F_TerrestrialNoLife_OnlyResource(t *testing.T) {
-	// Atm 0 + Hydro 0 + young → biomass should be 0.
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "5"
-	dp.Designation = "Aab III"
-	dp.Atmosphere = &Atmosphere{Code: 0}
-	dp.Hydrographics = &Hydrographics{Code: 0}
-	dp.Physical = &BodyPhysical{Density: 1.0}
-	dp.Temperature = &Temperature{MeanK: 100, HighK: 100}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 0.1}}
-
-	// Biomass roll (2D=2) + Resource roll (2D=8) = 2 dice when biomass=0.
-	r := roller.NewScripted(2, 8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Biology == nil {
-		t.Fatal("Biology is nil")
-	}
-	bio := detailed[0].Biology
-	if bio.Biomass != 0 {
-		t.Errorf("Biomass: got %d, want 0", bio.Biomass)
-	}
-	if bio.Biocomplexity != 0 || bio.Biodiversity != 0 || bio.Compatibility != 0 {
-		t.Errorf("non-Biomass biology fields should be 0; got %+v", bio)
-	}
-	if bio.HasNativeSophont || bio.HadExtinctSophont {
-		t.Error("sophont bools should be false")
-	}
-	if bio.ResourceRating < 2 || bio.ResourceRating > 12 {
-		t.Errorf("ResourceRating should still be computed; got %d", bio.ResourceRating)
-	}
-}
-
-func TestRunStep5F_GasGiant_NoBiology(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyGasGiant
-	dp.GGClass = GasGiantSmall
-	dp.Designation = "Aab IV"
-	r := roller.NewScripted()
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Biology != nil {
-		t.Error("GG should not get Biology")
-	}
-}
-
-func TestRunStep5F_BeltSize0_NoBiology(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyPlanetoidBelt
-	dp.SizeCode = "0"
-	dp.Designation = "Aab Belt"
-	r := roller.NewScripted()
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Biology != nil {
-		t.Error("Belt should not get Biology")
-	}
-}
-
-func TestRunStep5F_BodyEmpty_NoOp(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyEmpty
-	r := roller.NewScripted()
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Biology != nil {
-		t.Error("Empty body should not get Biology")
-	}
-}
-
-func TestRunStep5F_TerrestrialNoAtmosphere_NoBiology(t *testing.T) {
-	// Terrestrial without atmosphere → skipped (atm DM lookup needs atm code).
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "5"
-	dp.Designation = "Aab III"
-	dp.Atmosphere = nil
-	r := roller.NewScripted()
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, stars.System{}, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Biology != nil {
-		t.Error("Terrestrial without atmosphere should not get Biology")
-	}
-}
-
-func TestRunStep5F_MoonWithAtmosphere_GetsBiology(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "8"
-	dp.Designation = "Aab III"
-	dp.Atmosphere = &Atmosphere{Code: 6}
-	dp.Hydrographics = &Hydrographics{Code: 6}
-	dp.Physical = &BodyPhysical{Density: 1.0}
-	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
-	dp.Moons = []Moon{
-		{
-			Designation:   "Aab III a",
-			SizeCode:      "5",
-			Atmosphere:    &Atmosphere{Code: 6},
-			Hydrographics: &Hydrographics{Code: 5},
-			Physical:      &BodyPhysical{Density: 1.0},
-			Temperature:   &Temperature{MeanK: 290, HighK: 310},
-		},
-	}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
-
-	// Generous dice budget for parent (up to 7) + moon (up to 7).
-	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Biology == nil {
-		t.Fatal("Parent Biology is nil")
-	}
-	if detailed[0].Moons[0].Biology == nil {
-		t.Fatal("Moon Biology is nil")
-	}
-}
-
-func TestRunStep5F_MoonNoAtmosphere_NoBiology(t *testing.T) {
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "8"
-	dp.Designation = "Aab III"
-	dp.Atmosphere = &Atmosphere{Code: 6}
-	dp.Hydrographics = &Hydrographics{Code: 6}
-	dp.Physical = &BodyPhysical{Density: 1.0}
-	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
-	dp.Moons = []Moon{
-		{
-			Designation: "Aab III a",
-			SizeCode:    "2",
-			Atmosphere:  nil, // no atmosphere
-		},
-	}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
-
-	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Moons[0].Biology != nil {
-		t.Error("Moon without atmosphere should not get Biology")
-	}
-}
-
-func TestRunStep5F_BiocomplexityBelowEight_NoSophontRolls(t *testing.T) {
-	// Construct a body where biomass>0 but biocomplexity<8.
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "5"
-	dp.Designation = "Aab III"
-	dp.Atmosphere = &Atmosphere{Code: 11} // atm B → DM-2 for biocomplexity (not 4-9)
-	dp.Hydrographics = &Hydrographics{Code: 6}
-	dp.Physical = &BodyPhysical{Density: 1.0}
-	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}}
-
-	// Dice: Biomass + Biocomplexity (small) + Biodiversity + Compatibility + Resource = 5 dice.
-	// (NO sophont rolls if biocomplexity < 8.)
-	r := roller.NewScripted(8, 2, 6, 6, 8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	bio := detailed[0].Biology
-	if bio == nil {
-		t.Fatal("Biology is nil")
-	}
-	if bio.Biomass == 0 {
-		t.Skip("biomass came out 0; test only meaningful with biomass>0")
-	}
-	if bio.Biocomplexity >= 8 {
-		t.Skip("biocomplexity came out >=8; test only meaningful when <8")
-	}
-	if bio.HasNativeSophont || bio.HadExtinctSophont {
-		t.Errorf("sophont bools should be false when biocomplexity<8; got native=%v extinct=%v",
-			bio.HasNativeSophont, bio.HadExtinctSophont)
-	}
-}
-
-func TestRunStep5F_MoonOfGGParent_GetsBiology(t *testing.T) {
-	// Critical regression test: Zed Prime is a moon of Aab IV (a Gas Giant)
-	// and per WBH p.141 has Biomass=A. The previous implementation used
-	// 'continue' on the parent-applies check, skipping the entire moon loop
-	// when the parent was a GG, silently denying Biology to such moons.
-	dp := DetailedPlacement{}
-	dp.Body = BodyGasGiant
-	dp.GGClass = GasGiantSmall
-	dp.Designation = "Aab IV"
-	dp.Moons = []Moon{
-		{
-			Designation:   "Aab IV d",
-			SizeCode:      "5",
-			Atmosphere:    &Atmosphere{Code: 6},
-			Hydrographics: &Hydrographics{Code: 6},
-			Physical:      &BodyPhysical{Density: 1.03, Gravity: 0.66},
-			Temperature:   &Temperature{MeanK: 300, HighK: 346, LowK: 262},
-		},
-	}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 6.336}}
-	// Generous dice budget for full biology + resource roll on the moon.
-	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	// Parent (GG) should NOT have Biology.
-	if detailed[0].Biology != nil {
-		t.Error("GG parent should not have Biology")
-	}
-	// Moon should have Biology — this is the bug being fixed.
-	if detailed[0].Moons[0].Biology == nil {
-		t.Fatal("Moon of GG parent should have Biology (Zed Prime case)")
-	}
-}
-
-func TestRollBiocomplexity_LowOxygenTaintAddsDM(t *testing.T) {
-	// Atm 4, biomass=5, age=5. Atm 4 IS in 4-9 so no atm-not-in-band DM.
-	// Without L: DM = 0; 2D=8 - 7 + min(5,9) = 6.
-	// With L: DM = -2; result = 4.
-	withTaint := &DetailedPlacement{
-		Atmosphere: &Atmosphere{
-			Code:   4,
-			Taints: []Taint{{Code: "L", Severity: 8, Persistence: 9}},
-		},
-	}
-	withoutTaint := &DetailedPlacement{
-		Atmosphere: &Atmosphere{Code: 4},
-	}
-	rA := roller.NewScripted(8)
-	rB := roller.NewScripted(8)
-	got := RollBiocomplexity(rA, withTaint, 5, 5.0)
-	if got != 4 {
-		t.Errorf("with L taint: got %d, want 4", got)
-	}
-	got = RollBiocomplexity(rB, withoutTaint, 5, 5.0)
-	if got != 6 {
-		t.Errorf("without L taint: got %d, want 6", got)
-	}
-}
-
-func TestRollBiomass_BiologicTaintPromotesZeroToOne(t *testing.T) {
-	// Atm 0 with B taint, hydro 0, age 5, rolled 2D=2 → biomass would be 0
-	// without promotion. With B taint, promoted to 1 per WBH p.127 SC1.
-	body := &DetailedPlacement{
-		Atmosphere: &Atmosphere{
-			Code:   0,
-			Taints: []Taint{{Code: "B", Severity: 5, Persistence: 5}},
-		},
-		Hydrographics: &Hydrographics{Code: 0},
-	}
-	r := roller.NewScripted(2) // 2D=2
-	got := RollBiomass(r, body, 5.0)
-	if got != 1 {
-		t.Errorf("biomass with B taint and rolled=0: got %d, want 1 (promoted)", got)
-	}
-}
-
-func TestRollBiomass_NoBiologicTaint_StaysZero(t *testing.T) {
-	body := &DetailedPlacement{
-		Atmosphere:    &Atmosphere{Code: 0, Taints: []Taint{{Code: "P", Severity: 5, Persistence: 5}}},
-		Hydrographics: &Hydrographics{Code: 0},
-	}
-	r := roller.NewScripted(2)
-	got := RollBiomass(r, body, 5.0)
-	if got != 0 {
-		t.Errorf("biomass with non-B taint and rolled=0: got %d, want 0", got)
-	}
-}
-
-func TestRunStep5F_MoonBiomass_UsesMoonTemperature(t *testing.T) {
-	// Regression test for the moonDP.Temperature=nil silent-zero bug:
-	// computeBiology must see the moon's actual temperature so RollBiomass
-	// can apply the temperate-zone DM+2 (or other temp DMs).
-	dp := DetailedPlacement{}
-	dp.Body = BodyTerrestrial
-	dp.SizeCode = "8"
-	dp.Designation = "Aab III"
-	dp.Atmosphere = &Atmosphere{Code: 6}
-	dp.Hydrographics = &Hydrographics{Code: 6}
-	dp.Physical = &BodyPhysical{Density: 1.0}
-	dp.Temperature = &Temperature{MeanK: 290, HighK: 310}
-	dp.Moons = []Moon{
-		{
-			Designation:   "Aab III a",
-			SizeCode:      "5",
-			Atmosphere:    &Atmosphere{Code: 6},
-			Hydrographics: &Hydrographics{Code: 6}, // hydro 6 → +1
-			Physical:      &BodyPhysical{Density: 1.0},
-			Temperature:   &Temperature{MeanK: 290, HighK: 310}, // +2 mean
-		},
-	}
-
-	sys := stars.System{Primary: stars.Star{AgeGyr: 5.0}} // age > 4 → +1
-
-	// Generous dice budget for both bodies.
-	r := roller.NewScripted(8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8)
-	detailed := []DetailedPlacement{dp}
-	if err := runStep5F(r, detailed, sys, DetailOpts{}); err != nil {
-		t.Fatal(err)
-	}
-	if detailed[0].Moons[0].Biology == nil {
-		t.Fatal("Moon Biology is nil")
-	}
-	moonBio := detailed[0].Moons[0].Biology
-	// Moon should have biomass ≥ 8: parent rolls Biomass first (consumes one
-	// dice), then biocomplexity/sophont/biodiv/compat/resource — about 7 dice
-	// for the parent. Then moon Biomass rolls 2D=8 with DMs hydro+1, age+1,
-	// mean+2 → +4 (at cap), 8+4 = 12.
-	// If the temperature DMs were silently ignored (the bug), the moon DMs
-	// would be hydro+1, age+1 = +2, and biomass would be 8+2 = 10.
-	// The exact value depends on dice consumption order; assert the moon
-	// got the temperate-zone benefit by checking biomass is at least 11.
-	if moonBio.Biomass < 11 {
-		t.Errorf("moon Biomass: got %d, want >= 11 (temperature DMs should apply)", moonBio.Biomass)
-	}
-}
-
-// --- WBH p.128 Optional Rule 1: oxygen-atm biomass floor ---
-
-// fixedRollerForBiomassZero returns a Scripted roller whose RollBiomass
-// outcome is well below 1 (rolled-zero baseline). The shared fixture
-// (atm 6, hydro 5, ageGyr 0.5) gives DM = 0 + 0 + (-2) = -2, so 2D=2
-// produces a modified result of 0. Subsequent dependent rolls
-// (Biocomplexity, Biodiversity, Compatibility, ResourceRating) draw
-// from the same scripted sequence — provide enough values to cover
-// them when biomass is elevated to 1.
-func fixedRollerForBiomassZero(t *testing.T) roller.Roller {
-	t.Helper()
-	return roller.NewScripted(2, 7, 7, 7, 7, 7, 7)
-}
-
-func TestComputeBiology_OxygenAtmFloor_Off_RolledZeroStaysZero(t *testing.T) {
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
-	body.SizeCode = "8"
-	body.Atmosphere = &Atmosphere{Code: 6} // standard-oxygen
-	body.Hydrographics = &Hydrographics{Code: 5}
-
-	bio := computeBiology(fixedRollerForBiomassZero(t), body, 0.5, DetailOpts{})
-	if bio.Biomass != 0 {
-		t.Errorf("opts off: biomass should stay 0, got %d", bio.Biomass)
-	}
-}
-
-func TestComputeBiology_OxygenAtmFloor_On_RolledZeroBecomesOne(t *testing.T) {
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
-	body.SizeCode = "8"
-	body.Atmosphere = &Atmosphere{Code: 6} // standard-oxygen
-	body.Hydrographics = &Hydrographics{Code: 5}
-
-	opts := DetailOpts{OxygenAtmBiomassFloor: true}
-	bio := computeBiology(fixedRollerForBiomassZero(t), body, 0.5, opts)
-	if bio.Biomass != 1 {
-		t.Errorf("opts on, oxygen atm, rolled zero: want biomass 1, got %d", bio.Biomass)
-	}
-}
-
-func TestComputeBiology_OxygenAtmFloor_On_NonOxygenAtmStaysZero(t *testing.T) {
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
-	body.SizeCode = "8"
-	body.Atmosphere = &Atmosphere{Code: 10} // A — Exotic, not oxygen-bearing
-	body.Hydrographics = &Hydrographics{Code: 5}
-
-	opts := DetailOpts{OxygenAtmBiomassFloor: true}
-	bio := computeBiology(fixedRollerForBiomassZero(t), body, 0.5, opts)
-	if bio.Biomass != 0 {
-		t.Errorf("opts on, non-oxygen atm: biomass should stay 0, got %d", bio.Biomass)
-	}
-}
-
-func TestComputeBiology_OxygenAtmFloor_On_RolledPositiveUnchanged(t *testing.T) {
-	// Dice that produce a positive biomass without help from the floor.
-	// 2D=12, oxygen atm + hydro 7 (+1) + temp 290 (+2 mean sweet spot) +
-	// age 5.0 (+1) → DM = +4 (cap). 12 + 4 = 16, well above 2.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
-	body.SizeCode = "8"
-	body.Atmosphere = &Atmosphere{Code: 6}
-	body.Hydrographics = &Hydrographics{Code: 7} // +1 DM
-	body.Temperature = &Temperature{MeanK: 290}  // sweet-spot DM+2
-
-	// 2D=12 (6+6). Successor rolls cover dependent stats.
-	r := roller.NewScripted(12, 7, 7, 7, 7, 7, 7)
-	opts := DetailOpts{OxygenAtmBiomassFloor: true}
-	bio := computeBiology(r, body, 5.0, opts)
-	if bio.Biomass < 2 {
-		t.Errorf("opts on, oxygen atm, positive roll: biomass should reflect the roll (>=2), got %d", bio.Biomass)
-	}
-}

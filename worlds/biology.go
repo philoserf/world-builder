@@ -65,7 +65,7 @@ type Biology struct {
 // Applies WBH p.127 Special Case 1: a body with biologic-taint
 // atmosphere (Taints contains a "B" entry) and rolled biomass = 0
 // is promoted to biomass = 1.
-func RollBiomass(r roller.Roller, body *DetailedPlacement, ageGyr float64) int {
+func RollBiomass(r roller.Roller, body *Body, ageGyr float64) int {
 	if body == nil || body.Atmosphere == nil {
 		return 0
 	}
@@ -179,22 +179,9 @@ func exoticBiomassBonusApplies(atmCode int) bool {
 		atmCode == 10 || atmCode == 11 || atmCode == 12 || atmCode == 15
 }
 
-// hasOxygenAtmosphere reports whether atm carries free oxygen per
-// WBH p.128 Optional Rule (codes 2-9, D, E). Hex codes:
-//
-//	2-9: progressively thicker oxygen atmospheres
-//	D (13): "Very Dense" oxygen atmosphere (2.50-10.0 bar per WBH p.79)
-//	E (14): "Low" oxygen atmosphere (0.10-0.42 bar per WBH p.79)
-//
-// Excluded: 0 (None), 1 (Trace), A (10, Exotic), B (11, Corrosive),
-// C (12, Insidious), F (15, Unusual).
-func hasOxygenAtmosphere(atm *Atmosphere) bool {
-	if atm == nil {
-		return false
-	}
-	code := atm.Code
-	return (code >= 2 && code <= 9) || code == 13 || code == 14
-}
+// hasOxygenAtmosphere (the WBH p.128 Optional Rule predicate) was
+// removed in cycle 8 because pass-2's cuts list drops the optional
+// any-oxygen-atm biomass floor.
 
 // exoticBiomassBonus returns |atmDM| − 1 for the exotic atm codes per WBH
 // Special Case 2: "Add one less than the negative Atmosphere DM".
@@ -235,7 +222,7 @@ func exoticBiomassBonus(atmCode int) int {
 // Result < 1 promoted to 1 (when biomass > 0).
 //
 // Applies WBH p.129 low-oxygen-taint DM-2 when atm has an "L" taint.
-func RollBiocomplexity(r roller.Roller, body *DetailedPlacement, biomass int, ageGyr float64) int {
+func RollBiocomplexity(r roller.Roller, body *Body, biomass int, ageGyr float64) int {
 	if biomass <= 0 {
 		return 0
 	}
@@ -353,7 +340,7 @@ func RollBiodiversity(r roller.Roller, biomass, biocomplexity int) int {
 //
 // Atm codes G/H mentioned in the book DM table don't exist in the WBH
 // 0-F atm system. They cannot be produced by RollAtmoCode — no DM applied.
-func RollCompatibility(r roller.Roller, body *DetailedPlacement, biocomplexity int, ageGyr float64) int {
+func RollCompatibility(r roller.Roller, body *Body, biocomplexity int, ageGyr float64) int {
 	dm := compatibilityAtmDM(body)
 	// Applies WBH p.131 "or otherwise tainted" qualifier: -2 for any
 	// tainted atm whose code isn't already in {2, 4, 7, 9}.
@@ -376,7 +363,7 @@ func RollCompatibility(r roller.Roller, body *DetailedPlacement, biocomplexity i
 }
 
 // compatibilityAtmDM per WBH p.131 atmosphere-DM table.
-func compatibilityAtmDM(body *DetailedPlacement) int {
+func compatibilityAtmDM(body *Body) int {
 	if body == nil || body.Atmosphere == nil {
 		return 0
 	}
@@ -401,7 +388,7 @@ func compatibilityAtmDM(body *DetailedPlacement) int {
 
 // atmIs4to9 reports whether body.Atmosphere.Code is in [4, 9]. Returns
 // false on nil atmosphere.
-func atmIs4to9(body *DetailedPlacement) bool {
+func atmIs4to9(body *Body) bool {
 	if body == nil || body.Atmosphere == nil {
 		return false
 	}
@@ -458,7 +445,7 @@ func eHexDigit(n int) byte {
 //   - Compatibility ≥ 8: +2
 //
 // bio may be a zero Biology{} for bodies without life.
-func RollTerrestrialResourceRating(r roller.Roller, body *DetailedPlacement, bio *Biology) int {
+func RollTerrestrialResourceRating(r roller.Roller, body *Body, bio *Biology) int {
 	dm := 0
 	if body != nil && body.Physical != nil {
 		switch {

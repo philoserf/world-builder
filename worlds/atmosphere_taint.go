@@ -357,7 +357,7 @@ func RollTaintSubtype(r roller.Roller, atmCode int, isSecondOrLater bool) string
 // Mutates body.Atmosphere.OxygenPartialPressure when ppO2 adjustment fires.
 //
 // Returns the populated []Taint slice for assignment to body.Atmosphere.Taints.
-func RollAllTaints(r roller.Roller, body *DetailedPlacement, preseeded *Taint) []Taint {
+func RollAllTaints(r roller.Roller, body *Body, preseeded *Taint) []Taint {
 	if body == nil || body.Atmosphere == nil {
 		return nil
 	}

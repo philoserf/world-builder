@@ -6,78 +6,15 @@ import (
 	"wbh/roller"
 )
 
-// Moon — one significant moon. Insignificant moons (free-form Referee
-// fiat per WBH p.58) are out of scope for 2C.
-type Moon struct {
-	Designation string // "Aab IV a", ... — assigned by AssignMoonDesignations
-	SizeCode    SizeCode
-	DiameterKm  float64
-
-	// Set when the moon is itself gas-giant-sized (rare, GG Special row, p.57):
-	GGClass        GasGiantClass
-	GGDiameterCode string
-	DiameterEarth  float64
-	MassEarth      float64
-
-	// 3A1 additions
-	Physical      *BodyPhysical
-	OrbitPD       float64
-	OrbitKm       int
-	Eccentricity  float64
-	Retrograde    bool
-	PeriodHours   float64
-	Atmosphere    *Atmosphere    // for HZ-planet moons only
-	Hydrographics *Hydrographics // for HZ-planet moons only
-
-	// 3A2a additions
-	SurfaceDistribution *SurfaceDistribution
-	DayLength           *DayLength
-	AxialTilt           *AxialTilt
-	TidalLock           *TidalLock
-	TidalEffects        *SurfaceTidalEffects
-
-	// 3A2b-temp additions
-	Temperature *Temperature
-
-	// 3B-geology additions
-	Geology *Geology
-
-	// 3B-biology additions
-	Biology *Biology
-
-	// 3B-final additions
-	Habitability *Habitability
-}
-
-// HasSurfaceDistribution reports whether surface-distribution data has been generated for this moon.
-func (m *Moon) HasSurfaceDistribution() bool { return m.SurfaceDistribution != nil }
-
-// HasDayLength reports whether day-length data has been generated for this moon.
-func (m *Moon) HasDayLength() bool { return m.DayLength != nil }
-
-// HasAxialTilt reports whether axial-tilt data has been generated for this moon.
-func (m *Moon) HasAxialTilt() bool { return m.AxialTilt != nil }
-
-// HasTidalLock reports whether tidal-lock data has been generated for this moon.
-func (m *Moon) HasTidalLock() bool { return m.TidalLock != nil }
-
-// HasTidalEffects reports whether surface tidal-effects data has been generated for this moon.
-func (m *Moon) HasTidalEffects() bool { return m.TidalEffects != nil }
-
-// HasTemperature reports whether 5C ran for this moon.
-func (m *Moon) HasTemperature() bool { return m.Temperature != nil }
-
-// HasGeology reports whether geology data has been generated for this moon.
-func (m *Moon) HasGeology() bool { return m.Geology != nil }
-
-// HasBiology reports whether biology data has been generated for this moon.
-func (m *Moon) HasBiology() bool { return m.Biology != nil }
-
-// HasHabitability reports whether habitability data has been generated for this moon.
-func (m *Moon) HasHabitability() bool { return m.Habitability != nil }
-
-// ParentInfo describes a moon's parent body. Only one of (terrestrial
-// SizeCode) or (IsGasGiant + GGClass) should be populated.
+// ParentInfo describes a moon's parent body. Used by CountMoons and
+// SizeMoon as a clean abstraction over the parent's relevant fields.
+// Only one of (terrestrial SizeCode) or (IsGasGiant + GGClass) should
+// be populated.
+//
+// Per docs/pass-2/api-surface.md § The Body, moons are first-class
+// Body instances. ParentInfo decouples the moon-generation procedures
+// from the full Body struct so they can be exercised in isolation by
+// per-procedure fixtures.
 type ParentInfo struct {
 	IsGasGiant bool
 	GGClass    GasGiantClass // NotGasGiant for terrestrial parents
@@ -137,23 +74,25 @@ func CountMoons(r roller.Roller, parent ParentInfo, dms int) (int, error) {
 // than parent" 2D adjust (2 → upgrade by 1; 12 → twin world).
 //
 // For gas-giant parents on a 6 first roll, dispatches to gasGiantSpecialMoon.
-func SizeMoon(r roller.Roller, parent ParentInfo) (Moon, error) {
+//
+// Returns a Body with Kind = BodyMoon. The caller wires Parent and
+// Designation; this procedure just sizes.
+func SizeMoon(r roller.Roller, parent ParentInfo) (Body, error) {
 	first := r.Roll("1D")
 	switch {
 	case first <= 3:
-		return Moon{SizeCode: "S", DiameterKm: BasicTerrestrialDiameter("S")}, nil
+		return moonBody("S"), nil
 	case first <= 5:
 		// D3-1 → range 0 to 2
 		n := r.Roll("D3") - 1
 		// Size 1 terrestrial parent: any moon less than parent (n < 1) → "S".
 		if !parent.IsGasGiant && nForSizeCode(parent.SizeCode) == 1 && n < 1 {
-			return Moon{SizeCode: "S", DiameterKm: BasicTerrestrialDiameter("S")}, nil
+			return moonBody("S"), nil
 		}
 		if n <= 0 {
-			return Moon{SizeCode: "R", DiameterKm: 0}, nil
+			return moonBody("R"), nil
 		}
-		code := sizeCodeForN(n)
-		return Moon{SizeCode: code, DiameterKm: BasicTerrestrialDiameter(code)}, nil
+		return moonBody(sizeCodeForN(n)), nil
 	default: // 6
 		if parent.IsGasGiant {
 			return gasGiantSpecialMoon(r)
@@ -162,21 +101,33 @@ func SizeMoon(r roller.Roller, parent ParentInfo) (Moon, error) {
 	}
 }
 
+// moonBody constructs a Body with Kind=BodyMoon and the given SizeCode,
+// pre-filling DiameterKm from the basic-terrestrial table. GG-cascade
+// moons are constructed inline by gasGiantSpecialMoon and do not use
+// this helper.
+func moonBody(code SizeCode) Body {
+	return Body{
+		Kind:       BodyMoon,
+		SizeCode:   code,
+		DiameterKm: BasicTerrestrialDiameter(code),
+	}
+}
+
 // terrestrialMoonFirst6 implements the WBH p.57 first-6 branch for
 // terrestrial parents.
-func terrestrialMoonFirst6(r roller.Roller, parent ParentInfo) (Moon, error) {
+func terrestrialMoonFirst6(r roller.Roller, parent ParentInfo) (Body, error) {
 	parentN := nForSizeCode(parent.SizeCode)
 	if parentN < 1 {
 		// Parent Size 0 / S / unknown — defensive (should not happen
 		// via legitimate CountMoons callers since they short-circuit).
-		return Moon{SizeCode: "S", DiameterKm: BasicTerrestrialDiameter("S")}, nil
+		return moonBody("S"), nil
 	}
 	d := r.Roll("1D")
 	resultN := parentN - 1 - d
 
 	// Size 1 parent: any moon less than parent (resultN < 1) → "S".
 	if parentN == 1 && resultN < 1 {
-		return Moon{SizeCode: "S", DiameterKm: BasicTerrestrialDiameter("S")}, nil
+		return moonBody("S"), nil
 	}
 
 	// "Exactly 2 less than parent" 2D adjustment.
@@ -193,10 +144,9 @@ func terrestrialMoonFirst6(r roller.Roller, parent ParentInfo) (Moon, error) {
 
 	// Negative or zero → ring.
 	if resultN <= 0 {
-		return Moon{SizeCode: "R", DiameterKm: 0}, nil
+		return moonBody("R"), nil
 	}
-	code := sizeCodeForN(resultN)
-	return Moon{SizeCode: code, DiameterKm: BasicTerrestrialDiameter(code)}, nil
+	return moonBody(sizeCodeForN(resultN)), nil
 }
 
 // gasGiantSpecialMoon implements the WBH p.57 Gas Giant Special Moon
@@ -208,25 +158,21 @@ func terrestrialMoonFirst6(r roller.Roller, parent ParentInfo) (Moon, error) {
 //
 // On Size G(16) cascade: roll Small GG (diameter D3+D3, mass 5×(1D+1)).
 // Per the WBH footnote, an additional 2D rolling 12 cascades to Medium GG.
-func gasGiantSpecialMoon(r roller.Roller) (Moon, error) {
+func gasGiantSpecialMoon(r roller.Roller) (Body, error) {
 	first := r.Roll("1D")
 	switch {
 	case first <= 3:
-		n := r.Roll("1D")
-		code := sizeCodeForN(n)
-		return Moon{SizeCode: code, DiameterKm: BasicTerrestrialDiameter(code)}, nil
+		return moonBody(sizeCodeForN(r.Roll("1D"))), nil
 	case first <= 5:
 		n := r.Roll("2D") - 2
 		if n <= 0 {
-			return Moon{SizeCode: "R", DiameterKm: 0}, nil
+			return moonBody("R"), nil
 		}
-		code := sizeCodeForN(n)
-		return Moon{SizeCode: code, DiameterKm: BasicTerrestrialDiameter(code)}, nil
+		return moonBody(sizeCodeForN(n)), nil
 	default: // 6
 		n := r.Roll("2D") + 4
 		if n < 16 {
-			code := sizeCodeForN(n)
-			return Moon{SizeCode: code, DiameterKm: BasicTerrestrialDiameter(code)}, nil
+			return moonBody(sizeCodeForN(n)), nil
 		}
 		// Cascade: moon is itself a gas giant. Start as Small GG.
 		ggDiameter := r.Roll("D3") + r.Roll("D3")
@@ -241,7 +187,8 @@ func gasGiantSpecialMoon(r roller.Roller) (Moon, error) {
 			ggCode = gasGiantDiameterCode(ggDiameter)
 			ggMass = float64(20 * (r.Roll("3D") - 1))
 		}
-		return Moon{
+		return Body{
+			Kind:           BodyMoon,
 			SizeCode:       "G", // GG cascade — moon is itself a gas giant (Size 16)
 			GGClass:        ggClass,
 			GGDiameterCode: ggCode,

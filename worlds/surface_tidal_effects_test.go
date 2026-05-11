@@ -65,16 +65,17 @@ func TestGenerateSurfaceTidalEffects_ZedPrime(t *testing.T) {
 	// uses parentPlanet.Orbit (1.06 AU) for all star groups, so any Z
 	// companion here would contribute ~0.24m extra and break the assertion.
 
-	zedPrime := &DetailedPlacement{}
-	zedPrime.Body = BodyTerrestrial
+	zedPrime := &Body{}
+	zedPrime.Kind = BodyTerrestrial
 	zedPrime.SizeCode = "5"
 
-	parentGG := &DetailedPlacement{}
-	parentGG.Body = BodyGasGiant
+	parentGG := &Body{}
+	parentGG.Kind = BodyGasGiant
 	parentGG.MassEarth = 1200
 	parentGG.Orbit = 1.06
 
-	moonRef := &Moon{
+	moonRef := &Body{
+		Kind:        BodyMoon,
 		SizeCode:    "5",
 		OrbitKm:     3942400,
 		PeriodHours: 26 * 24,

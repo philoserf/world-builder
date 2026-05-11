@@ -13,7 +13,7 @@ func TestComputeAlbedo_ZedPrime(t *testing.T) {
 	// (parent's), star Aab L=1.419, HZCO computed from L.
 	// Per WBH p.111: 0.04 + (8-2)*0.02 + 8*0.01 + (7-4)*0.03 = 0.33.
 	// Scripted dice: [8 (rocky base), 8 (atm 6), 7 (hyd 6+)].
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Orbit = 1.0 // moon's parent orbit; for albedo we use Orbit# vs HZCO
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -34,7 +34,7 @@ func TestComputeAlbedo_Terra_Reference(t *testing.T) {
 	// Terra: rocky (density 1.0), atm 6, hyd 7, orbit 1.0 AU, sol L=1.0.
 	// 0.04 + (X-2)*0.02 + Y*0.01 + (Z-4)*0.03 should hit ~0.30 with mid rolls.
 	// Scripted [7, 7, 6]: 0.04 + 0.10 + 0.07 + 0.06 = 0.27. Close to 0.30 reference.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -52,7 +52,7 @@ func TestComputeAlbedo_Terra_Reference(t *testing.T) {
 
 func TestComputeAlbedo_GasGiant(t *testing.T) {
 	// Gas giant: 0.05 + 2D × 0.05. With 2D=7: 0.40.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.GGClass = GasGiantSmall
 	body.SizeCode = "S"
 	body.Orbit = 5.0
@@ -70,7 +70,7 @@ func TestComputeAlbedo_GasGiant(t *testing.T) {
 func TestComputeAlbedo_IcyBeyondHZCO2(t *testing.T) {
 	// Icy beyond HZCO+2: 0.25 + (2D-2) × 0.07. With 2D=7: 0.25 + 5*0.07 = 0.60.
 	// Sol HZCO()=3.0, so HZCO+2=5.0. Body at Orbit# 6.0 is clearly beyond.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Orbit = 6.0                            // HZCO+3 for Sol-like star (HZCO()=3.0); clearly beyond HZCO+2
 	body.Physical = &BodyPhysical{Density: 0.3} // icy
@@ -88,7 +88,7 @@ func TestComputeAlbedo_IcyBeyondHZCO2(t *testing.T) {
 
 func TestComputeAlbedo_Clamping(t *testing.T) {
 	// Force a result above 0.98: rocky terr base 0.04 + (12-2)*0.02 = 0.24 + atm A-C +(12-2)*0.05 = 0.50 + hyd 6+ +(12-4)*0.03 = 0.24 → 0.98 exactly.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "8"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	body.Atmosphere = &Atmosphere{Code: 10, Pressure: 1.0} // A → +(2D-2)*0.05
@@ -108,7 +108,7 @@ func TestComputeAlbedo_Vacuum(t *testing.T) {
 	// Vacuum body: Atmosphere{Code: 0} → no atm modifier applied.
 	// Rocky terr base [7]: 0.04 + (7-2)*0.02 = 0.14. Hyd 0 → no hyd modifier.
 	// Sol HZCO()=3.0 → HZCO+2=5.0; orbit 1.0 < 5.0 → rocky branch fires.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.SizeCode = "5"
 	body.Orbit = 1.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -280,7 +280,7 @@ func TestHZRegionAtmosphereDM(t *testing.T) {
 
 func TestBasicTemperatureRoll_Mod7_TableValue(t *testing.T) {
 	// Atm 6 → DM 0; orbit at HZCO → no orbit DM. 2D=7 → mod=7 → 288K.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	// Sol HZCO()=3.0; set body.Orbit=3.0 to be exactly at HZCO (in zone, no orbit DM).
 	body.Orbit = 3.0
@@ -298,7 +298,7 @@ func TestBasicTemperatureRoll_Mod7_TableValue(t *testing.T) {
 
 func TestBasicTemperatureRoll_AtmDMShifts(t *testing.T) {
 	// Atm B (11) → DM +6. 2D=2 → mod=8 → 293K.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 11}
 	body.Orbit = 3.0
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -317,7 +317,7 @@ func TestBasicTemperatureRoll_OrbitInside_DMPlus(t *testing.T) {
 	// Sol HZCO=3.0, HZCO-1=2.0. Body at orbit 1.0 → 2.0 - 1.0 = 1.0 below HZCO-1
 	// → DM = 4 + floor(1.0/0.5) = 4 + 2 = +6.
 	// Atm 6 (DM 0). 2D=2 → mod=8 → 293K.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Orbit = 1.0
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -336,7 +336,7 @@ func TestBasicTemperatureRoll_OrbitOutside_DMMinus(t *testing.T) {
 	// Sol HZCO=3.0, HZCO+1=4.0. Body at orbit 5.0 → 5.0 - 4.0 = 1.0 above HZCO+1
 	// → DM = -(4 + floor(1.0/0.5)) = -(4+2) = -6.
 	// Atm 6 (DM 0). 2D=12 → mod=6 → 283K.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Orbit = 5.0
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -355,7 +355,7 @@ func TestBasicTemperatureRoll_AboveTable(t *testing.T) {
 	// Force modified roll 14 → 388 + 2*50 = 488K. Per the project's roller
 	// convention, NewScripted(14) returns 14 from any Roll() call regardless
 	// of dice notation — so we can directly script the modified-roll value.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6} // DM 0
 	body.Orbit = 3.0                       // at HZCO; no orbit DM
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -372,7 +372,7 @@ func TestBasicTemperatureRoll_BelowTable_NoRecompute(t *testing.T) {
 	// → DM = -(4 + 12) = -16.
 	// Atm 6 (DM 0). 2D=12 → mod = 12 - 16 = -4 → kelvin = 178 + (-4)*5 = 158K.
 	// 158K > 10K → no recompute path fires.
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Orbit = 10.0
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -394,7 +394,7 @@ func TestBasicTemperatureRoll_BelowTable_RecomputeAs1DPlus5(t *testing.T) {
 	// Atm 6 (DM 0). 2D=2 → mod = 2 - 36 = -34.
 	// 178 + (-34)*5 = 178 - 170 = 8K → triggers recompute.
 	// Recompute: 1D=4 → 4 + 5 = 9K (above 3K floor → no further adjustment).
-	body := &DetailedPlacement{}
+	body := &Body{}
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Orbit = 20.0
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -410,15 +410,15 @@ func TestBasicTemperatureRoll_BelowTable_RecomputeAs1DPlus5(t *testing.T) {
 func TestGenerateTemperature_ZedPrime_Mean(t *testing.T) {
 	// Zed Prime as a moon of a gas giant orbiting Aab (L=1.419) at 1.06 AU.
 	// Per WBH p.111: A=0.33, G=0.59 → MeanK ≈ 300K.
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	// Set parent.Orbit so OrbitToAU round-trips to ≈1.06 AU (Zed Prime's actual
 	// distance per WBH p.111). Using a raw Orbit#=3.0 would give 1.0 AU and
 	// drift MeanK ~9K from the book.
 	parent.Orbit = stars.AUToOrbit(1.06)
 
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.03}
 	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.04, ScaleHeight: 8.5}
@@ -464,8 +464,8 @@ func TestGenerateTemperature_ZedPrime_Mean(t *testing.T) {
 }
 
 func TestGenerateTemperature_BodyEmpty_ReturnsNil(t *testing.T) {
-	body := &DetailedPlacement{}
-	body.Body = BodyEmpty
+	body := &Body{}
+	body.Kind = BodyEmpty
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted()
@@ -480,8 +480,8 @@ func TestGenerateTemperature_BodyEmpty_ReturnsNil(t *testing.T) {
 
 func TestGenerateTemperature_PlanetUsesOwnOrbit(t *testing.T) {
 	// For a planet (parent==nil), AU comes from body.Orbit via OrbitToAU.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0 // Sol HZCO Orbit#
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -511,8 +511,8 @@ func TestGenerateTemperature_PlanetUsesOwnOrbit(t *testing.T) {
 func TestGenerateTemperature_MultiStarLuminositySum(t *testing.T) {
 	// Close binary mate (OrbitClass==OrbitCompanion, ParentIndex==-1) sums
 	// luminosity into the primary group.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -544,8 +544,8 @@ func TestGenerateTemperature_MultiStarLuminositySum(t *testing.T) {
 func TestGenerateTemperature_NoAtmosphere(t *testing.T) {
 	// Vacuum body: Atmosphere is nil → albedo skips atm modifier; greenhouse 0;
 	// ScaleHeight stays 0; AtmosphericFactor will default in later tasks.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Orbit = 3.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -573,8 +573,8 @@ func TestGenerateTemperature_NoAtmosphere(t *testing.T) {
 
 func TestGenerateTemperature_ZedPrime_HighLow(t *testing.T) {
 	// Zed Prime: high=346K, low=250K per WBH p.114.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.03}
 	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.04, ScaleHeight: 8.5}
@@ -584,8 +584,8 @@ func TestGenerateTemperature_ZedPrime_HighLow(t *testing.T) {
 	body.DayLength = &DayLength{SiderealHours: 42.37, SolarHours: 85.77}
 	body.Period = Period{Hours: 26 * 24} // moon's local year for short-year halving
 
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.Orbit = stars.AUToOrbit(1.06)
 	parent.Eccentricity = 0.10
 
@@ -630,8 +630,8 @@ func TestGenerateTemperature_ZedPrime_HighLow(t *testing.T) {
 func TestGenerateTemperature_ZedPrime_WorstCase(t *testing.T) {
 	// Per WBH p.115 sidebar: WorstHigh=359K (book), WorstLow=219K (consistent
 	// computation; book stated 230K is an inconsistency we surface in Task 13).
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.03}
 	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.04, ScaleHeight: 8.5}
@@ -641,8 +641,8 @@ func TestGenerateTemperature_ZedPrime_WorstCase(t *testing.T) {
 	body.DayLength = &DayLength{SiderealHours: 42.37, SolarHours: 85.77}
 	body.Period = Period{Hours: 26 * 24}
 
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.Orbit = stars.AUToOrbit(1.06)
 	parent.Eccentricity = 0.10
 
@@ -667,8 +667,8 @@ func TestGenerateTemperature_ZedPrime_WorstCase(t *testing.T) {
 func TestGenerateTemperature_AxialTiltLongYearBoost(t *testing.T) {
 	// Year > 2 std years → axial tilt factor +0.01 per std year (max +0.25, cap 1.0).
 	// Body with 5-year period: boost = 0.05.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -694,8 +694,8 @@ func TestGenerateTemperature_AxialTiltLongYearBoost(t *testing.T) {
 
 func TestGenerateTemperature_RotationFactorLongDay(t *testing.T) {
 	// Solar day > 2500h → rotation factor = 1.0.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -721,8 +721,8 @@ func TestGenerateTemperature_TwilightZone_Detected(t *testing.T) {
 	// Body 1:1 star-locked → IsTwilight=true, BrightSideK > TwilightK > DarkSideK.
 	// Eccentricity=0.2 ensures NearAU < AU < FarAU so bright/dark ordering holds
 	// even when the dark lum modifier clamps to zero.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 1.0 // close to its star
 	body.Eccentricity = 0.2
@@ -760,8 +760,8 @@ func TestGenerateTemperature_TwilightZone_Detected(t *testing.T) {
 
 func TestGenerateTemperature_MoonLockedToPlanet_NotTwilight(t *testing.T) {
 	// Moon 1:1 locked to its parent planet (Case == MoonToPlanet) → NOT twilight.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
@@ -774,8 +774,8 @@ func TestGenerateTemperature_MoonLockedToPlanet_NotTwilight(t *testing.T) {
 		LockRatio: "1:1",
 	}
 
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.Orbit = stars.AUToOrbit(1.0)
 
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
@@ -796,8 +796,8 @@ func TestGenerateTemperature_MoonLockedToPlanet_NotTwilight(t *testing.T) {
 
 func TestGenerateTemperature_NotLocked_NoTwilight(t *testing.T) {
 	// Normal body with TidalLock == nil → not twilight, fields zero.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -822,8 +822,8 @@ func TestGenerateTemperature_NotLocked_NoTwilight(t *testing.T) {
 
 func TestGenerateTemperature_GGMoon_ParentRadiance_AppliedWhenWarm(t *testing.T) {
 	// Moon of a hot gas giant: parent's MeanK > moon's stellar-only MeanK + 30K → combine.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
@@ -833,8 +833,8 @@ func TestGenerateTemperature_GGMoon_ParentRadiance_AppliedWhenWarm(t *testing.T)
 	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
 	body.Period = Period{Hours: 7 * 24}
 
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.Orbit = stars.AUToOrbit(5.0) // far from star → moon's stellar-only ~150K
 	parent.Eccentricity = 0.0
 	// Pre-populate parent.Temperature with a HOT gas giant (much warmer than moon's stellar-only).
@@ -862,8 +862,8 @@ func TestGenerateTemperature_GGMoon_ParentRadiance_AppliedWhenWarm(t *testing.T)
 
 func TestGenerateTemperature_GGMoon_ParentRadiance_SkippedWhenCold(t *testing.T) {
 	// Moon of a cold gas giant: parent's MeanK ≤ moon's stellar-only MeanK + 30K → skip.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
@@ -873,8 +873,8 @@ func TestGenerateTemperature_GGMoon_ParentRadiance_SkippedWhenCold(t *testing.T)
 	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
 	body.Period = Period{Hours: 7 * 24}
 
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.Orbit = stars.AUToOrbit(1.0) // moon's stellar-only ~280K
 	parent.Eccentricity = 0.0
 	parent.Temperature = &Temperature{MeanK: 200} // colder than moon's stellar-only
@@ -896,8 +896,8 @@ func TestGenerateTemperature_GGMoon_ParentRadiance_SkippedWhenCold(t *testing.T)
 
 func TestGenerateTemperature_PlanetNoParentRadiance(t *testing.T) {
 	// Planet (parent==nil) → ParentRadianceK stays 0.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "8"
 	body.Orbit = 3.0
 	body.Physical = &BodyPhysical{Density: 1.0}
@@ -922,8 +922,8 @@ func TestGenerateTemperature_PlanetNoParentRadiance(t *testing.T) {
 func TestGenerateTemperature_GGMoon_ParentNoTemperature_Skipped(t *testing.T) {
 	// Defensive: if parent.Temperature is nil (shouldn't happen in normal pipeline
 	// but defensive), ParentRadianceK stays 0 and MeanK is unchanged.
-	body := &DetailedPlacement{}
-	body.Body = BodyTerrestrial
+	body := &Body{}
+	body.Kind = BodyTerrestrial
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	body.Atmosphere = &Atmosphere{Code: 6, Pressure: 1.0, ScaleHeight: 8.5}
@@ -932,8 +932,8 @@ func TestGenerateTemperature_GGMoon_ParentNoTemperature_Skipped(t *testing.T) {
 	body.DayLength = &DayLength{SiderealHours: 24, SolarHours: 24}
 	body.Period = Period{Hours: 7 * 24}
 
-	parent := &DetailedPlacement{}
-	parent.Body = BodyGasGiant
+	parent := &Body{}
+	parent.Kind = BodyGasGiant
 	parent.Orbit = stars.AUToOrbit(1.0)
 	// parent.Temperature == nil
 

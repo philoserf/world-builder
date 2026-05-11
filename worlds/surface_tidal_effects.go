@@ -85,16 +85,16 @@ func PlanetTideOnMoon(planetMassEarth float64, moonSizeN, orbitKm int) float64 {
 //
 // Returns an error if required fields are zero or missing.
 func GenerateSurfaceTidalEffects(
-	body *DetailedPlacement,
-	moonRef *Moon,
+	body *Body,
+	moonRef *Body,
 	sys stars.System,
-	parentPlanet *DetailedPlacement,
+	parentPlanet *Body,
 ) (*SurfaceTidalEffects, error) {
 	if body == nil {
 		return nil, fmt.Errorf("worlds: GenerateSurfaceTidalEffects: body is nil")
 	}
 	// Empty orbit slots have no tidal surface; skip per spec.
-	if body.Body == BodyEmpty {
+	if body.Kind == BodyEmpty {
 		return nil, nil
 	}
 
@@ -108,7 +108,7 @@ func GenerateSurfaceTidalEffects(
 	if moonRef != nil && parentPlanet != nil && !isOneToOneLocked {
 		planetMass := parentPlanet.MassEarth
 		if moonRef.OrbitKm > 0 && planetMass > 0 {
-			tide := PlanetTideOnMoon(planetMass, bodySizeN, moonRef.OrbitKm)
+			tide := PlanetTideOnMoon(planetMass, bodySizeN, int(moonRef.OrbitKm))
 			label := "planet"
 			if parentPlanet.Designation != "" {
 				label = fmt.Sprintf("planet %s", parentPlanet.Designation)

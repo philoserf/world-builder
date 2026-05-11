@@ -48,17 +48,17 @@ func MeanKToTempRange(meanK float64) TempRange {
 //   - Hydrographics.Profile    (composition tail per p.102)
 //   - Atmosphere.Profile       (gas mix for exotic A/B/C/F atm with hydro > 0)
 //
-// No-op when body.Body == BodyEmpty or body.Temperature == nil.
+// No-op when body.Kind == BodyEmpty or body.Temperature == nil.
 //
 // Pending in subsequent tasks of this sub-project:
 //   - Step 5D pipeline wiring (Task 10)
 func RederiveAtmosphereHydrographics(
 	r roller.Roller,
-	body *DetailedPlacement,
+	body *Body,
 	sys stars.System,
-	parent *DetailedPlacement,
+	parent *Body,
 ) error {
-	if body.Body == BodyEmpty || body.Temperature == nil {
+	if body.Kind == BodyEmpty || body.Temperature == nil {
 		return nil
 	}
 
@@ -181,7 +181,7 @@ func gasMixColumnForAtmCode(code int) string {
 // Mutates body.Atmosphere.Subtype and body.Atmosphere.Pressure on success.
 func rerollAtmSubtypeAndPressure(
 	r roller.Roller,
-	body *DetailedPlacement,
+	body *Body,
 	sys stars.System,
 	runawayResult bool,
 ) error {

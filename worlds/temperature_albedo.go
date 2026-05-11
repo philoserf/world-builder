@@ -15,7 +15,7 @@ import (
 //   - Icy terrestrial up to HZCO+2: same as rocky but different base formula
 //   - Icy terrestrial beyond HZCO+2: 1 roll (2D base); if base ≤ 0.4, +1 roll
 //     (1D-1 × 0.05 subtract) + atmosphere/hydrographics modifiers
-func ComputeAlbedo(r roller.Roller, body *DetailedPlacement, sys stars.System) float64 {
+func ComputeAlbedo(r roller.Roller, body *Body, sys stars.System) float64 {
 	var albedo float64
 
 	if body.GGClass != NotGasGiant {

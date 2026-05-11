@@ -117,10 +117,10 @@ func TestGenerateDayLength_ZedPrimeSidereal(t *testing.T) {
 		3, 2, // minutes 1D, d10
 		2, 5, // seconds 1D, d10
 	)
-	dp := &DetailedPlacement{
+	dp := &Body{
 		Period: Period{Years: 0.805, Days: 0.805 * 365.25, Hours: 0.805 * 8766},
 	}
-	dp.Body = BodyTerrestrial
+	dp.Kind = BodyTerrestrial
 	dp.SizeCode = "5"
 
 	sys := stars.System{Primary: stars.Star{AgeGyr: 6.3}}

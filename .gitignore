@@ -16,3 +16,6 @@ coverage.html
 # Source-PDF: place a local copy at docs/World Builders Handbook.pdf to use it
 # while working on this repo; the file itself is not redistributed.
 *.pdf
+
+# Local worktrees for spike / experimental work
+/.worktrees/

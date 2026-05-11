@@ -39,7 +39,7 @@ type Habitability struct {
 //
 // Skipped: low-oxygen-taint DM-2 deferred per spec Q3-a (taint
 // typology not yet modeled).
-func ComputeHabitability(body *DetailedPlacement) Habitability {
+func ComputeHabitability(body *Body) Habitability {
 	if body == nil {
 		return Habitability{Rating: 0}
 	}
@@ -87,7 +87,7 @@ func habitabilitySizeDM(size int) (int, string) {
 // nil Atmosphere is treated as atm code 0 (vacuum) → DM-8.
 // Returns the DM and the book's description-column phrase (empty when
 // no DM fires, i.e., atm 6 baseline or unhandled codes).
-func habitabilityAtmDM(body *DetailedPlacement) (int, string) {
+func habitabilityAtmDM(body *Body) (int, string) {
 	atmCode := 0
 	if body.Atmosphere != nil {
 		atmCode = body.Atmosphere.Code
@@ -117,7 +117,7 @@ func habitabilityAtmDM(body *DetailedPlacement) (int, string) {
 // nil Hydrographics is treated as Hydro code 0 → DM-4.
 // Returns the DM and the book's description-column phrase (empty when
 // no DM fires, i.e., Hydro 4–8).
-func habitabilityHydroDM(body *DetailedPlacement) (int, string) {
+func habitabilityHydroDM(body *Body) (int, string) {
 	hydroCode := 0
 	if body.Hydrographics != nil {
 		hydroCode = body.Hydrographics.Code
@@ -139,7 +139,7 @@ func habitabilityHydroDM(body *DetailedPlacement) (int, string) {
 // world" → DM-2. Detection: TidalLock.IsTwilightZone (which is true
 // only when Case == PlanetToStar AND LockRatio == "1:1").
 // Returns the DM and the book's description-column phrase.
-func habitabilityTidalLockDM(body *DetailedPlacement) (int, string) {
+func habitabilityTidalLockDM(body *Body) (int, string) {
 	if body.TidalLock == nil {
 		return 0, ""
 	}
@@ -157,7 +157,7 @@ func habitabilityTidalLockDM(body *DetailedPlacement) (int, string) {
 // Note: HighK > 323 and MeanK > 323 are strict (323 itself is in the
 // [304, 323] band → -2, NOT in the >323 band → -4). Per WBH p.132 footnote,
 // "use worst at edges" — but the bands as written are unambiguous at 323.
-func habitabilityTempDM(body *DetailedPlacement) (int, []string) {
+func habitabilityTempDM(body *Body) (int, []string) {
 	if body.Temperature == nil {
 		return 0, nil
 	}
@@ -202,7 +202,7 @@ func habitabilityTempDM(body *DetailedPlacement) (int, []string) {
 // so the note is empty.
 //
 // Returns the DM and the book's description-column phrase.
-func habitabilityGravityDM(body *DetailedPlacement) (int, string) {
+func habitabilityGravityDM(body *Body) (int, string) {
 	if body.Physical == nil {
 		size := SizeAsInt(body.SizeCode)
 		diff := 6 - size

@@ -239,7 +239,7 @@ func TestRollInsidiousHazard_ExtremelyDenseDM(t *testing.T) {
 func TestRollAllTaints_NoPreseed_SingleTaint(t *testing.T) {
 	// Atm 7, no DM. Subtype 2D=4 → B (no reroll); severity 2D=7 → 4; persistence 2D=5 → 5.
 	r := roller.NewScripted(4, 7, 5)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
 	}
 	taints := RollAllTaints(r, body, nil)
@@ -253,7 +253,7 @@ func TestRollAllTaints_NoPreseed_SingleTaint(t *testing.T) {
 
 func TestRollAllTaints_UnsupportedAtmosphere_NoTaints(t *testing.T) {
 	r := roller.NewScripted(7, 7, 7)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{Code: 6, Pressure: 1.0, OxygenPartialPressure: 0.21},
 	}
 	taints := RollAllTaints(r, body, nil)
@@ -278,7 +278,7 @@ func TestRollAllTaints_PreseededL_FillsSevPers(t *testing.T) {
 		7, // severity for P
 		5, // persistence for P
 	)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{Code: 4, Pressure: 0.5, OxygenPartialPressure: 0.05},
 	}
 	taints := RollAllTaints(r, body, preseeded)
@@ -301,7 +301,7 @@ func TestRollAllTaints_MaxThree(t *testing.T) {
 		10, 7, 5, // taint 2: P 4 5
 		10, 7, 5, // taint 3: P 4 5 (no further reroll)
 	)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
 	}
 	taints := RollAllTaints(r, body, nil)
@@ -327,7 +327,7 @@ func TestRollAllTaints_LRollAdjustsPpO2(t *testing.T) {
 		// severity uses override, no roll consumed
 		2, // persistence 2D=2 + DM+4 = 6
 	)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{Code: 4, Pressure: 0.5, OxygenPartialPressure: 0.21},
 	}
 	originalPress := body.Atmosphere.Pressure
@@ -361,7 +361,7 @@ func TestAabVd_TaintProfile_p85(t *testing.T) {
 		8,  // severity for R: 2D=8 → 5
 		4,  // persistence for R: 2D=4 → 4
 	)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{
 			Code:                  4,
 			Pressure:              0.544,
@@ -392,7 +392,7 @@ func TestAabVb_ExoticIrritant_p88(t *testing.T) {
 		5,  // severity 2D=5 → 2
 		9,  // persistence 2D=9 → 9
 	)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{Code: 10, Subtype: "9", Pressure: 2.09},
 	}
 	taints := RollAllTaints(r, body, nil)
@@ -417,7 +417,7 @@ func TestAaBVI_CorrosiveProfile_p90(t *testing.T) {
 		7, // severity 2D=7 → 4
 		7, // persistence 2D=7 → 7
 	)
-	body := &DetailedPlacement{
+	body := &Body{
 		Atmosphere: &Atmosphere{Code: 11, Subtype: "6", Pressure: 1.21},
 	}
 	taints := RollAllTaints(r, body, nil)
@@ -438,7 +438,7 @@ func TestRollAllTaints_Invariants(t *testing.T) {
 	// Property test across many seeds.
 	for seed := int64(1); seed <= 50; seed++ {
 		r := roller.NewSeeded(seed)
-		body := &DetailedPlacement{
+		body := &Body{
 			Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
 		}
 		taints := RollAllTaints(r, body, nil)

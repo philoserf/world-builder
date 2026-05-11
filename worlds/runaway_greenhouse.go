@@ -34,7 +34,7 @@ import (
 // Returns true iff the trigger fired (regardless of outcome path).
 // Caller distinguishes the mutation vs boiling-only paths by comparing
 // the pre-call atm.Code to the post-call value.
-func CheckRunawayGreenhouse(r roller.Roller, body *DetailedPlacement, sys stars.System) bool {
+func CheckRunawayGreenhouse(r roller.Roller, body *Body, sys stars.System) bool {
 	if body.Atmosphere == nil || body.Temperature == nil {
 		return false
 	}
