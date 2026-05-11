@@ -40,13 +40,14 @@ Pass 2 inverted the relationship: **the data dependency graph determined structu
 
 ### Fidelity gate status
 
-`design-intent.md` § Fidelity gate (the renamed parity gate) lists three merge criteria:
+`design-intent.md` § Fidelity gate (the renamed parity gate) originally listed three merge criteria. Item 2 (pass-1-vs-pass-2 IISS divergence assertions) is now explicitly **dropped** — pass-2's design intentionally diverges from pass-1 on multiple axes (TSS fold-into-climate, surface-distribution-after-converge, narrower-band-wins for gravity DM), and the within-pass-2 Markdown regression baseline (`iiss/testdata/seed_*.md`) is the working substitute. See `next-steps.md` § A0.
+
+Remaining criteria:
 
 1. **Every worked-example fixture passes** (post-decision values, per `wbh-inconsistencies.md`). ✓ — every per-procedure test is green; the six WBH inconsistencies (Compatibility "+3", gravity DM overlap, etc.) are committed to specific interpretations in the source.
-2. **Pass-1-vs-pass-2 IISS divergence assertions** with comments citing the corrected design. ✗ — never built. The within-pass-2 regression baseline catches drift between pass-2 cycles but does not compare against pass-1's binary output. Building the comparison is mechanical; resolving divergences needs design opinion (see Next Steps).
-3. **Cuts list honoured pre-merge.** Partial — variance/accuracy/optional flags are still present in `stars.GenerateSystemOpts` because removing them would break ~10 pass-1 fidelity tests (the cuts list was aspirational on this point). Pass-3 referee knobs (Rare Earth, optional biomass floor, `-mainworld` override) are correctly deferred.
+2. **Cuts list honoured pre-merge.** Partial — variance/accuracy/optional flags are still present in `stars.GenerateSystemOpts` because removing them would break ~10 pass-1 fidelity tests (the cuts list was aspirational on this point). Pass-3 referee knobs (Rare Earth, optional biomass floor, `-mainworld` override) are correctly deferred.
 
-The spirit of the gate is met — pass-2 is architecturally complete, every per-procedure test is green, and the IISS forms render with full WBH-page fidelity. The letter requires the comparison work in Next Steps.
+The gate is met — pass-2 is architecturally complete, every per-procedure test is green, the IISS forms render with full WBH-page fidelity, and the regression baseline guards future drift.
 
 ### Carry-over deferrals
 

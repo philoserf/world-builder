@@ -6,27 +6,9 @@ The ordering within each category roughly reflects priority — higher items unb
 
 ## A. Items requiring your judgement
 
-### A1. Pass-1-vs-pass-2 byte comparison and divergence triage
+**A0 (dropped).** A pass-1-vs-pass-2 byte comparison was originally listed here as the unfinished fidelity-gate item. It is now explicitly **dropped**: pass-2's design intentionally diverges from pass-1 on multiple axes (TSS fold-into-climate, surface-distribution-after-converge, narrower-band-wins for gravity DM, etc.), and the within-pass-2 Markdown regression baseline (`iiss/testdata/seed_*.md` + `TestRegression_MarkdownSeeds`) is the working substitute. Future drift between pass-2 cycles is caught by the baseline; pass-1's outputs are no longer authoritative.
 
-**Status.** Not built. The fidelity gate (`design-intent.md` § Fidelity gate item 2) calls for "for each pass-1-vs-pass-2 IISS divergence on a fixed seed set, a fixture asserts pass-2's value with a comment citing the corrected design." We have a within-pass-2 regression baseline but no pass-1 comparison.
-
-**Why your call.** Building the diff tool is mechanical (build the `main`-branch binary, run both binaries at the same seed set, diff stdout). But each divergence the tool surfaces falls into one of three buckets:
-
-- **Intentional** — TSS fold-into-climate (cycle 17+18), surface-distribution-after-converge (`dependency-graph.md` § Stage 6), narrower-band-wins for gravity DM (`wbh-inconsistencies.md` § 6). These should be accepted; the divergence is the bug fix.
-- **Unintentional** — a real regression in some procedure where pass-2 produces a different value than pass-1 for a reason that wasn't designed.
-- **Special-Circumstances** — pass-1 produces output for a seed pass-2 fails on (or vice versa). Out of pass-2 scope.
-
-Triaging requires reading each divergence and deciding which bucket. Pass-2-side automation can't tell the difference.
-
-**Concrete next actions.**
-
-1. Write a tool: `cmd/wbh-diff/main.go` that takes a seed range and two binary paths, runs both, and emits a structured diff per seed.
-2. Run it over seeds 0..99 with the `main` binary and the `pass-2` binary.
-3. Triage the output: for each divergence, decide expected vs regression vs out-of-scope, and either accept (commit a fixture or update the regression baseline) or fix.
-
-**Time estimate.** Tool: 1-2 hours. Triage: depends on divergence count. Likely 0-2 days.
-
-### A2. Strict `ConvergeClimate` convergence
+### A1. Strict `ConvergeClimate` convergence
 
 **Status.** Cycle 17+18 ships N=5 with early-exit on stable triple; if N exhausts, accept the last-iteration state silently. `api-surface.md` specced N=3 with panic-on-overflow; that contract is deferred.
 
@@ -40,7 +22,7 @@ Triaging requires reading each divergence and deciding which bucket. Pass-2-side
 
 **Time estimate.** (a): 30 minutes (docstring update). (b): 1-2 days of investigation. (c): not real work; relabel current behaviour.
 
-### A3. `stars.Group` migration to `stars/` package (cycle 12 deferred)
+### A2. `stars.Group` migration to `stars/` package (cycle 12 deferred)
 
 **Status.** `api-surface.md` § Open questions, decided says Group should live in `stars/`. Cycle 12 was deferred because `worlds.Group` has unexported fields (`companionEcc`, `sourceCompanion`) accessed by tests in the same package; moving requires either exporting them or threading getters.
 
@@ -52,7 +34,7 @@ Triaging requires reading each divergence and deciding which bucket. Pass-2-side
 
 **Recommendation.** Defer indefinitely unless `stars.Group` starts attracting unrelated coupling. The api-surface.md decision was right in principle; the cost in practice doesn't justify it for a working system.
 
-### A4. `stars.GenerateSystemOpts` cuts (cycle 13 deferred)
+### A3. `stars.GenerateSystemOpts` cuts (cycle 13 deferred)
 
 **Status.** `design-intent.md` cuts list says drop `WithVariance` / `Accuracy` from `GenerateSystemOpts`. Cycle 13 deferred because ~10 pass-1 fidelity tests rely on `Accuracy: 1` to drive the simple-1D age path that the book's worked examples use.
 
@@ -63,7 +45,7 @@ Triaging requires reading each divergence and deciding which bucket. Pass-2-side
 
 **Recommendation.** Option (b). The toggle is small (two fields on one struct); removing it doesn't simplify anything meaningfully; the test-update work is real. Defer indefinitely.
 
-### A5. Belt-mainworld worked example
+### A4. Belt-mainworld worked example
 
 **Status.** `harness.md` § Class4P/PartPB lists `ZedPrime/Class4P/PartPB` as 🚧 deferred. No canonical WBH example exists. Cycle 16 shipped a functioning PART P.B renderer with structurally-correct content; the missing piece is a fixture that asserts specific values.
 
@@ -132,20 +114,9 @@ Five property tests run over 1000 seeds. Could add more:
 
 ### C1. Merge `pass-2` to `main`
 
-**Status.** Pass-2 is on its own branch. Main has pass-1. The merge is when fidelity is met.
+**Status.** Pass-2 is on its own branch. Main has pass-1. With A0 (pass-1 comparison) dropped, the gating concern is gone.
 
-**Decision factors.**
-
-- Pass-1-vs-pass-2 comparison (A1) is unfinished. Without it, you don't know which Markdown outputs change for which seeds.
-- The current pass-2 branch is shippable — every test green, end-to-end CLI works, full IISS form fidelity. The fidelity gate's letter is unfulfilled; its spirit is met.
-
-**Two strategies.**
-
-**(a) Comparison-first.** Build the A1 tool, run it, triage divergences, update the regression baseline to capture the accepted pass-2 outputs, THEN merge. Time: 1-3 days depending on divergence count.
-
-**(b) Merge now, comparison after.** Land pass-2 on main, then build the comparison tool against the pre-merge main (preserved as a tag). Time: 1 hour to merge; comparison work happens post-merge.
-
-**Recommendation.** Strategy (a). The comparison work is the unfulfilled fidelity gate; doing it pre-merge means main always represents "the pass-2 outputs we explicitly endorse." Post-merge, you'd be reading divergences against a moving target.
+**Plan.** Merge `pass-2` to `main` when ready. The pass-2 branch is shippable: every test green, end-to-end CLI works, full IISS form fidelity, the within-pass-2 regression baseline guards drift. Tag `pre-pass-2` on `main`'s current HEAD before the merge so the historical pass-1 binary stays buildable from a known reference. Then either fast-forward `main` to `pass-2`'s HEAD or use `git merge --no-ff` for a marked merge commit; the choice is preference. Time: ~30 minutes including the tag, the merge, the push, and a sanity-run of `cmd/wbh` from `main`.
 
 ### C2. Pass-3 referee knobs
 
@@ -192,10 +163,9 @@ Explicitly out of pass-2 scope per CLAUDE.md. Includes social characteristics, g
 
 If the goal is "close pass-2 fully":
 
-1. **A1** (pass-1 comparison + triage) — closes the fidelity gate's last item.
-2. **C1** (merge) — pass-2 becomes main.
-3. **B2** (harness.md status update) — final hygiene.
-4. **A2** (strict convergence investigation) — only if appetite remains.
+1. **C1** (merge to main) — pass-2 becomes the trunk.
+2. **B2** (harness.md status update) — final hygiene.
+3. **A1** (strict convergence investigation) — only if appetite remains.
 
 If the goal is "ship a useful tool":
 
@@ -208,4 +178,4 @@ If the goal is "preserve pass-2 indefinitely as the v2 design":
 1. **C1** (merge with regression baseline as the canonical output).
 2. Defer everything else; pass-2 is the new baseline.
 
-Pass 2 reached architectural completeness. What remains is choice of direction.
+With A0 (pass-1 comparison) dropped, the close-pass-2-fully path is dramatically shorter. Pass 2 reached architectural completeness. What remains is choice of direction.

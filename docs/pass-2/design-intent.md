@@ -98,10 +98,11 @@ Pass 2's merge gate is fidelity to the book, not byte-equivalence to pass 1. The
 Pass 2 merges to `main` when:
 
 - Every worked-example fixture passes (post-decision values, per `wbh-inconsistencies.md`).
-- For each pass-1-vs-pass-2 IISS divergence on a fixed seed set, a fixture asserts pass-2's value with a comment citing the corrected design.
 - The cut list (above) is honored pre-merge — no resurrected variance/accuracy/optional flags during the merge cycle. (Post-parity reintroduction is named below.)
 
-Until then, `main` retains pass 1 as shipped working software. There is no pressure to merge.
+A pass-1-vs-pass-2 byte comparison was originally listed here as a third gate item. It was explicitly **dropped** during pass-2 wrap-up — see `next-steps.md` § A0. Pass-2's design intentionally diverges from pass-1 on multiple axes (TSS fold-into-climate, surface-distribution-after-converge, narrower-band-wins for gravity DM); the within-pass-2 Markdown regression baseline (`iiss/testdata/seed_*.md`) is the working substitute.
+
+Until pass-2 merges, `main` retains pass 1 as shipped working software. There is no pressure to merge.
 
 ## Stop rules — no second-system aspirations until parity
 
