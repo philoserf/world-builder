@@ -159,3 +159,25 @@ func (b *Body) Host() *Body {
 	}
 	return b
 }
+
+// MassOrDerived returns the body's mass in Earth masses, preferring
+// MassEarth when set (Stage 2 fills it for gas giants; Stage 3 fills it
+// for terrestrials and moons) and otherwise deriving it from
+// Physical.Density and DiameterKm. Returns 0 for a nil receiver or for
+// a body with neither MassEarth nor Physical (belts, anomalous slots).
+//
+// Subsumes the open-coded fallback that previously appeared as
+// bodyMassEarth (stage7), parentMassEarth (tidal_lock), and the
+// inline form in refineParentMoons (stage3).
+func (b *Body) MassOrDerived() float64 {
+	if b == nil {
+		return 0
+	}
+	if b.MassEarth != 0 {
+		return b.MassEarth
+	}
+	if b.Physical != nil {
+		return DeriveMass(b.Physical.Density, b.DiameterKm)
+	}
+	return 0
+}

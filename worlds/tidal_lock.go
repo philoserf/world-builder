@@ -188,7 +188,7 @@ func moonToPlanetDMs(moonRef, parent *Body) int {
 	}
 
 	// Planet mass DM ladder (Earth masses).
-	mass := parentMassEarth(parent)
+	mass := parent.MassOrDerived()
 	switch {
 	case mass >= 1 && mass < 10:
 		dm += 2
@@ -344,19 +344,6 @@ func countStarsOrbited(sys stars.System) int {
 		}
 	}
 	return count
-}
-
-// parentMassEarth returns the parent planet's mass in Earth masses.
-// For gas giants, reads MassEarth directly (set by the GG sizing step).
-// For terrestrial parents with BodyPhysical, derives mass from density and diameter.
-func parentMassEarth(parent *Body) float64 {
-	if parent.Kind == BodyGasGiant {
-		return parent.MassEarth
-	}
-	if parent.Physical != nil {
-		return DeriveMass(parent.Physical.Density, parent.DiameterKm)
-	}
-	return 0
 }
 
 // ApplyTidalLockEffect mutates body fields based on the rolled 2D+DM result,

@@ -87,7 +87,7 @@ func planetTidalHeatingInputs(body *Body, sys stars.System) TidalHeatingInputs {
 		Eccentricity:     body.Eccentricity,
 		DistanceMkm:      stars.OrbitToAU(body.Orbit) * auMkm,
 		PeriodDays:       body.Period.Hours / 24.0,
-		WorldMassEarth:   bodyMassEarth(body),
+		WorldMassEarth:   body.MassOrDerived(),
 	}
 }
 
@@ -95,28 +95,11 @@ func planetTidalHeatingInputs(body *Body, sys stars.System) TidalHeatingInputs {
 // its parent planet.
 func moonTidalHeatingInputs(moon, parent *Body) TidalHeatingInputs {
 	return TidalHeatingInputs{
-		PrimaryMassEarth: bodyMassEarth(parent),
+		PrimaryMassEarth: parent.MassOrDerived(),
 		SizeN:            SizeAsInt(moon.SizeCode),
 		Eccentricity:     moon.Eccentricity,
 		DistanceMkm:      moon.OrbitKm / 1_000_000.0,
 		PeriodDays:       moon.PeriodHours / 24.0,
-		WorldMassEarth:   bodyMassEarth(moon),
+		WorldMassEarth:   moon.MassOrDerived(),
 	}
-}
-
-// bodyMassEarth returns body.MassEarth if populated, else falls back
-// to DeriveMass(density, diameter). Stage 2 sets MassEarth for gas
-// giants only — terrestrial bodies derive it from their physical
-// composition + diameter via Stage 3.
-func bodyMassEarth(body *Body) float64 {
-	if body == nil {
-		return 0
-	}
-	if body.MassEarth != 0 {
-		return body.MassEarth
-	}
-	if body.Physical != nil {
-		return DeriveMass(body.Physical.Density, body.DiameterKm)
-	}
-	return 0
 }
