@@ -1,12 +1,12 @@
-# A VI — System Survey
+# A IV — System Survey
 
-**Mainworld:** A VI
+**Mainworld:** A IV
 
 Short profile: `0-2-6-5-0.1`
 
 Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 
-## Class 0/I — A VI
+## Class 0/I — A IV
 
 - System: A
 - Sector / Location: — / —
@@ -18,7 +18,7 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 | --------- | ----- | ---- | -------- | -------- | ---------- | ---- |
 | A | M0 V | 0.440 | 0.672 | 3700 | 0.0763 | 0.69 |
 
-## Class II/III — A VI
+## Class II/III — A IV
 
 - Gas giants: 0
 - Belts: 2
@@ -36,55 +36,55 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 | Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
 | A | A PI | 0.18 | 0.07 |  | 10.716d | 000 | ? | HZ |
-| A | A I | 0.44 | 0.17 | 0.01 | 0.110y | 4C7 | 0 | HZ |
-| A | A II | 0.56 | 0.22 | 0.00 | 0.158y | 6B7 | 0 | HZ |
-| A | A III | 0.69 | 0.28 | 0.03 | 0.219y | 6A1 | 0 | HZ |
-| A | A IV | 0.81 | 0.32 | 0.09 | 0.279y | 642 | 0 | HZ |
+| A | A I | 0.44 | 0.17 | 0.01 | 0.110y | 445 | 0 | HZ |
+| A | A II | 0.56 | 0.22 | 0.00 | 0.158y | 685 | 0 | HZ |
+| A | A III | 0.69 | 0.28 | 0.03 | 0.219y | 640 | 0 | HZ |
+| A | A IV | 0.81 | 0.32 | 0.09 | 0.279y | 665 | 0 | HZ |
 | A | A PII | 0.96 | 0.38 |  | 0.358y | 000 | ? | HZ |
-| A | A V | 1.07 | 0.42 | 0.08 | 0.410y | 544 | 0 | HZ |
-| A | A VI | 1.25 | 0.48 | 0.01 | 0.495y | 478 | 0 | HZ |
+| A | A V | 1.07 | 0.42 | 0.08 | 0.410y | 562 | 0 | HZ |
+| A | A VI | 1.25 | 0.48 | 0.01 | 0.495y | 46A | 0 | HZ |
 
-## Class IV-P PART P — A VI
+## Class IV-P PART P — A IV
 
-**WORLD:** A VI
+**WORLD:** A IV
 **SECTOR | LOCATION:** — | —
 **INITIAL SURVEY:**    **LAST UPDATED:** 
 **SYSTEM AGE (Gyr):** 3.200
 
 ### ORBIT
-- AU: 0.48, Eccentricity: 0.01, Period (h): 4340.30
+- AU: 0.32, Eccentricity: 0.09, Period (h): 2441.70
 
 ### SIZE
-- Diameter (km): 6400, Density: 0.91, Gravity: 0.46, Mass (Earth): 0.115
+- Diameter (km): 9600, Density: 0.71, Gravity: 0.53, Mass (Earth): 0.304
 
 ### ATMOSPHERE
-- Code: 7, Pressure (bar): 1.121, O₂ (bar): 0.112, Scale Height: 14.68
-- Profile: 7-1.121-0.112:G.2.9
+- Code: 6, Pressure (bar): 0.937, O₂ (bar): 0.103, Scale Height: 14.78
+- Profile: 6-0.937-0.103
 
 ### HYDROGRAPHICS
-- Code: 8, Coverage (%): 85, Profile: H8:H2O-100
+- Code: 5, Coverage (%): 54, Profile: H5:H2O-100
 
 ### ROTATION
-- Sidereal (h): 164.04, Solar (h): 170.48, Solar days/year: 25.46
-- Axial Tilt: 0.04°
-- Tidal lock: no, Tides (m): 0.03
+- Sidereal (h): 2880.00, Solar (h): -16044.17, Solar days/year: -0.15
+- Axial Tilt: 4.00°
+- Tidal lock: no, Tides (m): 0.15
 
 ### TEMPERATURE
-- High (K): 237.1, Mean (K): 227.4, Low (K): 216.9
-- Luminosity: 0.076, Albedo: 0.18, Greenhouse: 0.60
+- High (K): 311.6, Mean (K): 267.9, Low (K): 214.0
+- Luminosity: 0.076, Albedo: 0.25, Greenhouse: 0.56
 
 ### SEISMIC
-- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 7
 
 ### LIFE
-- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+- Biomass: 6, Biocomplexity: 7, Sophonts: no, Biodiversity: 10, Compatibility: 5
 
 ### RESOURCES
-- Rating: 5
+- Rating: 9
 
 ### HABITABILITY
-- Rating: 3
-- Notes: Limited surface area; Thin, taint (standard), or dense Atmospheres; Too cold all of the time; Too cold most of the time; Low gravity
+- Rating: 7
+- Notes: Too cold most of the time; Low gravity
 
 ### COMMENTS
 - This is the system mainworld.

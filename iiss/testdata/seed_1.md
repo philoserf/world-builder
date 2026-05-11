@@ -1,12 +1,12 @@
-# Aab V — System Survey
+# Aab IV a — System Survey
 
-**Mainworld:** Aab V
+**Mainworld:** Aab IV a
 
 Short profile: `5-0-6-4-0.7`
 
 Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 
-## Class 0/I — Aab V
+## Class 0/I — Aab IV a
 
 - System: Aa
 - Sector / Location: — / —
@@ -22,7 +22,7 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 | B | K4 V | 0.720 | 0.787 | 4560 | 0.2414 | 1.30 |
 | AB | — | 2.354 | 0.000 | 0 | 1.7280 | 0.00 |
 
-## Class II/III — Aab V
+## Class II/III — Aab IV a
 
 - Gas giants: 5
 - Belts: 0
@@ -55,12 +55,12 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 | Aab | Aab II e |  |  |  |  | R |  |  |
 | Aab | Aab II f |  |  |  |  | 5 |  |  |
 | Aab | Aab II g |  |  |  |  | S |  |  |
-| Aab | Aab III | 2.48 | 0.84 | 0.03 | 0.606y | 4C5 | 0 | HZ |
+| Aab | Aab III | 2.48 | 0.84 | 0.03 | 0.606y | 4C2 | 0 | HZ |
 | Aab | Aab IV | 3.57 | 1.34 | 0.02 | 1.212y | GL8 | 3 | 500⊕, HZ, 6??, 1??, 1?? |
 | Aab | Aab IV a |  |  |  |  | 6?? |  |  |
 | Aab | Aab IV b |  |  |  |  | 1?? |  |  |
 | Aab | Aab IV c |  |  |  |  | 1?? |  |  |
-| Aab | Aab V | 4.31 | 1.97 | 0.00 | 2.170y | 567 | 0 | HZ |
+| Aab | Aab V | 4.31 | 1.97 | 0.00 | 2.170y | 569 | 0 | HZ |
 | Aab | Aab VI | 5.06 | 2.94 | 0.01 | 3.946y | 7?? | 0 |  |
 | Aab | Aab VII | 5.53 | 4.08 | 0.01 | 6.451y | 9?? | 2 | 1, 8 |
 | Aab | Aab VII a |  |  |  |  | 1 |  |  |
@@ -86,49 +86,49 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 | Aab | Aab IX h |  |  |  |  | R |  |  |
 | Aab | Aab IX i |  |  |  |  | S |  |  |
 | B | B I | 0.97 | 0.39 | 0.06 | 0.285y | GS5 | 0 | 20⊕, HZ |
-| B | B II | 1.72 | 0.62 | 0.30 | 0.569y | 5C4 | 0 | HZ |
+| B | B II | 1.72 | 0.62 | 0.30 | 0.569y | 5A5 | 0 | HZ |
 
-## Class IV-P PART P — Aab V
+## Class IV-P PART P — Aab IV a (Moon mainworld)
 
-**WORLD:** Aab V
+**WORLD:** Aab IV a
 **SECTOR | LOCATION:** — | —
 **INITIAL SURVEY:**    **LAST UPDATED:** 
 **SYSTEM AGE (Gyr):** 9.500
 
 ### ORBIT
-- AU: 1.97, Eccentricity: 0.00, Period (h): 19025.76
+- AU: 0.00, Eccentricity: 0.00, Period (h): 10622.30
 
 ### SIZE
-- Diameter (km): 8000, Density: 0.97, Gravity: 0.61, Mass (Earth): 0.240
+- Diameter (km): 9600, Density: 1.27, Gravity: 0.96, Mass (Earth): 0.543
 
 ### ATMOSPHERE
-- Code: 6, Pressure (bar): 1.358, O₂ (bar): 0.353, Scale Height: 11.37
-- Profile: 6-1.358-0.353
+- Code: 9, Pressure (bar): 2.325, O₂ (bar): 1.046, Scale Height: 8.55
+- Profile: 9-2.325-1.046:H.8.9,R.7.7
 
 ### HYDROGRAPHICS
-- Code: 7, Coverage (%): 73, Profile: H7:H2O-100
+- Code: 6, Coverage (%): 60, Profile: H6:H2O-100
 
 ### ROTATION
-- Sidereal (h): 25.98, Solar (h): 26.02, Solar days/year: 731.32
-- Axial Tilt: 15.00°
-- Tidal lock: no, Tides (m): 0.00
+- Sidereal (h): 1453.84, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 0.01
 
 ### TEMPERATURE
-- High (K): 250.0, Mean (K): 234.5, Low (K): 215.2
-- Luminosity: 1.487, Albedo: 0.24, Greenhouse: 0.72
+- High (K): 280.1, Mean (K): 277.1, Low (K): 274.1
+- Luminosity: 1.487, Albedo: 0.38, Greenhouse: 0.89
 
 ### SEISMIC
 - TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
 
 ### LIFE
-- Biomass: 4, Biocomplexity: 1, Sophonts: no, Biodiversity: 8, Compatibility: 10
+- Biomass: 13, Biocomplexity: 10, Sophonts: yes, Biodiversity: 14, Compatibility: 0
 
 ### RESOURCES
-- Rating: 7
+- Rating: 12
 
 ### HABITABILITY
-- Rating: 5
-- Notes: Too cold all of the time; Too cold most of the time; Low gravity
+- Rating: 8
+- Notes: Tainted thin or dense atmospheres
 
 ### COMMENTS
 - This is the system mainworld.

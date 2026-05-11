@@ -8,19 +8,18 @@ The ordering within each category roughly reflects priority — higher items unb
 
 **A0 (dropped).** A pass-1-vs-pass-2 byte comparison was originally listed here as the unfinished fidelity-gate item. It is now explicitly **dropped**: pass-2's design intentionally diverges from pass-1 on multiple axes (TSS fold-into-climate, surface-distribution-after-converge, narrower-band-wins for gravity DM, etc.), and the within-pass-2 Markdown regression baseline (`iiss/testdata/seed_*.md` + `TestRegression_MarkdownSeeds`) is the working substitute. Future drift between pass-2 cycles is caught by the baseline; pass-1's outputs are no longer authoritative.
 
-### A1. Strict `ConvergeClimate` convergence
+### A1. Strict `ConvergeClimate` convergence — RESOLVED
 
-**Status.** Cycle 17+18 ships N=5 with early-exit on stable triple; if N exhausts, accept the last-iteration state silently. `api-surface.md` specced N=3 with panic-on-overflow; that contract is deferred.
+**Status.** Closed via option (b) investigation. The oscillation root cause was identified empirically: `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which consumes fresh dice from the Roller each call. Each iteration is a stochastic sample of hydro (and, via albedo, temperature), not a convergence step. There is no fixed point to find because the system isn't deterministic in the convergence variable.
 
-**Why your call.** Empirical testing showed some seeds oscillate between adjacent atm.Code values within N=5. The oscillation is probably real (RederiveAtmosphereHydrographics's runaway-greenhouse check interacting with TSS-bumped ScaleHeight), not a numerical artifact. Three options:
+**Resolution.** Reverted `ConvergeClimate` to exactly 2 passes (matching pass-1's flow with TSS folded into each pass). Removed the N-iteration loop, early-exit check, and convergence assertion — they were over-engineering of a stochastic-sampling pattern. The name "ConvergeClimate" is retained for continuity but is a misnomer.
 
-- **(a) Accept the current relaxed contract.** Document "ConvergeClimate may produce a non-converged last-iteration state for some seeds; this is by design." Lossy but stable.
-- **(b) Investigate the oscillation root cause.** Likely involves instrumenting one oscillating seed, reading the per-iteration atm/hydro/temp values, identifying the bistable attractor, and either (i) breaking the tie via a deterministic rule (e.g., "on oscillation, prefer the higher-MeanK state"), or (ii) widening some threshold so the oscillation collapses.
-- **(c) Punt convergence to a documented invariant.** Don't iterate at all — do exactly N=2 like pass-1 — and accept that the result isn't formally "converged." Pass-2 ships this in practice (early-exit rarely fires; we're effectively doing N=5 fixed iterations).
+**Cascade.**
 
-**Recommendation.** Option (b) is most rigorous and produces a real engineering insight. Option (a) is what's currently in code and is "good enough" for the IISS output. Decide based on appetite.
-
-**Time estimate.** (a): 30 minutes (docstring update). (b): 1-2 days of investigation. (c): not real work; relabel current behaviour.
+- `api-surface.md` § The Climate solver updated to reflect 2-pass sampling behaviour.
+- `lessons-learned.md` § L13 documents the architectural finding.
+- `iiss/testdata/seed_*.md` regression baseline refreshed to capture the new 2-pass output (one seed drifted; magnitudes were small and sensible).
+- No external API change: `ConvergeClimate(r, body, sys) error` signature is unchanged.
 
 ### A2. `stars.Group` migration to `stars/` package (cycle 12 deferred)
 

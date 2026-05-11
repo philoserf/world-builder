@@ -60,7 +60,7 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 | A | A V i |  |  |  |  | S |  |  |
 | A | A V j |  |  |  |  | S |  |  |
 | A | A VI | 4.21 | 1.85 | 0.06 | 1.886y | 4?? | 0 |  |
-| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 774 | 0 | HZ |
+| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 772 | 0 | HZ |
 | B | B I | 0.75 | 0.30 | 0.00 | 0.139y | B?? | 0 |  |
 | B | B II | 1.45 | 0.54 |  | 0.333y | C?? | 5 | 6, 2, 1, S, S |
 | B | B II a |  |  |  |  | 6 |  |  |
@@ -86,11 +86,11 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Diameter (km): 11200, Density: 1.03, Gravity: 0.91, Mass (Earth): 0.699
 
 ### ATMOSPHERE
-- Code: 7, Pressure (bar): 0.832, O₂ (bar): 0.183, Scale Height: 9.62
-- Profile: 7-0.832-0.183:R.6.5
+- Code: 7, Pressure (bar): 0.832, O₂ (bar): 0.183, Scale Height: 8.98
+- Profile: 7-0.832-0.183:S.8.8
 
 ### HYDROGRAPHICS
-- Code: 4, Coverage (%): 41, Profile: H4:H2O-100
+- Code: 2, Coverage (%): 25, Profile: H2:H2O-100
 
 ### ROTATION
 - Sidereal (h): 43.60, Solar (h): 43.63, Solar days/year: 1412.81
@@ -98,21 +98,21 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Tidal lock: no, Tides (m): 0.00
 
 ### TEMPERATURE
-- High (K): 309.2, Mean (K): 295.1, Low (K): 279.0
-- Luminosity: 19.785, Albedo: 0.19, Greenhouse: 0.55
+- High (K): 285.2, Mean (K): 275.4, Low (K): 264.7
+- Luminosity: 19.785, Albedo: 0.39, Greenhouse: 0.56
 
 ### SEISMIC
 - TSS: 9, Residual: 9, Tidal Stress: 0, Tidal Heating: 0, Plates: 6
 
 ### LIFE
-- Biomass: 13, Biocomplexity: 8, Sophonts: yes, Biodiversity: 8, Compatibility: 6
+- Biomass: 3, Biocomplexity: 1, Sophonts: no, Biodiversity: 6, Compatibility: 4
 
 ### RESOURCES
-- Rating: 9
+- Rating: 11
 
 ### HABITABILITY
-- Rating: 9
-- Notes: Thin, taint (standard), or dense Atmospheres
+- Rating: 7
+- Notes: Thin, taint (standard), or dense Atmospheres; Desert conditions prevalent
 
 ### COMMENTS
 - This is the system mainworld.

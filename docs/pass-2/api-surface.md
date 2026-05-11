@@ -185,7 +185,9 @@ Procedures take `*Body` directly. The "moon path" is not a separate iteration �
 
 ## The Climate solver — ConvergeClimate
 
-The structural innovation of pass 2. Replaces pass-1's 5A-atm/hydro + 5C-temp + 5D-rederive 2-pass loop + 5E TSS-temperature-back-edge with a single explicit fixed-point solver.
+Replaces pass-1's 5A-atm/hydro + 5C-temp + 5D-rederive 2-pass loop + 5E TSS-temperature-back-edge with a single explicit per-body entry that folds partial-geology (Residual + TSF + THF) into each rederive pass.
+
+The original pass-2 design called this a "fixed-point solver" with formal N-iteration convergence assertion. Empirical investigation post-cycle-17 showed the climate cluster is NOT a fixed point in the strict mathematical sense — `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which consumes fresh dice from the Roller each call. Every iteration is a fresh stochastic sample of hydro (and via albedo, temperature), not a convergence step. The name "ConvergeClimate" is retained for continuity but is a misnomer; pass-2 runs exactly 2 passes (matching pass-1's behaviour) and accepts the second sample. See `lessons-learned.md` § L13.
 
 ```go
 package worlds
@@ -201,20 +203,24 @@ type Climate struct {
                                      // tectonic plates (post-converge)
 }
 
-// ConvergeClimate finds the fixed point of the atm/hydro/temp/TSS cluster
-// for the given body. Mutates body.Atmosphere, body.Hydrographics, and
-// body.Temperature on return.
+// ConvergeClimate runs the atm/hydro/temp/TSS cluster for the given
+// body. Mutates body.Atmosphere, body.Hydrographics, body.Temperature,
+// and body.Geology (partial — TectonicPlates added in Stage 7) on
+// return.
 //
 // Eligibility: HZ-orbit terrestrials and HZ-planet moons get a full
-// climate. Non-HZ terrestrials and atm-less bodies get a degenerate
-// Climate with nil Atmosphere / Hydrographics / Temperature.
+// climate. Non-HZ terrestrials and atm-less bodies short-circuit (no
+// atm / hydro / temp populated).
 //
-// Convergence: iterates until atm.Code, hydro.Code, and temp.MeanK are
-// stable. Cap N = 3 iterations. Asserts convergence; panics on overflow
-// (a fixture failure).
+// Behaviour: runs exactly 2 passes of (temp → partial-geology → TSS
+// apply → rederive). Matches pass-1's 2-rederive flow. The "convergence"
+// framing of the original pass-2 design proved unrealizable — see
+// lessons-learned.md § L13 (the cluster isn't a fixed point because
+// hydro is re-sampled per pass).
 //
-// Dice consumption: bounded by N * (atm + hydro + temp + partial-geology
-// inner-roll counts). The Roller must support the worst case.
+// Dice consumption: 2 × (atm + hydro + temp + partial-geology inner-roll
+// counts) plus the initial atm + hydro rolls. Determined entirely by
+// the Roller's sequence.
 func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error
 ```
 
@@ -551,7 +557,7 @@ These decisions resolve the stub line-items they blocked. Cycle 0 (stub commit) 
 ## What this document commits pass 2 to
 
 1. A unified `Body` type with one iterator, eliminating the moon-path silent-zero anti-pattern at the type level.
-2. An explicit `Climate` fixed-point solver, eliminating the 2-pass-rederive workaround.
+2. A consolidated `ConvergeClimate` per-body solver that folds partial-geology into the rederive flow. (Originally framed as a fixed-point solver; post-cycle-17 investigation reclassified it as deterministic 2-pass sampling — see `lessons-learned.md` § L13.)
 3. Three IISS form structs from day one, with per-form per-format renderers in a separate `iiss/` package.
 4. A smaller public surface (target ~200–300 symbols) by hiding internal helpers behind procedure boundaries.
 5. Misuse-path contract tests as a mandatory class of fixture for every public function.

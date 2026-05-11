@@ -110,6 +110,24 @@ Pass-2's tests recognise these via an `isSpecialCircumstances(err)` predicate an
 
 **Implication.** When a project has explicit out-of-scope boundaries (WBH chapter X is post-parity), give the test infrastructure a way to recognise those boundaries via specific error sentinels. Don't fail tests on legitimate out-of-scope outcomes.
 
+## L13 — The climate cluster is NOT a fixed point in the strict sense
+
+The pass-2 design framed `ConvergeClimate` as a fixed-point solver: iterate until atm.Code, hydro.Code, and temp.MeanK are stable; panic on overflow. Cycle 17 implemented this with N=3 and immediately hit convergence overflow on common seeds. Cycle 17's pragmatic compromise (N=5 + accept-last-state) shipped but felt wrong.
+
+Post-cycle-17 investigation (A1 option (b) per `next-steps.md`):
+
+1. Instrumented `ConvergeClimate` to dump per-iteration `(atm.Code, hydro.Code, MeanK)` to stderr.
+2. Ran seed 0 and found body `A III` with atm stable at code 10 but **hydro oscillating** (0 → 5 → 7 → 4 → 9) and MeanK following.
+3. Traced the cause: `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which consumes fresh dice each call. Every iteration is a stochastic sample, not a convergence step.
+
+**Root cause.** The hydro distribution depends on TempRange, and TempRange depends on hydro (via albedo). For some atm.Code values, the distribution of hydro outcomes is wide enough that successive samples don't agree. There is no "true" hydro to converge to — there's a probability distribution over possible hydro values, and each iteration draws a fresh sample.
+
+**Resolution.** Reverted to pass-1's 2-pass behaviour (one initial atm/hydro from HZ-offset proxy, then 2 passes of temp → partial-geo → TSS → rederive). The name `ConvergeClimate` is preserved for continuity. The N-iteration loop and convergence assertion from cycle 17 are removed.
+
+**Wider implication.** Specs that read like "iterate to convergence within N" are claims about the dynamics of the underlying procedure. If the procedure samples from a probability distribution (as `RollHydroDigit` does), there is no fixed point — only sampling. A 30-minute spike in cycle 17 would have caught the false-premise; pass-2's design got it wrong because the spec was written before the implementation, and the implementation revealed the system is stochastic, not deterministic.
+
+The agent-vault entry [[2026-05-10-empirical-convergence-validates-spec]] captures this lesson cross-project: validate convergence empirically before specing N-iteration.
+
 ## Closing — what changed from pass 1 vs what survived
 
 What changed: the type system (unified Body), the iteration pattern (`iter.Seq[*Body]`), the architectural layering (`iiss/` split, ConvergeClimate as a per-body entry, TSS folded into climate), the test fixture pattern (Seeded shape-invariant for façades), the orchestrator code (every Apply\* function), the cycle cadence (per-stage instead of per-WBH-page).
