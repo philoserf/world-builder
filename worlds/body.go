@@ -1,7 +1,5 @@
 package worlds
 
-import "fmt"
-
 // BodyKind classifies a Body in the universe. Per anti-pattern A.1, the
 // moon-vs-planet distinction is encoded as a Kind value, not a separate
 // type or code path.
@@ -134,15 +132,8 @@ func (b *Body) RenderSAH() string {
 	if !b.HasAtmosphere() || !b.HasHydrographics() {
 		return size + "??"
 	}
-	atmoChar := atmosphereCodeChar(b.Atmosphere.Code)
-	hydroChar := fmt.Sprintf("%d", b.Hydrographics.Code)
-	if b.Hydrographics.Code == 10 {
-		hydroChar = "A"
-	}
-	return size + atmoChar + hydroChar
+	return size + atmosphereCodeChar(b.Atmosphere.Code) + hydroCodeChar(b.Hydrographics.Code)
 }
-
-// atmosphereCodeChar lives in atmosphere_profile.go (cycle 5).
 
 // StellarOrbit returns the body's orbit around its host star. For
 // moons, that is the parent planet's orbit; for planets and belts, the

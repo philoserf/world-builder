@@ -30,6 +30,11 @@ type SystemDetail struct {
 	EmptyOrbits   int
 	SystemSpread  float64
 
+	// Mainworld is the auto-picked mainworld body, set by AggregateSystem
+	// alongside MainworldDesignation. nil when the system has no
+	// terrestrial / belt bodies.
+	Mainworld *Body
+
 	iiss.SystemForms
 }
 

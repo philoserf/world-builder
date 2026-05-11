@@ -10,17 +10,14 @@ import (
 )
 
 // BuildIISSForms populates u.Detail.SystemForms (Class0I, Class23,
-// Class4P) from the converged universe state. Pure function — no
-// rolls. Called by GenerateWithRoller after AggregateSystem.
-//
-// Cycle-11 MVP: produces structurally-correct forms with the
-// header / counts / star rows / object rows populated; cell-by-cell
-// fidelity to the WBH p.35 / p.63 / pp.141-142 layouts lands in a
-// post-parity sub-project.
+// Class4P) from the converged universe state per WBH p.35 / p.63 /
+// pp.141-142. Pure function — no rolls. Called by GenerateWithRoller
+// after AggregateSystem.
 func BuildIISSForms(u *Universe) {
-	u.Detail.Class0I = buildClass0I(u)
-	u.Detail.Class23 = buildClass23(u)
-	u.Detail.Class4P = buildClass4P(u)
+	c0 := buildClass0I(u)
+	u.Detail.Class0I = c0
+	u.Detail.Class23 = buildClass23(u, c0)
+	u.Detail.Class4P = buildClass4P(u, c0.FormHeader)
 }
 
 func buildClass0I(u *Universe) iiss.Class0IForm {
@@ -64,8 +61,7 @@ func buildClass0I(u *Universe) iiss.Class0IForm {
 	return form
 }
 
-func buildClass23(u *Universe) iiss.Class23Form {
-	c0 := buildClass0I(u)
+func buildClass23(u *Universe, c0 iiss.Class0IForm) iiss.Class23Form {
 	form := iiss.Class23Form{
 		FormHeader:   c0.FormHeader,
 		SystemAgeGyr: c0.SystemAgeGyr,
@@ -147,23 +143,26 @@ func fillStarsMAO(rows []iiss.Class0IStarRow, avail Result, sys stars.System) {
 	}
 }
 
+// ggPrefix returns the 2-letter SAH prefix for a gas giant.
+// NotGasGiant → "G" (defensive — callers should gate by GGClass).
+func ggPrefix(c GasGiantClass) string {
+	switch c {
+	case GasGiantSmall:
+		return "GS"
+	case GasGiantMedium:
+		return "GM"
+	case GasGiantLarge:
+		return "GL"
+	}
+	return "G"
+}
+
 func renderObjectSAH(body *Body) string {
 	switch body.Kind {
 	case BodyTerrestrial:
 		return body.RenderSAH()
 	case BodyGasGiant:
-		var prefix string
-		switch body.GGClass {
-		case GasGiantSmall:
-			prefix = "GS"
-		case GasGiantMedium:
-			prefix = "GM"
-		case GasGiantLarge:
-			prefix = "GL"
-		default:
-			prefix = "G"
-		}
-		return prefix + body.GGDiameterCode
+		return ggPrefix(body.GGClass) + body.GGDiameterCode
 	case BodyPlanetoidBelt:
 		return "000"
 	}
@@ -172,16 +171,7 @@ func renderObjectSAH(body *Body) string {
 
 func renderMoonSAH(m *Body, parentInHZ bool) string {
 	if m.GGClass != NotGasGiant {
-		var prefix string
-		switch m.GGClass {
-		case GasGiantSmall:
-			prefix = "GS"
-		case GasGiantMedium:
-			prefix = "GM"
-		case GasGiantLarge:
-			prefix = "GL"
-		}
-		return prefix + m.GGDiameterCode
+		return ggPrefix(m.GGClass) + m.GGDiameterCode
 	}
 	if parentInHZ {
 		return string(m.SizeCode) + "??"
@@ -214,7 +204,7 @@ func renderObjectNotes(body *Body) string {
 		}
 		parts = append(parts, strings.Join(moonSAH, ", "))
 	}
-	if body.Belt != nil && body.Belt.Profile != "" {
+	if body.HasBelt() && body.Belt.Profile != "" {
 		parts = append(parts, body.Belt.Profile)
 	}
 	return strings.Join(parts, ", ")
@@ -243,11 +233,9 @@ func formatPeriod(p Period) string {
 	return fmt.Sprintf("%.3fy", p.Years)
 }
 
-func buildClass4P(u *Universe) iiss.Class4PForm {
-	form := iiss.Class4PForm{
-		FormHeader: buildClass0I(u).FormHeader,
-	}
-	mainworld := findMainworld(u)
+func buildClass4P(u *Universe, header iiss.FormHeader) iiss.Class4PForm {
+	form := iiss.Class4PForm{FormHeader: header}
+	mainworld := u.Detail.Mainworld
 	if mainworld == nil {
 		return form
 	}
@@ -277,7 +265,7 @@ func buildClass4PPartP(u *Universe, body *Body) *iiss.Class4PPartP {
 		MassEarth:    body.MassEarth,
 		IsMainworld:  true,
 	}
-	if body.Physical != nil {
+	if body.HasPhysical() {
 		p.Density = body.Physical.Density
 		p.Gravity = body.Physical.Gravity
 	}
@@ -378,7 +366,7 @@ func buildClass4PPartPB(u *Universe, body *Body) *iiss.Class4PPartPB {
 		PeriodHours:  body.Period.Hours,
 		IsMainworld:  true,
 	}
-	if body.Belt != nil {
+	if body.HasBelt() {
 		pb.SpanOrbits = body.Belt.Span
 		pb.MTypePct = body.Belt.Composition.MTypePct
 		pb.STypePct = body.Belt.Composition.STypePct
@@ -391,26 +379,3 @@ func buildClass4PPartPB(u *Universe, body *Body) *iiss.Class4PPartPB {
 	}
 	return pb
 }
-
-func findMainworld(u *Universe) *Body {
-	if u.Detail.MainworldDesignation == "" {
-		return nil
-	}
-	target := u.Detail.MainworldDesignation
-	for i := range u.Detail.Bodies {
-		body := &u.Detail.Bodies[i]
-		if body.Designation == target {
-			return body
-		}
-		for _, child := range body.Children {
-			if child.Designation == target {
-				return child
-			}
-		}
-	}
-	return nil
-}
-
-// buildBodyNotes (cycle-11 simple Notes string) was replaced by
-// renderObjectNotes / renderObjectSAH / renderSub for full pass-1
-// fidelity in cycle 15.

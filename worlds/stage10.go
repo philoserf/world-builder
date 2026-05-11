@@ -9,13 +9,8 @@ import (
 
 // AggregateSystem computes the system-wide aggregations after every
 // body has converged: BaselineN backfill per allocation, ShortProfile,
-// LongProfile, and the auto-picked mainworld designation. Pure
-// function — no rolls. Stage-10 entry point per docs/pass-2/api-
-// surface.md § Stage 10.
-//
-// IISS form structs (Class0I / Class23 / Class4P) are populated in
-// cycle 11 alongside the iiss/ renderers; cycle-10 leaves them at
-// zero values.
+// LongProfile, and the auto-picked mainworld. Pure function — no
+// rolls. Stage-10 entry point per docs/pass-2/api-surface.md § Stage 10.
 func AggregateSystem(u *Universe) {
 	// Step 1 — backfill per-allocation BaselineN.
 	allocs := make([]StarAllocation, len(u.Placement.Allocations))
@@ -30,9 +25,9 @@ func AggregateSystem(u *Universe) {
 	u.Detail.LongProfile = buildLongProfile(u)
 
 	// Step 3 — mainworld pick.
-	mainworld := pickMainworld(u.Detail.Bodies)
-	// SystemDetail embeds iiss.SystemForms — promoted access:
-	u.Detail.MainworldDesignation = mainworld
+	designation, body := pickMainworld(u.Detail.Bodies)
+	u.Detail.MainworldDesignation = designation
+	u.Detail.Mainworld = body
 }
 
 // computeBaselineN returns the per-star baseline number for a group
@@ -152,29 +147,29 @@ func formatSpread(s float64) string {
 //  3. Highest ResourceRating > 0 (admits belts).
 //  4. First terrestrial-or-belt body in iteration order.
 //
-// Walks both Body and Children (moons). Returns "" only when the
-// system has no terrestrial / belt bodies whatsoever.
-func pickMainworld(bodies []Body) string {
+// Walks both Body and Children (moons). Returns ("", nil) only when
+// the system has no terrestrial / belt bodies whatsoever.
+func pickMainworld(bodies []Body) (string, *Body) {
 	type candidate struct {
-		designation  string
+		body         *Body
 		habitability int
 		resource     int
 		hasSophont   bool
 	}
 	var candidates []candidate
-	collect := func(designation string, kind BodyKind, h *Habitability, b *Biology, belt *BeltDetails) {
-		if kind != BodyTerrestrial && kind != BodyMoon && kind != BodyPlanetoidBelt {
+	collect := func(body *Body, belt *BeltDetails) {
+		if body.Kind != BodyTerrestrial && body.Kind != BodyMoon && body.Kind != BodyPlanetoidBelt {
 			return
 		}
-		c := candidate{designation: designation}
-		if h != nil {
-			c.habitability = h.Rating
+		c := candidate{body: body}
+		if body.Habitability != nil {
+			c.habitability = body.Habitability.Rating
 		}
-		if b != nil {
-			c.resource = b.ResourceRating
-			c.hasSophont = b.HasNativeSophont || b.HadExtinctSophont
+		if body.Biology != nil {
+			c.resource = body.Biology.ResourceRating
+			c.hasSophont = body.Biology.HasNativeSophont || body.Biology.HadExtinctSophont
 		}
-		if kind == BodyPlanetoidBelt && belt != nil {
+		if body.Kind == BodyPlanetoidBelt && belt != nil {
 			c.resource = belt.ResourceRating
 		}
 		candidates = append(candidates, c)
@@ -182,14 +177,14 @@ func pickMainworld(bodies []Body) string {
 
 	for i := range bodies {
 		body := &bodies[i]
-		collect(body.Designation, body.Kind, body.Habitability, body.Biology, body.Belt)
+		collect(body, body.Belt)
 		for _, child := range body.Children {
-			collect(child.Designation, child.Kind, child.Habitability, child.Biology, nil)
+			collect(child, nil)
 		}
 	}
 
 	if len(candidates) == 0 {
-		return ""
+		return "", nil
 	}
 
 	better := func(i, best int) bool {
@@ -207,33 +202,28 @@ func pickMainworld(bodies []Body) string {
 			best = i
 		}
 	}
-	if best != -1 {
-		return candidates[best].designation
-	}
-
-	for i, c := range candidates {
-		if c.habitability == 0 {
-			continue
-		}
-		if best == -1 || better(i, best) {
-			best = i
+	if best == -1 {
+		for i, c := range candidates {
+			if c.habitability == 0 {
+				continue
+			}
+			if best == -1 || better(i, best) {
+				best = i
+			}
 		}
 	}
-	if best != -1 {
-		return candidates[best].designation
-	}
-
-	for i, c := range candidates {
-		if c.resource == 0 {
-			continue
-		}
-		if best == -1 || candidates[i].resource > candidates[best].resource {
-			best = i
+	if best == -1 {
+		for i, c := range candidates {
+			if c.resource == 0 {
+				continue
+			}
+			if best == -1 || candidates[i].resource > candidates[best].resource {
+				best = i
+			}
 		}
 	}
-	if best != -1 {
-		return candidates[best].designation
+	if best == -1 {
+		best = 0
 	}
-
-	return candidates[0].designation
+	return candidates[best].body.Designation, candidates[best].body
 }
