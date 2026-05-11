@@ -121,7 +121,7 @@ func refineParentMoons(r roller.Roller, parent *Body) {
 	mor := MoonOrbitRange(limit, len(parent.Children))
 	// Effective parent size for moon period: terrestrials use Size code;
 	// gas giants use diameter ratio (DiameterEarth × 8 → Earth-units).
-	effSize := sizeAsInt(parent.SizeCode)
+	effSize := SizeAsInt(parent.SizeCode)
 	if parent.GGClass != NotGasGiant && parent.DiameterEarth > 0 {
 		effSize = int(parent.DiameterEarth * 8)
 	}
@@ -132,27 +132,4 @@ func refineParentMoons(r roller.Roller, parent *Body) {
 			parent.Children[j].PeriodHours = MoonPeriodHours(orbit, effSize, planetMass)
 		}
 	}
-}
-
-// sizeAsInt converts a SizeCode to its integer equivalent for arithmetic.
-// "S", "R", "", "0" → 0; "1"-"9" → 1-9; "A"-"F" → 10-15. Mirrors
-// pass-1's atmosphere.go SizeAsInt; lifted here so Stage-3 doesn't
-// import Stage-5 work. atmosphere.go's version supersedes when it
-// lands in cycle 5.
-func sizeAsInt(s SizeCode) int {
-	switch s {
-	case "", "0", "S", "R":
-		return 0
-	}
-	if len(s) != 1 {
-		return 0
-	}
-	ch := s[0]
-	switch {
-	case ch >= '1' && ch <= '9':
-		return int(ch - '0')
-	case ch >= 'A' && ch <= 'F':
-		return int(ch-'A') + 10
-	}
-	return 0
 }

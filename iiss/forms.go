@@ -36,7 +36,6 @@ type Class23Form struct {
 	Stars        []Class0IStarRow
 	Counts       Class23Counts
 	Objects      []Class23Object
-	ClassIII     bool
 }
 
 // Class23Counts holds the per-system world counts shown on the form.
