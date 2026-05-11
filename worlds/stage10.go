@@ -145,10 +145,10 @@ func formatSpread(s float64) string {
 //     Habitability then Resource.
 //  2. Highest Habitability > 0.
 //  3. Highest ResourceRating > 0 (admits belts).
-//  4. First terrestrial-or-belt body in iteration order.
+//  4. First terrestrial / moon / belt body in iteration order.
 //
 // Walks both Body and Children (moons). Returns ("", nil) only when
-// the system has no terrestrial / belt bodies whatsoever.
+// the system has no terrestrial / moon / belt bodies whatsoever.
 func pickMainworld(bodies []Body) (string, *Body) {
 	type candidate struct {
 		body         *Body

@@ -143,8 +143,10 @@ func fillStarsMAO(rows []iiss.Class0IStarRow, avail Result, sys stars.System) {
 	}
 }
 
-// ggPrefix returns the 2-letter SAH prefix for a gas giant.
-// NotGasGiant → "G" (defensive — callers should gate by GGClass).
+// ggPrefix returns the SAH prefix for a gas giant:
+// "GS" (Small), "GM" (Medium), "GL" (Large). NotGasGiant returns the
+// 1-letter "G" — defensive fallback only; callers should gate by
+// GGClass and this path should not fire in normal pipeline flow.
 func ggPrefix(c GasGiantClass) string {
 	switch c {
 	case GasGiantSmall:
