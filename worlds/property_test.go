@@ -131,10 +131,15 @@ func TestProperty_MoonsHaveBodies(t *testing.T) {
 }
 
 // TestProperty_MainworldExists per harness.md § Property tests.
-// When the system has at least one terrestrial-or-belt body, the
-// AggregateSystem mainworld pick yields a non-empty designation.
-// (pickMainworld's priority-4 fallback returns the first terrestrial-
-// or-belt body in iteration order.)
+// When the system has at least one terrestrial / moon / belt body,
+// the AggregateSystem mainworld pick yields a non-empty designation
+// and matching pointer. (pickMainworld's priority-4 fallback returns
+// the first terrestrial / moon / belt body in iteration order.)
+//
+// Also enforces the SystemDetail.Mainworld / MainworldDesignation
+// invariant: the two are paired — both empty/nil when no candidates
+// exist, both populated otherwise, and Mainworld.Designation must
+// equal MainworldDesignation.
 func TestProperty_MainworldExists(t *testing.T) {
 	t.Parallel()
 	for iter := range 1000 {
@@ -153,6 +158,18 @@ func TestProperty_MainworldExists(t *testing.T) {
 		if hasCandidate && u.Detail.MainworldDesignation == "" {
 			t.Errorf("seed %d: system has terrestrial/moon/belt candidates but no MainworldDesignation",
 				seed)
+		}
+		if hasCandidate && u.Detail.Mainworld == nil {
+			t.Errorf("seed %d: system has candidates and MainworldDesignation=%q but Mainworld pointer is nil",
+				seed, u.Detail.MainworldDesignation)
+		}
+		if !hasCandidate && u.Detail.Mainworld != nil {
+			t.Errorf("seed %d: system has no candidates but Mainworld pointer is non-nil (%s)",
+				seed, u.Detail.Mainworld.Designation)
+		}
+		if u.Detail.Mainworld != nil && u.Detail.Mainworld.Designation != u.Detail.MainworldDesignation {
+			t.Errorf("seed %d: Mainworld.Designation=%q does not match MainworldDesignation=%q",
+				seed, u.Detail.Mainworld.Designation, u.Detail.MainworldDesignation)
 		}
 	}
 }

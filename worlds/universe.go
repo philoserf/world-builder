@@ -32,7 +32,8 @@ type SystemDetail struct {
 
 	// Mainworld is the auto-picked mainworld body, set by AggregateSystem
 	// alongside MainworldDesignation. nil when the system has no
-	// terrestrial / belt bodies.
+	// terrestrial / moon / belt bodies (the body kinds pickMainworld
+	// admits as candidates).
 	Mainworld *Body
 
 	iiss.SystemForms
