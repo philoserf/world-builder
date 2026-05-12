@@ -1,7 +1,7 @@
 # Plan — clean every run
 
-**Date:** 2026-05-11 (updated 2026-05-12 with Phase 2 reframe)
-**Status:** Phases 0 + 1 complete. Phase 2 reframed; sub-phases pending. Phase 3 verification of Phases 0/1 complete.
+**Date:** 2026-05-11 (updated 2026-05-12)
+**Status:** ✅ **Complete.** All sub-phases shipped; 10000-seed sweep shows 100% successes, zero errors.
 **Companion doc:** [`generator-error-catalog.md`](generator-error-catalog.md) (the 10 000-seed sweep that motivated this plan)
 
 ## Intent
@@ -41,33 +41,40 @@ Introduced `stars.ErrSpecialCircumstances` as the umbrella sentinel. Every error
 
 Three test classifiers migrated from `strings.Contains` lists to a single `errors.Is(err, stars.ErrSpecialCircumstances)` check. Commit `90b64d2`. Closed [#45](https://github.com/philoserf/world-builder/issues/45).
 
-### Phase 2 — adopt the book's Referee defaults (sub-phases pending)
+### Phase 2 — adopt the book's Referee defaults ✅
 
-Direct implementation of the three WBH Referee options surfaced above. Seed determinism preserved; no re-roll / Nth-in-scope / time-seeded gymnastics required.
+Direct implementation of the three WBH Referee options. Seed determinism preserved; no re-roll / Nth-in-scope / time-seeded gymnastics required. Sub-phases shipped:
 
-- **2a. Primary column switch — Unusual → Special.** Add `PeculiarPathSpecial` to `stars/peculiar.go`; route `generateSpecialPrimary` through it. Eliminates ~595 post-stellar primary errors and ~53 peculiar/protostar/nebula errors (the Special column's cells are Class VI / IV / III / Giants only).
-- **2b. Companion column switch — same Referee choice consistently.** Apply the Special column to companion paths (`generateRandom`, the descriptor-"Random" call site that currently bubbles `ErrSpecialPrimary`). Eliminates the 51 "companion (descriptor 'Random'): special primary; dispatch through peculiar" errors.
-- **2c. Special-column Giants dispatch.** The Special-column "Giants" cell (rows 11-12) needs `RollGiantClass` + a fresh Type-column roll at DM+1 + `generatePrimaryAtClass` for III/II/Ib/Ia. `RollGiantClass` already exists. Eliminates 6 errors.
-- **2d. Companion-of-giant orbit — WBH p.27 rule.** Replace the `ErrCompanionOfGiantMAO` error at `stars/orbits.go:40` with `Orbit# = 1D × MAO(primary)`. MAO is already implemented. Eliminates 5 errors.
-- **2e. 1D Peculiar fallback as safety net.** For any path that still reaches the Peculiar cell (e.g. future opt-in to Unusual column), apply WBH p.16's "1D, 1-5 NS / 6 BH" rule. Catch-all so the umbrella `ErrSpecialCircumstances` is never returned in default operation. (Lower priority — 2a-2d should already reach zero.)
+- **2a (85d80a3)** — Primary column Unusual → Special. `PeculiarPathSpecial` constant; `GenerateSystemOpts.PeculiarColumn` field (zero value = Special). Adjacent fix: `RollPrimaryTypeAndClassDMPlus1` for class-redirect re-rolls per WBH p.16.
+- **2c (f5ae866)** — Special-column Giants dispatch. `RollGiantClass` + `generatePrimaryAtClass` for III/II/Ib/Ia.
+- **2d (2d6008b)** — Companion-of-giant orbit per WBH p.27: `Orbit# = 1D × MAO(primary)`. `MAO` callback on `GenerateSystemOpts`.
+- **2f (25751bb)** — Post-stellar group members contribute 0 to MAO. Allows WBH-allowed BD/D companions (p.29) without invoking Special Circumstances for orbital placement.
+- **2b (12d714d)** — Companion `Random` descriptor's "Special" cell dispatches through the Special column. `generateRandomSpecial` mirrors `generateSpecialPrimary` for the companion context.
 
-After 2a-2d, target is **10 000 / 10 000 seeds produce a real, fully-rendered system** with no contract change.
+Result: **10 000 / 10 000 seeds produce a real, fully-rendered system** with no contract change. Seed determinism preserved.
+
+#### Deferred
+
+- **2e — 1D Peculiar fallback as safety net.** Originally scoped as a catch-all for any code path that might reach the Peculiar cell. With 2a-2f shipped, the default operation reaches zero errors without it. Park as a future safety net for opt-in Unusual-column use (which currently still has the original error behavior).
+- **Companion column opt-in for Unusual.** 2b hardcodes Special for `generateRandomSpecial`. Threading `PeculiarColumn` through `GenerateCompanionStar` for explicit Unusual-companions support is a future extension (needs API change to `GenerateCompanionStar`).
 
 #### Configurations on top of Phase 2
 
-The original three options (re-roll forward / Nth-in-scope / time-seeded) remain _available as opt-in modifiers_ for users who explicitly choose the Unusual column for verisimilitude. They are not the primary mechanism. If/when these are exposed, document via CLI flags + GenerateOpts fields.
+The original three options (re-roll forward / Nth-in-scope / time-seeded) remain _available as opt-in modifiers_ for users who explicitly choose `GenerateSystemOpts.PeculiarColumn = PeculiarPathUnusual` for verisimilitude. They are not the primary mechanism. If/when these are exposed, document via CLI flags.
 
-### Phase 3 — verify the loop is closed
+### Phase 3 — verify the loop is closed ✅
 
-After Phase 0 + 1 (2026-05-12): 663 / 663 errors classify as Special Circumstances via `errors.Is`; zero untyped real bugs.
+Final 10 000-seed sweep (2026-05-12): **10 000 / 10 000 successes, zero errors.**
 
-Permanent unit-level regression fixtures from Phases 0a/0b:
+Permanent unit-level regression fixtures:
 
-- `worlds/available_orbits_test.go::TestMAO_Protostar`
-- `stars/peculiar_test.go::TestGeneratePrimaryAtClass_IV_M_to_K`
-- `stars/peculiar_test.go::TestGeneratePrimaryAtClass_VI_F_to_G`
+- `worlds/available_orbits_test.go::TestMAO_Protostar` (0a)
+- `stars/peculiar_test.go::TestGeneratePrimaryAtClass_IV_M_to_K` (0b)
+- `stars/peculiar_test.go::TestGeneratePrimaryAtClass_VI_F_to_G` (0b)
+- `stars/peculiar_test.go::TestRollSpecialPrimary_Special_ClassRedirects` (2a)
+- `stars/system_test.go::TestGenerateSystem_SpecialPrimary_GiantsCell` (2c)
 
-Phase 2 sub-phases will each add their own unit-level fixtures next to the fix. After 2a-2d the bulk-sweep target is **10 000 / 10 000 produce a real system** with no remaining `ErrSpecialCircumstances` in default operation.
+See `generator-error-catalog.md` for the full per-phase journey.
 
 ## Out of scope for this plan
 
