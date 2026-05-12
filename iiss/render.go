@@ -1,7 +1,6 @@
 package iiss
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -119,35 +118,4 @@ func MarkdownSystem(sf SystemForms) string {
 		b.WriteString("\n")
 	}
 	return b.String()
-}
-
-// JSONClass0I returns the Class 0/I form as JSON.
-func JSONClass0I(f Class0IForm) ([]byte, error) {
-	return json.MarshalIndent(f, "", "  ")
-}
-
-// JSONClass23 returns the Class II/III form as JSON.
-func JSONClass23(f Class23Form) ([]byte, error) {
-	return json.MarshalIndent(f, "", "  ")
-}
-
-// JSONClass4P returns the Class IV-P form as JSON.
-func JSONClass4P(f Class4PForm) ([]byte, error) {
-	return json.MarshalIndent(f, "", "  ")
-}
-
-// PlainTextClass0I renders the Class 0/I form as a stripped-down
-// plain-text version of the Markdown rendering.
-func PlainTextClass0I(f Class0IForm) string {
-	return MarkdownClass0I(f)
-}
-
-// PlainTextClass23 renders the Class II/III form as plain text.
-func PlainTextClass23(f Class23Form) string {
-	return MarkdownClass23(f)
-}
-
-// PlainTextClass4P renders the Class IV-P form as plain text.
-func PlainTextClass4P(f Class4PForm) string {
-	return MarkdownClass4P(f)
 }

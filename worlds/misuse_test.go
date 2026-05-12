@@ -262,11 +262,5 @@ func TestMisuse_Renderers_ZeroValue(t *testing.T) {
 	_ = iiss.MarkdownClass0I(iiss.Class0IForm{})
 	_ = iiss.MarkdownClass23(iiss.Class23Form{})
 	_ = iiss.MarkdownClass4P(iiss.Class4PForm{})
-	_, _ = iiss.JSONClass0I(iiss.Class0IForm{})
-	_, _ = iiss.JSONClass23(iiss.Class23Form{})
-	_, _ = iiss.JSONClass4P(iiss.Class4PForm{})
-	_ = iiss.PlainTextClass0I(iiss.Class0IForm{})
-	_ = iiss.PlainTextClass23(iiss.Class23Form{})
-	_ = iiss.PlainTextClass4P(iiss.Class4PForm{})
 	_ = iiss.MarkdownSystem(iiss.SystemForms{})
 }
