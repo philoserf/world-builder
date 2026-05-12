@@ -6,6 +6,7 @@ Project documentation for [world-builder](https://github.com/philoserf/world-bui
 
 Design, reference, and living docs live at this directory's root:
 
+- [`walkthrough.md`](walkthrough.md) — linear code tour from CLI entry through the pipeline to the rendered Markdown. Best starting point for new contributors.
 - [`design-intent.md`](design-intent.md) — why the code looks the way it does. Read before proposing structural changes.
 - [`api-surface.md`](api-surface.md) — every public signature with its rationale.
 - [`dependency-graph.md`](dependency-graph.md) — every value, its inputs, the fixed-point clusters.
