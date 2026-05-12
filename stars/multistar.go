@@ -1,6 +1,7 @@
 package stars
 
 import (
+	"errors"
 	"fmt"
 
 	"wbh/roller"
@@ -238,6 +239,16 @@ func generateLesser(r roller.Roller, parent Star) (Star, error) {
 
 func generateRandom(r roller.Roller, parent Star) (Star, error) {
 	letter, lc, err := RollPrimaryTypeAndClass(r)
+	if errors.Is(err, ErrSpecialPrimary) {
+		// Companion-side Special-primary dispatch. WBH p.15's Special
+		// vs Unusual column choice applies to companions too — for now,
+		// default to Special (the same as primaries). Producing
+		// Unusual-column companions (BD/D/Peculiar via descriptor)
+		// is what WBH p.29's NonPrimaryStarDetermination descriptors
+		// already cover; the Type-column "Special" cell here is a
+		// separate redirect to a non-V luminosity class.
+		return generateRandomSpecial(r, parent)
+	}
 	if err != nil {
 		return Star{}, err
 	}
@@ -257,6 +268,55 @@ func generateRandom(r roller.Roller, parent Star) (Star, error) {
 	}
 	return Star{
 		Kind:            parent.Kind,
+		SpectralType:    SpectralType{Letter: letter, Subtype: subtype},
+		LuminosityClass: lc,
+		AgeGyr:          parent.AgeGyr,
+	}, nil
+}
+
+// generateRandomSpecial handles the companion-side equivalent of
+// generateSpecialPrimary: when the Type-column roll yields "Special"
+// (2D=2), dispatch through the Special column to a class-redirect cell
+// (Class VI / IV / III / Giants), then roll the resulting class's
+// letter and subtype. WBH p.15 — Referee option; this follows the
+// same Special-column default chosen for primaries. The returned star
+// carries the parent's age and Kind derived from the rolled class.
+func generateRandomSpecial(r roller.Roller, parent Star) (Star, error) {
+	kind, lc, err := RollSpecialPrimary(r, PeculiarPathSpecial)
+	if err != nil {
+		return Star{}, err
+	}
+	if lc == "Giants" {
+		giantClass, gerr := RollGiantClass(r)
+		if gerr != nil {
+			return Star{}, gerr
+		}
+		lc = giantClass
+	}
+	if lc == "" {
+		// Special column never yields a final Kind (no BD/D/Peculiar
+		// cells); this branch is unreachable today but guards against
+		// future schema drift.
+		return Star{}, fmt.Errorf("stars: Special column produced unexpected Kind %q", kind)
+	}
+	// Class-redirect: roll letter (DM+1 per WBH p.16), apply
+	// class-letter constraint, then subtype.
+	letter, _, err := RollPrimaryTypeAndClassDMPlus1(r)
+	if err != nil {
+		return Star{}, err
+	}
+	switch lc {
+	case IV:
+		letter = ApplyClassIVLetterConstraint(letter)
+	case VI:
+		letter = ApplyClassVILetterConstraint(letter)
+	}
+	subtype, err := RollSubtype(r, letter, lc)
+	if err != nil {
+		return Star{}, err
+	}
+	return Star{
+		Kind:            kindForClass(lc),
 		SpectralType:    SpectralType{Letter: letter, Subtype: subtype},
 		LuminosityClass: lc,
 		AgeGyr:          parent.AgeGyr,
