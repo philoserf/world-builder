@@ -1,10 +1,8 @@
-# Pass 2 — API Surface Design
+# API Surface
 
-This document specifies the public API design for pass 2: types, key signatures, conventions, and the delta from pass 1. It is the contract that procedures honor, the shape callers depend on, and the rationale for each non-obvious choice.
+This document is the public-API reference: types, key signatures, conventions, and the rationale behind non-obvious choices. The actual signatures live in code; this document is the index and the design context.
 
-The actual stub commitments — every public signature compiling but unimplemented — land in code as the first implementation step (per `design-intent.md` § Implementation order). When stubs are written, they cross-reference this document by section. Until then, this document is the source of truth for "what should the public surface look like."
-
-Pass 1's public surface was 1048 symbols. Pass 2 targets a smaller surface: roughly 200–300 public symbols, with the rest hidden behind procedure boundaries. The reduction comes from (a) the cuts list (variance/accuracy options gone, optional rules gone), (b) the unified body iterator (replaces `buildMoonPlacementView`, `parentInfoOf`, and several helper layers), and (c) hiding internal table-lookups that pass 1 exposed unnecessarily.
+The public surface is intentionally compact — roughly 200–300 public symbols — with internal helpers hidden behind procedure boundaries. The compactness comes from (a) cutting toggles for speculative variants, (b) the unified body iterator (a single `Universe.AllBodies()` replaces the earlier `buildMoonPlacementView` / `parentInfoOf` helper sprawl), and (c) keeping internal table lookups unexported.
 
 ## Conventions
 
@@ -83,11 +81,9 @@ type SystemDetail struct {
 }
 ```
 
-**Pass-1 delta.** Pass 1 had `SystemPlacement → DetailedPlacement[]` with `DetailedPlacement{Placement, ...}` embedding. Pass 2 flattens to a single `Body` type (next section) and groups everything system-wide into `SystemDetail`. The Universe wrapper is the top-level handoff to renderers and the CLI.
-
 ## The Body — unified per-body type
 
-The single most important pass-2 design change. Pass 1 had `DetailedPlacement` (planet) and `Moon` as different types with `buildMoonPlacementView` to coerce one into the other. The moon-path silent-zero anti-pattern recurred four times because procedures could iterate the planet path without iterating the moon path.
+A single `Body` type holds every placed object (planet, moon, belt member). The unified iterator (`Universe.AllBodies()`) yields every body, eliminating the moon-path silent-zero anti-pattern at the type level: there is no separate moon code path that procedures can forget to walk.
 
 Pass 2 unifies:
 
@@ -179,15 +175,13 @@ func (u *Universe) Bodies(filter func(*Body) bool) iter.Seq[*Body] { ... }
 
 Procedures take `*Body` directly. The "moon path" is not a separate iteration — moons are yielded by `AllBodies` alongside their parents.
 
-**Pass-1 delta.** Removes `Moon`, `DetailedPlacement`, `buildMoonPlacementView`, `parentInfoOf`. Adds `Body`, `BodyKind.BodyMoon`, the iterator. Reduces the moon-path silent-zero attack surface to zero.
-
-**Trade-off.** A moon's `Orbit` (around the parent planet) and its parent's `Orbit` (around the star) overlap in name. Pass 2 resolves: for moons, `Body.Orbit` is unset (or zero), `OrbitPD`/`OrbitKm` carry the moon's orbit around its parent. Procedures that need "the orbit around the star" call `body.StellarOrbit()` which returns `body.Parent.Orbit` for moons or `body.Orbit` for planets. This explicit indirection prevents the pass-1 confusion where moon code "happened to work" because some procedures aliased through `dp.Orbit` and others didn't.
+**Trade-off.** A moon's `Orbit` (around the parent planet) and its parent's `Orbit` (around the star) overlap in name. Resolution: for moons, `Body.Orbit` is unset (or zero), `OrbitPD`/`OrbitKm` carry the moon's orbit around its parent. Procedures that need "the orbit around the star" call `body.StellarOrbit()` which returns `body.Parent.Orbit` for moons or `body.Orbit` for planets. Explicit indirection.
 
 ## The Climate solver — ConvergeClimate
 
 Replaces pass-1's 5A-atm/hydro + 5C-temp + 5D-rederive 2-pass loop + 5E TSS-temperature-back-edge with a single explicit per-body entry that folds partial-geology (Residual + TSF + THF) into each rederive pass.
 
-The original pass-2 design called this a "fixed-point solver" with formal N-iteration convergence assertion. Empirical investigation post-cycle-17 showed the climate cluster is NOT a fixed point in the strict mathematical sense — `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which consumes fresh dice from the Roller each call. Every iteration is a fresh stochastic sample of hydro (and via albedo, temperature), not a convergence step. The name "ConvergeClimate" is retained for continuity but is a misnomer; pass-2 runs exactly 2 passes (matching pass-1's behaviour) and accepts the second sample. See `lessons-learned.md` § L13.
+The original design called this a "fixed-point solver" with formal N-iteration convergence assertion. Empirical investigation post-cycle-17 showed the climate cluster is NOT a fixed point in the strict mathematical sense — `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which consumes fresh dice from the Roller each call. Every iteration is a fresh stochastic sample of hydro (and via albedo, temperature), not a convergence step. The name "ConvergeClimate" is retained for continuity but is a misnomer; pass-2 runs exactly 2 passes (matching pass-1's behaviour) and accepts the second sample. See `lessons-learned.md` § L13.
 
 ```go
 package worlds
@@ -214,7 +208,7 @@ type Climate struct {
 //
 // Behaviour: runs exactly 2 passes of (temp → partial-geology → TSS
 // apply → rederive). Matches pass-1's 2-rederive flow. The "convergence"
-// framing of the original pass-2 design proved unrealizable — see
+// framing of the original design proved unrealizable — see
 // lessons-learned.md § L13 (the cluster isn't a fixed point because
 // hydro is re-sampled per pass).
 //
@@ -226,9 +220,7 @@ func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error
 
 **Why a struct, not just successive mutations on Body.** The convergence variable is local to the loop. Exposing it externally would let callers reach into a half-converged state. The Climate type is internal-by-design; only ConvergeClimate constructs it. Post-parity, a sibling `ConvergeClimateWithTrace` may expose iteration history for debugging unexpected atm flips; the type signature leaves room.
 
-**Why the partial-geology fold-in.** Per `dependency-graph.md` § Stage 7, the TSS back-edge into Temperature is real. Pass 1 ignored it; pass 2 includes it. The geology factors that depend only on body physical / orbital parameters (Residual, TSF, THF) are computed inside the loop. The factors that depend on stable TSS (Tectonic Plates, GG residual heat propagation) are computed after.
-
-**Pass-1 delta.** Removes `RederiveAtmosphereHydrographics`, the 2-pass loop in pass-1's `runStep5D`, and the 1-pass forward update of `ApplyInherentTempAddition` in `runStep5E`'s temp section. All folded into ConvergeClimate.
+**Why the partial-geology fold-in.** Per `dependency-graph.md` § Stage 7, the TSS back-edge into Temperature is real. The geology factors that depend only on body physical / orbital parameters (Residual, TSF, THF) are computed inside the loop. The factors that depend on stable TSS (Tectonic Plates, GG residual heat propagation) are computed after.
 
 ## Stage-by-stage signature design
 
@@ -286,7 +278,7 @@ func ApplyRotationTilt(r roller.Roller, u *Universe, sys stars.System) error
 
 Internal sub-procedures: `GenerateDayLength`, `GenerateAxialTilt`, `GenerateTidalLock`, `GenerateSurfaceTidalEffects`. All take `*Body`; moons are walked by the unified iterator.
 
-**Surface distribution moves to Stage 6** (post-climate). Pass 1 ran it here against preliminary hydro; pass 2 defers.
+**Surface distribution moves to Stage 6** (post-climate). The project defers.
 
 ### Stage 5: ConvergeClimate
 
@@ -397,8 +389,6 @@ func PlainTextClass4P(f Class4PForm) string
 
 No `Renderer` interface; no `(f Class0IForm) Markdown() string` method. Direct functions are simpler, do not impose an interface, and are trivially extended to a fourth format if one ever appears.
 
-**Pass-1 delta.** Removes plain-text-only `RenderIISSClass4P`. Splits each form's renderers into per-format files (`iiss/class4p_markdown.go`, `iiss/class4p_json.go`, `iiss/class4p_plaintext.go`).
-
 ## The top-level façade
 
 ```go
@@ -503,64 +493,12 @@ Implementation: TBD per stub commitment.
 
 The pattern is mandatory. No public function ships without misuse-path test coverage.
 
-## Pass-1 → pass-2 delta summary
+## What this document commits to
 
-Removed:
-
-- **Embedded chain depth.** `Slot → AnomalousSlot → Placement → DetailedPlacement` (4 levels) collapses to `Body` (1 level, with `Group` embedded for shared fields).
-- **`buildMoonPlacementView`, `parentInfoOf`** and several helper layers — replaced by unified `Body` + iterator.
-- **`Moon` struct** — moons become `Body{Kind: BodyMoon, Parent: <planet>}`.
-- **`RederiveAtmosphereHydrographics` and the 2-pass loop** — folded into `ConvergeClimate`.
-- **`*Opts.WithVariance`, `*Opts.Accuracy`, `DetailOpts.OxygenAtmBiomassFloor`** — cut per `design-intent.md`.
-- **`SurveyForm.ClassI bool`** dead field — pass-2 fields are added with both writer and reader simultaneously.
-- **Plain-text-only `RenderIISSClass4P`** — replaced by struct + per-format renderers.
-- **`IISSClass23Header.SectorLocation` (single string)** — replaced by `Sector` + `Location` fields.
-
-Renamed:
-
-- **`ComputeAlbedo` → `RollAlbedo`** (consumes Roller).
-- **`ComputeGreenhouseFactor` → `RollGreenhouseFactor`** (consumes Roller).
-- **`atmosphereSubtype` parameter (in `RollGasMix`) → `atmosphereColumnLetter`** with `AtmosphereColumnLetter` typed string.
-
-Added:
-
-- **`Body`, `BodyKind`, `Universe`** — top-level model.
-- **`Climate`, `ConvergeClimate`** — the fixed-point solver.
-- **`Universe.AllBodies() iter.Seq[*Body]`** — Go 1.23+ unified iterator.
-- **`iiss/` package** — IISS forms + renderers split out.
-- **`Class4PForm` (struct)** — pass-1 plain-text renderer becomes a struct + format renderers.
-- **`Class0IForm`, `Class23Form`** updated headers (`Sector`, `Location` as separate fields).
-
-## Stub commitment scope
-
-The stubs are the API surface in code. They include:
-
-- All public types declared.
-- All public functions declared with bodies that `panic("unimplemented: see docs/api-surface.md § <section>")`.
-- All `Has*()` predicates declared.
-- All renderer functions declared.
-- The Universe / Body / Climate types fully fielded (pass-2 tests can construct empty values).
-
-After stubs land, the harness fixtures are written against them (red). After harness is red, implementation proceeds, driven by which fixture is closest to green next, in dependency-graph order.
-
-The stub commit is a single PR-sized change, ~30 source files, no implementation logic. It is reviewable as one artifact. Subsequent implementation cycles touch a small subset of those files per cycle.
-
-## Open questions, decided
-
-These decisions resolve the stub line-items they blocked. Cycle 0 (stub commit) honors them.
-
-- **Where does pass-2's `Group` live? — `stars/`.** Group is stellar-group geometry (HZCO, MAO, parent-star references). Pass-1 had `worlds.Group`; pass-2 moves to `stars.Group`. `worlds/` imports `stars/` and uses `stars.Group` as a foreign type at boundaries. The `Body` struct's `Group` field is typed as `stars.Group`.
-- **`OrbitToAU` and HZCO accessors — methods on `stars.Star`.** Pass 1 mixed methods and free functions; pass 2 picks methods. `star.HZCOOrbit() float64`, `star.OrbitToAU(orbit float64) float64`. No sibling free functions; no two ways to compute the same value.
-- **Belt member detail — omitted from cycle-0 stubs.** `BeltDetails` does not declare `Members []BeltMember`. `Class4PPartPB` is an empty struct shell — `Variant == Class4PBelt` on the parent `Class4PForm` is the only marker that the belt variant exists. Both are fleshed out post-parity, when the belt-mainworld fixture in `harness.md` § Class4P/PartPB lands. Per anti-pattern A.4 (dead fields), declaring a field without a writer/reader is forbidden; the omission is the right call.
-- **`ConvergeClimate` panic-on-overflow stance — deferred to cycle-6 (Climate) spec.** Per `spike-findings.md` § Finding 6a; the production-vs-test trade-off (raise N? log and degrade? introspect Roller type?) is not pre-stub work. Cycle 0 stubs `ConvergeClimate` as `panic("unimplemented: see api-surface.md § ConvergeClimate")` — the convergence behavior is irrelevant until cycle 6.
-
-## What this document commits pass 2 to
-
-1. A unified `Body` type with one iterator, eliminating the moon-path silent-zero anti-pattern at the type level.
-2. A consolidated `ConvergeClimate` per-body solver that folds partial-geology into the rederive flow. (Originally framed as a fixed-point solver; post-cycle-17 investigation reclassified it as deterministic 2-pass sampling — see `lessons-learned.md` § L13.)
-3. Three IISS form structs from day one, with per-form per-format renderers in a separate `iiss/` package.
-4. A smaller public surface (target ~200–300 symbols) by hiding internal helpers behind procedure boundaries.
+1. A unified `Body` type with one iterator (`Universe.AllBodies()`), eliminating the moon-path silent-zero anti-pattern at the type level.
+2. A consolidated `ApplyClimatePasses` per-body solver that folds partial-geology into the rederive flow. (Originally framed as a fixed-point solver; investigation reclassified it as deterministic 2-pass sampling — see `history/lessons-learned.md` § L13.)
+3. Three IISS form structs with per-form Markdown renderers in a separate `iiss/` package; `iiss/` does not import `worlds/`.
+4. A compact public surface (~200–300 symbols) with internal helpers hidden behind procedure boundaries.
 5. Misuse-path contract tests as a mandatory class of fixture for every public function.
-6. The pass-1 → pass-2 delta is enumerated; stubs are written against this document; tests are written against the stubs; implementation follows.
 
-The next document, `harness.md`, catalogs the worked-example fixtures that gate the implementation.
+The companion `harness.md` catalogs the worked-example fixtures; `dependency-graph.md` maps every value to its inputs; `wbh-inconsistencies.md` consolidates the six book-internal divergences.

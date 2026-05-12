@@ -1,15 +1,13 @@
-# Pass 2 — WBH Internal Inconsistencies
+# WBH Internal Inconsistencies
 
-The _World Builder's Handbook_ (Lanesskog 2023) contains documented internal contradictions: tables that disagree with each other, formulas that disagree with worked examples, and footnotes that disagree with the IISS-form printed values. Pass 1 identified six such cases and made a judgment call for each. Pass 2 inherits those calls, commits them in code, and removes any runtime toggle that would let either interpretation win.
+The _World Builder's Handbook_ (Lanesskog 2023) contains documented internal contradictions: tables that disagree with each other, formulas that disagree with worked examples, and footnotes that disagree with the IISS-form printed values. The project commits to one interpretation per case, encoded in code with the chosen value asserted by a test and the divergence documented here. No runtime toggles for either interpretation.
 
-This document is the consolidated source of truth. The rules:
+The rules:
 
 - **One interpretation per inconsistency.** No `*Opts` field, no `t.Logf` divergence note, no flag.
 - **Each entry cites both sources** (the conflicting pages or sources within the book).
 - **Each entry states the chosen interpretation** and the reason for the choice.
 - **Each entry names the verification target.** Where applicable, the chosen interpretation is the one that reproduces the canonical Zed Prime IISS form on WBH pp.141–142.
-
-Pass-1 source memories: `feedback_wbh_p19_p42_inconsistency`, `feedback_wbh_p58_p63_inconsistency`, `feedback_wbh_temperature_inconsistencies`, `feedback_wbh_p125_density_dm`, `feedback_wbh_p131_compatibility_formula`, `feedback_wbh_p132_gravity_dm_overlap`. They remain in working memory for traceability; this document is the canonical reference for pass-2 implementation.
 
 ## The decision rule
 
@@ -17,7 +15,7 @@ Across the six entries below, one heuristic emerges:
 
 > When a formula table and a worked example disagree, choose the interpretation that reproduces the canonical Zed Prime IISS form on pp.141–142. Worked examples on the IISS forms are the printed verification targets. Where the formula matches the form, follow the formula. Where the worked example matches the form (and the formula does not), follow the worked example.
 
-This is not always "trust the table" or "trust the worked example" — it is "trust whichever interpretation makes the canonical example reproducible." Pass 2 applies this rule consistently and notes when the rule was decisive (entries 4–6) versus when the formula and example agree on the value but disagree elsewhere (entries 1–3).
+This is not always "trust the table" or "trust the worked example" — it is "trust whichever interpretation makes the canonical example reproducible." The rule applies consistently and is decisive for entries 4–6; for entries 1–3 the formula and example agree on the value but disagree elsewhere.
 
 ## Inconsistency 1: WBH p.19 luminosity table vs p.42 HZCO table
 
@@ -33,7 +31,7 @@ This is not always "trust the table" or "trust the worked example" — it is "tr
 | M9 V  |         0.00029 |        0.043 |      0.04 |      0.00025 (−14%) |
 | M9 VI |         0.00019 |        0.035 |      0.03 |      0.00014 (−26%) |
 
-**Pass-2 choice.** **Implement the formula** (`HZCO = AUToOrbit(sqrt(luminosity))`) using p.19 luminosities as the source of truth. The five cells where p.42 disagrees are accepted as inter-table drift; pass-2 tests verify the formula against the 83 consistent cells and explicitly skip the five known-divergent cells. The skip list is hard-coded with comments citing this document.
+**Chosen interpretation.** **Implement the formula** (`HZCO = AUToOrbit(sqrt(luminosity))`) using p.19 luminosities as the source of truth. The five cells where p.42 disagrees are accepted as inter-table drift; the tests verify the formula against the 83 consistent cells and explicitly skip the five known-divergent cells. The skip list is hard-coded with comments citing this document.
 
 **Why.** The formula is procedurally specified; the p.42 table is a derived display. Choosing the formula keeps the implementation honest about what HZCO means (a function of luminosity). The Class VI divergence is small in absolute orbit-units and does not affect any worked example we verify against.
 
@@ -43,13 +41,13 @@ This is not always "trust the table" or "trust the worked example" — it is "tr
 
 **Conflict.** If d-moon were Size S as p.58 says, it could not be a mainworld candidate (Size S = small body < 600 km, no atmosphere capacity). But the form makes Zed Prime the mainworld at Size 5.
 
-**Pass-2 choice.** **Treat p.63 (the form) as authoritative.** The d-moon's underlying SizeCode is "5".
+**Chosen interpretation.** **Treat p.63 (the form) as authoritative.** The d-moon's underlying SizeCode is "5".
 
 **Why.** The book authors evidently updated the p.63 form to make Zed Prime habitable but left the p.58 sizing table unrevised. The form is the canonical verification target on pp.141–142; the sizing table appears to be a typo or stale text. The Zed Prime fixture in the harness encodes Size=5 directly.
 
 ## Inconsistency 3: WBH temperature chapter (pp.108–126) — three table-vs-text divergences
 
-The temperature chapter contains three independent contradictions surfaced during pass-1's 3A2b-temp implementation. Pass 2 follows the formula-table interpretation in each case.
+The temperature chapter contains three independent contradictions surfaced during pass-1's 3A2b-temp implementation. The project follows the formula-table interpretation in each case.
 
 ### 3a. Albedo Hyd 6+ formula
 
@@ -57,7 +55,7 @@ The temperature chapter contains three independent contradictions surfaced durin
 
 **Conflict.** The text formula `(2D − 4) × 0.03` and the worked example `(2D − 3) × 0.03` give different results for the same dice value.
 
-**Pass-2 choice.** **Follow the table** (`(2D − 4) × 0.03`).
+**Chosen interpretation.** **Follow the table** (`(2D − 4) × 0.03`).
 
 **Why.** To reproduce the book's stated 0.09 albedo modifier with the table formula, the harness scripts dice value `7` for the hyd modifier (gives `(7 − 4) × 0.03 = 0.09`). The dice script in the Zed fixture encodes this; the worked example's stated `(6 − 3)` is treated as a typo.
 
@@ -67,7 +65,7 @@ The temperature chapter contains three independent contradictions surfaced durin
 
 **Conflict.** The book's stated `G = 0.36` does not reproduce real Earth's mean temperature of ~288 K. Earth's actual mean would require `G ≈ 0.62`.
 
-**Pass-2 choice.** **Use `G = 0.36` as the book specifies.** The implementation does not "correct" the Terra reference value to match real Earth.
+**Chosen interpretation.** **Use `G = 0.36` as the book specifies.** The implementation does not "correct" the Terra reference value to match real Earth.
 
 **Why.** The book's choice of 0.36 is a simplified-model value used consistently throughout the chapter. Substituting 0.62 would break every other Terra-relative computation. The discrepancy with real Earth is a model simplification, not an internal contradiction.
 
@@ -77,7 +75,7 @@ The temperature chapter contains three independent contradictions surfaced durin
 
 **Conflict.** The book's stated 230 K appears to use base AU (instead of Far AU) for worst-low only — internally inconsistent with how worst-high is computed in the same sidebar.
 
-**Pass-2 choice.** **Compute consistently using Near/Far AU** (yields 319 K worst-high, 219 K worst-low). The Zed fixture pins the computed values; the sidebar's 230 K is documented as a book-internal arithmetic drift.
+**Chosen interpretation.** **Compute consistently using Near/Far AU** (yields 319 K worst-high, 219 K worst-low). The Zed fixture pins the computed values; the sidebar's 230 K is documented as a book-internal arithmetic drift.
 
 **Why.** The internal consistency of the formula matters more than matching one stated number that breaks its own pattern.
 
@@ -98,7 +96,7 @@ WBH p.126 worked example for Zed Prime (density 1.03):
 
 **Conflict.** The table says density > 1.0 → DM+2; the worked example uses DM+1.
 
-**Pass-2 choice.** **Follow the formula table** (density > 1.0 → DM+2).
+**Chosen interpretation.** **Follow the formula table** (density > 1.0 → DM+2).
 
 **Why.** The table is the procedural reference; the worked example's `+1` appears to be transcription drift. Result for Zed Prime: `5 − 6.3 + 1 (moon) + 2 (density) = 1.7 → floor 1 → 1² = 1`. The book's worked example would give 0; pass-2 gives 1. Neither value is large enough to materially affect downstream calculations because TSS is dominated by tidal stress + tidal heating in any tectonically interesting world. The harness fixture asserts 1, with a comment citing the book's worked-example value of 0.
 
@@ -116,7 +114,7 @@ WBH p.131 worked example for Zed Prime:
 
 **Conflict.** The worked example shows `7 + 3 − 2.5 + 2 = 9.5` but the formula box has no `+3` addend. The "+3" is unsourced — no documented DM adds to 3, and no secondary table supports the value.
 
-**Pass-2 choice.** **Follow the formula box** (`Compatibility = floor(2D − Biocomplexity/2 + DMs)`).
+**Chosen interpretation.** **Follow the formula box** (`Compatibility = floor(2D − Biocomplexity/2 + DMs)`).
 
 **Why.** The formula box is the procedural reference. The "+3" cannot be reverse-engineered from any documented DM table or footnote. The book's printed Compatibility=9 for Zed Prime appears to be an unstated DM, a leftover from a prior edition, or a transcription error. Result: Zed Prime gets Compatibility = `7 − 5/2 + 2 = 6.5 → floor → 6`. Native Lifeform Profile becomes `"A576"` (not `"A579"` per the book).
 
@@ -124,7 +122,7 @@ WBH p.131 worked example for Zed Prime:
 
 **Exception to the verification-target rule.** The decision rule at the top of this document says "follow whichever interpretation reproduces the canonical IISS form." This entry deliberately violates that rule, and the rule is therefore a heuristic, not a constitution. The criterion that breaks the tie: when reproducing the form would require implementing an unsourced constant, the formula wins; when reproducing the form follows from a procedural rule that is itself defensible (Inconsistency 6's "narrower band wins"), the form wins.
 
-A referee replicating Zed Prime by hand under the formula gets `"A576"`/`Hab 7`; the form's printed values give `"A579"`/`Hab 7`. The two results differ on Compatibility but agree on Habitability — they cannot both be the verification target. Pass 2 picks the formula for Compatibility, the form for Habitability, and accepts the asymmetry. Both divergences are flagged ⚠️ in the harness; neither hides.
+A referee replicating Zed Prime by hand under the formula gets `"A576"`/`Hab 7`; the form's printed values give `"A579"`/`Hab 7`. The two results differ on Compatibility but agree on Habitability — they cannot both be the verification target. The code picks the formula for Compatibility, the form for Habitability, and accepts the asymmetry. Both divergences are flagged ⚠️ in the harness; neither hides.
 
 ### Adjacent finding: WBH p.131 Compatibility table mentions atm codes G and H
 
@@ -152,11 +150,11 @@ WBH p.133 worked example for Zed Prime: "Gravity is only 0.66, so that warrants 
 
 **Conflict.** The footnote says use the worst (more-negative) DM at boundaries — gravity 0.66 falls in both bands, so the footnote prescribes DM−2. The worked example uses DM−1 (the narrower 0.4–0.7 band wins).
 
-**Pass-2 choice.** **Follow the worked example.** The narrower band wins for the overlap zone.
+**Chosen interpretation.** **Follow the worked example.** The narrower band wins for the overlap zone.
 
 **Why.** Zed Prime's printed Habitability rating on the canonical IISS form (pp.141–142) is **7**. With "use worst at edges" the formula gives 6; with "narrower band wins" the formula gives 7, matching the form. The verification target rule (introduced at the top of this document) decides: follow whichever interpretation reproduces the printed canonical value. The footnote is treated as text-vs-form drift; the form wins.
 
-**Pass-2 interpretation, encoded.**
+**Encoded interpretation.**
 
 ```text
 g < 0.2                  → DM−4
@@ -189,9 +187,9 @@ WBH p.79 labels are unintuitive: **D = "Very Dense"** (2.50–10.0 bar), **E = "
 
 This map lives in `worlds/atmosphere.go::atmosphereLabels` and is the source of truth.
 
-## How pass 2 implements these decisions
+## How the code encodes these decisions
 
-- Each decision is encoded in code with a doc-comment block citing this document by section.
+- Each decision is encoded with a doc-comment block citing this document by section.
 - Each decision has at least one test that asserts the chosen value and documents the alternative as a comment (e.g., `// Book worked example shows "+3" giving 9; we follow the formula box (= 6) per docs/wbh-inconsistencies.md § Inconsistency 5.`).
 - The Zed Prime harness fixture asserts the post-decision values, not the book's printed values, where they differ. The IISS form output is committed as a golden file with the differences explicitly documented.
 - No runtime toggle exists for any of these decisions. The cuts list in `design-intent.md` includes "toggles for book inconsistencies" specifically.

@@ -1,8 +1,8 @@
-# Pass 2 — Data Dependency Graph
+# Data Dependency Graph
 
-This document maps every value in WBH pp.14–146 to its inputs. The graph determines pass-2's structural ordering: bodies are walked in dependency order, not in book pagination order. Where the graph cycles, pass 2 builds an explicit fixed-point solver. Where it is acyclic, pass 2 builds a topological pipeline.
+This document maps every value in WBH pp.14–146 to its inputs. The graph determines the project's structural ordering: bodies are walked in dependency order, not in book pagination order. Where the graph cycles, the code builds an explicit fixed-point solver. Where it is acyclic, the code builds a topological pipeline.
 
-The pass-1 implementation is the authoritative reference for "what actually depends on what" because it shipped working. WBH page citations come from pass-1 doc-comments. Where pass 1 worked around an edge with multi-pass iteration (atmosphere ↔ temperature ↔ hydrographics), this document treats the edge as load-bearing and pass 2 designs for it explicitly.
+The graph treats the atmosphere ↔ temperature ↔ hydrographics edge as load-bearing and designs for it explicitly via `ApplyClimatePasses` (two stochastic-sample passes, second is trusted). WBH page citations are preserved on every value.
 
 ## At a glance
 
@@ -52,8 +52,8 @@ Generates the star system independent of any worlds.
 
 **Notes:**
 
-- `OrbitPeriodYears` for the i-th companion sums the masses of the primary plus all earlier-placed companions (book order is inner-to-outer). Pass 2 keeps this.
-- Special objects (Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, Nebula, Protostar, Star Cluster, Anomaly) have minimum-useful values: type label, mass, age. Detailed physics — accretion, degenerate-matter equations, jet behavior — is post-parity work, but the type/mass/age trio is enough that a referee can use the body in a campaign. A pass-2 IISS form rendering "Black Hole companion: <stubbed>" is a fidelity-gate failure; "Black Hole companion: 8 M☉, 6.0 Gyr" is acceptable.
+- `OrbitPeriodYears` for the i-th companion sums the masses of the primary plus all earlier-placed companions (book order is inner-to-outer). The code keeps this.
+- Special objects (Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, Nebula, Protostar, Star Cluster, Anomaly) have minimum-useful values: type label, mass, age. Detailed physics — accretion, degenerate-matter equations, jet behavior — is post-v1 polish, but the type/mass/age trio is enough that a referee can use the body in a campaign. A pass-2 IISS form rendering "Black Hole companion: <stubbed>" is a fidelity-gate failure; "Black Hole companion: 8 M☉, 6.0 Gyr" is acceptable.
 - `AgeGyr` flows downstream into atmosphere oxygen fraction, body physical age DMs, biology, geology — it is one of the most reused inputs. Compute once on the primary; companions inherit.
 
 ## Stage 1: System Worlds — Placement (WBH pp.36–52)
@@ -81,7 +81,7 @@ Allocates orbit slots to stars, fixes the baseline orbit, and places bodies in s
 **Notes:**
 
 - HZCO (habitable-zone central orbit) is computed from the host group's primary star (`Group.HZCO()`); for moons it is inherited from the parent's group. Used in nearly every downstream stage.
-- `Placements` are walked in ascending-orbit order within each group; `LongProfile` and `AssignPlanetDesignations` rely on this. Pass 2 preserves this iteration contract.
+- `Placements` are walked in ascending-orbit order within each group; `LongProfile` and `AssignPlanetDesignations` rely on this. The code preserves this iteration contract.
 
 ## Stage 2: Sizing + Moons + Designations + Periods + HZ (WBH pp.53–67)
 
@@ -131,7 +131,7 @@ Runs only if the planet has moons and resolvable mass. Computes Hill-sphere moon
 
 Per-body, every planet and moon (plus HZ-planet moons get surface distribution and the others). Five sub-passes in order:
 
-1. **`GenerateSurfaceDistribution(hydro)`** → `SurfaceDistribution`. Requires `Hydrographics` to be present. **NB:** at this point in pass 1, `Hydrographics` is the _preliminary_ Stage-5A output, not the post-fixed-point value. Pass 2 restructures so Stage 4 runs against the converged climate (see "Pass-2 sequencing" below).
+1. **`GenerateSurfaceDistribution(hydro)`** → `SurfaceDistribution`. Requires `Hydrographics` to be present. **NB:** at this point in pass 1, `Hydrographics` is the _preliminary_ Stage-5A output, not the post-fixed-point value. The code restructures so Stage 4 runs against the converged climate (see "Pass-2 sequencing" below).
 2. **`GenerateDayLength(dp, sys)`** → `DayLength{SiderealHours, SolarHours, YearDays, IsLong, ...}`. For moons, uses parent's period for calendar quantities (the moon's year around the star is its parent's year).
 3. **`GenerateAxialTilt(dp)`** → `AxialTilt{Degrees, IsExtreme}`.
 4. **`GenerateTidalLock(dp, m, sys, parent, periodHours)`** → `TidalLock`. May reroll `Eccentricity` if 1:1 lock fires.
@@ -140,13 +140,13 @@ Per-body, every planet and moon (plus HZ-planet moons get surface distribution a
 **Notes:**
 
 - Tidal-lock 1:1 mutates `Eccentricity` — this is a one-shot forward update, not a loop, but it must precede any computation that reads eccentricity (notably tidal heating in Stage 7).
-- Pass 1 placed Stage 4 between the preliminary atm/hydro (5A) and the temperature pass (5C). Pass 2 must decide: does Stage 4 belong before, after, or inside the climate fixed-point? Day length and axial tilt feed into temperature variance; tidal lock affects greenhouse caps. The honest answer is: **inside or alongside the climate fixed-point**, since tidal lock state can affect temperature which can affect atm. Conservative pass-2 plan: run Stage 4 once before the fixed-point, then re-run only the parts that read climate state if the fixed-point converges to a different equilibrium. Most worlds will be insensitive, but the rule must be explicit, not accidental.
+- The earlier code placed Stage 4 between the preliminary atm/hydro (5A) and the temperature pass (5C). Pass 2 must decide: does Stage 4 belong before, after, or inside the climate fixed-point? Day length and axial tilt feed into temperature variance; tidal lock affects greenhouse caps. The honest answer is: **inside or alongside the climate fixed-point**, since tidal lock state can affect temperature which can affect atm. Conservative decision: run Stage 4 once before the fixed-point, then re-run only the parts that read climate state if the fixed-point converges to a different equilibrium. Most worlds will be insensitive, but the rule must be explicit, not accidental.
 
 ## Stage 5: Climate Fixed-Point — Atmosphere ↔ Hydrographics ↔ Temperature
 
-This is the load-bearing structural insight pass 2 corrects. Pass 1 generated atm/hydro from preliminary inputs, generated temperature from those, then re-derived atm/hydro from real temperature, then re-generated temperature, then re-derived again — a 2-pass iteration that empirically converged.
+This is the load-bearing structural insight pass 2 corrects. The earlier code generated atm/hydro from preliminary inputs, generated temperature from those, then re-derived atm/hydro from real temperature, then re-generated temperature, then re-derived again — a 2-pass iteration that empirically converged.
 
-**Pass 2 designs this as an explicit fixed-point solver from day one.**
+**The code implements an explicit fixed-point solver.**
 
 ### The cycle
 
@@ -163,16 +163,16 @@ Atmosphere.Code  ─────► Greenhouse  ─────► Temperature.M
        └──────────────────┘  (Hydrographics.Code feeds Albedo)
 ```
 
-Concrete dependency edges (verified from pass-1 source):
+Concrete dependency edges (verified from source):
 
 - **`ComputeAlbedo`** reads `Hydrographics.Code` (`temperature_albedo.go:71`). Different hydro bands give different albedo modifiers per WBH p.110. Therefore `Temperature` depends on `Hydrographics`.
 - **`ComputeGreenhouseFactor`** reads `Atmosphere.Code` and `Atmosphere.Pressure` (`temperature_greenhouse.go`). Therefore `Temperature` depends on `Atmosphere`.
 - **`RederiveAtmosphereHydrographics`** reads `Temperature.MeanK` and may mutate `Atmosphere.Code` via `CheckRunawayGreenhouse` (`temperature_rederive.go`). Therefore `Atmosphere` depends on `Temperature`.
 - **`GenerateHydrographics`** takes `tempRange` as input. `tempRange` is derived from `Temperature.MeanK` (post-fixed-point) — though pass 1 used `HZCOOffsetToTempRange` as a preliminary proxy in Stage 5A. Therefore `Hydrographics` depends on `Temperature`.
 
-Three-way bidirectional dependence. Single-pass evaluation in any order produces wrong answers for non-trivial worlds. Pass 1 recovered with two iterations.
+Three-way bidirectional dependence. Single-pass evaluation in any order produces wrong answers for non-trivial worlds. Earlier code recovered with two iterations.
 
-### Pass-2 solver shape
+### Solver shape
 
 ```go
 // Pseudocode — to be specified in api-surface.md.
@@ -193,7 +193,7 @@ func ConvergeClimate(r Roller, body, sys, parent) Climate {
 }
 ```
 
-Convergence cap: pass 1 used N=2 and it sufficed for the worked examples. Pass 2 starts at N=3 and asserts convergence within the cap; if a fixture fails, the model is wrong and the failure should be loud.
+Convergence cap: pass 1 used N=2 and it sufficed for the worked examples. The code uses N=3 and asserts convergence within the cap; if a fixture fails, the model is wrong and the failure should be loud.
 
 ### Eligibility
 
@@ -211,7 +211,7 @@ Forward-only. Runs after climate has converged.
 - `RollAllTaints(dp, preseed)` — multi-roll up to 3 taints with reroll on result 10. Eligible codes: 2/4/7/9, A/B/C.
 - `RollInsidiousHazards(subtype, isExtremelyDense)` — atm C only.
 
-**Notes:** Mutates `Atmosphere` in place (promotion can change `Code`). The promotion does not feed back into the climate fixed-point because the changes are in atm code-grouping (still oxygen-bearing), not in greenhouse parameters that would shift temperature meaningfully. Pass 2 verifies this assumption with a fixture.
+**Notes:** Mutates `Atmosphere` in place (promotion can change `Code`). The promotion does not feed back into the climate fixed-point because the changes are in atm code-grouping (still oxygen-bearing), not in greenhouse parameters that would shift temperature meaningfully. A fixture verifies this assumption.
 
 ## Stage 7: Geology — TSS + post-TSS temperature update (WBH pp.125–127)
 
@@ -233,11 +233,11 @@ Per-body. Terrestrials get full geology; gas giants get residual heat only; belt
 
 ### The TSS back-edge into climate
 
-`ApplyInherentTempAddition` mutates `Temperature.MeanK`. In principle this could re-trigger climate's atm/hydro derivation. Pass 1 chose not to chase it, with the rationale (per `project_world_builder_3b_dependency_graph` memory entry):
+`ApplyInherentTempAddition` mutates `Temperature.MeanK`. In principle this could re-trigger climate's atm/hydro derivation. The earlier code chose not to chase it, with the rationale (per `project_world_builder_3b_dependency_graph` memory entry):
 
 > For HZ worlds: TSS ~17 alters T by ~0.001K — negligible. For cold/rogue worlds (base T near 25K), TSS can dominate and add 4-5K. The math converges in one pass — no iteration needed. There is no path back into atm/hydro that would re-trigger 3A2b-rederive in practice (the temperature delta is too small to cross any band boundary except in extreme cases worth flagging as `t.Logf` divergences).
 
-Pass-2 decision: **fold TSS into the climate fixed-point's convergence variable.** `Temperature.MeanK` post-TSS is the value atm/hydro should be derived from. The cost is computing partial geology (residual + TSF + THF) inside the convergence loop, but those quantities themselves don't depend on climate state — they depend on body physical, tidal effects, and orbital parameters, all from earlier stages. So:
+Decision: **fold TSS into the climate fixed-point's convergence variable.** `Temperature.MeanK` post-TSS is the value atm/hydro should be derived from. The cost is computing partial geology (residual + TSF + THF) inside the convergence loop, but those quantities themselves don't depend on climate state — they depend on body physical, tidal effects, and orbital parameters, all from earlier stages. So:
 
 ```text
 ConvergeClimate now includes:
@@ -269,7 +269,7 @@ Forward-only. Runs after climate + geology converge.
    d. `RollCompatibility(dp, biocomplexity, ageGyr)`.
 3. `RollTerrestrialResourceRating(dp, bio)` → resource rating.
 
-**Notes:** Resource depends on biology, so order is strict. Pass 1's optional oxygen-atm biomass floor is cut in pass 2 (see `design-intent.md` cuts list). Belts get their own resource rating in `GenerateBeltDetails` (Stage 3).
+**Notes:** Resource depends on biology, so order is strict. Pass 1's optional oxygen-atm biomass floor is cut (see `design-intent.md` cuts list). Belts get their own resource rating in `GenerateBeltDetails` (Stage 3).
 
 ## Stage 9: Habitability (WBH p.132)
 
@@ -288,7 +288,7 @@ Run once after every body has converged.
 - `computeBaselineN(group, detailed)` per allocation — backfills `StarAllocation.BaselineN`.
 - `ShortProfile(sd)` — "G-P-T-N-S" form per WBH p.58.
 - `LongProfile(sd)` — "St-N-W-W-S:..." form per WBH p.58.
-- `RenderClass0I`, `RenderClass23`, `RenderClass4P` — typed structs (pass-2 design; see `api-surface.md`).
+- `RenderClass0I`, `RenderClass23`, `RenderClass4P` — typed structs (design; see `api-surface.md`).
 - `pickMainworld(detailed)` — priority chain: native sophonts → highest habitability → highest resource → first in iteration order.
 
 **Notes:** `pickMainworld` admits planets, moons, and belts as candidates. Class IV-P renders only for the auto-picked mainworld; PART P or PART P.B variant is selected by mainworld type.
@@ -351,7 +351,7 @@ Differences from pass-1's pipeline:
 - **`ConvergeClimate` replaces 5A-atm/hydro + 5C + 5D + the TSS-temperature-update edge of 5E.** The 2-pass iteration becomes an explicit solver with assertable convergence.
 - **Surface distribution moves to step 6** because it depends on hydrographics, which is only stable post-climate. Pass 1 ran it in 5B against the preliminary hydro and never re-ran it; the result happened to be correct because the preliminary and converged hydro were nearly always identical for HZ worlds. Pass 2 makes the dependency explicit.
 - **Tectonic plates moves to step 6** for the same reason — depends on stable TSS.
-- **Atmosphere taint typology moves before TSS-dependent geology follow-ups** because taint promotion can mutate `atm.Code` and downstream consumers should see the post-promotion code. Pass 1 placed taint between rederive and geology; pass 2 keeps that ordering.
+- **Atmosphere taint typology moves before TSS-dependent geology follow-ups** because taint promotion can mutate `atm.Code` and downstream consumers should see the post-promotion code. The project keeps that ordering.
 
 ## What this graph commits pass 2 to
 
