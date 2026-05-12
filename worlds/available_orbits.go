@@ -77,10 +77,12 @@ type Result struct {
 	Groups []Group // ordered by ascending stellar Orbit# of the group's outer member
 }
 
-// ErrPostStellarPrimaryUnsupported indicates the primary star is a
-// Brown Dwarf, White Dwarf, Neutron Star, Black Hole, or Pulsar —
-// classes whose MAO is in the Special Circumstances chapter and not
-// yet encoded.
+// ErrPostStellarPrimaryUnsupported indicates the primary star has no
+// p.39 MAO row — Brown Dwarf, White Dwarf, Neutron Star, Black Hole,
+// Pulsar, or Protostar. MAO for these kinds lives in the WBH Special
+// Circumstances chapter and is not yet encoded. (The name predates
+// protostar inclusion; pre-stellar kinds like nebulae and star
+// clusters fail earlier at the age-formula step and never reach MAO.)
 var ErrPostStellarPrimaryUnsupported = errors.New(
 	"worlds: post-stellar primary MAO requires Special Circumstances chapter",
 )
@@ -119,8 +121,9 @@ var maoTablePage39 = map[string]maoRow{
 var ErrNoMAOForStar = errors.New("worlds: spectral type / class combination has no MAO entry")
 
 // isPostStellar reports whether a StarKind is post-stellar (BD, D, NS,
-// BH, Pulsar) — these have MAO defined in the Special Circumstances
-// chapter, not yet encoded.
+// BH, Pulsar). Used by the WBH p.37 DM stack in counts.go — semantic,
+// not structural; do not broaden it. To gate the MAO lookup, use
+// lacksP39MAORow instead, which also excludes protostars.
 func isPostStellar(k stars.StarKind) bool {
 	switch k {
 	case stars.KindBrownDwarf, stars.KindWhiteDwarf,
@@ -128,6 +131,14 @@ func isPostStellar(k stars.StarKind) bool {
 		return true
 	}
 	return false
+}
+
+// lacksP39MAORow reports whether a StarKind has no row in the WBH
+// p.39 Minimum Allowable Orbit# table — every post-stellar kind plus
+// the pre-stellar Protostar. MAO for these kinds lives in the
+// Special Circumstances chapter (not yet encoded).
+func lacksP39MAORow(k stars.StarKind) bool {
+	return isPostStellar(k) || k == stars.KindProtostar
 }
 
 // maoCell reads the MAO cell for an exact spectral type key (e.g. "G5")
@@ -167,10 +178,11 @@ func maoCell(typeKey string, lc stars.LuminosityClass) (float64, error) {
 // spectral type within its luminosity-class column per the WBH p. 39
 // table.
 //
-// Post-stellar kinds return ErrPostStellarPrimaryUnsupported.
-// Combinations the book lists as "—" return ErrNoMAOForStar.
+// Kinds without a p.39 row (post-stellar, plus protostar) return
+// ErrPostStellarPrimaryUnsupported. Combinations the book lists as
+// "—" return ErrNoMAOForStar.
 func MAO(s stars.Star) (float64, error) {
-	if isPostStellar(s.Kind) {
+	if lacksP39MAORow(s.Kind) {
 		return 0, ErrPostStellarPrimaryUnsupported
 	}
 	lower, upper, frac := bracketSpectralType(s.SpectralType)
@@ -338,10 +350,11 @@ func nextSpectralLetter(l stars.SpectralLetter) stars.SpectralLetter {
 // interval set. See spec for the rule list.
 //
 // Returns ErrPostStellarPrimaryUnsupported if the primary star is a
-// Brown Dwarf, White Dwarf, Neutron Star, Black Hole, or Pulsar (their
-// MAO is in the Special Circumstances chapter, not yet encoded).
+// Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, or
+// Protostar (their MAO is in the Special Circumstances chapter, not
+// yet encoded).
 func AvailableOrbits(sys stars.System) (Result, error) {
-	if isPostStellar(sys.Primary.Kind) {
+	if lacksP39MAORow(sys.Primary.Kind) {
 		return Result{}, ErrPostStellarPrimaryUnsupported
 	}
 

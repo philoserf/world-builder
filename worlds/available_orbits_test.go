@@ -181,6 +181,21 @@ func TestMAO_PostStellar(t *testing.T) {
 	}
 }
 
+// TestMAO_Protostar covers the seed 6724 regression: a protostar
+// primary has no spectral type, so MAO previously fell through to the
+// p.39 table lookup with a zero-valued SpectralType (Letter == 0),
+// producing `no MAO row for "\x000"`. Protostars belong in the
+// Special Circumstances bucket with the other no-spectral-type kinds.
+func TestMAO_Protostar(t *testing.T) {
+	t.Parallel()
+
+	proto := stars.Star{Kind: stars.KindProtostar}
+	_, err := MAO(proto)
+	if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
+		t.Errorf("MAO(protostar) error = %v, want ErrPostStellarPrimaryUnsupported", err)
+	}
+}
+
 func TestMAO_CrossLetterInterpolation(t *testing.T) {
 	t.Parallel()
 
