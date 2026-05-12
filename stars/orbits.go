@@ -9,6 +9,23 @@ import (
 
 // ----- P2-4: Stellar Orbit# Ranges (WBH p.27) -----
 
+// IsGiantClass reports whether the luminosity class is one of the
+// giants (Ia/Ib/II/III) per WBH p.14 nomenclature.
+func IsGiantClass(lc LuminosityClass) bool {
+	switch lc {
+	case Ia, Ib, II, III:
+		return true
+	}
+	return false
+}
+
+// RollCompanionOrbitOfGiant computes the Orbit# for a companion of a
+// giant primary per WBH p.27: Orbit# = 1D × MAO(primary). Callers must
+// pass in the primary's MAO since the table lives in worlds/.
+func RollCompanionOrbitOfGiant(r roller.Roller, primaryMAO float64) float64 {
+	return float64(r.Roll("1D")) * primaryMAO
+}
+
 // RollStellarOrbit rolls the Orbit# for a star at the given orbit class.
 //
 // Formulas (WBH p.27):
@@ -18,8 +35,9 @@ import (
 //   - Companion: 1D / 10 + (2D - 7) / 100  (range 0.05 to 0.65)
 //
 // Companions of Class Ia/Ib/II/III primaries use 1D × MAO of the primary
-// (page 39); MAO is a Plan 3+ concept, so this function returns an error
-// if asked for a Companion orbit with a giant-class primary.
+// (page 39); this function returns ErrCompanionOfGiantMAO for that case
+// since MAO data lives in worlds/. Callers with MAO access should use
+// RollCompanionOrbitOfGiant directly for giant-class companions.
 func RollStellarOrbit(r roller.Roller, oc OrbitClass, primaryClass LuminosityClass) (float64, error) {
 	switch oc {
 	case OrbitClose:

@@ -27,6 +27,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 	sys, err := stars.GenerateSystem(r, stars.GenerateSystemOpts{
 		WithVariance: true,
 		Accuracy:     2,
+		MAO:          MAO,
 	})
 	if err != nil {
 		return Universe{}, fmt.Errorf("worlds: stars: %w", err)
