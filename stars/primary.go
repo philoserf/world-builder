@@ -22,13 +22,25 @@ var validLetters = map[SpectralLetter]struct{}{
 }
 
 // RollPrimaryTypeAndClass rolls for the spectral letter and luminosity
-// class of a primary star (WBH p. 15).
+// class of a primary star (WBH p.15) with no DM.
 //
 // A roll of 12 redirects to the Hot column with a fresh 2D roll.
 // A roll of 2 returns ErrSpecialPrimary so the caller can route through
 // the Special / Unusual / Peculiar dispatch in peculiar.go.
 func RollPrimaryTypeAndClass(r roller.Roller) (SpectralLetter, LuminosityClass, error) {
-	first := r.Roll("2D")
+	return rollPrimaryTypeAndClass(r, 0)
+}
+
+// RollPrimaryTypeAndClassDMPlus1 is the class-redirect variant per WBH
+// p.16: "Any result starting with Class requires a second roll on the
+// Type column with DM+1." The +1 makes the "Special" cell (row 2)
+// unreachable, so the redirect cannot recursively land back on Special.
+func RollPrimaryTypeAndClassDMPlus1(r roller.Roller) (SpectralLetter, LuminosityClass, error) {
+	return rollPrimaryTypeAndClass(r, 1)
+}
+
+func rollPrimaryTypeAndClass(r roller.Roller, dm int) (SpectralLetter, LuminosityClass, error) {
+	first := min(r.Roll("2D")+dm, 12)
 	row, ok := StarTypeDetermination[first]
 	if !ok {
 		return 0, "", fmt.Errorf("stars: 2D out of range: %d", first)

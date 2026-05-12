@@ -148,8 +148,9 @@ func TestGenerateSystem_SpecialPrimary_BD(t *testing.T) {
 		9, 9, 9, 9,
 	)
 	sys, err := GenerateSystem(r, GenerateSystemOpts{
-		WithVariance: true,
-		Accuracy:     1,
+		WithVariance:   true,
+		Accuracy:       1,
+		PeculiarColumn: PeculiarPathUnusual,
 	})
 	if err != nil {
 		t.Fatalf("error: %v", err)
@@ -179,8 +180,9 @@ func TestGenerateSystem_SpecialPrimary_D(t *testing.T) {
 		9, 9, 9, 9,
 	)
 	sys, err := GenerateSystem(r, GenerateSystemOpts{
-		WithVariance: true,
-		Accuracy:     1,
+		WithVariance:   true,
+		Accuracy:       1,
+		PeculiarColumn: PeculiarPathUnusual,
 	})
 	if err != nil {
 		t.Fatalf("error: %v", err)
@@ -233,7 +235,10 @@ func TestGenerateSystem_SpecialPrimaryClassRedirect(t *testing.T) {
 		2,  // 2D Far presence: 2+1=3 < 10 → absent
 		2,  // 2D Primary companion: 2+1=3 < 10 → absent
 	)
-	sys, err := GenerateSystem(r, GenerateSystemOpts{Accuracy: 1})
+	sys, err := GenerateSystem(r, GenerateSystemOpts{
+		Accuracy:       1,
+		PeculiarColumn: PeculiarPathUnusual,
+	})
 	if err != nil {
 		t.Fatalf("GenerateSystem: %v", err)
 	}

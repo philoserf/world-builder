@@ -10,10 +10,13 @@ import (
 // GenerateSystemOpts controls GenerateSystem. WithVariance applies the
 // optional ±20% variance to mass and diameter for each star (matching
 // Plan 1's GenerateMainSequenceStar). Accuracy is forwarded to
-// SmallStarAge for the primary's age.
+// SmallStarAge for the primary's age. PeculiarColumn selects the WBH
+// p.15 Referee option for "Special" (2D=2) primary rolls; zero value
+// is Special (the cleaner setting — no BD/D/Peculiar primaries).
 type GenerateSystemOpts struct {
-	WithVariance bool
-	Accuracy     int // 1 or 2
+	WithVariance   bool
+	Accuracy       int          // 1 or 2
+	PeculiarColumn PeculiarPath // zero value = PeculiarPathSpecial
 }
 
 // GenerateSystem rolls a complete multi-star system from a Roller.
@@ -30,7 +33,7 @@ type GenerateSystemOpts struct {
 //     eccentricity, inclination.
 //  5. AssignDesignations.
 func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
-	primary, err := GenerateMainSequenceStar(r, GenerateOpts(opts))
+	primary, err := GenerateMainSequenceStar(r, GenerateOpts{WithVariance: opts.WithVariance, Accuracy: opts.Accuracy})
 	if errors.Is(err, ErrSpecialPrimary) {
 		primary, err = generateSpecialPrimary(r, opts)
 		if err != nil {
@@ -252,7 +255,11 @@ func isStellarKind(k StarKind) bool {
 // for special objects, or SmallStarAge (via generatePrimaryAtClass) for
 // class redirects.
 func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, error) {
-	kind, lc, err := RollSpecialPrimary(r, PeculiarPathUnusual)
+	column := opts.PeculiarColumn
+	if column == "" {
+		column = PeculiarPathSpecial
+	}
+	kind, lc, err := RollSpecialPrimary(r, column)
 	if err != nil {
 		return Star{}, err
 	}
@@ -267,7 +274,7 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 	if lc != "" {
 		// Class redirect: re-roll on the regular Star Type Determination
 		// flow at the indicated class.
-		return generatePrimaryAtClass(r, lc, GenerateOpts(opts))
+		return generatePrimaryAtClass(r, lc, GenerateOpts{WithVariance: opts.WithVariance, Accuracy: opts.Accuracy})
 	}
 	// Build the special-object Star with stub physical values appropriate
 	// to the kind. The book leaves detailed physics (white-dwarf cooling,

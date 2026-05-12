@@ -24,7 +24,10 @@ import (
 // SmallStarAge for all luminosity classes is a known gap; giant-age modelling
 // is deferred until a later plan.
 func generatePrimaryAtClass(r roller.Roller, targetClass LuminosityClass, opts GenerateOpts) (Star, error) {
-	letter, _, err := RollPrimaryTypeAndClass(r)
+	// WBH p.16: class redirects use DM+1 on the second Type roll. This
+	// makes the "Special" cell (row 2) unreachable, so the redirect
+	// can't recursively bubble ErrSpecialPrimary back to the caller.
+	letter, _, err := RollPrimaryTypeAndClassDMPlus1(r)
 	if err != nil {
 		return Star{}, err
 	}
@@ -146,12 +149,17 @@ func RollSpecialPrimarySimple(r roller.Roller) (StarKind, error) {
 }
 
 // PeculiarPath selects the column the Referee picks for resolving a
-// "Special" (2D=2) primary roll: WBH p.16 lets the Referee choose
-// either the Unusual or Peculiar column.
+// "Special" (2D=2) primary roll: WBH p.15-16 lets the Referee choose
+// either the Special, Unusual, or Peculiar column.
+//
+// Special is the simpler Referee setting — its cells are Class VI / IV
+// / III / Giants only, all covered by pp.14-146. Unusual additionally
+// admits BD/D primaries and recursive Peculiar dispatch.
 type PeculiarPath string
 
 // PeculiarPath column selector constants.
 const (
+	PeculiarPathSpecial  PeculiarPath = "special"
 	PeculiarPathUnusual  PeculiarPath = "unusual"
 	PeculiarPathPeculiar PeculiarPath = "peculiar"
 )
@@ -197,6 +205,8 @@ func rollSpecialPrimaryImpl(r roller.Roller, path PeculiarPath, depth int) (Star
 	}
 	var cell string
 	switch path {
+	case PeculiarPathSpecial:
+		cell = row.Special
 	case PeculiarPathUnusual:
 		cell = row.Unusual
 	case PeculiarPathPeculiar:

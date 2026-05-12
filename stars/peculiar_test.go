@@ -127,6 +127,45 @@ func TestRollSpecialPrimary_Unusual_ClassRedirect(t *testing.T) {
 	}
 }
 
+// TestRollSpecialPrimary_Special_ClassRedirects verifies the Special
+// column (the cleaner Referee default per WBH p.15) routes every cell
+// to a class redirect within the mainstream pp.14-146 ruleset — no
+// BD/D/Peculiar primaries ever reached.
+func TestRollSpecialPrimary_Special_ClassRedirects(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name    string
+		roll    int
+		wantLC  LuminosityClass
+		wantStr string
+	}{
+		{"row2_ClassVI", 2, VI, ""},
+		{"row5_ClassVI", 5, VI, ""},
+		{"row6_ClassIV", 6, IV, ""},
+		{"row8_ClassIV", 8, IV, ""},
+		{"row9_ClassIII", 9, III, ""},
+		{"row10_ClassIII", 10, III, ""},
+		{"row11_Giants", 11, "Giants", ""},
+		{"row12_Giants", 12, "Giants", ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := roller.NewScripted(c.roll)
+			kind, lc, err := RollSpecialPrimary(r, PeculiarPathSpecial)
+			if err != nil {
+				t.Fatalf("error: %v", err)
+			}
+			if kind != "" {
+				t.Errorf("got kind %v, want empty (class redirect)", kind)
+			}
+			if lc != c.wantLC {
+				t.Errorf("got class %v, want %v", lc, c.wantLC)
+			}
+		})
+	}
+}
+
 func TestRollSpecialPrimary_PeculiarRecursion(t *testing.T) {
 	// Unusual column at row 2 = "Peculiar" -> recurse on Peculiar column.
 	// Recursive 2D=11 -> Peculiar column = "Anomaly".
@@ -148,13 +187,11 @@ func TestRollSpecialPrimary_PeculiarRecursion(t *testing.T) {
 func TestGeneratePrimaryAtClass_IV_M_to_K(t *testing.T) {
 	t.Parallel()
 
-	// Roll sequence:
-	//  1. 2D=4 → RollPrimaryTypeAndClass → Type column row 4 = "M"
-	//     M must be mapped to K for Class IV per p.16; subsequent
-	//     RollSubtype runs against the Numeric column.
+	// Roll sequence (class redirects use DM+1 on the Type column, p.16):
+	//  1. 2D=3 → +1 → row 4 = "M". M maps to K for Class IV per p.16.
 	//  2. 2D=7 → StarSubtypeNumeric[7] = 9; K-IV-subtype>4 shift → 4 → K4
 	//  3. 1D=1, D3=2 → SmallStarAge accuracy=1 → age 3 Gyr
-	r := roller.NewScripted(4, 7, 1, 2)
+	r := roller.NewScripted(3, 7, 1, 2)
 	got, err := generatePrimaryAtClass(r, IV, GenerateOpts{Accuracy: 1})
 	if err != nil {
 		t.Fatalf("generatePrimaryAtClass: %v", err)
@@ -179,12 +216,11 @@ func TestGeneratePrimaryAtClass_IV_M_to_K(t *testing.T) {
 func TestGeneratePrimaryAtClass_VI_F_to_G(t *testing.T) {
 	t.Parallel()
 
-	// Roll sequence:
-	//  1. 2D=11 → RollPrimaryTypeAndClass → Type column row 11 = "F"
-	//     F must be mapped to G for Class VI per p.16.
+	// Roll sequence (class redirects use DM+1 on the Type column, p.16):
+	//  1. 2D=10 → +1 → row 11 = "F". F maps to G for Class VI per p.16.
 	//  2. 2D=7 → StarSubtypeNumeric[7] = 9 → G9 (no class-IV shift for VI)
 	//  3. 1D=1, D3=2 → age 3 Gyr
-	r := roller.NewScripted(11, 7, 1, 2)
+	r := roller.NewScripted(10, 7, 1, 2)
 	got, err := generatePrimaryAtClass(r, VI, GenerateOpts{Accuracy: 1})
 	if err != nil {
 		t.Fatalf("generatePrimaryAtClass: %v", err)
@@ -206,12 +242,12 @@ func TestGeneratePrimaryAtClass_VI_F_to_G(t *testing.T) {
 func TestGeneratePrimaryAtClass_III(t *testing.T) {
 	t.Parallel()
 
-	// Roll sequence:
-	//  1. 2D=7 → RollPrimaryTypeAndClass → Type column row 7 = "K"
+	// Roll sequence (class redirects use DM+1 on the Type column, p.16):
+	//  1. 2D=6 → +1 → row 7 = "K".
 	//  2. 2D=7 → RollSubtype('K', III) → StarSubtypeNumeric[7] = 9, no IV clamp → K9
 	//  3. 1D=1 → SmallStarAge accuracy=1 (oneD)
 	//  4. D3=2 → SmallStarAge accuracy=1 (d3) → age = 1×2 + 2 − 1 = 3 Gyr
-	rolls := []int{7, 7, 1, 2}
+	rolls := []int{6, 7, 1, 2}
 	r := roller.NewScripted(rolls...)
 	got, err := generatePrimaryAtClass(r, III, GenerateOpts{Accuracy: 1})
 	if err != nil {
