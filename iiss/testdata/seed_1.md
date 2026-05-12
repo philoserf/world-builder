@@ -6,6 +6,54 @@ Short profile: `5-0-6-4-0.7`
 
 Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 
+## Notable Features
+
+### Tidal locks
+- Aab I: planet → star, 1:1, twilight zone
+- Aab I a: planet → star, 1:1, twilight zone
+- Aab I b: planet → star, 1:1, twilight zone
+- Aab I c: planet → star, 1:1, twilight zone
+- Aab II a: moon → planet, 1:1
+- Aab II b: moon → planet, 1:1
+- Aab II c: moon → planet, 1:1
+- Aab II d: moon → planet, 1:1
+- Aab II e: moon → planet, 1:1
+- Aab II f: moon → planet, 1:1
+- Aab II g: moon → planet, 1:1
+- Aab IV a: moon → planet, 1:1
+- Aab IV b: moon → planet, 1:1
+- Aab IV c: moon → planet, 1:1
+- Aab VII: planet → moon, 3:2
+- Aab VII a: planet → star, 1:1, twilight zone
+- Aab VII b: planet → star, 1:1, twilight zone
+- Aab VIII b: moon → planet, 1:1
+- Aab VIII c: planet → star, 1:1, twilight zone
+- Aab VIII d: moon → planet, 1:1
+- Aab VIII e: moon → planet, 1:1
+- Aab VIII f: moon → planet, 1:1
+- Aab VIII g: moon → planet, 1:1
+- Aab VIII i: moon → planet, 1:1
+- Aab IX a: moon → planet, 1:1
+- Aab IX b: planet → star, 1:1, twilight zone
+- Aab IX c: moon → planet, 1:1
+- Aab IX d: moon → planet, 1:1
+- Aab IX e: moon → planet, 1:1
+- Aab IX f: moon → planet, 1:1
+- Aab IX g: moon → planet, 1:1
+- Aab IX h: moon → planet, 1:1
+- Aab IX i: moon → planet, 1:1
+
+### Cold snaps
+- Aab IV b: WorstLow 34 K (mean 258 K)
+- Aab IV c: WorstLow 34 K (mean 255 K)
+
+### Taint chains
+- Aab IV a: H, R
+
+### Mainworld habitability
+- Aab IV a — Rating 8/12 (Suitable): Tainted thin or dense atmospheres
+
+
 ## Class 0/I — Aab IV a
 
 - System: Aa

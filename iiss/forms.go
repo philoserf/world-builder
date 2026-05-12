@@ -90,9 +90,10 @@ type Class4PForm struct {
 }
 
 // SystemForms aggregates the three IISS forms for a generated system,
-// plus the system-wide profile strings and the auto-picked mainworld
-// designation. Renderer functions take SystemForms (or one of its
-// fields) so iiss/ does not import worlds/.
+// plus the system-wide profile strings, the auto-picked mainworld
+// designation, and a Markdown referee-facing Notable Features summary.
+// Renderer functions take SystemForms (or one of its fields) so iiss/
+// does not import worlds/.
 type SystemForms struct {
 	Class0I              Class0IForm
 	Class23              Class23Form
@@ -100,4 +101,5 @@ type SystemForms struct {
 	MainworldDesignation string
 	ShortProfile         string
 	LongProfile          string
+	NotableFeatures      string // pre-rendered Markdown block; rendered above Class 0/I
 }

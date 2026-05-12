@@ -6,6 +6,39 @@ Short profile: `2-1-9-8-0.7`
 
 Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 
+## Notable Features
+
+### Tidal locks
+- A I: planet → star, 1:1, twilight zone
+- A II b: moon → planet, 1:1
+- A III a: planet → star, 3:2
+- A III b: planet → star, 1:1, twilight zone
+- A III c: planet → star, 1:1, twilight zone
+- A V a: moon → planet, 1:1
+- A V b: moon → planet, 1:1
+- A V c: moon → planet, 1:1
+- A V d: moon → planet, 1:1
+- A V e: moon → planet, 1:1
+- A V f: moon → planet, 1:1
+- A V g: moon → planet, 1:1
+- A V h: moon → planet, 1:1
+- A V i: moon → planet, 1:1
+- A V j: moon → planet, 1:1
+- B I: planet → star, 1:1, twilight zone
+- B II: planet → moon, 1:1
+- B II a: planet → star, 1:1, twilight zone
+- B II b: planet → star, 1:1, twilight zone
+- B II c: planet → star, 1:1, twilight zone
+- B II d: planet → star, 1:1, twilight zone
+- B II e: planet → star, 1:1, twilight zone
+
+### Cold snaps
+- A VII: WorstLow 202 K (mean 275 K)
+
+### Mainworld habitability
+- A VII — Rating 7/12 (Regionally habitable): Thin, taint (standard), or dense Atmospheres; Desert conditions prevalent
+
+
 ## Class 0/I — A VII
 
 - System: A

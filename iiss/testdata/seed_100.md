@@ -6,6 +6,23 @@ Short profile: `0-2-6-5-0.1`
 
 Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 
+## Notable Features
+
+### Tidal locks
+- A PI: planet → star, 1:1, twilight zone
+- A V: planet → star, 3:2
+
+### Cold snaps
+- A III: WorstLow 196 K (mean 281 K)
+- A IV: WorstLow 193 K (mean 268 K)
+
+### Taint chains
+- A III: L, R
+
+### Mainworld habitability
+- A IV — Rating 7/12 (Regionally habitable): Too cold most of the time; Low gravity
+
+
 ## Class 0/I — A IV
 
 - System: A

@@ -6,6 +6,48 @@ Short profile: `2-0-5-4-0.1`
 
 Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 
+## Notable Features
+
+### Tidal locks
+- A I: planet → star, 1:1, twilight zone
+- A II: planet → star, 1:1, twilight zone
+- A III: planet → moon, 1:1
+- A III a: moon → planet, 1:1
+- A III b: moon → planet, 1:1
+- A III c: moon → planet, 1:1
+- A III d: moon → planet, 1:1
+- A IV: planet → star, 1:1, twilight zone
+- A V a: moon → planet, 1:1
+- A V b: moon → planet, 1:1
+- A V c: moon → planet, 1:1
+- A V d: moon → planet, 1:1
+- A V e: moon → planet, 1:1
+- A V f: moon → planet, 1:1
+- A V g: moon → planet, 1:1
+- A V h: moon → planet, 1:1
+- A V i: moon → planet, 1:1
+- A V j: moon → planet, 1:1
+- A V k: moon → planet, 1:1
+- A VI: planet → star, 1:1, twilight zone
+- A VII: planet → star, 1:1, twilight zone
+
+### Cold snaps
+- A III a: WorstLow 35 K (mean 326 K)
+- A III c: WorstLow 40 K (mean 326 K)
+- A V d: WorstLow 174 K (mean 260 K)
+- A V g: WorstLow 180 K (mean 256 K)
+- A V h: WorstLow 28 K (mean 253 K)
+- A V k: WorstLow 185 K (mean 265 K)
+
+### Taint chains
+- A III b: H, S
+- A V k: L, B
+- A VI: P, P, P
+
+### Mainworld habitability
+- A V g — Rating 6/12 (Regionally habitable): Thin, taint (standard), or dense Atmospheres; Too cold all of the time; Too cold most of the time; Gravity very comfortable
+
+
 ## Class 0/I — A V g
 
 - System: A

@@ -106,6 +106,10 @@ func MarkdownSystem(sf SystemForms) string {
 	if sf.LongProfile != "" {
 		fmt.Fprintf(&b, "Long profile: `%s`\n\n", sf.LongProfile)
 	}
+	if sf.NotableFeatures != "" {
+		b.WriteString(sf.NotableFeatures)
+		b.WriteString("\n")
+	}
 	b.WriteString(MarkdownClass0I(sf.Class0I))
 	b.WriteString("\n")
 	b.WriteString(MarkdownClass23(sf.Class23))

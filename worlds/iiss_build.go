@@ -18,6 +18,7 @@ func BuildIISSForms(u *Universe) {
 	u.Detail.Class0I = c0
 	u.Detail.Class23 = buildClass23(u, c0)
 	u.Detail.Class4P = buildClass4P(u, c0.FormHeader)
+	u.Detail.NotableFeatures = NotableFeatures(u)
 }
 
 func buildClass0I(u *Universe) iiss.Class0IForm {
