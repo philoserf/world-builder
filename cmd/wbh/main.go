@@ -48,8 +48,8 @@ func run(args []string, stdout, stderr io.Writer) error {
 	case "json":
 		// Emit the full SystemForms aggregate (Class0I + Class23 + Class4P
 		// plus profile strings and mainworld designation) so downstream
-		// tooling has everything in one document. Per docs/pass-2/
-		// next-steps.md § B3.
+		// tooling has everything in one document. Per docs/next-steps.md
+		// § B3.
 		enc := json.NewEncoder(stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(u.Detail.SystemForms); err != nil {

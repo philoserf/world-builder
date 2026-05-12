@@ -11,7 +11,7 @@ import (
 // Only one of (terrestrial SizeCode) or (IsGasGiant + GGClass) should
 // be populated.
 //
-// Per docs/pass-2/api-surface.md § The Body, moons are first-class
+// Per docs/api-surface.md § The Body, moons are first-class
 // Body instances. ParentInfo decouples the moon-generation procedures
 // from the full Body struct so they can be exercised in isolation by
 // per-procedure fixtures.

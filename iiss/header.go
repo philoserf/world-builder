@@ -1,5 +1,5 @@
 // Package iiss carries the IISS form structs (Class 0/I, Class II/III,
-// Class IV-P) and their renderers. Per docs/pass-2/api-surface.md §
+// Class IV-P) and their renderers. Per docs/api-surface.md §
 // Package boundaries, iiss/ is split out from worlds/ so the renderer
 // concerns are separately replaceable. iiss/ does not import worlds/;
 // the SystemForms aggregate is the boundary type.

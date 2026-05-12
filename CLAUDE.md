@@ -108,7 +108,7 @@ The project is **done** when:
 
 WBH pp. 147–234 (World Social Characteristics, Special Circumstances) are **out of scope** for current and near-term purposes. Do not start work in those chapters; do not add code that anticipates them.
 
-The rules half is complete on `main`: Stars (pp. 14–35), System Worlds and Orbits (pp. 36–68), and the full World Physical chapter (pp. 69–146) — including 3B-final habitability, mainworld pick, and all three IISS forms with Class IV-P variants for planet, moon, and belt mainworlds. Pass-1 specs/plans/retrospective live in `docs/pass-1/{specs,plans,retrospective}/`, dated and named for the WBH section they cover. Pass-2 design and implementation work lives under `docs/pass-2/` (unnumbered, topic-named).
+The rules half is complete on `main`: Stars (pp. 14–35), System Worlds and Orbits (pp. 36–68), and the full World Physical chapter (pp. 69–146) — including 3B-final habitability, mainworld pick, and all three IISS forms with Class IV-P variants for planet, moon, and belt mainworlds. Evergreen design + reference docs live at `docs/` root (api-surface, anti-patterns, design-intent, dependency-graph, harness, next-steps, summary, wbh-inconsistencies). Historical artifacts — pass-1 specs/plans/retrospective and pass-2 plans/retrospective — live under `docs/history/`.
 
 ### Output
 

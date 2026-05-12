@@ -81,24 +81,24 @@ Three layers:
 - `worlds/` — WBH pp.36-146. `worlds.Generate(seed)` returns a complete `Universe` (system + placement + per-body detail + system aggregations).
 - `iiss/` — IISS form structs and renderers (Markdown / JSON / PlainText). Boundary type is `iiss.SystemForms`, populated by `worlds.BuildIISSForms` and consumed by the renderers.
 
-Lower-level entry points (`stars.GenerateSystem`, `worlds.GenerateSystemPlacement`, individual `Apply*` stages, per-procedure `Roll*` and `Generate*` functions) remain available for finer control — see `docs/pass-2/api-surface.md`.
+Lower-level entry points (`stars.GenerateSystem`, `worlds.GenerateSystemPlacement`, individual `Apply*` stages, per-procedure `Roll*` and `Generate*` functions) remain available for finer control — see `docs/api-surface.md`.
 
 ## Architecture
 
 The project went through a major re-layering in 2026. Pass-1 followed WBH pagination as architecture; pass-2 inverted that — **the data dependency graph determines structure, worked-example fixtures determine the acceptance gate, the book is a citation system rather than an architecture.**
 
-Key pass-2 design choices, all documented in `docs/pass-2/`:
+Key design choices, all documented at `docs/` root:
 
 - **Unified `Body` type.** Moons are `Body{Kind: BodyMoon, Parent: <planet>}` walked by the same iterator as planets. The moon-path silent-zero anti-pattern that recurred four times in pass-1 is prevented at the type level.
 - **`iiss/` package boundary.** Renderers and form structs live in their own package; `iiss/` does not import `worlds/`. `iiss.SystemForms` is the boundary aggregate.
-- **`ConvergeClimate` per-body solver.** Folds partial geology (Residual + TSF + THF) into each rederive pass. Originally framed as a fixed-point solver; empirical investigation revealed the climate cluster is not a fixed point in the strict sense (`RederiveAtmosphereHydrographics` samples fresh dice per call), so pass-2 settled on pass-1's pragmatic 2-pass-take-the-last behaviour, honestly named.
+- **`ApplyClimatePasses` per-body solver.** Folds partial geology (Residual + TSF + THF) into each rederive pass. Originally framed as a fixed-point solver; empirical investigation revealed the climate cluster is not a fixed point in the strict sense (`RederiveAtmosphereHydrographics` samples fresh dice per call), so the design settled on 2-pass-take-the-last behaviour, honestly named.
 - **Stage orchestrators**: `ApplyDetailFrontEnd`, `ApplyBodyPhysical`, `ApplyRotationTilt`, `ApplyClimate`, `ApplyTaintTypology`, `ApplyGeology`, `ApplyBiology`, `ApplyHabitability`, `AggregateSystem` — each walks `Body` + `Body.Children` to drive per-procedure work.
 
-The pass-1 implementation is preserved on tag `pass-1-final` for archival.
+The original pass-1 implementation is preserved on tag `pass-1-final` for archival.
 
 ## Status
 
-Pass 2 is on main; the architectural rebuild is the end-state design. **No pass 3 is planned.** The project's next milestone is **v1.0** after a vetting period: run the CLI across many seeds, watch for human-spottable bugs, fix what surfaces, then tag `v1.0`. See `docs/pass-2/next-steps.md` for the open items (most are recommended-defer-indefinitely or optional-polish).
+**v1.0 shipped 2026-05-12** (tag `v1.0`, [GitHub release](https://github.com/philoserf/world-builder/releases/tag/v1.0)). The 10 000-seed sweep produces 10 000 real, fully-formed systems with zero errors; seed determinism preserved. See `docs/next-steps.md` for the small set of post-v1.0 open items — all optional polish or explicitly-out-of-scope.
 
 All gates currently green:
 
@@ -109,7 +109,7 @@ task        # check + test (modernizer + gofumpt + vet + golangci-lint + go test
 Coverage:
 
 - Per-procedure value-exact tests for every WBH-narrated dice script (the book is the spec).
-- Stage integration tests using `Seeded` shape-invariant assertions (per `docs/pass-2/spike-findings.md` § Finding 2: full-pipeline gold scripts don't survive pipeline reorders).
+- Stage integration tests using `Seeded` shape-invariant assertions (per `docs/history/spike-findings.md` § Finding 2: full-pipeline gold scripts don't survive pipeline reorders).
 - Façade end-to-end tests over 100 seeds.
 - Property tests (8 invariants × 1000 seeds each).
 - Misuse-path contract tests for every public function.
@@ -123,9 +123,8 @@ Known limitations (out of pass-2 scope):
 
 ## Documentation
 
-- **Design pre-flight** (under `docs/pass-2/`): `design-intent.md` (the why and the cuts), `api-surface.md` (every public signature), `dependency-graph.md` (every value, its inputs, fixed-point clusters), `anti-patterns.md` (pre-flight checklist), `harness.md` (fixture catalog with status indicators), `wbh-inconsistencies.md` (six book-internal divergences with chosen interpretations), `spike-findings.md` (pre-implementation validation).
-- **Post-pass retrospective**: `summary.md` (what was built), `lessons-learned.md` (13 numbered lessons from implementation), `next-steps.md` (what's open, what's closed, suggested orderings).
-- **Pass-1 archive**: `docs/pass-1/{specs,plans,retrospective}/` — dated, chapter-numbered docs from the original implementation. Buildable via `git checkout pass-1-final`.
+- **Evergreen design + reference docs** (under `docs/` root): `design-intent.md` (the why and the cuts), `api-surface.md` (every public signature), `dependency-graph.md` (every value, its inputs, fixed-point clusters), `anti-patterns.md` (don't-do-this catalog), `harness.md` (fixture catalog with status indicators), `wbh-inconsistencies.md` (six book-internal divergences with chosen interpretations), `summary.md` (one-page overview), `next-steps.md` (post-v1.0 open items).
+- **Historical artifacts** (under `docs/history/`): pass-1 specs/plans/retrospective from the original implementation, plus the pass-2 rebuild's retrospective (`lessons-learned.md`, `plan-clean-every-run.md`, `generator-error-catalog.md`, `spike-findings.md`, `allbodies-migration.md`). Preserved for context; not authoritative. Pass-1 was buildable at tag `pass-1-final`; pass-2 design is now what's on `main`.
 
 ## Development
 
@@ -145,13 +144,13 @@ go run ./cmd/wbh -seed 42 -format markdown
 
 `task check` runs `go fix ./...` first (modernizer pass) and fails on any diff — modernizer hints are mandatory. The gate is local; no CI.
 
-Conventions: `gofumpt` formatting (`gofumpt -l -w -extra .`); typed `Roller` interface (no package-level RNG); WBH page citations in doc-comments; six book inconsistencies committed to specific interpretations in code (no runtime toggles for them, see `docs/pass-2/wbh-inconsistencies.md`).
+Conventions: `gofumpt` formatting (`gofumpt -l -w -extra .`); typed `Roller` interface (no package-level RNG); WBH page citations in doc-comments; six book inconsistencies committed to specific interpretations in code (no runtime toggles for them, see `docs/wbh-inconsistencies.md`).
 
 ## Source material
 
 Every procedure, every table, and every formula references Mongoose Publishing's _World Builder's Handbook_ (Geir Lanesskog, 2023) as the canonical authority. WBH page numbers appear in doc-comments next to the tables and procedures they encode — that's the project's traceability mechanism. To work with this repository locally and verify procedure fidelity against the source, place a copy of the handbook PDF at `docs/World Builders Handbook.pdf` (gitignored — copyright).
 
-Where the book contradicts itself (worked example vs formula box, table A vs table B), this implementation surfaces the divergence in `docs/pass-2/wbh-inconsistencies.md` rather than silently picking one. Each of the six known inconsistencies has a chosen interpretation with rationale and a test that asserts the chosen value.
+Where the book contradicts itself (worked example vs formula box, table A vs table B), this implementation surfaces the divergence in `docs/wbh-inconsistencies.md` rather than silently picking one. Each of the six known inconsistencies has a chosen interpretation with rationale and a test that asserts the chosen value.
 
 ## License
 

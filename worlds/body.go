@@ -139,7 +139,7 @@ func (b *Body) RenderSAH() string {
 // moons, that is the parent planet's orbit; for planets and belts, the
 // body's own Orbit. Resolves the pass-1 confusion where moon code
 // "happened to work" because some procedures aliased through dp.Orbit
-// and others didn't (anti-pattern memo per docs/pass-2/api-surface.md
+// and others didn't (anti-pattern memo per docs/api-surface.md
 // § The Body trade-off).
 func (b *Body) StellarOrbit() float64 {
 	if b.Kind == BodyMoon && b.Parent != nil {

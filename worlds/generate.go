@@ -17,7 +17,7 @@ func Generate(seed int64) (Universe, error) {
 // GenerateWithRoller runs the entire pass-2 pipeline against any
 // Roller. Tests use it with a Scripted roller for narrow per-procedure
 // fixtures and with a Seeded roller for façade end-to-end fixtures
-// (per docs/pass-2/harness.md § Façade end-to-end). cmd/wbh and
+// (per docs/harness.md § Façade end-to-end). cmd/wbh and
 // Generate use it via the seed convenience.
 //
 // All other entry points (GenerateSystem, GenerateSystemPlacement,

@@ -10,7 +10,7 @@ package worlds
 // its parent (Zed Prime is a moon of a gas giant and is the canonical
 // Habitability-7 mainworld).
 //
-// Pure function — no rolls. Per docs/pass-2/api-surface.md § Stage 9.
+// Pure function — no rolls. Per docs/api-surface.md § Stage 9.
 func ApplyHabitability(u *Universe) {
 	for body := range u.AllBodies() {
 		if !habitabilityApplies(body) {

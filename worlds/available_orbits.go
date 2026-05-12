@@ -370,7 +370,7 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		// Special Circumstances territory. Referee call: such bodies
 		// exist in the system but contribute zero MAO (they don't push
 		// out the parent's orbital exclusion zone). See
-		// docs/pass-2/plan-clean-every-run.md Phase 2f.
+		// docs/history/plan-clean-every-run.md Phase 2f.
 		m := groups[i].Members[0]
 		if lacksP39MAORow(m.Kind) {
 			groups[i].MAO = 0

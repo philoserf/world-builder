@@ -9,8 +9,8 @@ import (
 )
 
 // TestSol_Generate is the Sol/Generate façade fixture per
-// docs/pass-2/harness.md § Façade end-to-end. Per
-// docs/pass-2/spike-findings.md § Finding 2, this is a Seeded shape-
+// docs/harness.md § Façade end-to-end. Per
+// docs/history/spike-findings.md § Finding 2, this is a Seeded shape-
 // invariant fixture (not Scripted value-exact); pass-1's full-pipeline
 // gold scripts were abandoned because pipeline reorders break them.
 //
@@ -51,7 +51,7 @@ func TestSol_Generate(t *testing.T) {
 }
 
 // TestZed_Generate is the Zed/Generate façade fixture per
-// docs/pass-2/harness.md § Façade end-to-end. Multi-star path; mirrors
+// docs/harness.md § Façade end-to-end. Multi-star path; mirrors
 // pass-1's TestZed_FullDetail_3A2b shape-invariant assertions.
 //
 // Note: Generate(seed) builds a fresh system from scratch (random

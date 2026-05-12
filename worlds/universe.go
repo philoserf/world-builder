@@ -8,7 +8,7 @@ import (
 )
 
 // Universe is the top-level container produced by the full pipeline.
-// Per docs/pass-2/api-surface.md § The Universe model, this is the
+// Per docs/api-surface.md § The Universe model, this is the
 // handoff to renderers and to cmd/wbh.
 type Universe struct {
 	System    stars.System

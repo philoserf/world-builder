@@ -78,7 +78,7 @@ func sumStellarMassInterior(body *Body) float64 {
 // designated, periodic, HZ-tagged bodies from the universe's
 // SystemPlacement. Stage 2 of the dependency graph.
 //
-// Mutates u.Detail.Bodies in place. Per docs/pass-2/api-surface.md §
+// Mutates u.Detail.Bodies in place. Per docs/api-surface.md §
 // Mutability — the pipeline is mutator-shaped.
 //
 // Sub-stages, in order:

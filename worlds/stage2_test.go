@@ -8,7 +8,7 @@ import (
 )
 
 // TestZed_ApplyDetailFrontEnd exercises the Stage-2 façade end-to-end
-// against a Seeded roller. Per docs/pass-2/spike-findings.md § Finding 2,
+// against a Seeded roller. Per docs/history/spike-findings.md § Finding 2,
 // this is a Seeded shape-invariant fixture (not a Scripted value-exact
 // gold script) — the dice consumption order for Stage 2 is determined
 // by Generate / GenerateSystemPlacement / ApplyDetailFrontEnd as a

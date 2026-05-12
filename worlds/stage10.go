@@ -10,7 +10,7 @@ import (
 // AggregateSystem computes the system-wide aggregations after every
 // body has converged: BaselineN backfill per allocation, ShortProfile,
 // LongProfile, and the auto-picked mainworld. Pure function — no
-// rolls. Stage-10 entry point per docs/pass-2/api-surface.md § Stage 10.
+// rolls. Stage-10 entry point per docs/api-surface.md § Stage 10.
 func AggregateSystem(u *Universe) {
 	// Step 1 — backfill per-allocation BaselineN.
 	allocs := make([]StarAllocation, len(u.Placement.Allocations))
