@@ -12,14 +12,6 @@ import (
 // errors.Is(err, ErrSpecialCircumstances) check.
 var ErrSpecialCircumstances = errors.New("stars: special circumstances chapter required")
 
-// ErrSpecialPrimaryGiantsDispatch indicates the primary roll yielded a
-// "Giants" cell on the Unusual column (2D=12) — dispatch via
-// RollGiantClass + a fresh Type roll is not yet implemented.
-var ErrSpecialPrimaryGiantsDispatch = fmt.Errorf(
-	"stars: Special-primary Giants dispatch not yet implemented: %w",
-	ErrSpecialCircumstances,
-)
-
 // ErrCompanionOfGiantMAO indicates a companion of a giant primary
 // (class Ia/Ib/II/III) requires a Plan 3+ MAO computation that is not
 // yet implemented.

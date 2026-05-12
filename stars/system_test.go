@@ -1,7 +1,6 @@
 package stars
 
 import (
-	"strings"
 	"testing"
 
 	"wbh/roller"
@@ -256,30 +255,43 @@ func TestGenerateSystem_SpecialPrimaryClassRedirect(t *testing.T) {
 	}
 }
 
-// TestGenerateSystem_SpecialPrimary_GiantsCellNotImplemented verifies that a
-// Special-primary roll landing on the "Giants" cell (Unusual column, 2D=12)
-// returns an explicit error rather than silently misrouting through
-// generatePrimaryAtClass with an invalid LuminosityClass.
+// TestGenerateSystem_SpecialPrimary_GiantsCell verifies that a
+// Special-primary roll landing on the "Giants" cell (row 11-12)
+// dispatches per WBH p.16: roll Giants column for class, then Type
+// column at DM+1 for letter, then resolve via generatePrimaryAtClass.
 //
-// Roll sequence:
+// Roll sequence (default opts: PeculiarColumn = Special):
 //  1. 2D=2  → Type = "Special" → ErrSpecialPrimary in GenerateMainSequenceStar
-//  2. 2D=12 → Unusual col row 12 = "Giants"
-//
-// generateSpecialPrimary should return an error containing
-// "Giants dispatch not yet implemented".
-func TestGenerateSystem_SpecialPrimary_GiantsCellNotImplemented(t *testing.T) {
+//  2. 2D=12 → Special col row 12 = "Giants"
+//  3. 2D=12 → RollGiantClass: 12+1 capped to 12 → Giants col row 12 = "Class Ia"
+//  4. 2D=6  → generatePrimaryAtClass: RollPrimaryTypeAndClassDMPlus1: 6+1=7 → "K"
+//  5. 2D=7  → RollSubtype('K', Ia) → StarSubtypeNumeric[7]=9 → K9 Ia
+//  6. 1D=1, D3=2 → SmallStarAge accuracy=1 → 3 Gyr
+//     7-9. presence rolls all below threshold → no companions
+func TestGenerateSystem_SpecialPrimary_GiantsCell(t *testing.T) {
 	t.Parallel()
 
 	r := roller.NewScripted(
-		2,  // 2D type → Special
-		12, // 2D Unusual col row 12 = "Giants"
+		2,       // Type 2D → Special
+		12,      // Special col row 12 = "Giants"
+		12,      // RollGiantClass → Class Ia
+		6,       // RollPrimaryTypeAndClassDMPlus1 → row 7 = "K"
+		7,       // RollSubtype('K', Ia) → 9
+		1,       // SmallStarAge 1D
+		2,       // SmallStarAge D3
+		2, 2, 2, // 3 presence rolls below threshold
 	)
-	_, err := GenerateSystem(r, GenerateSystemOpts{Accuracy: 1})
-	if err == nil {
-		t.Fatal("expected an error for Giants cell, got nil")
+	sys, err := GenerateSystem(r, GenerateSystemOpts{Accuracy: 1})
+	if err != nil {
+		t.Fatalf("GenerateSystem: %v", err)
 	}
-	const want = "Giants dispatch not yet implemented"
-	if !strings.Contains(err.Error(), want) {
-		t.Fatalf("error %q does not contain %q", err.Error(), want)
+	if sys.Primary.LuminosityClass != Ia {
+		t.Errorf("primary class = %v, want Ia", sys.Primary.LuminosityClass)
+	}
+	if sys.Primary.SpectralType.Letter != 'K' {
+		t.Errorf("primary letter = %c, want K", sys.Primary.SpectralType.Letter)
+	}
+	if sys.Primary.SpectralType.Subtype != 9 {
+		t.Errorf("primary subtype = %d, want 9", sys.Primary.SpectralType.Subtype)
 	}
 }

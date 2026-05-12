@@ -264,12 +264,15 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 		return Star{}, err
 	}
 	if lc == "Giants" {
-		// The "Giants" cell (Unusual column, 2D=12) requires dispatching via
-		// RollGiantClass and a fresh Type-column roll (WBH p.16). That dispatch
-		// is not yet implemented; return an explicit error rather than silently
-		// misrouting through generatePrimaryAtClass with an invalid
-		// LuminosityClass.
-		return Star{}, ErrSpecialPrimaryGiantsDispatch
+		// WBH p.16: "A result of Class III+ requires a roll in the giants
+		// column to determine the final luminosity class of the star,
+		// followed by a roll on the type column with DM+1." RollGiantClass
+		// handles the first roll; generatePrimaryAtClass handles the rest.
+		giantClass, gerr := RollGiantClass(r)
+		if gerr != nil {
+			return Star{}, gerr
+		}
+		return generatePrimaryAtClass(r, giantClass, GenerateOpts{WithVariance: opts.WithVariance, Accuracy: opts.Accuracy})
 	}
 	if lc != "" {
 		// Class redirect: re-roll on the regular Star Type Determination
