@@ -365,8 +365,18 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 	// Rule 1: MAO from p. 39 table for each group.
 	for i := range groups {
 		// Pair groups use the parent (first member) MAO; rule 2 may
-		// raise it later.
-		mao, err := MAO(groups[i].Members[0])
+		// raise it later. Post-stellar group representatives (BD/D/NS/
+		// BH/Pulsar/Protostar) have no p.39 row — per WBH that's
+		// Special Circumstances territory. Referee call: such bodies
+		// exist in the system but contribute zero MAO (they don't push
+		// out the parent's orbital exclusion zone). See
+		// docs/pass-2/plan-clean-every-run.md Phase 2f.
+		m := groups[i].Members[0]
+		if lacksP39MAORow(m.Kind) {
+			groups[i].MAO = 0
+			continue
+		}
+		mao, err := MAO(m)
 		if err != nil {
 			return Result{}, fmt.Errorf("worlds: MAO for group %s: %w",
 				groups[i].Designation, err)
