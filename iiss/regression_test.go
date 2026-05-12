@@ -1,14 +1,15 @@
 package iiss_test
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 
 	"wbh/iiss"
+	"wbh/stars"
 	"wbh/worlds"
 )
 
@@ -70,10 +71,5 @@ func TestRegression_MarkdownSeeds(t *testing.T) {
 }
 
 func isExpectedSpecial(err error) bool {
-	msg := err.Error()
-	return strings.Contains(msg, "post-stellar primary") ||
-		strings.Contains(msg, "special primary") ||
-		strings.Contains(msg, "Special-primary") ||
-		strings.Contains(msg, "giant primary requires MAO") ||
-		strings.Contains(msg, "class IV missing")
+	return errors.Is(err, stars.ErrSpecialCircumstances)
 }

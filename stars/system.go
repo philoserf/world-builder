@@ -262,7 +262,7 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 		// is not yet implemented; return an explicit error rather than silently
 		// misrouting through generatePrimaryAtClass with an invalid
 		// LuminosityClass.
-		return Star{}, fmt.Errorf("stars: Special-primary Giants dispatch not yet implemented")
+		return Star{}, ErrSpecialPrimaryGiantsDispatch
 	}
 	if lc != "" {
 		// Class redirect: re-roll on the regular Star Type Determination

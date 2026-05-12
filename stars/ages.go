@@ -80,7 +80,7 @@ func FinalAgeProgenitor(progenitorMass float64) float64 {
 func AgeSpecialObject(r roller.Roller, kind StarKind, deadStarMass float64) (float64, error) {
 	row, ok := SpecialObjectAgeByType[kind]
 	if !ok {
-		return 0, fmt.Errorf("stars: kind %q has no age formula", kind)
+		return 0, fmt.Errorf("stars: kind %q has no age formula: %w", kind, ErrSpecialCircumstances)
 	}
 
 	var base float64

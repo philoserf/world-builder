@@ -37,7 +37,7 @@ func RollStellarOrbit(r roller.Roller, oc OrbitClass, primaryClass LuminosityCla
 	case OrbitCompanion:
 		switch primaryClass {
 		case Ia, Ib, II, III:
-			return 0, fmt.Errorf("stars: companion of giant primary requires MAO (Plan 3+)")
+			return 0, ErrCompanionOfGiantMAO
 		}
 		first := r.Roll("1D")
 		second := r.Roll("2D-7")

@@ -1,9 +1,10 @@
 package worlds_test
 
 import (
-	"strings"
+	"errors"
 	"testing"
 
+	"wbh/stars"
 	"wbh/worlds"
 )
 
@@ -27,20 +28,7 @@ func generateForProperty(t *testing.T, seed int64) *worlds.Universe {
 // isSpecialCircumstances classifies errors as Special-Circumstances
 // chapter coverage gaps (out of pass-2 scope) vs. real bugs.
 func isSpecialCircumstances(err error) bool {
-	msg := err.Error()
-	switch {
-	case strings.Contains(msg, "post-stellar primary"):
-		return true
-	case strings.Contains(msg, "special primary"):
-		return true
-	case strings.Contains(msg, "Special-primary"):
-		return true
-	case strings.Contains(msg, "giant primary requires MAO"):
-		return true
-	case strings.Contains(msg, "class IV missing"):
-		return true
-	}
-	return false
+	return errors.Is(err, stars.ErrSpecialCircumstances)
 }
 
 // TestProperty_HZBodyHasClimate per harness.md § Property tests.

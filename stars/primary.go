@@ -1,7 +1,6 @@
 package stars
 
 import (
-	"errors"
 	"fmt"
 
 	"wbh/roller"
@@ -9,8 +8,14 @@ import (
 
 // ErrSpecialPrimary is returned by RollPrimaryTypeAndClass when the
 // initial Type-column roll is 2 ("Special"). Callers should dispatch
-// through peculiar.go to resolve the special-object branch.
-var ErrSpecialPrimary = errors.New("stars: special primary; dispatch through peculiar")
+// through peculiar.go to resolve the special-object branch. When the
+// caller has no dispatch implementation (e.g. companion-side), it
+// bubbles up and is matched by errors.Is(err, ErrSpecialCircumstances)
+// since the special-companion dispatch belongs to Special Circumstances.
+var ErrSpecialPrimary = fmt.Errorf(
+	"stars: special primary; dispatch through peculiar: %w",
+	ErrSpecialCircumstances,
+)
 
 var validLetters = map[SpectralLetter]struct{}{
 	'O': {}, 'B': {}, 'A': {}, 'F': {}, 'G': {}, 'K': {}, 'M': {},

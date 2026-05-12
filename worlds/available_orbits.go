@@ -83,8 +83,10 @@ type Result struct {
 // Circumstances chapter and is not yet encoded. (The name predates
 // protostar inclusion; pre-stellar kinds like nebulae and star
 // clusters fail earlier at the age-formula step and never reach MAO.)
-var ErrPostStellarPrimaryUnsupported = errors.New(
-	"worlds: post-stellar primary MAO requires Special Circumstances chapter",
+// Wraps stars.ErrSpecialCircumstances so callers can classify uniformly.
+var ErrPostStellarPrimaryUnsupported = fmt.Errorf(
+	"worlds: post-stellar primary MAO requires Special Circumstances chapter: %w",
+	stars.ErrSpecialCircumstances,
 )
 
 // maoRow is one row of the WBH p. 39 Minimum Allowable Orbit# table,

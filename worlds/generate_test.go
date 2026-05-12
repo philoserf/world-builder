@@ -1,9 +1,10 @@
 package worlds_test
 
 import (
-	"strings"
+	"errors"
 	"testing"
 
+	"wbh/stars"
 	"wbh/worlds"
 )
 
@@ -23,9 +24,10 @@ func TestSol_Generate(t *testing.T) {
 		seed := int64(iter)
 		u, err := worlds.Generate(seed)
 		if err != nil {
-			// Some seeds produce post-stellar primaries (white dwarf /
-			// neutron star / etc.) whose MAO is in the Special
-			// Circumstances chapter — out of scope for pass-2. Skip.
+			if errors.Is(err, stars.ErrSpecialCircumstances) {
+				continue
+			}
+			t.Errorf("seed %d: unexpected error: %v", seed, err)
 			continue
 		}
 		good++
@@ -42,7 +44,6 @@ func TestSol_Generate(t *testing.T) {
 		if len(u.Detail.Class0I.Stars) == 0 {
 			t.Errorf("seed %d: Class 0/I form has no Stars rows", seed)
 		}
-		_ = strings.HasPrefix // unused after relaxing the mainworld assertion
 	}
 	if good < 50 {
 		t.Errorf("only %d / 100 seeds produced a system without post-stellar primaries (expected >= 50)", good)
