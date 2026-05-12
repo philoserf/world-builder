@@ -9,11 +9,11 @@ import (
 	"wbh/worlds"
 )
 
-// TestMisuse_ConvergeClimate_GGSkipped verifies ConvergeClimate's
+// TestMisuse_ApplyClimatePasses_GGSkipped verifies ApplyClimatePasses's
 // eligibility check short-circuits cleanly for gas giants (climate is
-// terrestrials-only). Per harness.md § Misuse-path tests, ConvergeClimate
+// terrestrials-only). Per harness.md § Misuse-path tests, ApplyClimatePasses
 // must skip non-HZ bodies and gas giants without panicking.
-func TestMisuse_ConvergeClimate_GGSkipped(t *testing.T) {
+func TestMisuse_ApplyClimatePasses_GGSkipped(t *testing.T) {
 	t.Parallel()
 	body := &worlds.Body{
 		Kind:        worlds.BodyGasGiant,
@@ -22,7 +22,7 @@ func TestMisuse_ConvergeClimate_GGSkipped(t *testing.T) {
 		Designation: "test-gg",
 	}
 	r := roller.NewSeeded(42)
-	if err := worlds.ConvergeClimate(r, body, stars.System{Primary: stars.Compose(stars.ComposeOpts{
+	if err := worlds.ApplyClimatePasses(r, body, stars.System{Primary: stars.Compose(stars.ComposeOpts{
 		Kind:            stars.KindMainSequence,
 		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
 		LuminosityClass: stars.V,
@@ -31,16 +31,16 @@ func TestMisuse_ConvergeClimate_GGSkipped(t *testing.T) {
 		Temperature:     5772,
 		AgeGyr:          4.6,
 	})}); err != nil {
-		t.Errorf("ConvergeClimate on GG returned error: %v", err)
+		t.Errorf("ApplyClimatePasses on GG returned error: %v", err)
 	}
 	if body.HasAtmosphere() {
-		t.Error("GG body got an atmosphere from ConvergeClimate (should be skipped)")
+		t.Error("GG body got an atmosphere from ApplyClimatePasses (should be skipped)")
 	}
 }
 
-// TestMisuse_ConvergeClimate_NonHZSkipped verifies non-HZ bodies skip
+// TestMisuse_ApplyClimatePasses_NonHZSkipped verifies non-HZ bodies skip
 // climate without panicking.
-func TestMisuse_ConvergeClimate_NonHZSkipped(t *testing.T) {
+func TestMisuse_ApplyClimatePasses_NonHZSkipped(t *testing.T) {
 	t.Parallel()
 	body := &worlds.Body{
 		Kind:        worlds.BodyTerrestrial,
@@ -49,8 +49,8 @@ func TestMisuse_ConvergeClimate_NonHZSkipped(t *testing.T) {
 		Designation: "test-cold",
 	}
 	r := roller.NewSeeded(42)
-	if err := worlds.ConvergeClimate(r, body, stars.System{}); err != nil {
-		t.Errorf("ConvergeClimate on non-HZ body returned error: %v", err)
+	if err := worlds.ApplyClimatePasses(r, body, stars.System{}); err != nil {
+		t.Errorf("ApplyClimatePasses on non-HZ body returned error: %v", err)
 	}
 	if body.HasAtmosphere() {
 		t.Error("non-HZ body got an atmosphere (should be skipped)")

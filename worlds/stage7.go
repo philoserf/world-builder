@@ -9,7 +9,7 @@ import (
 // non-empty non-belt body in the universe. Stage-7 orchestrator.
 //
 // Per dependency-graph.md § Stage 7, partial geology (Residual + TSF
-// + THF) is computed inside ConvergeClimate so the post-TSS Temperature
+// + THF) is computed inside ApplyClimatePasses so the post-TSS Temperature
 // converges with rederived atm/hydro. Stage 7's remaining work is:
 //
 //   - HZ bodies (body.Geology already set by climate): roll
@@ -35,7 +35,7 @@ func ApplyGeology(r roller.Roller, u *Universe) error {
 }
 
 // applyBodyGeology dispatches Stage-7 work for one body. If
-// ConvergeClimate already populated body.Geology, this just adds
+// ApplyClimatePasses already populated body.Geology, this just adds
 // TectonicPlates; otherwise it computes the full Geology.
 func applyBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bool) {
 	if body.Kind == BodyGasGiant {
@@ -57,7 +57,7 @@ func applyBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bool
 
 // computePartialGeology populates a Geology with Residual + TSF + THF +
 // TotalSeismicStress + InherentTemperatureK for the given body, but
-// leaves TectonicPlates at 0. Called by ConvergeClimate inside the
+// leaves TectonicPlates at 0. Called by ApplyClimatePasses inside the
 // climate fixed-point loop (atm/hydro-independent) and by ApplyGeology
 // for non-HZ bodies that didn't go through climate.
 func computePartialGeology(body *Body, sys stars.System, isMoon bool) *Geology {

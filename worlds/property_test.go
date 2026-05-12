@@ -34,7 +34,7 @@ func isSpecialCircumstances(err error) bool {
 // TestProperty_HZBodyHasClimate per harness.md § Property tests.
 // Every body with HZ == true and Kind == BodyTerrestrial has non-nil
 // Atmosphere / Hydrographics / Temperature after the pipeline runs
-// (climate eligibility per ConvergeClimate). Vacuum / Size-S / Size-R
+// (climate eligibility per ApplyClimatePasses). Vacuum / Size-S / Size-R
 // bodies are exempt (they don't get climate).
 func TestProperty_HZBodyHasClimate(t *testing.T) {
 	t.Parallel()

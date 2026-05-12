@@ -65,7 +65,7 @@ type Body struct {
 	TidalLock    *TidalLock
 	TidalEffects *SurfaceTidalEffects
 
-	// Stage 5 — populated post-ConvergeClimate
+	// Stage 5 — populated post-ApplyClimatePasses
 	Atmosphere    *Atmosphere
 	Hydrographics *Hydrographics
 	Temperature   *Temperature

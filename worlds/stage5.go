@@ -13,18 +13,18 @@ import (
 // 108-126.
 //
 // Per dependency-graph.md § Stage 7, partial-geology (Residual + TSF +
-// THF) is computed inside ConvergeClimate so the post-TSS Temperature
+// THF) is computed inside ApplyClimatePasses so the post-TSS Temperature
 // re-derives atm/hydro consistently. Tectonic plates and GG residual
 // heat are forward-only post-climate (Stage 7).
 //
 // Every body is walked uniformly via Universe.AllBodies(); eligibility
 // (HZ-orbit terrestrials and HZ-planet moons) is enforced inside
-// ConvergeClimate's initialAtmosphere check — ineligible bodies
+// ApplyClimatePasses's initialAtmosphere check — ineligible bodies
 // short-circuit at zero cost. Per anti-pattern A.1, every HZ-planet
 // moon is walked alongside its parent.
 func ApplyClimate(r roller.Roller, u *Universe) error {
 	for body := range u.AllBodies() {
-		if err := ConvergeClimate(r, body, u.System); err != nil {
+		if err := ApplyClimatePasses(r, body, u.System); err != nil {
 			return fmt.Errorf("worlds: stage5 climate %s: %w", body.Designation, err)
 		}
 	}
@@ -106,10 +106,9 @@ func tempRangeMidpointK(t TempRange) float64 {
 	return 288
 }
 
-// ConvergeClimate is the per-body climate solver. Folds partial
+// ApplyClimatePasses is the per-body climate solver. Folds partial
 // geology (Residual + TSF + THF) into each pass so Temperature
-// includes the WBH p.125 inherent-temperature addition (cycle 18 /
-// dependency-graph.md § Stage 7).
+// includes the WBH p.125 inherent-temperature addition.
 //
 // Each pass:
 //
@@ -118,24 +117,15 @@ func tempRangeMidpointK(t TempRange) float64 {
 //  3. Apply TSS via T' = ⁴√(T⁴ + TSS⁴); refresh ScaleHeight.
 //  4. Rederive atm/hydro from post-TSS Temperature.
 //
-// Runs exactly 2 passes (matching pass-1's behaviour). The name
-// "ConvergeClimate" is a misnomer inherited from the original
-// pass-2 design — empirical investigation (post-cycle-17) showed
-// the climate cluster is NOT a fixed point in the strict mathematical
-// sense: RederiveAtmosphereHydrographics calls RollHydroDigit, which
-// consumes fresh dice from the Roller each call. Each iteration is a
-// fresh stochastic sample, not a convergence step. The dice script
-// drives the outcome; there is no fixed point to find.
-//
-// Pass-1 ran exactly 2 rederive passes and trusted the second sample.
-// Pass-2 inherits that pragmatic choice. The earlier N=5 iteration
-// loop with early-exit (cycle 17) was an over-engineering of a
-// stochastic-sampling pattern as if it were deterministic.
+// Runs exactly 2 passes (matching pass-1). The climate cluster is not
+// a fixed point — RederiveAtmosphereHydrographics consumes fresh dice
+// each call, so each pass is a stochastic sample, not a convergence
+// step. The second sample is trusted.
 //
 // No-op for ineligible bodies (non-HZ, atmosphereless, gas giants,
 // belts). For HZ bodies, body.Geology is also populated with the
 // final TSS factors (without TectonicPlates — that's Stage 7).
-func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error {
+func ApplyClimatePasses(r roller.Roller, body *Body, sys stars.System) error {
 	atmo, eligible, err := initialAtmosphere(r, body, sys.Primary.AgeGyr)
 	if err != nil {
 		return err
