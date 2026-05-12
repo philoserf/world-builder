@@ -140,6 +140,69 @@ func TestRollSpecialPrimary_PeculiarRecursion(t *testing.T) {
 	}
 }
 
+// TestGeneratePrimaryAtClass_IV_M_to_K covers a regression: the Class IV
+// redirect must apply the WBH p.16 letter constraint M → K before
+// rolling subtype (and computing physical values), otherwise the lookup
+// hits M0/M5/M9 — none of which carry a Class IV cell — and fails with
+// "M0 class IV missing". Seed 212 hits this in the 10k sweep.
+func TestGeneratePrimaryAtClass_IV_M_to_K(t *testing.T) {
+	t.Parallel()
+
+	// Roll sequence:
+	//  1. 2D=4 → RollPrimaryTypeAndClass → Type column row 4 = "M"
+	//     M must be mapped to K for Class IV per p.16; subsequent
+	//     RollSubtype runs against the Numeric column.
+	//  2. 2D=7 → StarSubtypeNumeric[7] = 9; K-IV-subtype>4 shift → 4 → K4
+	//  3. 1D=1, D3=2 → SmallStarAge accuracy=1 → age 3 Gyr
+	r := roller.NewScripted(4, 7, 1, 2)
+	got, err := generatePrimaryAtClass(r, IV, GenerateOpts{Accuracy: 1})
+	if err != nil {
+		t.Fatalf("generatePrimaryAtClass: %v", err)
+	}
+	if got.LuminosityClass != IV {
+		t.Errorf("LuminosityClass = %s, want IV", got.LuminosityClass)
+	}
+	if got.SpectralType.Letter != 'K' {
+		t.Errorf("Letter = %c, want K (M→K constraint)", got.SpectralType.Letter)
+	}
+	if got.SpectralType.Subtype != 4 {
+		t.Errorf("Subtype = %d, want 4 (9 - 5 K-IV-subtype>4 shift)", got.SpectralType.Subtype)
+	}
+	if got.Mass <= 0 {
+		t.Errorf("Mass = %v, want > 0", got.Mass)
+	}
+}
+
+// TestGeneratePrimaryAtClass_VI_F_to_G covers the parallel regression
+// for Class VI: F must map to G per p.16, since F0/F5 carry no VI
+// cell. Seed 6547 hits this in the 10k sweep.
+func TestGeneratePrimaryAtClass_VI_F_to_G(t *testing.T) {
+	t.Parallel()
+
+	// Roll sequence:
+	//  1. 2D=11 → RollPrimaryTypeAndClass → Type column row 11 = "F"
+	//     F must be mapped to G for Class VI per p.16.
+	//  2. 2D=7 → StarSubtypeNumeric[7] = 9 → G9 (no class-IV shift for VI)
+	//  3. 1D=1, D3=2 → age 3 Gyr
+	r := roller.NewScripted(11, 7, 1, 2)
+	got, err := generatePrimaryAtClass(r, VI, GenerateOpts{Accuracy: 1})
+	if err != nil {
+		t.Fatalf("generatePrimaryAtClass: %v", err)
+	}
+	if got.LuminosityClass != VI {
+		t.Errorf("LuminosityClass = %s, want VI", got.LuminosityClass)
+	}
+	if got.SpectralType.Letter != 'G' {
+		t.Errorf("Letter = %c, want G (F→G constraint)", got.SpectralType.Letter)
+	}
+	if got.SpectralType.Subtype != 9 {
+		t.Errorf("Subtype = %d, want 9", got.SpectralType.Subtype)
+	}
+	if got.Mass <= 0 {
+		t.Errorf("Mass = %v, want > 0", got.Mass)
+	}
+}
+
 func TestGeneratePrimaryAtClass_III(t *testing.T) {
 	t.Parallel()
 

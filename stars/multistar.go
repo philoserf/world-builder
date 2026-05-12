@@ -189,6 +189,18 @@ func generateSibling(r roller.Roller, parent Star) (Star, error) {
 		letter = next
 		subtype -= 10
 	}
+	// WBH p.16 letter/subtype constraints. generateSibling derives
+	// subtype by addition rather than RollSubtype, so the constraints
+	// that RollSubtype applies internally need to be replayed here.
+	switch parent.LuminosityClass {
+	case IV:
+		letter = ApplyClassIVLetterConstraint(letter)
+		if letter == 'K' && subtype > 4 {
+			subtype -= 5
+		}
+	case VI:
+		letter = ApplyClassVILetterConstraint(letter)
+	}
 	st := SpectralType{Letter: letter, Subtype: subtype}
 	out := Star{
 		Kind:            parent.Kind,
@@ -205,6 +217,12 @@ func generateLesser(r roller.Roller, parent Star) (Star, error) {
 	if letter == 0 {
 		// Parent is already M; lesser stays M with subtype rerolled.
 		letter = 'M'
+	}
+	switch parent.LuminosityClass {
+	case IV:
+		letter = ApplyClassIVLetterConstraint(letter)
+	case VI:
+		letter = ApplyClassVILetterConstraint(letter)
 	}
 	subtype, err := RollSubtype(r, letter, parent.LuminosityClass)
 	if err != nil {
@@ -226,6 +244,12 @@ func generateRandom(r roller.Roller, parent Star) (Star, error) {
 	// If hotter than parent, treat as Lesser instead.
 	if isHotterOrEqualLetter(letter, parent.SpectralType.Letter) {
 		return generateLesser(r, parent)
+	}
+	switch lc {
+	case IV:
+		letter = ApplyClassIVLetterConstraint(letter)
+	case VI:
+		letter = ApplyClassVILetterConstraint(letter)
 	}
 	subtype, err := RollSubtype(r, letter, lc)
 	if err != nil {

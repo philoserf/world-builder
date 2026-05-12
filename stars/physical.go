@@ -62,8 +62,11 @@ func gridIndex(st SpectralType) (lower, upper int, frac float64, err error) {
 }
 
 // InterpolateClassRow interpolates a class-keyed quantity (Mass, Diameter,
-// Luminosity) from a ClassRow table. Returns an error if the requested
-// luminosity class is missing in either bracketing grid row.
+// Luminosity) from a ClassRow table. When one bracketing row lacks the
+// requested class (a book "—" cell at the table boundary, e.g. K5 has
+// no Class IV cell), the function falls back to the other endpoint —
+// the table is treated as truncated there. Mirrors MAO()'s one-sided-
+// missing policy. Both-missing still returns an error.
 func InterpolateClassRow(table map[string]ClassRow, st SpectralType, lc LuminosityClass) (float64, error) {
 	lo, hi, frac, err := gridIndex(st)
 	if err != nil {
@@ -73,20 +76,25 @@ func InterpolateClassRow(table map[string]ClassRow, st SpectralType, lc Luminosi
 	if !ok {
 		return 0, fmt.Errorf("stars: no row for %s", gridKeys[lo])
 	}
-	loVal, ok := loRow.Get(lc)
-	if !ok {
-		return 0, fmt.Errorf("stars: %s class %s missing", gridKeys[lo], lc)
-	}
+	loVal, loOK := loRow.Get(lc)
 	if lo == hi {
+		if !loOK {
+			return 0, fmt.Errorf("stars: %s class %s missing", gridKeys[lo], lc)
+		}
 		return loVal, nil
 	}
 	hiRow, ok := table[gridKeys[hi]]
 	if !ok {
 		return 0, fmt.Errorf("stars: no row for %s", gridKeys[hi])
 	}
-	hiVal, ok := hiRow.Get(lc)
-	if !ok {
-		return 0, fmt.Errorf("stars: %s class %s missing", gridKeys[hi], lc)
+	hiVal, hiOK := hiRow.Get(lc)
+	switch {
+	case !loOK && !hiOK:
+		return 0, fmt.Errorf("stars: %s class %s missing", gridKeys[lo], lc)
+	case !loOK:
+		return hiVal, nil
+	case !hiOK:
+		return loVal, nil
 	}
 	return loVal + frac*(hiVal-loVal), nil
 }

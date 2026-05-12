@@ -28,6 +28,12 @@ func generatePrimaryAtClass(r roller.Roller, targetClass LuminosityClass, opts G
 	if err != nil {
 		return Star{}, err
 	}
+	switch targetClass {
+	case IV:
+		letter = ApplyClassIVLetterConstraint(letter)
+	case VI:
+		letter = ApplyClassVILetterConstraint(letter)
+	}
 	subtype, err := RollSubtype(r, letter, targetClass)
 	if err != nil {
 		return Star{}, err
