@@ -75,8 +75,13 @@ func EvaluateTidalLockDMs(
 		out[TidalLockCaseMoonToPlanet] = common + moonToPlanetDMs(moonRef, parentPlanet)
 	}
 
-	// Planet → moon: only applies if body is a planet with at least one Size-1+ moon.
-	if parentPlanet == nil && moonRef == nil && hasSignificantMoon(body) {
+	// Planet → moon: only applies if body is a TERRESTRIAL planet with at
+	// least one moon already in a 1:1 or 3:2 lock per WBH p.107. The
+	// pre-locked-moon precondition requires moon-cases to be evaluated in
+	// an earlier pass; the Stage 4 orchestrator is responsible for that
+	// ordering.
+	if parentPlanet == nil && moonRef == nil &&
+		isTerrestrial(body) && hasSignificantMoon(body) && hasLockedMoon(body) {
 		out[TidalLockCasePlanetToMoon] = common + planetToMoonDMs(body)
 	}
 

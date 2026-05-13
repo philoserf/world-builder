@@ -138,6 +138,77 @@ func TestEvaluateTidalLockDMs_PlanetToMoon_OnlyIfHasSignificantMoon(t *testing.T
 	}
 }
 
+func TestEvaluateTidalLockDMs_PlanetToMoon_GasGiantExcluded(t *testing.T) {
+	// Gas giant should not have Planet→Moon case, even if it has a locked moon.
+	// The planet must be terrestrial per WBH p.107.
+	gg := &Body{
+		Kind:     BodyGasGiant,
+		SizeCode: "M",
+		Children: []*Body{
+			{
+				Kind:      BodyMoon,
+				SizeCode:  "5",
+				OrbitPD:   10,
+				TidalLock: &TidalLock{LockRatio: "1:1"},
+			},
+		},
+	}
+	gg.AxialTilt = &AxialTilt{Degrees: 0}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	dms := EvaluateTidalLockDMs(gg, sys, nil, nil)
+	if _, ok := dms[TidalLockCasePlanetToMoon]; ok {
+		t.Errorf("gas giant should not have Planet→Moon case; got DMs: %v", dms)
+	}
+}
+
+func TestEvaluateTidalLockDMs_PlanetToMoon_NoLockedMoonExcluded(t *testing.T) {
+	// Planet with no locked moons should not have Planet→Moon case.
+	// The planet must have at least one moon in 1:1 or 3:2 lock per WBH p.107.
+	p := &Body{
+		Kind:     BodyTerrestrial,
+		SizeCode: "8",
+		Children: []*Body{
+			{
+				Kind:      BodyMoon,
+				SizeCode:  "5",
+				OrbitPD:   10,
+				TidalLock: &TidalLock{LockRatio: ""}, // unlocked
+			},
+		},
+	}
+	p.AxialTilt = &AxialTilt{Degrees: 0}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	dms := EvaluateTidalLockDMs(p, sys, nil, nil)
+	if _, ok := dms[TidalLockCasePlanetToMoon]; ok {
+		t.Errorf("planet with no locked moons should not have Planet→Moon case; got DMs: %v", dms)
+	}
+}
+
+func TestEvaluateTidalLockDMs_PlanetToMoon_TerrestrialWithLockedMoonIncluded(t *testing.T) {
+	// Terrestrial planet with a locked moon should have Planet→Moon case.
+	p := &Body{
+		Kind:     BodyTerrestrial,
+		SizeCode: "8",
+		Children: []*Body{
+			{
+				Kind:      BodyMoon,
+				SizeCode:  "5",
+				OrbitPD:   30,
+				TidalLock: &TidalLock{LockRatio: "1:1"},
+			},
+		},
+	}
+	p.AxialTilt = &AxialTilt{Degrees: 0}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	dms := EvaluateTidalLockDMs(p, sys, nil, nil)
+	if _, ok := dms[TidalLockCasePlanetToMoon]; !ok {
+		t.Errorf("terrestrial with locked moon should have Planet→Moon case; got DMs: %v", dms)
+	}
+}
+
 func TestEvaluateTidalLockDMs_NoMoonCases_NotAMoon(t *testing.T) {
 	// A planet (parentPlanet=nil, moonRef=nil) cannot be locked to a planet.
 	body := &Body{SizeCode: "5"}
@@ -582,9 +653,10 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 	// significant moon. With a high-mass moon at close orbit, planet→moon DM
 	// can rival or exceed planet→star, exercising the case 3 path.
 	plutoMoon := Body{
-		Kind:     BodyMoon,
-		SizeCode: "1",
-		OrbitPD:  5,
+		Kind:      BodyMoon,
+		SizeCode:  "1",
+		OrbitPD:   5,
+		TidalLock: &TidalLock{LockRatio: "1:1"}, // assume moon already locked (WBH p.107 precondition)
 	}
 	pluto := &Body{}
 	pluto.Kind = BodyTerrestrial
