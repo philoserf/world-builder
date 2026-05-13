@@ -815,3 +815,202 @@ func TestClosestLockedSignificantMoon_MultipleLockedPicksClosest(t *testing.T) {
 		t.Errorf("got %v (OrbitPD=%v), want near (OrbitPD=10)", got, got.OrbitPD)
 	}
 }
+
+func TestApplyTidalLockEffect_MoonPeriodGuard_KeepsOneToOneLock(t *testing.T) {
+	// Setup: MoonToPlanet case, initialResult ≥ 12 (locks), natural-12
+	// verification fires (2D=12), rerolled status is result 8 (1D×20×24).
+	// Moon's yearHours = 480 (20-day orbit). Rerolled day length:
+	//   1D=3 → 3×20×24 = 1440 hours. 1440 > 480 → guard fires; lock holds.
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "5",
+		DayLength:   &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:   &AxialTilt{Degrees: 0},
+		PeriodHours: 480,
+	}
+	// Scripted rolls (in order):
+	//   verification 2D: 12 (natural twelve triggers reroll)
+	//   reroll status 2D + DM=0: 8 (result 8, the 1D×20×24 branch)
+	//   rerolledDayLength 1D: 3 (the would-be day-length probe)
+	r := roller.NewScripted(12, 8, 3)
+	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if !tl.VerificationFired {
+		t.Error("VerificationFired = false, want true (natural-12 fired)")
+	}
+	if tl.FinalResult != 12 {
+		t.Errorf("FinalResult = %d, want 12 (lock held by moon-period guard)", tl.FinalResult)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
+	}
+}
+
+func TestApplyTidalLockEffect_MoonPeriodGuard_FallsThroughWhenWouldFit(t *testing.T) {
+	// Setup: MoonToPlanet, verification 12, rerolled result 7 (1D×5×24).
+	// 1D=2 → 2×5×24 = 240 hours. yearHours=480 → 240 ≤ 480 → guard does
+	// NOT fire; FinalResult takes the rerolled value (7).
+	//
+	// After the fix: only 3 rolls are needed (probe = commit). The probe's
+	// 1D=2 is reused as the committed day length; the effect switch skips
+	// its own roll. DayLength.SiderealHours must equal 240 (2×5×24).
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "5",
+		DayLength:   &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:   &AxialTilt{Degrees: 0},
+		PeriodHours: 480,
+	}
+	// Scripted rolls:
+	//   verification 2D = 12
+	//   reroll status 2D + 0 = 7
+	//   probe 1D = 2 (=> 240h, not exceeding 480h — guard doesn't fire; value reused as commit)
+	r := roller.NewScripted(12, 7, 2)
+	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if tl.FinalResult != 7 {
+		t.Errorf("FinalResult = %d, want 7 (rerolled value committed)", tl.FinalResult)
+	}
+	if tl.LockRatio != "" {
+		t.Errorf("LockRatio = %q, want empty (lock broken)", tl.LockRatio)
+	}
+	if math.Abs(moon.DayLength.SiderealHours-240) > 0.01 {
+		t.Errorf("DayLength.SiderealHours = %v, want 240 (probe value committed)", moon.DayLength.SiderealHours)
+	}
+}
+
+func TestApplyTidalLockEffect_MoonPeriodGuard_NotAppliedToPlanetToStar(t *testing.T) {
+	// Same scenario but case = PlanetToStar — guard MUST NOT fire.
+	// FinalResult should reflect the rerolled value (8), not the initial (12).
+	planet := &Body{
+		Kind:      BodyTerrestrial,
+		SizeCode:  "8",
+		DayLength: &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt: &AxialTilt{Degrees: 0},
+		Period:    Period{Hours: 8766},
+	}
+	// verification 2D=12, reroll status 2D+0=8, probe 1D=3 (=> 1440h).
+	// PlanetToStar: guard doesn't apply; rerolled=8 is in 7-10 range so
+	// tl.NewSiderealHours=1440 is set from the probe; effect switch skips
+	// its own 1D roll. Three rolls total.
+	r := roller.NewScripted(12, 8, 3)
+	tl, err := ApplyTidalLockEffect(r, planet, nil, TidalLockCasePlanetToStar, 12, 8766)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if tl.FinalResult != 8 {
+		t.Errorf("FinalResult = %d, want 8 (no guard for PlanetToStar)", tl.FinalResult)
+	}
+}
+
+// TestApplyTidalLockEffect_MoonPeriodGuard_ProbeAndCommitUseSameRoll is a
+// regression test for the divergent-roll bug: previously, the guard probe
+// rolled one 1D and the effect commit rolled a separate 1D, so a low probe
+// (passes guard) could be followed by a high commit (would set a day length
+// exceeding the moon's orbit). Now probe and commit use the SAME 1D — the
+// committed day length is exactly what the guard inspected.
+//
+// This test scripts ONE 1D = 6 for result 7:
+//   - Probe: 6 × 5 × 24 = 720h.
+//   - 720 > moon period 480 → guard FIRES → 1:1 lock holds.
+//   - FinalResult = 12 (initial), LockRatio = "1:1".
+//   - DayLength = yearHours = 480h (1:1 lock day-length effect applies).
+//
+// If a second 1D were consumed by the effect switch, the scripted roller
+// would panic on exhaustion — that alone proves the fix.
+func TestApplyTidalLockEffect_MoonPeriodGuard_ProbeAndCommitUseSameRoll(t *testing.T) {
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "5",
+		DayLength:   &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:   &AxialTilt{Degrees: 0},
+		PeriodHours: 480,
+	}
+	// verification 2D=12, reroll status 2D+0=7, probe 1D=6 (=> 720h > 480h → guard fires)
+	r := roller.NewScripted(12, 7, 6)
+	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if tl.FinalResult != 12 {
+		t.Errorf("FinalResult = %d, want 12 (guard fired, lock held)", tl.FinalResult)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
+	}
+	// 1:1 lock sets DayLength = yearHours (480h). Guard only prevents the rerolled
+	// value from being committed — the original 1:1 effect still applies.
+	if math.Abs(moon.DayLength.SiderealHours-480) > 0.01 {
+		t.Errorf("DayLength.SiderealHours = %v, want 480 (1:1 lock = yearHours)", moon.DayLength.SiderealHours)
+	}
+}
+
+// TestApplyTidalLockEffect_MoonPeriodGuard_LowProbeCommitsProbeValue is the
+// inverse: probe rolls 1D=1 (120h ≤ 480h → guard doesn't fire), and the
+// committed day length must equal 120h (the probe value reused, not a
+// separately-rolled value that could have differed).
+func TestApplyTidalLockEffect_MoonPeriodGuard_LowProbeCommitsProbeValue(t *testing.T) {
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "5",
+		DayLength:   &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:   &AxialTilt{Degrees: 0},
+		PeriodHours: 480,
+	}
+	// verification 2D=12, reroll status 2D+0=7, probe 1D=1 (=> 120h ≤ 480h → guard doesn't fire)
+	r := roller.NewScripted(12, 7, 1)
+	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if tl.FinalResult != 7 {
+		t.Errorf("FinalResult = %d, want 7 (guard didn't fire)", tl.FinalResult)
+	}
+	if tl.LockRatio != "" {
+		t.Errorf("LockRatio = %q, want empty (lock broken)", tl.LockRatio)
+	}
+	if math.Abs(moon.DayLength.SiderealHours-120) > 0.01 {
+		t.Errorf("DayLength.SiderealHours = %v, want 120 (probe 1D=1 × 5 × 24, committed)", moon.DayLength.SiderealHours)
+	}
+}
+
+func TestRerolledDayLength(t *testing.T) {
+	body := &Body{DayLength: &DayLength{SiderealHours: 24}}
+	cases := []struct {
+		name      string
+		result    int
+		dieValue  int // value the next 1D roll would return (0 if no 1D consumed)
+		yearHours float64
+		want      float64
+	}{
+		{"result 3 → 1.5× current", 3, 0, 0, 36},
+		{"result 4 → 2× current", 4, 0, 0, 48},
+		{"result 5 → 3× current", 5, 0, 0, 72},
+		{"result 6 → 5× current", 6, 0, 0, 120},
+		{"result 7 → 1D×5×24 (1D=3)", 7, 3, 0, 360},
+		{"result 8 → 1D×20×24 (1D=2)", 8, 2, 0, 960},
+		{"result 9 → 1D×10×24 (1D=4)", 9, 4, 0, 960},
+		{"result 10 → 1D×50×24 (1D=5)", 10, 5, 0, 6000},
+		{"result 11 (3:2) → 2/3 yearHours", 11, 0, 720, 480},
+		{"result 12 (1:1) → yearHours", 12, 0, 720, 720},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var r roller.Roller
+			if c.dieValue > 0 {
+				r = roller.NewScripted(c.dieValue)
+			} else {
+				r = roller.NewScripted() // no rolls expected for 3-6, 11, 12
+			}
+			got := rerolledDayLength(r, c.result, body, c.yearHours)
+			if got != c.want {
+				t.Errorf("rerolledDayLength(%d, dieValue=%d, year=%g) = %g, want %g",
+					c.result, c.dieValue, c.yearHours, got, c.want)
+			}
+		})
+	}
+}

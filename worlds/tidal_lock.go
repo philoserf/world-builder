@@ -425,7 +425,26 @@ func ApplyTidalLockEffect(
 		verification := r.Roll("2D")
 		if verification == 12 {
 			tl.VerificationFired = true
-			tl.FinalResult = RollTidalLockStatus(r, 0)
+			rerolled := RollTidalLockStatus(r, 0)
+			// WBH p.105 † moon-period guard: for MoonToPlanet only, if the
+			// rerolled day length would exceed the moon's orbital period,
+			// the 1:1 lock holds. yearHours for a moon equals its PeriodHours.
+			//
+			// For results 7-10, rerolledDayLength consumes a 1D. That same 1D
+			// IS the committed day length — probe and commit must agree (single
+			// source of truth). Capture the probe value into tl.NewSiderealHours
+			// so the effect switch below skips its own 1D roll for those results.
+			wouldBeDay := rerolledDayLength(r, rerolled, body, yearHours)
+			if kase == TidalLockCaseMoonToPlanet && wouldBeDay > yearHours {
+				// Guard fires: keep FinalResult = initialResult (1:1 lock held).
+			} else {
+				tl.FinalResult = rerolled
+				// For results 7-10 only: reuse the probe's 1D as the committed
+				// day length so the effect switch below skips its own 1D roll.
+				if rerolled >= 7 && rerolled <= 10 {
+					tl.NewSiderealHours = wouldBeDay
+				}
+			}
 		}
 	}
 
@@ -442,14 +461,22 @@ func ApplyTidalLockEffect(
 	case tl.FinalResult == 6:
 		tl.DayLengthMultiplier = 5
 	case tl.FinalResult == 7:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 5 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 5 * 24)
+		}
 	case tl.FinalResult == 8:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 20 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 20 * 24)
+		}
 	case tl.FinalResult == 9:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 10 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 10 * 24)
+		}
 		tl.BecomesRetrograde = true
 	case tl.FinalResult == 10:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 50 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 50 * 24)
+		}
 		tl.BecomesRetrograde = true
 	case tl.FinalResult == 11:
 		tl.LockRatio = "3:2"
@@ -523,6 +550,46 @@ func ApplyTidalLockEffect(
 // one 2D for the table row, one 1D (or 2D for rows 11-12) for the value.
 func rerollEccentricityDMMinus2(r roller.Roller) (float64, error) {
 	return stars.RollEccentricity(r, stars.EccentricityOpts{ExtraDM: -2})
+}
+
+// rerolledDayLength returns the day length that ApplyTidalLockEffect WOULD
+// set for the given verification-reroll result, without committing the effect.
+// Used by the WBH p.105 † moon-period guard: for MoonToPlanet only, if the
+// rerolled day length exceeds the moon's orbital period (yearHours), the 1:1
+// lock holds instead.
+//
+// Consumes one 1D roll for results 7–10 (matching ApplyTidalLockEffect's dice
+// consumption). For results 3–6, 11, 12+ no roll is consumed. The caller is
+// responsible for deciding whether to apply the effect.
+func rerolledDayLength(r roller.Roller, result int, body *Body, yearHours float64) float64 {
+	current := 0.0
+	if body.DayLength != nil {
+		current = body.DayLength.SiderealHours
+	}
+	switch result {
+	case 3:
+		return current * 1.5
+	case 4:
+		return current * 2
+	case 5:
+		return current * 3
+	case 6:
+		return current * 5
+	case 7:
+		return float64(r.Roll("1D") * 5 * 24)
+	case 8:
+		return float64(r.Roll("1D") * 20 * 24)
+	case 9:
+		return float64(r.Roll("1D") * 10 * 24)
+	case 10:
+		return float64(r.Roll("1D") * 50 * 24)
+	case 11:
+		return yearHours * 2 / 3
+	case 12, 13, 14, 15, 16:
+		return yearHours
+	default:
+		return current
+	}
 }
 
 // GenerateTidalLock orchestrates the per-body tidal-lock pipeline per WBH p.106.
