@@ -311,6 +311,22 @@ func hasSignificantMoon(body *Body) bool {
 	return countSignificantMoons(body) > 0
 }
 
+// hasLockedMoon reports whether body has at least one moon already in a
+// 1:1 or 3:2 tidal lock with the planet, per WBH p.107 Planet→Moon
+// pre-condition. Relies on the Stage 4 two-pass ordering — moons must
+// be evaluated before planets so their TidalLock fields are populated.
+func hasLockedMoon(body *Body) bool {
+	for _, c := range body.Children {
+		if c.TidalLock == nil {
+			continue
+		}
+		if c.TidalLock.LockRatio == "1:1" || c.TidalLock.LockRatio == "3:2" {
+			return true
+		}
+	}
+	return false
+}
+
 func countSignificantMoons(body *Body) int {
 	n := 0
 	for i := range body.Children {

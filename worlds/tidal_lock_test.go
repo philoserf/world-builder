@@ -216,6 +216,32 @@ func TestIsTerrestrial(t *testing.T) {
 	}
 }
 
+func TestHasLockedMoon(t *testing.T) {
+	locked := &Body{TidalLock: &TidalLock{LockRatio: "1:1"}}
+	threeTwo := &Body{TidalLock: &TidalLock{LockRatio: "3:2"}}
+	unlocked := &Body{TidalLock: &TidalLock{LockRatio: ""}}
+	noLockField := &Body{}
+	cases := []struct {
+		name string
+		body Body
+		want bool
+	}{
+		{"no children false", Body{}, false},
+		{"all unlocked false", Body{Children: []*Body{unlocked}}, false},
+		{"nil TidalLock false", Body{Children: []*Body{noLockField}}, false},
+		{"3:2 locked true", Body{Children: []*Body{threeTwo}}, true},
+		{"1:1 locked true", Body{Children: []*Body{locked}}, true},
+		{"mixed with one locked true", Body{Children: []*Body{unlocked, locked}}, true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := hasLockedMoon(&c.body); got != c.want {
+				t.Errorf("hasLockedMoon = %v, want %v", got, c.want)
+			}
+		})
+	}
+}
+
 func TestRollTidalLockStatus_Plain2DPlusDM(t *testing.T) {
 	// 2D=8, DM+3 → 11.
 	r := roller.NewScripted(8)
