@@ -65,6 +65,14 @@ type Body struct {
 	TidalLock    *TidalLock
 	TidalEffects *SurfaceTidalEffects
 
+	// preTidalLockSnapshot is set during Stage 4 just before
+	// ApplyTidalLockEffect; consumed by ApplyTidalLockReEval after
+	// Stage 5 to restore pre-tidal-lock state when the atmosphere DM
+	// (WBH p.106) re-evaluates the lock. Package-private; not part of
+	// the rendered output (IISS forms ignore it).
+	//nolint:unused // populated in task 4.3, consumed in task 4.5
+	preTidalLockSnapshot *PreTidalLockSnapshot
+
 	// Stage 5 — populated post-ApplyClimatePasses
 	Atmosphere    *Atmosphere
 	Hydrographics *Hydrographics
