@@ -44,6 +44,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 		ApplyMoonRefinement,
 		ApplyRotationTilt,
 		ApplyClimate,
+		ApplyTidalLockReEval,
 		ApplyTaintTypology,
 		ApplySurfaceDistribution,
 		ApplyGeology,
