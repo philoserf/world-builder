@@ -7,6 +7,56 @@ import (
 	"wbh/stars"
 )
 
+func TestClearStage5Output_ZeroesAllStage5Fields(t *testing.T) {
+	body := &Body{
+		// Stage 4 fields — must SURVIVE ClearStage5Output.
+		DayLength:    &DayLength{SiderealHours: 24, SolarHours: 24},
+		AxialTilt:    &AxialTilt{Degrees: 23},
+		TidalLock:    &TidalLock{LockRatio: "1:1"},
+		TidalEffects: &SurfaceTidalEffects{},
+		Eccentricity: 0.05,
+
+		// Stage 5 fields — must be cleared.
+		Atmosphere:    &Atmosphere{Code: 6, Pressure: 1.0},
+		Hydrographics: &Hydrographics{Code: 7},
+		Temperature:   &Temperature{MeanK: 288},
+		Geology:       &Geology{ResidualSeismicStress: 3},
+	}
+
+	ClearStage5Output(body)
+
+	// Stage 4 fields must be untouched.
+	if body.DayLength == nil {
+		t.Error("DayLength was cleared; must survive ClearStage5Output")
+	}
+	if body.AxialTilt == nil {
+		t.Error("AxialTilt was cleared; must survive ClearStage5Output")
+	}
+	if body.TidalLock == nil {
+		t.Error("TidalLock was cleared; must survive ClearStage5Output")
+	}
+	if body.TidalEffects == nil {
+		t.Error("TidalEffects was cleared; must survive ClearStage5Output")
+	}
+	if body.Eccentricity != 0.05 {
+		t.Errorf("Eccentricity changed to %v; must survive ClearStage5Output", body.Eccentricity)
+	}
+
+	// Stage 5 fields must be zeroed.
+	if body.Atmosphere != nil {
+		t.Errorf("Atmosphere not cleared: %+v", body.Atmosphere)
+	}
+	if body.Hydrographics != nil {
+		t.Errorf("Hydrographics not cleared: %+v", body.Hydrographics)
+	}
+	if body.Temperature != nil {
+		t.Errorf("Temperature not cleared: %+v", body.Temperature)
+	}
+	if body.Geology != nil {
+		t.Errorf("Geology not cleared: %+v", body.Geology)
+	}
+}
+
 func TestPreTidalLockSnapshot_RoundTrip(t *testing.T) {
 	body := &Body{
 		Eccentricity: 0.42,
