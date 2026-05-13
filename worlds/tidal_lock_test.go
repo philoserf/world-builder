@@ -194,6 +194,28 @@ func TestSelectHighestDMCase_TieMoonFirst(t *testing.T) {
 	}
 }
 
+func TestIsTerrestrial(t *testing.T) {
+	cases := []struct {
+		name string
+		kind BodyKind
+		want bool
+	}{
+		{"terrestrial true", BodyTerrestrial, true},
+		{"gas giant false", BodyGasGiant, false},
+		{"belt false", BodyPlanetoidBelt, false},
+		{"empty false", BodyEmpty, false},
+		{"moon false (planet→moon evaluated from planet only)", BodyMoon, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			b := &Body{Kind: c.kind}
+			if got := isTerrestrial(b); got != c.want {
+				t.Errorf("isTerrestrial(%v) = %v, want %v", c.kind, got, c.want)
+			}
+		})
+	}
+}
+
 func TestRollTidalLockStatus_Plain2DPlusDM(t *testing.T) {
 	// 2D=8, DM+3 → 11.
 	r := roller.NewScripted(8)

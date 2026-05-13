@@ -301,6 +301,12 @@ func RollTidalLockStatus(r roller.Roller, dm int) int {
 
 // --- helpers ---
 
+// isTerrestrial reports whether a body is eligible for the Planet→Moon
+// tidal-lock case per WBH p.107 (terrestrial worlds, Size 1–F).
+func isTerrestrial(body *Body) bool {
+	return body.Kind == BodyTerrestrial
+}
+
 func hasSignificantMoon(body *Body) bool {
 	return countSignificantMoons(body) > 0
 }
