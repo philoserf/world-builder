@@ -525,6 +525,46 @@ func rerollEccentricityDMMinus2(r roller.Roller) (float64, error) {
 	return stars.RollEccentricity(r, stars.EccentricityOpts{ExtraDM: -2})
 }
 
+// rerolledDayLength returns the day length that ApplyTidalLockEffect WOULD
+// set for the given verification-reroll result, without committing the effect.
+// Used by the WBH p.105 † moon-period guard: for MoonToPlanet only, if the
+// rerolled day length exceeds the moon's orbital period (yearHours), the 1:1
+// lock holds instead.
+//
+// Consumes one 1D roll for results 7–10 (matching ApplyTidalLockEffect's dice
+// consumption). For results 3–6, 11, 12+ no roll is consumed. The caller is
+// responsible for deciding whether to apply the effect.
+func rerolledDayLength(r roller.Roller, result int, body *Body, yearHours float64) float64 {
+	current := 0.0
+	if body.DayLength != nil {
+		current = body.DayLength.SiderealHours
+	}
+	switch result {
+	case 3:
+		return current * 1.5
+	case 4:
+		return current * 2
+	case 5:
+		return current * 3
+	case 6:
+		return current * 5
+	case 7:
+		return float64(r.Roll("1D") * 5 * 24)
+	case 8:
+		return float64(r.Roll("1D") * 20 * 24)
+	case 9:
+		return float64(r.Roll("1D") * 10 * 24)
+	case 10:
+		return float64(r.Roll("1D") * 50 * 24)
+	case 11:
+		return yearHours * 2 / 3
+	case 12, 13, 14, 15, 16:
+		return yearHours
+	default:
+		return current
+	}
+}
+
 // GenerateTidalLock orchestrates the per-body tidal-lock pipeline per WBH p.106.
 // Returns nil (no error) for empty bodies or when no tidal-lock case applies.
 // Mutates body's DayLength, AxialTilt, and Eccentricity in place when an effect applies.

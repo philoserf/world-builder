@@ -815,3 +815,40 @@ func TestClosestLockedSignificantMoon_MultipleLockedPicksClosest(t *testing.T) {
 		t.Errorf("got %v (OrbitPD=%v), want near (OrbitPD=10)", got, got.OrbitPD)
 	}
 }
+
+func TestRerolledDayLength(t *testing.T) {
+	body := &Body{DayLength: &DayLength{SiderealHours: 24}}
+	cases := []struct {
+		name      string
+		result    int
+		dieValue  int // value the next 1D roll would return (0 if no 1D consumed)
+		yearHours float64
+		want      float64
+	}{
+		{"result 3 → 1.5× current", 3, 0, 0, 36},
+		{"result 4 → 2× current", 4, 0, 0, 48},
+		{"result 5 → 3× current", 5, 0, 0, 72},
+		{"result 6 → 5× current", 6, 0, 0, 120},
+		{"result 7 → 1D×5×24 (1D=3)", 7, 3, 0, 360},
+		{"result 8 → 1D×20×24 (1D=2)", 8, 2, 0, 960},
+		{"result 9 → 1D×10×24 (1D=4)", 9, 4, 0, 960},
+		{"result 10 → 1D×50×24 (1D=5)", 10, 5, 0, 6000},
+		{"result 11 (3:2) → 2/3 yearHours", 11, 0, 720, 480},
+		{"result 12 (1:1) → yearHours", 12, 0, 720, 720},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var r roller.Roller
+			if c.dieValue > 0 {
+				r = roller.NewScripted(c.dieValue)
+			} else {
+				r = roller.NewScripted() // no rolls expected for 3-6, 11, 12
+			}
+			got := rerolledDayLength(r, c.result, body, c.yearHours)
+			if got != c.want {
+				t.Errorf("rerolledDayLength(%d, dieValue=%d, year=%g) = %g, want %g",
+					c.result, c.dieValue, c.yearHours, got, c.want)
+			}
+		})
+	}
+}
