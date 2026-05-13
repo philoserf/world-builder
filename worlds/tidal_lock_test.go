@@ -1075,10 +1075,11 @@ func TestSelectHighestDMCases_BestOnlyNotTied(t *testing.T) {
 // If only one roll fires (old code), the scripted roller panics → test fails.
 func TestGenerateTidalLock_TiedCases_RollsAllTakesHighest(t *testing.T) {
 	moon := &Body{
-		Kind:      BodyMoon,
-		SizeCode:  "1",
-		OrbitPD:   10,
-		TidalLock: &TidalLock{LockRatio: "1:1"},
+		Kind:        BodyMoon,
+		SizeCode:    "1",
+		OrbitPD:     10,
+		PeriodHours: 1200, // ~50-day orbit; long enough for 1D=2×20×24=960h day
+		TidalLock:   &TidalLock{LockRatio: "1:1"},
 	}
 	planet := &Body{
 		Kind:         BodyTerrestrial,
@@ -1142,10 +1143,11 @@ func TestGenerateTidalLock_TiedCases_RollsAllTakesHighest(t *testing.T) {
 // Expected: Case=PlanetToMoon, FinalResult=8, SiderealHours=960.
 func TestGenerateTidalLock_TiedCases_FirstRollWins(t *testing.T) {
 	moon := &Body{
-		Kind:      BodyMoon,
-		SizeCode:  "1",
-		OrbitPD:   10,
-		TidalLock: &TidalLock{LockRatio: "1:1"},
+		Kind:        BodyMoon,
+		SizeCode:    "1",
+		OrbitPD:     10,
+		PeriodHours: 1200, // ~50-day orbit; long enough for 1D=2×20×24=960h day
+		TidalLock:   &TidalLock{LockRatio: "1:1"},
 	}
 	planet := &Body{
 		Kind:         BodyTerrestrial,
@@ -1179,6 +1181,12 @@ func TestGenerateTidalLock_TiedCases_FirstRollWins(t *testing.T) {
 	}
 	if tl.NewSiderealHours != 960 {
 		t.Errorf("NewSiderealHours = %v, want 960 (1D=2 × 20 × 24)", tl.NewSiderealHours)
+	}
+	if planet.DayLength.YearDays < 0 {
+		t.Errorf("YearDays = %v, want non-negative (PeriodHours fixture missing?)", planet.DayLength.YearDays)
+	}
+	if planet.DayLength.SolarHours < 0 {
+		t.Errorf("SolarHours = %v, want non-negative", planet.DayLength.SolarHours)
 	}
 }
 
