@@ -61,10 +61,11 @@ func EvaluateTidalLockDMs(
 	common := commonTidalLockDMs(body, sys)
 	out := make(map[TidalLockCase]int, 3)
 
-	// Planet → star: applies only to planets. Moons store their orbit
-	// around the parent in OrbitPD; body.Orbit is 0 for moons, which
-	// would spuriously trigger the orbit < 1 +14 close-orbit DM and
-	// drown out the proper moon → planet case.
+	// Planet → star: gated to non-moons (planets and belts — anything
+	// that orbits a star directly). Moons are excluded because they
+	// store their orbit around the parent in OrbitPD; body.Orbit is 0
+	// for moons, which would spuriously trigger the orbit < 1 +14
+	// close-orbit DM and drown out the proper moon → planet case.
 	if parentPlanet == nil && moonRef == nil {
 		out[TidalLockCasePlanetToStar] = common + planetToStarDMs(body, sys)
 	}

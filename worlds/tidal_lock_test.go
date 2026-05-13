@@ -101,24 +101,24 @@ func TestEvaluateTidalLockDMs_PlanetToStar_AbsentForMoon(t *testing.T) {
 	// the planet→star case outrank moon→planet for moons of small or
 	// moderate-mass parents. Per WBH p.106 the planet→star case applies
 	// to planets, not moons.
-	moonRef := &Body{
+	//
+	// Mirrors stage4.go: in production, GenerateTidalLock is called
+	// with moonRef = body (same pointer, Kind=BodyMoon) for moons.
+	body := &Body{
 		Kind:     BodyMoon,
 		SizeCode: "3",
 		OrbitPD:  15,
 	}
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+
 	parent := &Body{}
 	parent.Kind = BodyTerrestrial
 	parent.MassEarth = 1.0
 	parent.Orbit = 1.0
 
-	body := &Body{}
-	body.Kind = BodyTerrestrial
-	body.SizeCode = "3"
-	body.AxialTilt = &AxialTilt{Degrees: 0}
-
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
 
-	dms := EvaluateTidalLockDMs(body, sys, parent, moonRef)
+	dms := EvaluateTidalLockDMs(body, sys, parent, body)
 	if _, ok := dms[TidalLockCasePlanetToStar]; ok {
 		t.Errorf("planet→star case should not appear for a moon, got dms=%+v", dms)
 	}
