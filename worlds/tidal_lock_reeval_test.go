@@ -194,3 +194,143 @@ func TestGenerateTidalLock_NoSnapshotWhenNoCase(t *testing.T) {
 		t.Errorf("snapshot captured for empty body: %v", body.preTidalLockSnapshot)
 	}
 }
+
+// TestApplyTidalLockReEval_LowPressureSkipped verifies that a body with
+// pressure ≤ 2.5 bar is not re-evaluated. TidalLock and Atmosphere are
+// unchanged after ApplyTidalLockReEval.
+func TestApplyTidalLockReEval_LowPressureSkipped(t *testing.T) {
+	snap := CapturePreTidalLockSnapshot(&Body{
+		Eccentricity: 0.05,
+		AxialTilt:    &AxialTilt{Degrees: 10},
+		DayLength:    &DayLength{SiderealHours: 24},
+	})
+	origTL := &TidalLock{LockRatio: "1:1"}
+	body := &Body{
+		Kind:                 BodyTerrestrial,
+		Atmosphere:           &Atmosphere{Code: 6, Pressure: 1.0}, // ≤ 2.5 bar
+		TidalLock:            origTL,
+		preTidalLockSnapshot: &snap,
+	}
+	u := &Universe{}
+	u.Detail.Bodies = []Body{*body}
+
+	r := roller.NewScripted() // no dice should be consumed
+	if err := ApplyTidalLockReEval(r, u); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := &u.Detail.Bodies[0]
+	if got.TidalLock == nil || got.TidalLock.LockRatio != "1:1" {
+		t.Errorf("TidalLock changed; want 1:1, got %v", got.TidalLock)
+	}
+	if got.Atmosphere == nil || got.Atmosphere.Pressure != 1.0 {
+		t.Errorf("Atmosphere changed; want Pressure=1.0, got %v", got.Atmosphere)
+	}
+	if got.preTidalLockSnapshot == nil {
+		t.Error("preTidalLockSnapshot was cleared; should be untouched")
+	}
+}
+
+// TestApplyTidalLockReEval_NoSnapshotSkipped verifies that a body with no
+// pre-tidal-lock snapshot is skipped even when pressure > 2.5 bar.
+func TestApplyTidalLockReEval_NoSnapshotSkipped(t *testing.T) {
+	origTL := &TidalLock{LockRatio: "3:2"}
+	body := &Body{
+		Kind:                 BodyTerrestrial,
+		Atmosphere:           &Atmosphere{Code: 12, Pressure: 3.0}, // > 2.5 bar
+		TidalLock:            origTL,
+		preTidalLockSnapshot: nil, // Stage 4 didn't fire tidal lock
+	}
+	u := &Universe{}
+	u.Detail.Bodies = []Body{*body}
+
+	r := roller.NewScripted() // no dice should be consumed
+	if err := ApplyTidalLockReEval(r, u); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := &u.Detail.Bodies[0]
+	if got.TidalLock == nil || got.TidalLock.LockRatio != "3:2" {
+		t.Errorf("TidalLock changed; want 3:2, got %v", got.TidalLock)
+	}
+	if got.Atmosphere == nil || got.Atmosphere.Pressure != 3.0 {
+		t.Errorf("Atmosphere changed; want Pressure=3.0, got %v", got.Atmosphere)
+	}
+}
+
+// TestApplyTidalLockReEval_HighPressureTriggersReEval verifies the
+// orchestration logic of ApplyTidalLockReEval: when a body has pressure
+// > 2.5 bar AND a pre-tidal-lock snapshot, the function clears TidalLock,
+// re-runs GenerateTidalLock (consuming dice), then clears Stage-5 output
+// and re-runs ApplyClimatePasses.
+//
+// The fixture uses a body that will produce a nil TidalLock from the
+// re-roll (all DMs too low after -2 atmosphere penalty), demonstrating
+// that body.TidalLock is reset and Stage-5 output is cleared.
+//
+// We use a terrestrial body orbiting a star (no moonRef / parentPlanet),
+// with an orbit and star configuration that gives a marginal DM. After
+// the -2 atmosphere DM is applied on re-eval, the total DM drops below
+// the threshold and no tidal lock fires — so TidalLock becomes nil and
+// the body is not re-evaluated for climate (non-HZ, so ApplyClimatePasses
+// is a no-op and leaves Atmosphere nil).
+func TestApplyTidalLockReEval_HighPressureTriggersReEval(t *testing.T) {
+	// Build a snapshot representing pre-tidal-lock state.
+	snap := CapturePreTidalLockSnapshot(&Body{
+		Eccentricity: 0.05,
+		AxialTilt:    &AxialTilt{Degrees: 5},
+		DayLength:    &DayLength{SiderealHours: 24, SolarHours: 25},
+	})
+
+	// The body is non-HZ so ApplyClimatePasses will be a no-op (no
+	// atmosphere re-generated). This lets us confirm:
+	//   - body.TidalLock is reset by the re-eval (re-roll returns nil
+	//     when all DMs are ≤ -10 after including the atmosphere penalty).
+	//   - body.Atmosphere is cleared by ClearStage5Output after re-roll.
+	body := &Body{
+		Kind:         BodyTerrestrial,
+		SizeCode:     "5",
+		Eccentricity: 0.05,
+		AxialTilt:    &AxialTilt{Degrees: 5},
+		DayLength:    &DayLength{SiderealHours: 24, SolarHours: 25},
+		Orbit:        5.0, // orbit > 3 → DM-(5×2)=-10, total too low for a lock
+		Period:       Period{Hours: 8766 * 5},
+		HZ:           false, // non-HZ: ApplyClimatePasses short-circuits
+		// Stage-5 output already set (simulates post-ApplyClimate state).
+		Atmosphere:           &Atmosphere{Code: 12, Pressure: 3.0},
+		TidalLock:            &TidalLock{LockRatio: "1:1"},
+		preTidalLockSnapshot: &snap,
+	}
+
+	u := &Universe{
+		System: stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}},
+	}
+	u.Detail.Bodies = []Body{*body}
+
+	// GenerateTidalLock will roll dice even if all DMs are low; provide a
+	// scripted result so the test is deterministic. The specific result
+	// doesn't matter — what matters is the orchestration path.
+	r := roller.NewScripted(4) // one 2D roll; result 4 is a low final result
+
+	if err := ApplyTidalLockReEval(r, u); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := &u.Detail.Bodies[0]
+
+	// TidalLock must have been re-evaluated (nil if no case fired, or a
+	// new TidalLock if a case fired with the scripted roll).
+	// The pre-eval TidalLock was "1:1" — any mutation proves re-eval ran.
+	// If the re-roll produces nil (no case), that's also fine: the old
+	// "1:1" value must be gone.
+	if got.TidalLock != nil && got.TidalLock.LockRatio == "1:1" {
+		// The old value survived unchanged — re-eval didn't run.
+		t.Error("TidalLock still has original 1:1 lock; re-eval did not run")
+	}
+
+	// Atmosphere must be nil: ClearStage5Output ran, and ApplyClimatePasses
+	// is a no-op on non-HZ bodies, so no new atmosphere is generated.
+	if got.Atmosphere != nil {
+		t.Errorf("Atmosphere not cleared after re-eval; got %+v", got.Atmosphere)
+	}
+}
