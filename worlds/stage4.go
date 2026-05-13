@@ -68,7 +68,7 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		}
 		tl, err := GenerateTidalLock(r, body, body, sys, parent, body.PeriodHours)
 		if err != nil {
-			return fmt.Errorf("worlds: stage4 tidal lock moon %s: %w", body.Designation, err)
+			return fmt.Errorf("worlds: stage4 tidal lock %s%s: %w", moonTag(parent), body.Designation, err)
 		}
 		body.TidalLock = tl
 	}
@@ -80,7 +80,7 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		}
 		tl, err := GenerateTidalLock(r, body, nil, sys, nil, body.Period.Hours)
 		if err != nil {
-			return fmt.Errorf("worlds: stage4 tidal lock %s: %w", body.Designation, err)
+			return fmt.Errorf("worlds: stage4 tidal lock %s%s: %w", moonTag(parent), body.Designation, err)
 		}
 		body.TidalLock = tl
 	}
