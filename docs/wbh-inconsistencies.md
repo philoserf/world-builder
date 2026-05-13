@@ -169,6 +169,23 @@ g > 2.0                  → DM−6
 
 Result for Zed Prime: 10 + 0 (size 5) + 0 (atm 6) + 0 (hydro 6) + 0 (no lock) + (−2) (HighK 346 > 323) + 0 (MeanK 300) + 0 (LowK 262) + (−1) (gravity 0.66) = **7** ✓.
 
+## Inconsistency 7: WBH p.106 atmosphere DM — pipeline ordering
+
+WBH p.106 lists `pressure > 2.5 bar → DM−2` in the all-cases-common tidal-lock DMs. But atmospheric pressure is determined by the climate cluster (`ApplyClimatePasses`, Stage 5), which runs **after** rotation/tilt/tidal (`ApplyRotationTilt`, Stage 4). At Stage 4 evaluation time, `body.Atmosphere` is nil and the DM cannot fire — making the line dead code in any single-pass pipeline.
+
+Reordering Stage 4 and Stage 5 isn't viable: temperature (Stage 5) reads `body.AxialTilt` and `body.Eccentricity`, both of which `ApplyTidalLockEffect` can mutate. Atmosphere and tidal lock are mutually dependent.
+
+**Implementation: Stage-5-post re-evaluation cascade.**
+
+1. Stage 4 (`ApplyRotationTilt`) runs tidal lock without the atmosphere DM.
+2. `GenerateTidalLock` captures `body.preTidalLockSnapshot` (Eccentricity / AxialTilt / DayLength) and stores the initial DM map on `TidalLock.PreEvalDMs`.
+3. Stage 5 (`ApplyClimate`) sets `body.Atmosphere` with the rolled pressure.
+4. `ApplyTidalLockReEval` walks bodies with `Atmosphere.Pressure > 2.5`, restores the snapshot, re-runs `GenerateTidalLock` (the DM now fires because `commonTidalLockDMs` sees the pressure), then clears Stage-5 output and re-runs `ApplyClimatePasses` for the affected body so atmosphere/hydrographics/temperature/geology are derived from the corrected tidal-lock outputs.
+
+**Trade-off (acknowledged):** the dice stream consumes both the original Stage-4 tidal-lock rolls and the re-eval's rolls + climate re-run. Deterministic per seed, but a body that goes through the cascade has consumed roughly twice the dice of one that doesn't. Confined to a narrow population — `Pressure > 2.5 bar` plus a captured snapshot from Stage 4. In the 10 regression seeds only `seed_500`'s `A II` hits the cascade.
+
+Affected code: `worlds/tidal_lock_snapshot.go`, `worlds/tidal_lock_reeval.go`, `worlds/tidal_lock.go` (`GenerateTidalLock` capture site), `worlds/generate.go` (pipeline insertion). Tests in `worlds/tidal_lock_reeval_test.go`.
+
 ## Naming gotchas (not book contradictions but worth flagging)
 
 ### WBH atmosphere code labels for D and E
