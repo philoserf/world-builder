@@ -253,12 +253,44 @@ func planetToMoonDMs(body *Body) int {
 	return dm
 }
 
+// SelectHighestDMCases returns all cases tied at the highest DM, in
+// p.106 priority order (MoonToPlanet, PlanetToMoon, PlanetToStar).
+// Cases with DM ≤ -10 are filtered out. Returns nil, 0 if no case
+// applies. Used by GenerateTidalLock to implement the WBH p.106
+// tied-DM cascade — moon-case rolls first.
+func SelectHighestDMCases(dms map[TidalLockCase]int) ([]TidalLockCase, int) {
+	priority := []TidalLockCase{
+		TidalLockCaseMoonToPlanet,
+		TidalLockCasePlanetToMoon,
+		TidalLockCasePlanetToStar,
+	}
+	bestDM := -10
+	for _, kase := range priority {
+		if dm, ok := dms[kase]; ok && dm > bestDM {
+			bestDM = dm
+		}
+	}
+	if bestDM == -10 {
+		return nil, 0
+	}
+	var tied []TidalLockCase
+	for _, kase := range priority {
+		if dm, ok := dms[kase]; ok && dm == bestDM {
+			tied = append(tied, kase)
+		}
+	}
+	return tied, bestDM
+}
+
 // SelectHighestDMCase returns the case to roll, applying p.106 tiebreakers:
 //   - Cases with DM ≤ -10 are filtered out (no roll required for those).
 //   - On ties, moon-cases ordered first (MoonToPlanet before PlanetToStar).
 //   - On ties between multiple moons (future: moonToPlanet for multiple moons),
 //     closest moon first — handled at orchestration level via per-moon iteration.
 //   - Returns TidalLockCaseNone if no case applies.
+//
+// Deprecated: silently drops tied cases — use SelectHighestDMCases (plural)
+// for the WBH p.106 cascade. Retained for backwards compatibility with tests.
 func SelectHighestDMCase(dms map[TidalLockCase]int, _ *Body) (TidalLockCase, int) {
 	bestCase := TidalLockCaseNone
 	bestDM := -10 // exclusive lower bound
@@ -595,6 +627,9 @@ func rerolledDayLength(r roller.Roller, result int, body *Body, yearHours float6
 // GenerateTidalLock orchestrates the per-body tidal-lock pipeline per WBH p.106.
 // Returns nil (no error) for empty bodies or when no tidal-lock case applies.
 // Mutates body's DayLength, AxialTilt, and Eccentricity in place when an effect applies.
+//
+// When multiple cases tie on the highest DM, WBH p.106 says to roll each tied
+// case in priority order (moon-cases first) and apply the highest adjusted result.
 func GenerateTidalLock(
 	r roller.Roller,
 	body *Body,
@@ -608,22 +643,33 @@ func GenerateTidalLock(
 	}
 
 	dms := EvaluateTidalLockDMs(body, sys, parentPlanet, moonRef)
-	kase, dm := SelectHighestDMCase(dms, body)
-	if kase == TidalLockCaseNone {
+	tiedCases, dm := SelectHighestDMCases(dms)
+	if len(tiedCases) == 0 {
 		return nil, nil // no case applies; body has no tidal lock pressure
+	}
+
+	// WBH p.106 cascade: roll each tied case in priority order
+	// (moon-cases first); take the highest adjusted result.
+	bestResult := math.MinInt
+	bestCase := TidalLockCaseNone
+	for _, kase := range tiedCases {
+		rolled := RollTidalLockStatus(r, dm)
+		if rolled > bestResult {
+			bestResult = rolled
+			bestCase = kase
+		}
 	}
 
 	// Per WBH p.106: when the planet locks to its moon, the day length
 	// equals the moon's orbital period — not the planet's stellar year.
 	yh := yearHours
-	if kase == TidalLockCasePlanetToMoon {
+	if bestCase == TidalLockCasePlanetToMoon {
 		if closest := closestLockedSignificantMoon(body); closest != nil {
 			yh = closest.PeriodHours
 		}
 	}
 
-	initialResult := RollTidalLockStatus(r, dm)
-	tl, err := ApplyTidalLockEffect(r, body, moonRef, kase, initialResult, yh)
+	tl, err := ApplyTidalLockEffect(r, body, moonRef, bestCase, bestResult, yh)
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateTidalLock: %w", err)
 	}

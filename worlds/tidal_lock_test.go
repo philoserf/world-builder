@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"math"
+	"slices"
 	"testing"
 
 	"wbh/roller"
@@ -975,6 +976,217 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_LowProbeCommitsProbeValue(t *testi
 	}
 	if math.Abs(moon.DayLength.SiderealHours-120) > 0.01 {
 		t.Errorf("DayLength.SiderealHours = %v, want 120 (probe 1D=1 × 5 × 24, committed)", moon.DayLength.SiderealHours)
+	}
+}
+
+func TestSelectHighestDMCases_OrderedTiedCases(t *testing.T) {
+	// PlanetToStar tied with PlanetToMoon at DM=5; MoonToPlanet absent.
+	// Expected return order per p.106 priority: PlanetToMoon (moon-cases first), PlanetToStar.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: 5,
+		TidalLockCasePlanetToMoon: 5,
+	}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 5 {
+		t.Errorf("dm = %d, want 5", dm)
+	}
+	want := []TidalLockCase{TidalLockCasePlanetToMoon, TidalLockCasePlanetToStar}
+	if !slices.Equal(cases, want) {
+		t.Errorf("cases = %v, want %v", cases, want)
+	}
+}
+
+func TestSelectHighestDMCases_SingleCase(t *testing.T) {
+	dms := map[TidalLockCase]int{TidalLockCaseMoonToPlanet: 8}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 8 {
+		t.Errorf("dm = %d, want 8", dm)
+	}
+	if len(cases) != 1 || cases[0] != TidalLockCaseMoonToPlanet {
+		t.Errorf("cases = %v, want [MoonToPlanet]", cases)
+	}
+}
+
+func TestSelectHighestDMCases_AllFiltered(t *testing.T) {
+	dms := map[TidalLockCase]int{TidalLockCasePlanetToStar: -11}
+	cases, _ := SelectHighestDMCases(dms)
+	if len(cases) != 0 {
+		t.Errorf("expected no cases, got %v", cases)
+	}
+}
+
+func TestSelectHighestDMCases_AllThreeTied(t *testing.T) {
+	// All three cases at DM=7 — order must be MoonToPlanet, PlanetToMoon, PlanetToStar.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: 7,
+		TidalLockCaseMoonToPlanet: 7,
+		TidalLockCasePlanetToMoon: 7,
+	}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 7 {
+		t.Errorf("dm = %d, want 7", dm)
+	}
+	want := []TidalLockCase{TidalLockCaseMoonToPlanet, TidalLockCasePlanetToMoon, TidalLockCasePlanetToStar}
+	if !slices.Equal(cases, want) {
+		t.Errorf("cases = %v, want %v", cases, want)
+	}
+}
+
+func TestSelectHighestDMCases_BestOnlyNotTied(t *testing.T) {
+	// When DMs differ, only the highest-DM case is returned.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: 3,
+		TidalLockCasePlanetToMoon: 7,
+		TidalLockCaseMoonToPlanet: 5,
+	}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 7 {
+		t.Errorf("dm = %d, want 7", dm)
+	}
+	if len(cases) != 1 || cases[0] != TidalLockCasePlanetToMoon {
+		t.Errorf("cases = %v, want [PlanetToMoon]", cases)
+	}
+}
+
+// TestGenerateTidalLock_TiedCases_RollsAllTakesHighest verifies that when two
+// cases tie on DM, GenerateTidalLock rolls both (in priority order) and applies
+// the highest adjusted result. Without the cascade, only one roll fires and the
+// scripted roller panics on exhaustion — proving the fix.
+//
+// Fixture: terrestrial planet, Size 3, Orbit 2.0, star mass 1.0, age 5 Gyr,
+// eccentricity 0, tilt 0, no atmosphere; one Size 1 moon at OrbitPD 10 with a
+// 1:1 lock (enabling the Planet→Moon case).
+//
+// DM trace:
+//
+//	common: Size 3 → +ceil(3/3)=+1; ecc 0→0; tilt 0→0; age 5Gyr→+2; total=+3
+//	planet→star: base=-4; orbit 2.0 (1<orbit<3)→+1; mass 1.0 (≤1.0)→-1;
+//	             1 star, no multi-star penalty; Size 1 moon → -1; total=-5
+//	planet→moon: base=-10; moon Size 1 → +1; pd=10 (≤10)→+4; total=-5
+//	Both cases: +3 + (-5) = -2  (tied)
+//
+// Dice:
+//
+//	Roll 1 (PlanetToMoon, moon-case first): 2D=6 → adjusted=6+(-2)=4
+//	Roll 2 (PlanetToStar):                  2D=10 → adjusted=10+(-2)=8 (higher, wins)
+//	Roll 3 (1D for result 8 day length):    1D=3 → 3×20×24=1440h
+//
+// Expected: Case=PlanetToStar, FinalResult=8, SiderealHours=1440.
+// If only one roll fires (old code), the scripted roller panics → test fails.
+func TestGenerateTidalLock_TiedCases_RollsAllTakesHighest(t *testing.T) {
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "1",
+		OrbitPD:     10,
+		PeriodHours: 1200, // ~50-day orbit; long enough for 1D=2×20×24=960h day
+		TidalLock:   &TidalLock{LockRatio: "1:1"},
+	}
+	planet := &Body{
+		Kind:         BodyTerrestrial,
+		SizeCode:     "3",
+		Orbit:        2.0,
+		Period:       Period{Hours: 8766},
+		Eccentricity: 0.0,
+		DayLength:    &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:    &AxialTilt{Degrees: 0},
+		Children:     []*Body{moon},
+	}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	// Verify fixture: both cases must tie at DM=-2.
+	dms := EvaluateTidalLockDMs(planet, sys, nil, nil)
+	ptmDM, ptmOK := dms[TidalLockCasePlanetToMoon]
+	ptsDM, ptsOK := dms[TidalLockCasePlanetToStar]
+	if !ptmOK || !ptsOK {
+		t.Fatalf("fixture missing a case: PlanetToMoon=%v(%d) PlanetToStar=%v(%d)", ptmOK, ptmDM, ptsOK, ptsDM)
+	}
+	if ptmDM != ptsDM {
+		t.Fatalf("fixture DMs must tie: PlanetToMoon=%d PlanetToStar=%d", ptmDM, ptsDM)
+	}
+	if ptmDM != -2 {
+		t.Fatalf("expected tied DM=-2, got %d", ptmDM)
+	}
+
+	// Scripted rolls:
+	//   2D for PlanetToMoon (first, moon-cases priority): 6 → adjusted=4
+	//   2D for PlanetToStar (second):                    10 → adjusted=8 (wins)
+	//   1D for result-8 day length:                       3 → 1440h
+	r := roller.NewScripted(6, 10, 3)
+	tl, err := GenerateTidalLock(r, planet, nil, sys, nil, planet.Period.Hours)
+	if err != nil {
+		t.Fatalf("GenerateTidalLock: %v", err)
+	}
+	if tl == nil {
+		t.Fatal("expected non-nil TidalLock")
+	}
+	if tl.Case != TidalLockCasePlanetToStar {
+		t.Errorf("Case = %v, want PlanetToStar (higher adjusted result)", tl.Case)
+	}
+	if tl.FinalResult != 8 {
+		t.Errorf("FinalResult = %d, want 8 (10 + DM -2)", tl.FinalResult)
+	}
+	if tl.NewSiderealHours != 1440 {
+		t.Errorf("NewSiderealHours = %v, want 1440 (1D=3 × 20 × 24)", tl.NewSiderealHours)
+	}
+}
+
+// TestGenerateTidalLock_TiedCases_FirstRollWins verifies the inverse: when the
+// first (moon-priority) case rolls higher, it wins and the second case's result
+// is discarded (but the roll still fires — both 2D rolls must be consumed).
+//
+// Same fixture as above. Dice reversed:
+//
+//	Roll 1 (PlanetToMoon): 2D=10 → adjusted=8 (wins)
+//	Roll 2 (PlanetToStar): 2D=6  → adjusted=4
+//	Roll 3 (1D for result-8 day from PlanetToMoon): 1D=2 → 960h
+//
+// Expected: Case=PlanetToMoon, FinalResult=8, SiderealHours=960.
+func TestGenerateTidalLock_TiedCases_FirstRollWins(t *testing.T) {
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "1",
+		OrbitPD:     10,
+		PeriodHours: 1200, // ~50-day orbit; long enough for 1D=2×20×24=960h day
+		TidalLock:   &TidalLock{LockRatio: "1:1"},
+	}
+	planet := &Body{
+		Kind:         BodyTerrestrial,
+		SizeCode:     "3",
+		Orbit:        2.0,
+		Period:       Period{Hours: 8766},
+		Eccentricity: 0.0,
+		DayLength:    &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:    &AxialTilt{Degrees: 0},
+		Children:     []*Body{moon},
+	}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	// Rolls:
+	//   2D PlanetToMoon:  10 → adjusted=8 (wins)
+	//   2D PlanetToStar:   6 → adjusted=4
+	//   1D day (result 8): 2 → 960h
+	r := roller.NewScripted(10, 6, 2)
+	tl, err := GenerateTidalLock(r, planet, nil, sys, nil, planet.Period.Hours)
+	if err != nil {
+		t.Fatalf("GenerateTidalLock: %v", err)
+	}
+	if tl == nil {
+		t.Fatal("expected non-nil TidalLock")
+	}
+	if tl.Case != TidalLockCasePlanetToMoon {
+		t.Errorf("Case = %v, want PlanetToMoon (first tied case wins when adjusted result higher)", tl.Case)
+	}
+	if tl.FinalResult != 8 {
+		t.Errorf("FinalResult = %d, want 8 (10 + DM -2)", tl.FinalResult)
+	}
+	if tl.NewSiderealHours != 960 {
+		t.Errorf("NewSiderealHours = %v, want 960 (1D=2 × 20 × 24)", tl.NewSiderealHours)
+	}
+	if planet.DayLength.YearDays < 0 {
+		t.Errorf("YearDays = %v, want non-negative (PeriodHours fixture missing?)", planet.DayLength.YearDays)
+	}
+	if planet.DayLength.SolarHours < 0 {
+		t.Errorf("SolarHours = %v, want non-negative", planet.DayLength.SolarHours)
 	}
 }
 
