@@ -418,6 +418,35 @@ func ApplyTidalLockEffect(
 		}
 	}
 
+	// Missing moon-period guard on natural-12 verification reroll per WBH p.105 footnote:
+	// For the case of a moon locked to a planet only, if the resultant day length
+	// for a moon is greater than the period of its orbit around its parent planet,
+	// it remains in a 1:1 tidal lock.
+	if kase == TidalLockCaseMoonToPlanet && tl.VerificationFired && tl.FinalResult < 11 && body.DayLength != nil {
+		var resultantHours float64
+		switch {
+		case tl.DayLengthMultiplier > 0:
+			resultantHours = body.DayLength.SiderealHours * tl.DayLengthMultiplier
+		case tl.NewSiderealHours > 0:
+			resultantHours = tl.NewSiderealHours
+		default:
+			resultantHours = body.DayLength.SiderealHours
+		}
+
+		periodHours := body.PeriodHours
+		if periodHours <= 0 {
+			periodHours = yearHours
+		}
+
+		if resultantHours > periodHours {
+			tl.FinalResult = initialResult
+			tl.DayLengthMultiplier = 0
+			tl.NewSiderealHours = 0
+			tl.BecomesRetrograde = false
+			tl.LockRatio = "1:1"
+		}
+	}
+
 	// Apply day-length effects.
 	if body.DayLength != nil {
 		switch {

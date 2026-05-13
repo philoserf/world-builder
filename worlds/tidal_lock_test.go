@@ -570,3 +570,71 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 		t.Errorf("day length: got %v, want 72.0 (24 × 3)", pluto.DayLength.SiderealHours)
 	}
 }
+
+func TestApplyTidalLockEffect_MoonPeriodGuard(t *testing.T) {
+	// WBH p.105 footnote guard: for a moon locked to a planet, if the resultant
+	// day length from a natural-12 verification reroll exceeds the moon's orbital
+	// period around its parent planet, it remains in a 1:1 tidal lock.
+
+	t.Run("ExceedsPeriodRevertsToOneToOne", func(t *testing.T) {
+		body := &Body{
+			PeriodHours: 40.0,
+		}
+		body.DayLength = &DayLength{SiderealHours: 24.0, BaselineSiderealHours: 24.0}
+		body.AxialTilt = &AxialTilt{Degrees: 0}
+
+		// InitialResult=12 triggers verification. Verification rolls 12 (natural).
+		// Reroll with no DMs rolls 4 -> multiplier 2.
+		// Resultant day length would be 24.0 * 2 = 48.0 hours.
+		// Since 48.0 > 40.0 (orbital period), it must revert to the 1:1 lock.
+		r := roller.NewScripted(12, 4)
+		tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCaseMoonToPlanet, 12, 40.0)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !tl.VerificationFired {
+			t.Error("expected VerificationFired=true")
+		}
+		if tl.LockRatio != "1:1" {
+			t.Errorf("LockRatio: got %q, want 1:1 (reverted to keep lock)", tl.LockRatio)
+		}
+		if tl.DayLengthMultiplier != 0 {
+			t.Errorf("DayLengthMultiplier: got %v, want 0", tl.DayLengthMultiplier)
+		}
+		if body.DayLength.SiderealHours != 40.0 {
+			t.Errorf("SiderealHours: got %v, want 40.0 (= orbital period)", body.DayLength.SiderealHours)
+		}
+	})
+
+	t.Run("WithinPeriodKeepsRerolledEffect", func(t *testing.T) {
+		body := &Body{
+			PeriodHours: 100.0,
+		}
+		body.DayLength = &DayLength{SiderealHours: 24.0, BaselineSiderealHours: 24.0}
+		body.AxialTilt = &AxialTilt{Degrees: 0}
+
+		// InitialResult=12 triggers verification. Verification rolls 12 (natural).
+		// Reroll with no DMs rolls 4 -> multiplier 2.
+		// Resultant day length would be 24.0 * 2 = 48.0 hours.
+		// Since 48.0 <= 100.0, it keeps the rerolled day length multiplier.
+		r := roller.NewScripted(12, 4)
+		tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCaseMoonToPlanet, 12, 100.0)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !tl.VerificationFired {
+			t.Error("expected VerificationFired=true")
+		}
+		if tl.LockRatio != "" {
+			t.Errorf("LockRatio: got %q, want empty (lock broken)", tl.LockRatio)
+		}
+		if tl.DayLengthMultiplier != 2.0 {
+			t.Errorf("DayLengthMultiplier: got %v, want 2.0", tl.DayLengthMultiplier)
+		}
+		if body.DayLength.SiderealHours != 48.0 {
+			t.Errorf("SiderealHours: got %v, want 48.0", body.DayLength.SiderealHours)
+		}
+	})
+}
