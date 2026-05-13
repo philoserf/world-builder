@@ -647,6 +647,90 @@ func TestGenerateTidalLock_ZedPrime_FullPath(t *testing.T) {
 	}
 }
 
+func TestApplyTidalLockEffect_PlanetToMoon_OneToOne_UsesMoonPeriod(t *testing.T) {
+	// When ApplyTidalLockEffect lands a 1:1 lock for the Planet→Moon case,
+	// the planet's new SiderealHours should equal yearHours (which
+	// GenerateTidalLock will pre-compute as the moon's PeriodHours).
+	// We drive ApplyTidalLockEffect directly with yearHours=720 (moon period).
+	//
+	// initialResult=12 → verification 2D consumed (roll=7, not 12, so no reroll).
+	// Axial tilt=0° → no tilt reroll. Eccentricity=0.05 → no ecc reroll.
+	// Expected: SiderealHours = 720 (moon period), not 8766 (stellar year).
+	planet := &Body{
+		Kind:      BodyTerrestrial,
+		SizeCode:  "8",
+		Period:    Period{Hours: 8766},
+		DayLength: &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt: &AxialTilt{Degrees: 0},
+	}
+	// verification 2D = 7 (not 12, so no natural-12 reroll)
+	r := roller.NewScripted(7)
+	moonPeriodHours := 720.0
+	tl, err := ApplyTidalLockEffect(r, planet, nil, TidalLockCasePlanetToMoon, 12, moonPeriodHours)
+	if err != nil {
+		t.Fatalf("ApplyTidalLockEffect: %v", err)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
+	}
+	if math.Abs(planet.DayLength.SiderealHours-720.0) > 0.01 {
+		t.Errorf("planet SiderealHours = %v, want 720 (moon period), not 8766 (stellar year)",
+			planet.DayLength.SiderealHours)
+	}
+}
+
+func TestGenerateTidalLock_PlanetToMoon_UsesMoonPeriod(t *testing.T) {
+	// Construct a planet with a locked moon; scripted dice produce a
+	// Planet→Moon 3:2 lock (result=11).
+	//
+	// DM math:
+	//   common: Size 1 → +ceil(1/3)=+1; ecc=0 no DM; tilt=0 no DM;
+	//           no atmosphere; age=5Gyr → +2. Common = +3.
+	//   planetToMoonDMs: base=-10; moon Size 1 → +1; pd=5 → +4 (pd≤10);
+	//                    one significant moon → no extra DM. PTM = -5.
+	//   Net DM = 3 + (-5) = -2.
+	//
+	// Roll 2D=13 → initialResult = 13 + (-2) = 11 → LockRatio "3:2".
+	// Axial tilt=0° (≤3°) → no tilt reroll consumed.
+	// yearHours for PlanetToMoon case = moon.PeriodHours = 720.
+	// Expected SiderealHours = 720 × 2/3 = 480.
+	plutoMoon := Body{
+		Kind:        BodyMoon,
+		SizeCode:    "1",
+		OrbitPD:     5,
+		PeriodHours: 720,
+		TidalLock:   &TidalLock{LockRatio: "1:1"},
+	}
+	planet := &Body{
+		Kind:      BodyTerrestrial,
+		SizeCode:  "1",
+		Orbit:     30,
+		Period:    Period{Hours: 8766},
+		DayLength: &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt: &AxialTilt{Degrees: 0},
+		Children:  []*Body{&plutoMoon},
+	}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+	r := roller.NewScripted(13) // 2D=13 → result=11 → 3:2 lock
+	tl, err := GenerateTidalLock(r, planet, nil, sys, nil, planet.Period.Hours)
+	if err != nil {
+		t.Fatalf("GenerateTidalLock: %v", err)
+	}
+	if tl == nil {
+		t.Fatal("expected non-nil TidalLock")
+	}
+	if tl.Case != TidalLockCasePlanetToMoon {
+		t.Errorf("Case: got %v, want PlanetToMoon", tl.Case)
+	}
+	if tl.LockRatio != "3:2" {
+		t.Errorf("LockRatio: got %q, want 3:2", tl.LockRatio)
+	}
+	if math.Abs(planet.DayLength.SiderealHours-480.0) > 0.01 {
+		t.Errorf("planet SiderealHours = %v, want 480 (720×2/3, moon period), not %v (stellar year×2/3)",
+			planet.DayLength.SiderealHours, planet.Period.Hours*2/3)
+	}
+}
+
 func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 	// Synthetic Pluto/Charon: small planet (Size 3) with a Size 1 moon at orbit 5 PD.
 	// Pluto-side check: planet→moon case applies because the planet has a
