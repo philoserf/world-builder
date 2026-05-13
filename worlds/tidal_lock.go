@@ -425,7 +425,18 @@ func ApplyTidalLockEffect(
 		verification := r.Roll("2D")
 		if verification == 12 {
 			tl.VerificationFired = true
-			tl.FinalResult = RollTidalLockStatus(r, 0)
+			rerolled := RollTidalLockStatus(r, 0)
+			// WBH p.105 † moon-period guard: for MoonToPlanet only, if the
+			// rerolled day length would exceed the moon's orbital period,
+			// the 1:1 lock holds. yearHours for a moon equals its PeriodHours.
+			// Note: rerolledDayLength may consume a 1D for results 7–10; that
+			// consumption is accepted whether the guard fires or not.
+			if kase == TidalLockCaseMoonToPlanet &&
+				rerolledDayLength(r, rerolled, body, yearHours) > yearHours {
+				// Keep FinalResult = initialResult (1:1 lock held).
+			} else {
+				tl.FinalResult = rerolled
+			}
 		}
 	}
 
