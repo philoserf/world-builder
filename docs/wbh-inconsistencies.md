@@ -178,7 +178,7 @@ Reordering Stage 4 and Stage 5 isn't viable: temperature (Stage 5) reads `body.A
 **Implementation: Stage-5-post re-evaluation cascade.**
 
 1. Stage 4 (`ApplyRotationTilt`) runs tidal lock without the atmosphere DM.
-2. `GenerateTidalLock` captures `body.preTidalLockSnapshot` (Eccentricity / AxialTilt / DayLength) and stores the initial DM map on `TidalLock.PreEvalDMs`.
+2. `GenerateTidalLock` captures `body.preTidalLockSnapshot` (Eccentricity / AxialTilt / DayLength).
 3. Stage 5 (`ApplyClimate`) sets `body.Atmosphere` with the rolled pressure.
 4. `ApplyTidalLockReEval` walks bodies with `Atmosphere.Pressure > 2.5`, restores the snapshot, re-runs `GenerateTidalLock` (the DM now fires because `commonTidalLockDMs` sees the pressure), then clears Stage-5 output and re-runs `ApplyClimatePasses` for the affected body so atmosphere/hydrographics/temperature/geology are derived from the corrected tidal-lock outputs.
 

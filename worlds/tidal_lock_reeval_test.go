@@ -127,7 +127,7 @@ func TestPreTidalLockSnapshot_IndependentOfBody(t *testing.T) {
 	}
 }
 
-func TestGenerateTidalLock_CapturesSnapshotAndDMs(t *testing.T) {
+func TestGenerateTidalLock_CapturesSnapshot(t *testing.T) {
 	// Zed Prime moon→planet fixture — known to fire (DM=+7). Use the same
 	// scripted roll sequence as TestGenerateTidalLock_ZedPrime_FullPath:
 	//   2D=6 → initial result 13 (≥12, verification fires)
@@ -167,13 +167,6 @@ func TestGenerateTidalLock_CapturesSnapshotAndDMs(t *testing.T) {
 		t.Error("body.preTidalLockSnapshot is nil; snapshot was not captured")
 	} else if body.preTidalLockSnapshot.Eccentricity != 0.25 {
 		t.Errorf("snapshot Eccentricity = %v, want 0.25 (pre-effect)", body.preTidalLockSnapshot.Eccentricity)
-	}
-
-	if len(tl.PreEvalDMs) == 0 {
-		t.Error("tl.PreEvalDMs is empty; DM map was not captured")
-	}
-	if _, ok := tl.PreEvalDMs[TidalLockCaseMoonToPlanet]; !ok {
-		t.Errorf("tl.PreEvalDMs missing moon→planet case; got %v", tl.PreEvalDMs)
 	}
 }
 

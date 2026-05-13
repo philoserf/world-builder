@@ -23,11 +23,6 @@ type TidalLock struct {
 	BecomesRetrograde   bool    // FinalResult 9-10
 	EccentricityMutated bool    // 1:1 lock with old ecc > 0.1
 	AxialTiltMutated    bool    // 3:2 or 1:1 lock with old tilt > 3°
-
-	// PreEvalDMs captures the DM map computed at Stage 4 (before atmosphere
-	// was known). Used by ApplyTidalLockReEval to compare against the
-	// post-atmosphere DM map and decide whether to re-run the lock.
-	PreEvalDMs map[TidalLockCase]int
 }
 
 // TidalLockCase identifies which p.106 case fired (highest DM among applicable).
@@ -684,6 +679,5 @@ func GenerateTidalLock(
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateTidalLock: %w", err)
 	}
-	tl.PreEvalDMs = dms
 	return &tl, nil
 }
