@@ -56,22 +56,31 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		body.AxialTilt = at
 	}
 
-	// Sub-stage 3: tidal lock. Planet uses its own Period.Hours; moon
-	// uses its PeriodHours (orbit around planet) and passes the parent
-	// planet so GenerateTidalLock can resolve the moon-vs-planet branch.
+	// Sub-stage 3: tidal lock. Two-pass walk per WBH p.107 — moons must
+	// be evaluated before planets so the Planet→Moon case can check
+	// hasLockedMoon, which requires the moon's TidalLock to be populated.
+	//
+	// Pass 1: moons only. Moon uses its PeriodHours (orbit around planet)
+	// as yearHours and passes itself as moonRef.
 	for body, parent := range u.AllBodiesWithParent() {
-		if body.Kind == BodyEmpty {
+		if body.Kind == BodyEmpty || parent == nil {
 			continue
 		}
-		var moonRef *Body
-		hours := body.Period.Hours
-		if parent != nil {
-			moonRef = body
-			hours = body.PeriodHours
-		}
-		tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, hours)
+		tl, err := GenerateTidalLock(r, body, body, sys, parent, body.PeriodHours)
 		if err != nil {
-			return fmt.Errorf("worlds: stage4 tidal lock %s%s: %w", moonTag(parent), body.Designation, err)
+			return fmt.Errorf("worlds: stage4 tidal lock moon %s: %w", body.Designation, err)
+		}
+		body.TidalLock = tl
+	}
+	// Pass 2: planets and belts only. Planet uses its own Period.Hours
+	// (year around star) as yearHours; no moonRef or parentPlanet.
+	for body, parent := range u.AllBodiesWithParent() {
+		if body.Kind == BodyEmpty || parent != nil {
+			continue
+		}
+		tl, err := GenerateTidalLock(r, body, nil, sys, nil, body.Period.Hours)
+		if err != nil {
+			return fmt.Errorf("worlds: stage4 tidal lock %s: %w", body.Designation, err)
 		}
 		body.TidalLock = tl
 	}
