@@ -627,6 +627,9 @@ func rerolledDayLength(r roller.Roller, result int, body *Body, yearHours float6
 // GenerateTidalLock orchestrates the per-body tidal-lock pipeline per WBH p.106.
 // Returns nil (no error) for empty bodies or when no tidal-lock case applies.
 // Mutates body's DayLength, AxialTilt, and Eccentricity in place when an effect applies.
+//
+// When multiple cases tie on the highest DM, WBH p.106 says to roll each tied
+// case in priority order (moon-cases first) and apply the highest adjusted result.
 func GenerateTidalLock(
 	r roller.Roller,
 	body *Body,
@@ -640,22 +643,33 @@ func GenerateTidalLock(
 	}
 
 	dms := EvaluateTidalLockDMs(body, sys, parentPlanet, moonRef)
-	kase, dm := SelectHighestDMCase(dms, body)
-	if kase == TidalLockCaseNone {
+	tiedCases, dm := SelectHighestDMCases(dms)
+	if len(tiedCases) == 0 {
 		return nil, nil // no case applies; body has no tidal lock pressure
+	}
+
+	// WBH p.106 cascade: roll each tied case in priority order
+	// (moon-cases first); take the highest adjusted result.
+	bestResult := math.MinInt
+	bestCase := TidalLockCaseNone
+	for _, kase := range tiedCases {
+		rolled := RollTidalLockStatus(r, dm)
+		if rolled > bestResult {
+			bestResult = rolled
+			bestCase = kase
+		}
 	}
 
 	// Per WBH p.106: when the planet locks to its moon, the day length
 	// equals the moon's orbital period — not the planet's stellar year.
 	yh := yearHours
-	if kase == TidalLockCasePlanetToMoon {
+	if bestCase == TidalLockCasePlanetToMoon {
 		if closest := closestLockedSignificantMoon(body); closest != nil {
 			yh = closest.PeriodHours
 		}
 	}
 
-	initialResult := RollTidalLockStatus(r, dm)
-	tl, err := ApplyTidalLockEffect(r, body, moonRef, kase, initialResult, yh)
+	tl, err := ApplyTidalLockEffect(r, body, moonRef, bestCase, bestResult, yh)
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateTidalLock: %w", err)
 	}
