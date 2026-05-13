@@ -253,12 +253,44 @@ func planetToMoonDMs(body *Body) int {
 	return dm
 }
 
+// SelectHighestDMCases returns all cases tied at the highest DM, in
+// p.106 priority order (MoonToPlanet, PlanetToMoon, PlanetToStar).
+// Cases with DM ≤ -10 are filtered out. Returns nil, 0 if no case
+// applies. Used by GenerateTidalLock to implement the WBH p.106
+// tied-DM cascade — moon-case rolls first.
+func SelectHighestDMCases(dms map[TidalLockCase]int) ([]TidalLockCase, int) {
+	priority := []TidalLockCase{
+		TidalLockCaseMoonToPlanet,
+		TidalLockCasePlanetToMoon,
+		TidalLockCasePlanetToStar,
+	}
+	bestDM := -10
+	for _, kase := range priority {
+		if dm, ok := dms[kase]; ok && dm > bestDM {
+			bestDM = dm
+		}
+	}
+	if bestDM == -10 {
+		return nil, 0
+	}
+	var tied []TidalLockCase
+	for _, kase := range priority {
+		if dm, ok := dms[kase]; ok && dm == bestDM {
+			tied = append(tied, kase)
+		}
+	}
+	return tied, bestDM
+}
+
 // SelectHighestDMCase returns the case to roll, applying p.106 tiebreakers:
 //   - Cases with DM ≤ -10 are filtered out (no roll required for those).
 //   - On ties, moon-cases ordered first (MoonToPlanet before PlanetToStar).
 //   - On ties between multiple moons (future: moonToPlanet for multiple moons),
 //     closest moon first — handled at orchestration level via per-moon iteration.
 //   - Returns TidalLockCaseNone if no case applies.
+//
+// Deprecated: silently drops tied cases — use SelectHighestDMCases (plural)
+// for the WBH p.106 cascade. Retained for backwards compatibility with tests.
 func SelectHighestDMCase(dms map[TidalLockCase]int, _ *Body) (TidalLockCase, int) {
 	bestCase := TidalLockCaseNone
 	bestDM := -10 // exclusive lower bound

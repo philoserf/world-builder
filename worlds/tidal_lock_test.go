@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"math"
+	"slices"
 	"testing"
 
 	"wbh/roller"
@@ -975,6 +976,75 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_LowProbeCommitsProbeValue(t *testi
 	}
 	if math.Abs(moon.DayLength.SiderealHours-120) > 0.01 {
 		t.Errorf("DayLength.SiderealHours = %v, want 120 (probe 1D=1 × 5 × 24, committed)", moon.DayLength.SiderealHours)
+	}
+}
+
+func TestSelectHighestDMCases_OrderedTiedCases(t *testing.T) {
+	// PlanetToStar tied with PlanetToMoon at DM=5; MoonToPlanet absent.
+	// Expected return order per p.106 priority: PlanetToMoon (moon-cases first), PlanetToStar.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: 5,
+		TidalLockCasePlanetToMoon: 5,
+	}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 5 {
+		t.Errorf("dm = %d, want 5", dm)
+	}
+	want := []TidalLockCase{TidalLockCasePlanetToMoon, TidalLockCasePlanetToStar}
+	if !slices.Equal(cases, want) {
+		t.Errorf("cases = %v, want %v", cases, want)
+	}
+}
+
+func TestSelectHighestDMCases_SingleCase(t *testing.T) {
+	dms := map[TidalLockCase]int{TidalLockCaseMoonToPlanet: 8}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 8 {
+		t.Errorf("dm = %d, want 8", dm)
+	}
+	if len(cases) != 1 || cases[0] != TidalLockCaseMoonToPlanet {
+		t.Errorf("cases = %v, want [MoonToPlanet]", cases)
+	}
+}
+
+func TestSelectHighestDMCases_AllFiltered(t *testing.T) {
+	dms := map[TidalLockCase]int{TidalLockCasePlanetToStar: -11}
+	cases, _ := SelectHighestDMCases(dms)
+	if len(cases) != 0 {
+		t.Errorf("expected no cases, got %v", cases)
+	}
+}
+
+func TestSelectHighestDMCases_AllThreeTied(t *testing.T) {
+	// All three cases at DM=7 — order must be MoonToPlanet, PlanetToMoon, PlanetToStar.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: 7,
+		TidalLockCaseMoonToPlanet: 7,
+		TidalLockCasePlanetToMoon: 7,
+	}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 7 {
+		t.Errorf("dm = %d, want 7", dm)
+	}
+	want := []TidalLockCase{TidalLockCaseMoonToPlanet, TidalLockCasePlanetToMoon, TidalLockCasePlanetToStar}
+	if !slices.Equal(cases, want) {
+		t.Errorf("cases = %v, want %v", cases, want)
+	}
+}
+
+func TestSelectHighestDMCases_BestOnlyNotTied(t *testing.T) {
+	// When DMs differ, only the highest-DM case is returned.
+	dms := map[TidalLockCase]int{
+		TidalLockCasePlanetToStar: 3,
+		TidalLockCasePlanetToMoon: 7,
+		TidalLockCaseMoonToPlanet: 5,
+	}
+	cases, dm := SelectHighestDMCases(dms)
+	if dm != 7 {
+		t.Errorf("dm = %d, want 7", dm)
+	}
+	if len(cases) != 1 || cases[0] != TidalLockCasePlanetToMoon {
+		t.Errorf("cases = %v, want [PlanetToMoon]", cases)
 	}
 }
 
