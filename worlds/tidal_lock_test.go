@@ -138,6 +138,77 @@ func TestEvaluateTidalLockDMs_PlanetToMoon_OnlyIfHasSignificantMoon(t *testing.T
 	}
 }
 
+func TestEvaluateTidalLockDMs_PlanetToMoon_GasGiantExcluded(t *testing.T) {
+	// Gas giant should not have Planet→Moon case, even if it has a locked moon.
+	// The planet must be terrestrial per WBH p.107.
+	gg := &Body{
+		Kind:     BodyGasGiant,
+		SizeCode: "M",
+		Children: []*Body{
+			{
+				Kind:      BodyMoon,
+				SizeCode:  "5",
+				OrbitPD:   10,
+				TidalLock: &TidalLock{LockRatio: "1:1"},
+			},
+		},
+	}
+	gg.AxialTilt = &AxialTilt{Degrees: 0}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	dms := EvaluateTidalLockDMs(gg, sys, nil, nil)
+	if _, ok := dms[TidalLockCasePlanetToMoon]; ok {
+		t.Errorf("gas giant should not have Planet→Moon case; got DMs: %v", dms)
+	}
+}
+
+func TestEvaluateTidalLockDMs_PlanetToMoon_NoLockedMoonExcluded(t *testing.T) {
+	// Planet with no locked moons should not have Planet→Moon case.
+	// The planet must have at least one moon in 1:1 or 3:2 lock per WBH p.107.
+	p := &Body{
+		Kind:     BodyTerrestrial,
+		SizeCode: "8",
+		Children: []*Body{
+			{
+				Kind:      BodyMoon,
+				SizeCode:  "5",
+				OrbitPD:   10,
+				TidalLock: &TidalLock{LockRatio: ""}, // unlocked
+			},
+		},
+	}
+	p.AxialTilt = &AxialTilt{Degrees: 0}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	dms := EvaluateTidalLockDMs(p, sys, nil, nil)
+	if _, ok := dms[TidalLockCasePlanetToMoon]; ok {
+		t.Errorf("planet with no locked moons should not have Planet→Moon case; got DMs: %v", dms)
+	}
+}
+
+func TestEvaluateTidalLockDMs_PlanetToMoon_TerrestrialWithLockedMoonIncluded(t *testing.T) {
+	// Terrestrial planet with a locked moon should have Planet→Moon case.
+	p := &Body{
+		Kind:     BodyTerrestrial,
+		SizeCode: "8",
+		Children: []*Body{
+			{
+				Kind:      BodyMoon,
+				SizeCode:  "5",
+				OrbitPD:   30,
+				TidalLock: &TidalLock{LockRatio: "1:1"},
+			},
+		},
+	}
+	p.AxialTilt = &AxialTilt{Degrees: 0}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	dms := EvaluateTidalLockDMs(p, sys, nil, nil)
+	if _, ok := dms[TidalLockCasePlanetToMoon]; !ok {
+		t.Errorf("terrestrial with locked moon should have Planet→Moon case; got DMs: %v", dms)
+	}
+}
+
 func TestEvaluateTidalLockDMs_NoMoonCases_NotAMoon(t *testing.T) {
 	// A planet (parentPlanet=nil, moonRef=nil) cannot be locked to a planet.
 	body := &Body{SizeCode: "5"}
@@ -191,6 +262,54 @@ func TestSelectHighestDMCase_TieMoonFirst(t *testing.T) {
 	kase, _ := SelectHighestDMCase(dms, body)
 	if kase != TidalLockCaseMoonToPlanet {
 		t.Errorf("got case %v, want MoonToPlanet (moon-cases first on tie)", kase)
+	}
+}
+
+func TestIsTerrestrial(t *testing.T) {
+	cases := []struct {
+		name string
+		kind BodyKind
+		want bool
+	}{
+		{"terrestrial true", BodyTerrestrial, true},
+		{"gas giant false", BodyGasGiant, false},
+		{"belt false", BodyPlanetoidBelt, false},
+		{"empty false", BodyEmpty, false},
+		{"moon false (planet→moon evaluated from planet only)", BodyMoon, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			b := &Body{Kind: c.kind}
+			if got := isTerrestrial(b); got != c.want {
+				t.Errorf("isTerrestrial(%v) = %v, want %v", c.kind, got, c.want)
+			}
+		})
+	}
+}
+
+func TestHasLockedMoon(t *testing.T) {
+	locked := &Body{TidalLock: &TidalLock{LockRatio: "1:1"}}
+	threeTwo := &Body{TidalLock: &TidalLock{LockRatio: "3:2"}}
+	unlocked := &Body{TidalLock: &TidalLock{LockRatio: ""}}
+	noLockField := &Body{}
+	cases := []struct {
+		name string
+		body Body
+		want bool
+	}{
+		{"no children false", Body{}, false},
+		{"all unlocked false", Body{Children: []*Body{unlocked}}, false},
+		{"nil TidalLock false", Body{Children: []*Body{noLockField}}, false},
+		{"3:2 locked true", Body{Children: []*Body{threeTwo}}, true},
+		{"1:1 locked true", Body{Children: []*Body{locked}}, true},
+		{"mixed with one locked true", Body{Children: []*Body{unlocked, locked}}, true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := hasLockedMoon(&c.body); got != c.want {
+				t.Errorf("hasLockedMoon = %v, want %v", got, c.want)
+			}
+		})
 	}
 }
 
@@ -528,15 +647,100 @@ func TestGenerateTidalLock_ZedPrime_FullPath(t *testing.T) {
 	}
 }
 
+func TestApplyTidalLockEffect_PlanetToMoon_OneToOne_UsesMoonPeriod(t *testing.T) {
+	// When ApplyTidalLockEffect lands a 1:1 lock for the Planet→Moon case,
+	// the planet's new SiderealHours should equal yearHours (which
+	// GenerateTidalLock will pre-compute as the moon's PeriodHours).
+	// We drive ApplyTidalLockEffect directly with yearHours=720 (moon period).
+	//
+	// initialResult=12 → verification 2D consumed (roll=7, not 12, so no reroll).
+	// Axial tilt=0° → no tilt reroll. Eccentricity=0.05 → no ecc reroll.
+	// Expected: SiderealHours = 720 (moon period), not 8766 (stellar year).
+	planet := &Body{
+		Kind:      BodyTerrestrial,
+		SizeCode:  "8",
+		Period:    Period{Hours: 8766},
+		DayLength: &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt: &AxialTilt{Degrees: 0},
+	}
+	// verification 2D = 7 (not 12, so no natural-12 reroll)
+	r := roller.NewScripted(7)
+	moonPeriodHours := 720.0
+	tl, err := ApplyTidalLockEffect(r, planet, nil, TidalLockCasePlanetToMoon, 12, moonPeriodHours)
+	if err != nil {
+		t.Fatalf("ApplyTidalLockEffect: %v", err)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
+	}
+	if math.Abs(planet.DayLength.SiderealHours-720.0) > 0.01 {
+		t.Errorf("planet SiderealHours = %v, want 720 (moon period), not 8766 (stellar year)",
+			planet.DayLength.SiderealHours)
+	}
+}
+
+func TestGenerateTidalLock_PlanetToMoon_UsesMoonPeriod(t *testing.T) {
+	// Construct a planet with a locked moon; scripted dice produce a
+	// Planet→Moon 3:2 lock (result=11).
+	//
+	// DM math:
+	//   common: Size 1 → +ceil(1/3)=+1; ecc=0 no DM; tilt=0 no DM;
+	//           no atmosphere; age=5Gyr → +2. Common = +3.
+	//   planetToMoonDMs: base=-10; moon Size 1 → +1; pd=5 → +4 (pd≤10);
+	//                    one significant moon → no extra DM. PTM = -5.
+	//   Net DM = 3 + (-5) = -2.
+	//
+	// Roll 2D=13 → initialResult = 13 + (-2) = 11 → LockRatio "3:2".
+	// Axial tilt=0° (≤3°) → no tilt reroll consumed.
+	// yearHours for PlanetToMoon case = moon.PeriodHours = 720.
+	// Expected SiderealHours = 720 × 2/3 = 480.
+	plutoMoon := Body{
+		Kind:        BodyMoon,
+		SizeCode:    "1",
+		OrbitPD:     5,
+		PeriodHours: 720,
+		TidalLock:   &TidalLock{LockRatio: "1:1"},
+	}
+	planet := &Body{
+		Kind:      BodyTerrestrial,
+		SizeCode:  "1",
+		Orbit:     30,
+		Period:    Period{Hours: 8766},
+		DayLength: &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt: &AxialTilt{Degrees: 0},
+		Children:  []*Body{&plutoMoon},
+	}
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+	r := roller.NewScripted(13) // 2D=13 → result=11 → 3:2 lock
+	tl, err := GenerateTidalLock(r, planet, nil, sys, nil, planet.Period.Hours)
+	if err != nil {
+		t.Fatalf("GenerateTidalLock: %v", err)
+	}
+	if tl == nil {
+		t.Fatal("expected non-nil TidalLock")
+	}
+	if tl.Case != TidalLockCasePlanetToMoon {
+		t.Errorf("Case: got %v, want PlanetToMoon", tl.Case)
+	}
+	if tl.LockRatio != "3:2" {
+		t.Errorf("LockRatio: got %q, want 3:2", tl.LockRatio)
+	}
+	if math.Abs(planet.DayLength.SiderealHours-480.0) > 0.01 {
+		t.Errorf("planet SiderealHours = %v, want 480 (720×2/3, moon period), not %v (stellar year×2/3)",
+			planet.DayLength.SiderealHours, planet.Period.Hours*2/3)
+	}
+}
+
 func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 	// Synthetic Pluto/Charon: small planet (Size 3) with a Size 1 moon at orbit 5 PD.
 	// Pluto-side check: planet→moon case applies because the planet has a
 	// significant moon. With a high-mass moon at close orbit, planet→moon DM
 	// can rival or exceed planet→star, exercising the case 3 path.
 	plutoMoon := Body{
-		Kind:     BodyMoon,
-		SizeCode: "1",
-		OrbitPD:  5,
+		Kind:      BodyMoon,
+		SizeCode:  "1",
+		OrbitPD:   5,
+		TidalLock: &TidalLock{LockRatio: "1:1"}, // assume moon already locked (WBH p.107 precondition)
 	}
 	pluto := &Body{}
 	pluto.Kind = BodyTerrestrial
@@ -568,5 +772,46 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 	}
 	if math.Abs(pluto.DayLength.SiderealHours-72.0) > 0.01 {
 		t.Errorf("day length: got %v, want 72.0 (24 × 3)", pluto.DayLength.SiderealHours)
+	}
+}
+
+// TestClosestLockedSignificantMoon_PicksLockedNotClosest verifies that the
+// function picks the locked moon over the closer unlocked moon.
+// Per WBH p.107 the planet locks to one of its already-locked moons; the
+// DM math and day length must reference that locked moon, not the closest.
+func TestClosestLockedSignificantMoon_PicksLockedNotClosest(t *testing.T) {
+	// Planet has two moons:
+	//   - inner: OrbitPD=5, SizeCode="5", unlocked (TidalLock.LockRatio "")
+	//   - outer: OrbitPD=30, SizeCode="3", 1:1 locked
+	// The book partner is the outer (locked) moon, not the inner.
+	inner := &Body{SizeCode: "5", OrbitPD: 5, TidalLock: &TidalLock{LockRatio: ""}}
+	outer := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: "1:1"}}
+	planet := &Body{Children: []*Body{inner, outer}}
+	got := closestLockedSignificantMoon(planet)
+	if got != outer {
+		t.Errorf("got %v, want outer (the locked moon)", got)
+	}
+}
+
+// TestClosestLockedSignificantMoon_NoLockedReturnsNil verifies nil is returned
+// when no significant moon has a 1:1 or 3:2 lock.
+func TestClosestLockedSignificantMoon_NoLockedReturnsNil(t *testing.T) {
+	inner := &Body{SizeCode: "5", OrbitPD: 5} // nil TidalLock
+	outer := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: ""}}
+	planet := &Body{Children: []*Body{inner, outer}}
+	if got := closestLockedSignificantMoon(planet); got != nil {
+		t.Errorf("got %v, want nil", got)
+	}
+}
+
+// TestClosestLockedSignificantMoon_MultipleLockedPicksClosest verifies that
+// when multiple locked moons exist, the one with the smallest OrbitPD wins.
+func TestClosestLockedSignificantMoon_MultipleLockedPicksClosest(t *testing.T) {
+	far := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: "1:1"}}
+	near := &Body{SizeCode: "5", OrbitPD: 10, TidalLock: &TidalLock{LockRatio: "3:2"}}
+	planet := &Body{Children: []*Body{far, near}}
+	got := closestLockedSignificantMoon(planet)
+	if got != near {
+		t.Errorf("got %v (OrbitPD=%v), want near (OrbitPD=10)", got, got.OrbitPD)
 	}
 }

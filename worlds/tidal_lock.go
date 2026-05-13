@@ -75,8 +75,13 @@ func EvaluateTidalLockDMs(
 		out[TidalLockCaseMoonToPlanet] = common + moonToPlanetDMs(moonRef, parentPlanet)
 	}
 
-	// Planet → moon: only applies if body is a planet with at least one Size-1+ moon.
-	if parentPlanet == nil && moonRef == nil && hasSignificantMoon(body) {
+	// Planet → moon: only applies if body is a TERRESTRIAL planet with at
+	// least one moon already in a 1:1 or 3:2 lock per WBH p.107. The
+	// pre-locked-moon precondition requires moon-cases to be evaluated in
+	// an earlier pass; the Stage 4 orchestrator is responsible for that
+	// ordering.
+	if parentPlanet == nil && moonRef == nil &&
+		isTerrestrial(body) && hasSignificantMoon(body) && hasLockedMoon(body) {
 		out[TidalLockCasePlanetToMoon] = common + planetToMoonDMs(body)
 	}
 
@@ -216,18 +221,9 @@ func moonToPlanetDMs(moonRef, parent *Body) int {
 func planetToMoonDMs(body *Body) int {
 	dm := -10 // Base
 
-	// Use the closest significant moon (smallest OrbitPD with Size 1+).
-	var closest *Body
-	for i := range body.Children {
-		if nForSizeCode(body.Children[i].SizeCode) < 1 {
-			continue
-		}
-		if closest == nil || body.Children[i].OrbitPD < closest.OrbitPD {
-			closest = body.Children[i]
-		}
-	}
+	closest := closestLockedSignificantMoon(body)
 	if closest == nil {
-		return dm // guard (should not happen given hasSignificantMoon gate)
+		return dm // guard (should not happen given hasLockedMoon gate)
 	}
 
 	// Moon Size 1 or above: DM+Size.
@@ -301,8 +297,54 @@ func RollTidalLockStatus(r roller.Roller, dm int) int {
 
 // --- helpers ---
 
+// isTerrestrial reports whether a body is eligible for the Planet→Moon
+// tidal-lock case per WBH p.107 (terrestrial worlds, Size 1–F).
+func isTerrestrial(body *Body) bool {
+	return body.Kind == BodyTerrestrial
+}
+
 func hasSignificantMoon(body *Body) bool {
 	return countSignificantMoons(body) > 0
+}
+
+// closestLockedSignificantMoon returns the locked Size-1+ moon with the
+// smallest OrbitPD, or nil if no significant moon is in a 1:1 or 3:2
+// lock. Per WBH p.107 the Planet→Moon case binds the planet to one of
+// its already-locked moons; both the DM math and the resulting day
+// length must reference that moon.
+func closestLockedSignificantMoon(body *Body) *Body {
+	var closest *Body
+	for _, c := range body.Children {
+		if nForSizeCode(c.SizeCode) < 1 {
+			continue
+		}
+		if c.TidalLock == nil {
+			continue
+		}
+		if c.TidalLock.LockRatio != "1:1" && c.TidalLock.LockRatio != "3:2" {
+			continue
+		}
+		if closest == nil || c.OrbitPD < closest.OrbitPD {
+			closest = c
+		}
+	}
+	return closest
+}
+
+// hasLockedMoon reports whether body has at least one moon already in a
+// 1:1 or 3:2 tidal lock with the planet, per WBH p.107 Planet→Moon
+// pre-condition. Relies on the Stage 4 two-pass ordering — moons must
+// be evaluated before planets so their TidalLock fields are populated.
+func hasLockedMoon(body *Body) bool {
+	for _, c := range body.Children {
+		if c.TidalLock == nil {
+			continue
+		}
+		if c.TidalLock.LockRatio == "1:1" || c.TidalLock.LockRatio == "3:2" {
+			return true
+		}
+	}
+	return false
 }
 
 func countSignificantMoons(body *Body) int {
@@ -504,8 +546,17 @@ func GenerateTidalLock(
 		return nil, nil // no case applies; body has no tidal lock pressure
 	}
 
+	// Per WBH p.106: when the planet locks to its moon, the day length
+	// equals the moon's orbital period — not the planet's stellar year.
+	yh := yearHours
+	if kase == TidalLockCasePlanetToMoon {
+		if closest := closestLockedSignificantMoon(body); closest != nil {
+			yh = closest.PeriodHours
+		}
+	}
+
 	initialResult := RollTidalLockStatus(r, dm)
-	tl, err := ApplyTidalLockEffect(r, body, moonRef, kase, initialResult, yearHours)
+	tl, err := ApplyTidalLockEffect(r, body, moonRef, kase, initialResult, yh)
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateTidalLock: %w", err)
 	}
