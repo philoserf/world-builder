@@ -11,9 +11,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 ### Tidal locks
 - A I: planet → star, 1:1, twilight zone
 - A II b: moon → planet, 1:1
-- A III a: planet → star, 3:2
-- A III b: planet → star, 1:1, twilight zone
-- A III c: planet → star, 1:1, twilight zone
+- A III a: moon → planet, 3:2
+- A III b: moon → planet, 1:1
+- A III c: moon → planet, 3:2
+- A IV: planet → star, 1:1, twilight zone
 - A V a: moon → planet, 1:1
 - A V b: moon → planet, 1:1
 - A V c: moon → planet, 1:1
@@ -22,21 +23,20 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - A V f: moon → planet, 1:1
 - A V g: moon → planet, 1:1
 - A V h: moon → planet, 1:1
-- A V i: moon → planet, 1:1
 - A V j: moon → planet, 1:1
 - B I: planet → star, 1:1, twilight zone
 - B II: planet → moon, 1:1
-- B II a: planet → star, 1:1, twilight zone
-- B II b: planet → star, 1:1, twilight zone
-- B II c: planet → star, 1:1, twilight zone
-- B II d: planet → star, 1:1, twilight zone
-- B II e: planet → star, 1:1, twilight zone
+- B II a: moon → planet, 1:1
+- B II b: moon → planet, 1:1
+- B II c: moon → planet, 1:1
+- B II d: moon → planet, 1:1
+- B II e: moon → planet, 1:1
 
 ### Cold snaps
-- A VII: WorstLow 202 K (mean 275 K)
+- A VII: WorstLow 199 K (mean 281 K)
 
 ### Mainworld habitability
-- A VII — Rating 7/12 (Regionally habitable): Thin, taint (standard), or dense Atmospheres; Desert conditions prevalent
+- A VII — Rating 7/12 (Regionally habitable): Tainted thin or dense atmospheres; Little useable land surface area
 
 
 ## Class 0/I — A VII
@@ -93,7 +93,7 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 | A | A V i |  |  |  |  | S |  |  |
 | A | A V j |  |  |  |  | S |  |  |
 | A | A VI | 4.21 | 1.85 | 0.06 | 1.886y | 4?? | 0 |  |
-| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 772 | 0 | HZ |
+| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 749 | 0 | HZ |
 | B | B I | 0.75 | 0.30 | 0.00 | 0.139y | B?? | 0 |  |
 | B | B II | 1.45 | 0.54 |  | 0.333y | C?? | 5 | 6, 2, 1, S, S |
 | B | B II a |  |  |  |  | 6 |  |  |
@@ -119,11 +119,11 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Diameter (km): 11200, Density: 1.03, Gravity: 0.91, Mass (Earth): 0.699
 
 ### ATMOSPHERE
-- Code: 7, Pressure (bar): 0.832, O₂ (bar): 0.183, Scale Height: 8.98
-- Profile: 7-0.832-0.183:S.8.8
+- Code: 4, Pressure (bar): 0.673, O₂ (bar): 0.057, Scale Height: 9.16
+- Profile: 4-0.673-0.057:L.8.9
 
 ### HYDROGRAPHICS
-- Code: 2, Coverage (%): 25, Profile: H2:H2O-100
+- Code: 9, Coverage (%): 94, Profile: H9:H2O-100
 
 ### ROTATION
 - Sidereal (h): 43.60, Solar (h): 43.63, Solar days/year: 1412.81
@@ -131,21 +131,21 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Tidal lock: no, Tides (m): 0.00
 
 ### TEMPERATURE
-- High (K): 285.2, Mean (K): 275.4, Low (K): 264.7
-- Luminosity: 19.785, Albedo: 0.39, Greenhouse: 0.56
+- High (K): 293.6, Mean (K): 280.9, Low (K): 266.6
+- Luminosity: 19.785, Albedo: 0.31, Greenhouse: 0.49
 
 ### SEISMIC
-- TSS: 9, Residual: 9, Tidal Stress: 0, Tidal Heating: 0, Plates: 6
+- TSS: 9, Residual: 9, Tidal Stress: 0, Tidal Heating: 0, Plates: 10
 
 ### LIFE
-- Biomass: 3, Biocomplexity: 1, Sophonts: no, Biodiversity: 6, Compatibility: 4
+- Biomass: 10, Biocomplexity: 11, Sophonts: no, Biodiversity: 15, Compatibility: 0
 
 ### RESOURCES
-- Rating: 11
+- Rating: 10
 
 ### HABITABILITY
 - Rating: 7
-- Notes: Thin, taint (standard), or dense Atmospheres; Desert conditions prevalent
+- Notes: Tainted thin or dense atmospheres; Little useable land surface area
 
 ### COMMENTS
 - This is the system mainworld.
