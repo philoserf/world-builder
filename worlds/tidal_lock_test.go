@@ -93,6 +93,37 @@ func TestEvaluateTidalLockDMs_MoonToPlanet_ZedPrime(t *testing.T) {
 	}
 }
 
+func TestEvaluateTidalLockDMs_PlanetToStar_AbsentForMoon(t *testing.T) {
+	// A moon's body.Orbit is always 0 (moons store their parent-relative
+	// orbit in OrbitPD, not the star-relative Orbit#). Evaluating the
+	// planet→star case for a moon would feed orbit=0 into the
+	// orbit < 1 branch and award a spurious +14 close-orbit DM, making
+	// the planet→star case outrank moon→planet for moons of small or
+	// moderate-mass parents. Per WBH p.106 the planet→star case applies
+	// to planets, not moons.
+	moonRef := &Body{
+		Kind:     BodyMoon,
+		SizeCode: "3",
+		OrbitPD:  15,
+	}
+	parent := &Body{}
+	parent.Kind = BodyTerrestrial
+	parent.MassEarth = 1.0
+	parent.Orbit = 1.0
+
+	body := &Body{}
+	body.Kind = BodyTerrestrial
+	body.SizeCode = "3"
+	body.AxialTilt = &AxialTilt{Degrees: 0}
+
+	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
+	dms := EvaluateTidalLockDMs(body, sys, parent, moonRef)
+	if _, ok := dms[TidalLockCasePlanetToStar]; ok {
+		t.Errorf("planet→star case should not appear for a moon, got dms=%+v", dms)
+	}
+}
+
 func TestEvaluateTidalLockDMs_PlanetToMoon_OnlyIfHasSignificantMoon(t *testing.T) {
 	// Planet→moon case is absent when the planet has no significant (Size 1+) moons.
 	body := &Body{SizeCode: "3"}
