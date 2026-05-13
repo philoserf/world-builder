@@ -221,9 +221,9 @@ func moonToPlanetDMs(moonRef, parent *Body) int {
 func planetToMoonDMs(body *Body) int {
 	dm := -10 // Base
 
-	closest := closestSignificantMoon(body)
+	closest := closestLockedSignificantMoon(body)
 	if closest == nil {
-		return dm // guard (should not happen given hasSignificantMoon gate)
+		return dm // guard (should not happen given hasLockedMoon gate)
 	}
 
 	// Moon Size 1 or above: DM+Size.
@@ -307,17 +307,25 @@ func hasSignificantMoon(body *Body) bool {
 	return countSignificantMoons(body) > 0
 }
 
-// closestSignificantMoon returns the Size-1+ moon with the smallest OrbitPD,
-// or nil if body has no significant moons. Matches the moon selection used by
-// planetToMoonDMs per WBH p.106.
-func closestSignificantMoon(body *Body) *Body {
+// closestLockedSignificantMoon returns the locked Size-1+ moon with the
+// smallest OrbitPD, or nil if no significant moon is in a 1:1 or 3:2
+// lock. Per WBH p.107 the Planet→Moon case binds the planet to one of
+// its already-locked moons; both the DM math and the resulting day
+// length must reference that moon.
+func closestLockedSignificantMoon(body *Body) *Body {
 	var closest *Body
-	for i := range body.Children {
-		if nForSizeCode(body.Children[i].SizeCode) < 1 {
+	for _, c := range body.Children {
+		if nForSizeCode(c.SizeCode) < 1 {
 			continue
 		}
-		if closest == nil || body.Children[i].OrbitPD < closest.OrbitPD {
-			closest = body.Children[i]
+		if c.TidalLock == nil {
+			continue
+		}
+		if c.TidalLock.LockRatio != "1:1" && c.TidalLock.LockRatio != "3:2" {
+			continue
+		}
+		if closest == nil || c.OrbitPD < closest.OrbitPD {
+			closest = c
 		}
 	}
 	return closest
@@ -542,7 +550,7 @@ func GenerateTidalLock(
 	// equals the moon's orbital period — not the planet's stellar year.
 	yh := yearHours
 	if kase == TidalLockCasePlanetToMoon {
-		if closest := closestSignificantMoon(body); closest != nil {
+		if closest := closestLockedSignificantMoon(body); closest != nil {
 			yh = closest.PeriodHours
 		}
 	}

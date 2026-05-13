@@ -774,3 +774,44 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 		t.Errorf("day length: got %v, want 72.0 (24 × 3)", pluto.DayLength.SiderealHours)
 	}
 }
+
+// TestClosestLockedSignificantMoon_PicksLockedNotClosest verifies that the
+// function picks the locked moon over the closer unlocked moon.
+// Per WBH p.107 the planet locks to one of its already-locked moons; the
+// DM math and day length must reference that locked moon, not the closest.
+func TestClosestLockedSignificantMoon_PicksLockedNotClosest(t *testing.T) {
+	// Planet has two moons:
+	//   - inner: OrbitPD=5, SizeCode="5", unlocked (TidalLock.LockRatio "")
+	//   - outer: OrbitPD=30, SizeCode="3", 1:1 locked
+	// The book partner is the outer (locked) moon, not the inner.
+	inner := &Body{SizeCode: "5", OrbitPD: 5, TidalLock: &TidalLock{LockRatio: ""}}
+	outer := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: "1:1"}}
+	planet := &Body{Children: []*Body{inner, outer}}
+	got := closestLockedSignificantMoon(planet)
+	if got != outer {
+		t.Errorf("got %v, want outer (the locked moon)", got)
+	}
+}
+
+// TestClosestLockedSignificantMoon_NoLockedReturnsNil verifies nil is returned
+// when no significant moon has a 1:1 or 3:2 lock.
+func TestClosestLockedSignificantMoon_NoLockedReturnsNil(t *testing.T) {
+	inner := &Body{SizeCode: "5", OrbitPD: 5} // nil TidalLock
+	outer := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: ""}}
+	planet := &Body{Children: []*Body{inner, outer}}
+	if got := closestLockedSignificantMoon(planet); got != nil {
+		t.Errorf("got %v, want nil", got)
+	}
+}
+
+// TestClosestLockedSignificantMoon_MultipleLockedPicksClosest verifies that
+// when multiple locked moons exist, the one with the smallest OrbitPD wins.
+func TestClosestLockedSignificantMoon_MultipleLockedPicksClosest(t *testing.T) {
+	far := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: "1:1"}}
+	near := &Body{SizeCode: "5", OrbitPD: 10, TidalLock: &TidalLock{LockRatio: "3:2"}}
+	planet := &Body{Children: []*Body{far, near}}
+	got := closestLockedSignificantMoon(planet)
+	if got != near {
+		t.Errorf("got %v (OrbitPD=%v), want near (OrbitPD=10)", got, got.OrbitPD)
+	}
+}
