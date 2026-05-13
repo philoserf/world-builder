@@ -852,6 +852,10 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_FallsThroughWhenWouldFit(t *testin
 	// Setup: MoonToPlanet, verification 12, rerolled result 7 (1D×5×24).
 	// 1D=2 → 2×5×24 = 240 hours. yearHours=480 → 240 ≤ 480 → guard does
 	// NOT fire; FinalResult takes the rerolled value (7).
+	//
+	// After the fix: only 3 rolls are needed (probe = commit). The probe's
+	// 1D=2 is reused as the committed day length; the effect switch skips
+	// its own roll. DayLength.SiderealHours must equal 240 (2×5×24).
 	moon := &Body{
 		Kind:        BodyMoon,
 		SizeCode:    "5",
@@ -862,9 +866,8 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_FallsThroughWhenWouldFit(t *testin
 	// Scripted rolls:
 	//   verification 2D = 12
 	//   reroll status 2D + 0 = 7
-	//   rerolledDayLength 1D probe = 2 (=> 240, not exceeding 480)
-	//   ApplyTidalLockEffect commits result 7: consumes ANOTHER 1D for the actual day-length set (also 2)
-	r := roller.NewScripted(12, 7, 2, 2)
+	//   probe 1D = 2 (=> 240h, not exceeding 480h — guard doesn't fire; value reused as commit)
+	r := roller.NewScripted(12, 7, 2)
 	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -874,6 +877,9 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_FallsThroughWhenWouldFit(t *testin
 	}
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio = %q, want empty (lock broken)", tl.LockRatio)
+	}
+	if math.Abs(moon.DayLength.SiderealHours-240) > 0.01 {
+		t.Errorf("DayLength.SiderealHours = %v, want 240 (probe value committed)", moon.DayLength.SiderealHours)
 	}
 }
 
@@ -887,8 +893,10 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_NotAppliedToPlanetToStar(t *testin
 		AxialTilt: &AxialTilt{Degrees: 0},
 		Period:    Period{Hours: 8766},
 	}
-	// verification 2D=12, reroll status 2D+0=8, ApplyTidalLockEffect's
-	// commit consumes a 1D for the actual day-length set.
+	// verification 2D=12, reroll status 2D+0=8, probe 1D=3 (=> 1440h).
+	// PlanetToStar: guard doesn't apply; rerolled=8 is in 7-10 range so
+	// tl.NewSiderealHours=1440 is set from the probe; effect switch skips
+	// its own 1D roll. Three rolls total.
 	r := roller.NewScripted(12, 8, 3)
 	tl, err := ApplyTidalLockEffect(r, planet, nil, TidalLockCasePlanetToStar, 12, 8766)
 	if err != nil {
@@ -896,6 +904,77 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_NotAppliedToPlanetToStar(t *testin
 	}
 	if tl.FinalResult != 8 {
 		t.Errorf("FinalResult = %d, want 8 (no guard for PlanetToStar)", tl.FinalResult)
+	}
+}
+
+// TestApplyTidalLockEffect_MoonPeriodGuard_ProbeAndCommitUseSameRoll is a
+// regression test for the divergent-roll bug: previously, the guard probe
+// rolled one 1D and the effect commit rolled a separate 1D, so a low probe
+// (passes guard) could be followed by a high commit (would set a day length
+// exceeding the moon's orbit). Now probe and commit use the SAME 1D — the
+// committed day length is exactly what the guard inspected.
+//
+// This test scripts ONE 1D = 6 for result 7:
+//   - Probe: 6 × 5 × 24 = 720h.
+//   - 720 > moon period 480 → guard FIRES → 1:1 lock holds.
+//   - FinalResult = 12 (initial), LockRatio = "1:1".
+//   - DayLength = yearHours = 480h (1:1 lock day-length effect applies).
+//
+// If a second 1D were consumed by the effect switch, the scripted roller
+// would panic on exhaustion — that alone proves the fix.
+func TestApplyTidalLockEffect_MoonPeriodGuard_ProbeAndCommitUseSameRoll(t *testing.T) {
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "5",
+		DayLength:   &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:   &AxialTilt{Degrees: 0},
+		PeriodHours: 480,
+	}
+	// verification 2D=12, reroll status 2D+0=7, probe 1D=6 (=> 720h > 480h → guard fires)
+	r := roller.NewScripted(12, 7, 6)
+	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if tl.FinalResult != 12 {
+		t.Errorf("FinalResult = %d, want 12 (guard fired, lock held)", tl.FinalResult)
+	}
+	if tl.LockRatio != "1:1" {
+		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
+	}
+	// 1:1 lock sets DayLength = yearHours (480h). Guard only prevents the rerolled
+	// value from being committed — the original 1:1 effect still applies.
+	if math.Abs(moon.DayLength.SiderealHours-480) > 0.01 {
+		t.Errorf("DayLength.SiderealHours = %v, want 480 (1:1 lock = yearHours)", moon.DayLength.SiderealHours)
+	}
+}
+
+// TestApplyTidalLockEffect_MoonPeriodGuard_LowProbeCommitsProbeValue is the
+// inverse: probe rolls 1D=1 (120h ≤ 480h → guard doesn't fire), and the
+// committed day length must equal 120h (the probe value reused, not a
+// separately-rolled value that could have differed).
+func TestApplyTidalLockEffect_MoonPeriodGuard_LowProbeCommitsProbeValue(t *testing.T) {
+	moon := &Body{
+		Kind:        BodyMoon,
+		SizeCode:    "5",
+		DayLength:   &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		AxialTilt:   &AxialTilt{Degrees: 0},
+		PeriodHours: 480,
+	}
+	// verification 2D=12, reroll status 2D+0=7, probe 1D=1 (=> 120h ≤ 480h → guard doesn't fire)
+	r := roller.NewScripted(12, 7, 1)
+	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if tl.FinalResult != 7 {
+		t.Errorf("FinalResult = %d, want 7 (guard didn't fire)", tl.FinalResult)
+	}
+	if tl.LockRatio != "" {
+		t.Errorf("LockRatio = %q, want empty (lock broken)", tl.LockRatio)
+	}
+	if math.Abs(moon.DayLength.SiderealHours-120) > 0.01 {
+		t.Errorf("DayLength.SiderealHours = %v, want 120 (probe 1D=1 × 5 × 24, committed)", moon.DayLength.SiderealHours)
 	}
 }
 

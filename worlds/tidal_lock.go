@@ -429,13 +429,21 @@ func ApplyTidalLockEffect(
 			// WBH p.105 † moon-period guard: for MoonToPlanet only, if the
 			// rerolled day length would exceed the moon's orbital period,
 			// the 1:1 lock holds. yearHours for a moon equals its PeriodHours.
-			// Note: rerolledDayLength may consume a 1D for results 7–10; that
-			// consumption is accepted whether the guard fires or not.
-			if kase == TidalLockCaseMoonToPlanet &&
-				rerolledDayLength(r, rerolled, body, yearHours) > yearHours {
-				// Keep FinalResult = initialResult (1:1 lock held).
+			//
+			// For results 7-10, rerolledDayLength consumes a 1D. That same 1D
+			// IS the committed day length — probe and commit must agree (single
+			// source of truth). Capture the probe value into tl.NewSiderealHours
+			// so the effect switch below skips its own 1D roll for those results.
+			wouldBeDay := rerolledDayLength(r, rerolled, body, yearHours)
+			if kase == TidalLockCaseMoonToPlanet && wouldBeDay > yearHours {
+				// Guard fires: keep FinalResult = initialResult (1:1 lock held).
 			} else {
 				tl.FinalResult = rerolled
+				// For results 7-10 only: reuse the probe's 1D as the committed
+				// day length so the effect switch below skips its own 1D roll.
+				if rerolled >= 7 && rerolled <= 10 {
+					tl.NewSiderealHours = wouldBeDay
+				}
 			}
 		}
 	}
@@ -453,14 +461,22 @@ func ApplyTidalLockEffect(
 	case tl.FinalResult == 6:
 		tl.DayLengthMultiplier = 5
 	case tl.FinalResult == 7:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 5 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 5 * 24)
+		}
 	case tl.FinalResult == 8:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 20 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 20 * 24)
+		}
 	case tl.FinalResult == 9:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 10 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 10 * 24)
+		}
 		tl.BecomesRetrograde = true
 	case tl.FinalResult == 10:
-		tl.NewSiderealHours = float64(r.Roll("1D") * 50 * 24)
+		if tl.NewSiderealHours == 0 {
+			tl.NewSiderealHours = float64(r.Roll("1D") * 50 * 24)
+		}
 		tl.BecomesRetrograde = true
 	case tl.FinalResult == 11:
 		tl.LockRatio = "3:2"
