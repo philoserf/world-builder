@@ -41,7 +41,10 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 - A V k: WorstLow 35 K (mean 251 K)
 
 ### Crush worlds
-- A II: gravity 2.26 G, pressure 640.00 bar
+- A II: gravity 2.26 G, pressure 6.00 bar
+
+### Taint chains
+- A IV: P, G
 
 ### Mainworld habitability
 - A V g — Rating 6/12 (Regionally habitable): Thin, taint (standard), or dense Atmospheres; Too cold all of the time; Too cold most of the time; Gravity very comfortable
@@ -76,8 +79,8 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 
 | Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
-| A | A I | 0.06 | 0.02 | 0.02 | 2.830d | 7B0 | 0 | HZ |
-| A | A II | 0.11 | 0.04 | 0.03 | 6.814d | AC0 | 0 | HZ |
+| A | A I | 0.06 | 0.02 | 0.02 | 2.830d | 7C5 | 0 | HZ |
+| A | A II | 0.11 | 0.04 | 0.03 | 6.814d | AB4 | 0 | HZ |
 | A | A III | 0.16 | 0.06 | 0.00 | 12.404d | GM9 | 4 | 260⊕, HZ, 1??, 4??, 1??, R?? |
 | A | A III a |  |  |  |  | 1?? |  |  |
 | A | A III b |  |  |  |  | 4?? |  |  |
@@ -132,10 +135,10 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 - TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
 
 ### LIFE
-- Biomass: 8, Biocomplexity: 11, Sophonts: no, Biodiversity: 7, Compatibility: 0
+- Biomass: 4, Biocomplexity: 6, Sophonts: no, Biodiversity: 3, Compatibility: 5
 
 ### RESOURCES
-- Rating: 9
+- Rating: 8
 
 ### HABITABILITY
 - Rating: 6

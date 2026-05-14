@@ -669,6 +669,13 @@ func GenerateTidalLock(
 		}
 	}
 
+	// Capture pre-effect snapshot for the WBH p.106 atmosphere-DM
+	// re-eval cascade (Stage-5-post). Stored on the body so
+	// ApplyTidalLockReEval can restore the pre-tidal-lock state when
+	// re-running with atmosphere now known.
+	snap := CapturePreTidalLockSnapshot(body)
+	body.preTidalLockSnapshot = &snap
+
 	tl, err := ApplyTidalLockEffect(r, body, moonRef, bestCase, bestResult, yh)
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateTidalLock: %w", err)
