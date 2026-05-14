@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/stars"
+	"github.com/philoserf/world-builder/stars"
 )
 
 func TestGroup_HZCO_SingleStar(t *testing.T) {

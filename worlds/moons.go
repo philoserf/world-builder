@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // ParentInfo describes a moon's parent body. Used by CountMoons and

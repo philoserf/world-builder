@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/stars"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // SurfaceTidalEffects holds the computed tidal amplitude for a body,

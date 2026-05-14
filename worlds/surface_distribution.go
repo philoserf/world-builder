@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // SurfaceDistribution — landmass concentration per WBH p.100.

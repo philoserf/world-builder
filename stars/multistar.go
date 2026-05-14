@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // OrbitClass is the WBH p.23 orbit class for a non-primary star.

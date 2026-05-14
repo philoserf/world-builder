@@ -3,7 +3,7 @@ package worlds
 import (
 	"math"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 const auKm = 149597870.9 // km per AU

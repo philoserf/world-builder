@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // GasGiantClass identifies the WBH p.55 gas-giant size category.

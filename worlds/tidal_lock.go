@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // TidalLock — tidal lock state per WBH pp.105-107.

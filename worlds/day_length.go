@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // DayLength — rotation periods per WBH pp.103-104.

@@ -3,7 +3,7 @@ package worlds
 import (
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // TestCountMoons_PerSizeBand exercises each row of WBH p.55 Significant

@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // ApplyRotationTilt runs the WBH pp.100-108 (3A2a) per-body rotation/

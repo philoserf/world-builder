@@ -24,7 +24,7 @@ Details on each below.
 
 ### B. Mechanical items — all resolved pre-v1.0
 
-- **B1** misuse-path tests, **B2** harness.md status, **B3** cmd/wbh JSON output, **B4** property test expansion — all landed before v1.0.
+- **B1** misuse-path tests, **B2** harness.md status, **B3** cmd/world-builder JSON output, **B4** property test expansion — all landed before v1.0.
 
 ### C. Strategic / scope items
 
@@ -35,7 +35,7 @@ Details on each below.
   - Optional Insidious DE hazard rule's optional branch
   - `-mainworld <designation>` override flag
 
-  Each is a small individual change (an `Opts` field on the relevant `Generate*` or a `cmd/wbh` flag). Effort: ~1 day for all four, including tests and a `cmd/wbh -help` update. Value: medium — referee-facing. Drive by vetting feedback.
+  Each is a small individual change (an `Opts` field on the relevant `Generate*` or a `cmd/world-builder` flag). Effort: ~1 day for all four, including tests and a `cmd/world-builder -help` update. Value: medium — referee-facing. Drive by vetting feedback.
 
 - **C3 — Notable Features Markdown block.** **Shipped in v1.0** (commit `89cbcd5`). Five sections above the IISS forms: tidal-lock zones, cold snaps, crush worlds, taint chains, mainworld habitability rationale.
 

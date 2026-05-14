@@ -5,7 +5,7 @@ package worlds
 import (
 	"math"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // Geology — seismic activity and inherent temperature contribution per

@@ -22,12 +22,12 @@ The library remains the artifact; the new tool consumes it.
 | Shape                                                                              | Pros                                                      | Cons                                                                          |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | A. `cmd/sector` in this repo                                                       | smallest delta; ships fast                                | grows `cmd/`; world-builder's "done" scope text becomes inaccurate            |
-| B. New `wbh/sector` package + `cmd/wbh -sector` flag                               | library-first per project principle                       | expands world-builder beyond its stated scope (Stars + Worlds pp.14–146)      |
+| B. New `github.com/philoserf/world-builder/sector` package + `cmd/world-builder -sector` flag                               | library-first per project principle                       | expands world-builder beyond its stated scope (Stars + Worlds pp.14–146)      |
 | C. Separate repo `philoserf/sector-builder` depending on world-builder as a module | preserves world-builder's "done" status; clean separation | two repos to maintain; cross-repo coordination if world-builder's API changes |
 
-**The core decision is scope-political, not technical.** World-builder's CLAUDE.md says the project is done when WBH pp.14–146 are encoded and `cmd/wbh -format markdown` emits the three IISS forms — which is the current state on `main`. Adding sector machinery here (A or B) expands what "done" means. Adding it as a separate repo (C) doesn't.
+**The core decision is scope-political, not technical.** World-builder's CLAUDE.md says the project is done when WBH pp.14–146 are encoded and `cmd/world-builder -format markdown` emits the three IISS forms — which is the current state on `main`. Adding sector machinery here (A or B) expands what "done" means. Adding it as a separate repo (C) doesn't.
 
-**Recommendation: C.** World-builder stays focused; the sector tool consumes it via `go get wbh@vX.Y.Z`. Trade-off accepted: one more repo. The rest of this document assumes C, but everything except module path and packaging carries over to B trivially.
+**Recommendation: C.** World-builder stays focused; the sector tool consumes it via `go get github.com/philoserf/world-builder@vX.Y.Z`. Trade-off accepted: one more repo. The rest of this document assumes C, but everything except module path and packaging carries over to B trivially.
 
 ## API sketch
 
@@ -36,7 +36,7 @@ The library remains the artifact; the new tool consumes it.
 
 package sector
 
-import "wbh/worlds" // depends on world-builder
+import "github.com/philoserf/world-builder/worlds" // depends on world-builder
 
 // Generate produces a sector layout deterministically from seed + opts.
 // Per-hex systems are not generated eagerly — call Hex.GenerateSystem to
@@ -156,9 +156,9 @@ Out of scope for the initial spike but mentioned because it's the most obvious t
 Two natural emissions:
 
 1. **JSON.** Full sector + per-hex metadata. Per-hex `Universe` is _not_ embedded by default (huge); embed only on `--include-systems`.
-2. **Markdown sector summary.** Table per subsector with hex coords, system designation, and the mainworld's short profile (one line per system — leverage the existing `cmd/wbh -format short`).
+2. **Markdown sector summary.** Table per subsector with hex coords, system designation, and the mainworld's short profile (one line per system — leverage the existing `cmd/world-builder -format short`).
 
-Per-system full Markdown (`cmd/wbh -format markdown`) is the existing tool's job — the sector tool would print a hex coord and let the user run `wbh -seed <hex.Seed>` for the full profile, OR expose a `--hex X,Y` shorthand that does it.
+Per-system full Markdown (`cmd/world-builder -format markdown`) is the existing tool's job — the sector tool would print a hex coord and let the user run `world-builder -seed <hex.Seed>` for the full profile, OR expose a `--hex X,Y` shorthand that does it.
 
 ## Testing strategy
 

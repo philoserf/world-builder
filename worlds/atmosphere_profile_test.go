@@ -3,7 +3,7 @@ package worlds
 import (
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestGasMixTableLookup_FrozenExotic(t *testing.T) {

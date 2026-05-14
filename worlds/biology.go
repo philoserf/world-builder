@@ -5,7 +5,7 @@ package worlds
 import (
 	"math"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // Biology — native lifeform ratings + resource rating per WBH pp.127-131.

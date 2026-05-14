@@ -13,7 +13,7 @@ import (
 	"errors"
 	"fmt"
 
-	"wbh/stars"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // Interval is a closed Orbit# range [Min, Max].

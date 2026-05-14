@@ -142,7 +142,7 @@ Then a sanity sweep across the same 10 seeds we used for #52 verification:
 
 ```sh
 for seed in 1 2 3 4 5 42 100 200 500 1000; do
-  go run ./cmd/wbh -seed $seed -format markdown | grep -c "planet → \|moon → "
+  go run ./cmd/world-builder -seed $seed -format markdown | grep -c "planet → \|moon → "
 done
 ```
 

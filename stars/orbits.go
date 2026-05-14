@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // ----- P2-4: Stellar Orbit# Ranges (WBH p.27) -----

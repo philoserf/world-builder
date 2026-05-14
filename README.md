@@ -1,4 +1,4 @@
-# wbh — World Builder's Handbook reference implementation
+# world-builder — World Builder's Handbook reference implementation
 
 Go library and CLI that generates Mongoose Traveller star systems per the procedures in the _World Builder's Handbook_ (Geir Lanesskog, 2023). Given a seed, the tool produces a complete deterministic system — stars, planets, moons, belts, atmospheres, oceans, climate, geology, biology, habitability — rendered as the three IISS Survey forms (Class 0/I + Class II/III + Class IV-P) in Markdown, JSON, or a short profile string.
 
@@ -17,18 +17,18 @@ What's **not** here (out of scope): pp.147-234 (World Social Characteristics, Sp
 
 ```bash
 # Build
-go build ./cmd/wbh
+go build ./cmd/world-builder
 
 # Generate a full system as Markdown
-go run ./cmd/wbh -seed 42 -format markdown
+go run ./cmd/world-builder -seed 42 -format markdown
 
 # Short profile only
-go run ./cmd/wbh -seed 42 -format short
+go run ./cmd/world-builder -seed 42 -format short
 # → 2-1-9-8-0.7
 # (G-P-T-N-S form per WBH p.58: gas-giants, belts, terrestrials, baseline, spread)
 
 # Full system as JSON for downstream tooling
-go run ./cmd/wbh -seed 42 -format json
+go run ./cmd/world-builder -seed 42 -format json
 ```
 
 Sample of `-format markdown` output (truncated):
@@ -61,8 +61,8 @@ Class IV-P renders only for the auto-picked mainworld (per WBH p.134's mainworld
 import (
     "fmt"
 
-    "wbh/iiss"
-    "wbh/worlds"
+    "github.com/philoserf/world-builder/iiss"
+    "github.com/philoserf/world-builder/worlds"
 )
 
 func main() {
@@ -139,7 +139,7 @@ task tidy                   # go mod tidy
 go test ./worlds/ -run TestZed_ApplyStage5
 
 # Run CLI:
-go run ./cmd/wbh -seed 42 -format markdown
+go run ./cmd/world-builder -seed 42 -format markdown
 ```
 
 `task check` runs `go fix ./...` first (modernizer pass) and fails on any diff — modernizer hints are mandatory. The gate is local; no CI.

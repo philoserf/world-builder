@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // ComposeOpts holds the inputs to Compose.

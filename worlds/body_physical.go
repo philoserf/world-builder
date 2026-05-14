@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // BodyPhysical — physical characteristics per WBH pp.71-78.

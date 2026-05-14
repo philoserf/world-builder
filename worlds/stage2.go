@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // placementToBody constructs a Body from a Stage-1 Placement. Group,

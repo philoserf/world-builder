@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // SystemPlacement is the full audit trail produced by

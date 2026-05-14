@@ -3,8 +3,8 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // ApplyClimate runs the climate cluster (atmosphere ↔ hydrographics ↔

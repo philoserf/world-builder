@@ -3,7 +3,7 @@
 package worlds
 
 import (
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // Taint — one taint or irritant condition per WBH p.82-84.

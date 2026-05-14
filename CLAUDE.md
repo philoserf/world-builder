@@ -19,7 +19,7 @@ task tidy         # go mod tidy
 
 go test ./worlds/ -run TestZed_FullDetail_3A2b   # single test
 go test ./stars/ -run TestSolTerra_p35           # worked-example test
-go run ./cmd/wbh -seed 42 -format short          # run the CLI
+go run ./cmd/world-builder -seed 42 -format short    # run the CLI
 ```
 
 `task check` runs `go fix ./...` first (modernizer pass) and **fails if it produces any diff** — modernizer hints are mandatory, not advisory. If `task check` complains, review the diff with `git diff` and commit it before continuing.
@@ -35,14 +35,14 @@ go run ./cmd/wbh -seed 42 -format short          # run the CLI
 Every dice roll passes through `roller.Roller`. There are no package-level RNG calls. A seed plus a sequence of options fully determines a system. This is the core invariant — anything that calls `math/rand` or `crypto/rand` outside `roller/` is a bug.
 
 ```text
-dice → roller → stars → worlds → cmd/wbh
+dice → roller → stars → worlds → cmd/world-builder
 ```
 
 - `dice/` — parses WBH dice notation (`"2D"`, `"2D-7"`, `"D3-1"`); returns `Spec{Count, Sides, Modifier}`.
 - `roller/` — `Roller` interface with three impls: `Seeded` (production), `Scripted` (replays book values for worked-example tests; **panics on exhaustion** — that always indicates a test bug), `Fixed`.
 - `stars/` — WBH pp. 14–35 (Stars chapter). Public entry: `stars.GenerateSystem(r, opts)`.
 - `worlds/` — WBH pp. 36–146. Layered façades: `worlds.SystemPlacement` → `worlds.SystemDetail`.
-- `cmd/wbh/` — thin CLI wrapper; emits Markdown (default), JSON, or short profile. See _Output_ below.
+- `cmd/world-builder/` — thin CLI wrapper; emits Markdown (default), JSON, or short profile. See _Output_ below.
 
 Each `Generate*` takes upstream results plus a `Roller`, returns immutable value types. No package-level state. Variance and accuracy options live on per-call `*Opts` structs, off by default.
 
@@ -93,10 +93,10 @@ When the book is inconsistent, the test asserts the implementation's chosen inte
 
 ## Conventions
 
-- Module path: `wbh` (local-only). Imports: `"wbh/stars"`, `"wbh/worlds"`, etc.
+- Module path: `github.com/philoserf/world-builder`. Imports: `"github.com/philoserf/world-builder/stars"`, `"github.com/philoserf/world-builder/worlds"`, etc.
 - Go version: see `go.mod`. Modernizer hints (`go fix`) reflect Go 1.21+/1.22+ idioms (`min`/`max`, range-over-int, `new(value)`) and are enforced.
 - Doc-comments cite WBH page numbers next to procedures and tables — that's the project's traceability mechanism (no runtime metadata wrapper).
-- The library is the artifact; `cmd/wbh` is one screen of code and stays that way.
+- The library is the artifact; `cmd/world-builder` is one screen of code and stays that way.
 - No CI. Local `task` (or `task check && task test`) is the gate.
 
 ## Scope
@@ -104,7 +104,7 @@ When the book is inconsistent, the test asserts the implementation's chosen inte
 The project is **done** when:
 
 1. The book's physical star-system rules (WBH pp. 14–146) are encoded faithfully in code, and
-2. `cmd/wbh` emits a complete description of the generated system as Markdown — all three IISS forms (Class 0/I, Class II/III, Class IV-P) covering whatever world type the mainworld turns out to be (planet, moon, or belt).
+2. `cmd/world-builder` emits a complete description of the generated system as Markdown — all three IISS forms (Class 0/I, Class II/III, Class IV-P) covering whatever world type the mainworld turns out to be (planet, moon, or belt).
 
 WBH pp. 147–234 (World Social Characteristics, Special Circumstances) are **out of scope** for current and near-term purposes. Do not start work in those chapters; do not add code that anticipates them.
 
@@ -112,7 +112,7 @@ The rules half is complete on `main`: Stars (pp. 14–35), System Worlds and Orb
 
 ### Output
 
-`cmd/wbh -format markdown` is the default. Output is the full system as Markdown to stdout — concatenated IISS Class 0/I, Class II/III, and Class IV-P forms under H1/H2 section headings, in book order. Class IV-P renders **only for the auto-picked mainworld** (per book — not for every notable body), using whichever variant matches the mainworld's type.
+`cmd/world-builder -format markdown` is the default. Output is the full system as Markdown to stdout — concatenated IISS Class 0/I, Class II/III, and Class IV-P forms under H1/H2 section headings, in book order. Class IV-P renders **only for the auto-picked mainworld** (per book — not for every notable body), using whichever variant matches the mainworld's type.
 
 `-format json` and `-format short` remain available for tooling and at-a-glance use; a future webservice may expose JSON over HTTP. The library is the source of truth — the CLI is a thin renderer.
 

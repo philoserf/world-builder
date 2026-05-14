@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"wbh/stars"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/stars"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // generateForProperty runs the full pipeline at the given seed and

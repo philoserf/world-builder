@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // AxialTilt — world's obliquity per WBH p.104.

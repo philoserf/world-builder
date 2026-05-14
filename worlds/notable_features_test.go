@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // TestNotableFeatures_EmptyOnVoid verifies an empty Universe produces

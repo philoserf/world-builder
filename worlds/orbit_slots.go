@@ -3,8 +3,8 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // Slot is one placed orbit position in a system, before world-body

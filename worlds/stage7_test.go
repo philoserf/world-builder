@@ -3,8 +3,8 @@ package worlds_test
 import (
 	"testing"
 
-	"wbh/roller"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // TestZed_ApplyStage7 exercises the Stage-7 geology orchestrator end-

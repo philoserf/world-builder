@@ -3,7 +3,7 @@ package stars
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // gridKeys lists the WBH-tabulated subtype grid in book order.

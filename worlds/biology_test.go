@@ -3,7 +3,7 @@ package worlds
 import (
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestRollBiomass_ZedPrime(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestComputeResidualSeismicStress_Terra(t *testing.T) {

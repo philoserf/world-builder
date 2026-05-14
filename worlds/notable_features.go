@@ -21,7 +21,7 @@ const (
 // worlds (high gravity + high pressure), taint chains, and the
 // mainworld's habitability rationale. Returns "" if nothing notable.
 //
-// Inserted by BuildIISSForms above the IISS forms in cmd/wbh's
+// Inserted by BuildIISSForms above the IISS forms in cmd/world-builder's
 // Markdown output. The block is informational only — every fact
 // surfaced is already present in the IISS forms, just dispersed
 // across them.

@@ -3,8 +3,8 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // ApplyBodyPhysical generates per-body physical characteristics

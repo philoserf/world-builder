@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestHillSphere_AabIV(t *testing.T) {

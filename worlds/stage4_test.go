@@ -3,9 +3,9 @@ package worlds_test
 import (
 	"testing"
 
-	"wbh/roller"
-	"wbh/stars"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // TestZed_ApplyStage4 exercises the Stage-4 orchestrator (rotation /

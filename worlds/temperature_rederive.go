@@ -5,8 +5,8 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // MeanKToTempRange buckets a real mean temperature in Kelvin into the same

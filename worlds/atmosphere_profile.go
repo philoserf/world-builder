@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // gasMixTables maps (TempRange, column "A"/"B"/"C") → 13-row gas name table.

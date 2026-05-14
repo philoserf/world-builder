@@ -3,8 +3,8 @@ package worlds
 import (
 	"testing"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 func TestClearStage5Output_ZeroesAllStage5Fields(t *testing.T) {

@@ -1,7 +1,7 @@
 package worlds
 
 import (
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // ApplyBiology runs the WBH pp.127-131 biology pass: per-body biomass,
