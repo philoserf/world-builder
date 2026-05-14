@@ -611,7 +611,7 @@ git commit -m "worlds(tidal-lock): add moon-period guard on natural-12 reroll (#
 
 Per the handoff doc, #54 produces "more locks" (some MoonToPlanet 1:1 outcomes that previously broke now hold).
 
-- [ ] Run the 10-seed sweep from `docs/tidal-lock-handoff.md`:
+- [ ] Run the 10-seed sweep from [`tidal-lock-handoff.md`](tidal-lock-handoff.md):
 
 ```bash
 for seed in 1 2 3 4 5 42 100 200 500 1000; do
