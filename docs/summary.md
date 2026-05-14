@@ -4,7 +4,7 @@ A one-page overview of what this project is and how it's organised. For deeper c
 
 ## What this is
 
-`cmd/world-builder -seed N -format {markdown,json,short}` generates a complete Mongoose Traveller _World Builder's Handbook_ star system end-to-end. Default Markdown output emits all three IISS forms (Class 0/I, Class II/III, Class IV-P) plus a referee-facing Notable Features summary. Seed determinism preserved; every invocation produces a real, fully-formed system.
+`go run ./cmd/world-builder -seed N -format {markdown,json,short}` generates a complete Mongoose Traveller _World Builder's Handbook_ star system end-to-end. Default Markdown output emits all three IISS forms (Class 0/I, Class II/III, Class IV-P) plus a referee-facing Notable Features summary. Seed determinism preserved; every invocation produces a real, fully-formed system.
 
 WBH pp.14–146 (Stars + System Worlds and Orbits + World Physical Characteristics) are implemented to book fidelity. WBH pp.147+ (World Social Characteristics, Special Circumstances) are out of scope.
 
