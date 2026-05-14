@@ -737,6 +737,16 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 	// Pluto-side check: planet→moon case applies because the planet has a
 	// significant moon. With a high-mass moon at close orbit, planet→moon DM
 	// can rival or exceed planet→star, exercising the case 3 path.
+	//
+	// Fidelity note (project finding, #59): with REAL Pluto/Charon parameters
+	// (Pluto SizeCode "1", ecc 0.2488, Charon OrbitPD 7.38, age 4.6 Gyr) the
+	// PlanetToMoon DM works out to: common −1 + specific (−10 base + Size 1
+	// + pd≤10 → +4) = −6. Maximum reachable result is 12 + (−6) = 6, which
+	// produces a DayLengthMultiplier ×5 — not the canonical mutual 1:1 lock
+	// observed in reality. WBH's procedure is structurally incapable of
+	// producing Pluto↔Charon's actual mutual lock from real parameters; the
+	// synthetic Size-3 / orbit-5-PD fixture here is a procedural exerciser,
+	// not a real-world reproduction.
 	plutoMoon := Body{
 		Kind:      BodyMoon,
 		SizeCode:  "1",
