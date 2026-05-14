@@ -397,7 +397,3 @@ func computeGeographicFactor(body *Body) float64 {
 	}
 	return factor
 }
-
-// Variance methods on *Temperature (MeanByLatitude, MeanBySeason, AtMoment,
-// AdjustedForAltitude) and the SunlightPortion helper live in
-// temperature_variance.go.
