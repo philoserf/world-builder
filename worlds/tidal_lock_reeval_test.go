@@ -335,3 +335,109 @@ func TestApplyTidalLockReEval_HighPressureTriggersReEval(t *testing.T) {
 		t.Error("TidalEffects is nil after re-eval; recompute did not run")
 	}
 }
+
+// TestSolFidelity_ReEval_Venus verifies that Venus's 92-bar atmosphere
+// triggers the WBH p.106 atmosphere-DM re-eval cascade and shifts the
+// tidal-lock outcome to a result the pre-#9 single-pass pipeline could
+// not produce.
+//
+// Real Venus parameters used:
+//
+//	diameter        12,104 km → SizeCode "7"
+//	eccentricity    0.0068
+//	semi-major axis 0.723 AU → Orbit# 2.077 (per stars.AUToOrbit)
+//	axial tilt      177.36° (retrograde rotation)
+//	pressure        92 bar (real Venus)
+//	parent star     Sol (mass 1.0 M☉, age 4.6 Gyr)
+//
+// DM trace WITHOUT atmosphere DM (what Stage 4 produced):
+//
+//	commonTidalLockDMs:
+//	  Size 7 → +ceil(7/3) = +3
+//	  Ecc 0.0068 ≤ 0.1 → 0
+//	  Tilt 177.36° > 30 → −2 (the 60–120 and 80–100 bands don't fire at 177°)
+//	  No atmosphere yet → 0
+//	  Age 4.6 Gyr (< 5) → 0
+//	  Common = +1
+//	planetToStarDMs:
+//	  Base = −4
+//	  Orbit# 2.077 ∈ [1, 3) → orbit-bracket DM: 2 ≤ orbit < 3 → +1
+//	  Star mass 1.0 ≤ 1.0 → −1
+//	  No multi-star, no moon penalty
+//	  Specific = −4
+//	Total = −3 → max InitialResult = 9 (retrograde rotation, 1D×10×24).
+//
+// DM trace WITH atmosphere DM (post-#9 re-eval sees pressure 92):
+//
+//	Common: +3 − 2 (tilt) − 2 (pressure > 2.5) + 0 (age) = −1
+//	Specific: unchanged (−4)
+//	Total = −5 → max InitialResult = 7 (random rotation, 1D×5×24).
+//
+// The atmosphere DM lowers the cap from result 9 to result 7 — a real
+// behavioral change. Without the cascade the pre-#9 pipeline would have
+// committed result 9 (retrograde); the cascade now produces result ≤ 7.
+//
+// Fidelity note: WBH does not reproduce Venus's *actual* spin (5,832-hour
+// retrograde sidereal day, 117-day solar day). With real ecc/tilt/age the
+// procedure caps at result 7 — a random rotation in the 1D×5×24-hour
+// range (120–720 h), well short of Venus's actual rotation. The cascade
+// is what the book prescribes; that it doesn't match observed Venus is a
+// further example of the book-vs-reality divergence (see also Mercury 3:2
+// and Pluto↔Charon mutual 1:1 in worlds/sol_fidelity_test.go).
+func TestSolFidelity_ReEval_Venus(t *testing.T) {
+	// Snapshot captures pre-tidal-lock state (post-Stage-4 axial tilt,
+	// pre-Stage-4 day length).
+	snap := CapturePreTidalLockSnapshot(&Body{
+		Eccentricity: 0.0068,
+		AxialTilt:    &AxialTilt{Degrees: 177.36, Retrograde: true, BaselineDegrees: 177.36},
+		DayLength:    &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+	})
+
+	body := &Body{
+		Kind:         BodyTerrestrial,
+		SizeCode:     "7",
+		Eccentricity: 0.0068,
+		AxialTilt:    &AxialTilt{Degrees: 177.36, Retrograde: true, BaselineDegrees: 177.36},
+		DayLength:    &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
+		Orbit:        2.077,
+		Period:       Period{Hours: 0.6152 * 8766}, // Venus 224.7-day year
+		HZ:           false,                        // skip the ApplyClimatePasses re-run
+		// Post-Stage-4 / post-Stage-5 state at the moment ApplyTidalLockReEval runs:
+		Atmosphere:           &Atmosphere{Code: 11, Pressure: 92.0}, // real Venus pressure
+		TidalLock:            &TidalLock{FinalResult: 9, BecomesRetrograde: true},
+		preTidalLockSnapshot: &snap,
+	}
+
+	u := &Universe{
+		System: stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}},
+	}
+	u.Detail.Bodies = []Body{*body}
+
+	// Re-eval scripted dice: 2D = 12 (max possible) with DM = −5 produces
+	// InitialResult = 7 (random rotation). Result 7 consumes one 1D for
+	// the day-length (1D × 5 × 24 hours). 1D=3 → 360 hours.
+	r := roller.NewScripted(12, 3)
+
+	if err := ApplyTidalLockReEval(r, u); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := &u.Detail.Bodies[0]
+
+	if got.TidalLock == nil {
+		t.Fatal("TidalLock is nil after re-eval; expected a re-rolled lock")
+	}
+	if got.TidalLock.FinalResult == 9 {
+		t.Error("FinalResult is still 9 (pre-eval value); re-eval did not run")
+	}
+	if got.TidalLock.FinalResult > 7 {
+		t.Errorf("FinalResult = %d, expected ≤ 7 (atmosphere DM −2 caps max at 7)",
+			got.TidalLock.FinalResult)
+	}
+	if got.TidalLock.FinalResult != 7 {
+		t.Errorf("FinalResult = %d, want 7 (2D=12 with DM=−5)", got.TidalLock.FinalResult)
+	}
+	// ClearStage5Output ran; HZ=false so ApplyClimatePasses is a no-op.
+	if got.Atmosphere != nil {
+		t.Errorf("Atmosphere not cleared after re-eval; got %+v", got.Atmosphere)
+	}
+}
