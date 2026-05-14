@@ -343,7 +343,7 @@ func TestApplyTidalLockReEval_HighPressureTriggersReEval(t *testing.T) {
 //
 // Real Venus parameters used:
 //
-//	diameter        12,104 km → SizeCode "7"
+//	diameter        12,104 km → SizeCode "8" (closest anchor 12,800 km)
 //	eccentricity    0.0068
 //	semi-major axis 0.723 AU → Orbit# 2.077 (per stars.AUToOrbit)
 //	axial tilt      177.36° (retrograde rotation)
@@ -353,7 +353,7 @@ func TestApplyTidalLockReEval_HighPressureTriggersReEval(t *testing.T) {
 // DM trace WITHOUT atmosphere DM (what Stage 4 produced):
 //
 //	commonTidalLockDMs:
-//	  Size 7 → +ceil(7/3) = +3
+//	  Size 8 → +ceil(8/3) = +3
 //	  Ecc 0.0068 ≤ 0.1 → 0
 //	  Tilt 177.36° > 30 → −2 (the 60–120 and 80–100 bands don't fire at 177°)
 //	  No atmosphere yet → 0
@@ -395,7 +395,7 @@ func TestSolFidelity_ReEval_Venus(t *testing.T) {
 
 	body := &Body{
 		Kind:         BodyTerrestrial,
-		SizeCode:     "7",
+		SizeCode:     "8",
 		Eccentricity: 0.0068,
 		AxialTilt:    &AxialTilt{Degrees: 177.36, Retrograde: true, BaselineDegrees: 177.36},
 		DayLength:    &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},

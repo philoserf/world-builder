@@ -25,22 +25,29 @@
 //	Jupiter: diameter 139,820 km; mass 317.8 M⊕.
 //	  Io:        diameter 3,643 km → SizeCode "2"; orbit 421,800 km → OrbitPD 3.02;
 //	             ecc 0.0041; period 42.46 h.
-//	  Europa:    diameter 3,122 km → SizeCode "1"; orbit 671,034 km → OrbitPD 4.80;
+//	  Europa:    diameter 3,122 km → SizeCode "2"; orbit 671,034 km → OrbitPD 4.80;
 //	             ecc 0.0090; period 85.23 h.
 //	  Ganymede:  diameter 5,268 km → SizeCode "3"; orbit 1,070,400 km → OrbitPD 7.66;
 //	             ecc 0.0013; period 171.71 h.
 //	  Callisto:  diameter 4,821 km → SizeCode "3"; orbit 1,882,700 km → OrbitPD 13.47;
 //	             ecc 0.0074; period 400.54 h.
 //
-// SizeCode mapping per WBH p.69 sizing table:
+// SizeCode is a discrete anchor table per `worlds/sizing_terrestrial.go`
+// (basicTerrestrialDiameterTable, sourced from WBH p.54):
 //
-//	"0" = 0–800 km      "5" = 8,001–9,600 km
-//	"1" = 801–2,400 km  "6" = 9,601–11,200 km
-//	"2" = 2,401–4,000 km "7" = 11,201–12,800 km
-//	"3" = 4,001–5,600 km "8" = 12,801–14,400 km
-//	"4" = 5,601–8,000 km
+//	"0" = 0 km        "5" = 8,000 km
+//	"S" = 600 km      "6" = 9,600 km
+//	"1" = 1,600 km    "7" = 11,200 km
+//	"2" = 3,200 km    "8" = 12,800 km
+//	"3" = 4,800 km    "9" = 14,400 km
+//	"4" = 6,400 km    (continues "A"–"F" at +1,600 km each)
 //
-// (Sub-S = "S" = 600 km; bodies < 600 km that generate as "0" use nForSizeCode=0.)
+// Each code is a discrete anchor, not a range. To pick a SizeCode for a
+// real body, choose the anchor with the smallest |diameter − anchor|.
+// Phobos (22 km) and Deimos (12 km) both round to "0" — closer to 0 km
+// than to "S"'s 600 km. nForSizeCode("0") returns 0 (no size DM
+// contribution); nForSizeCode("S") returns −1 (sub-significant body, no
+// DMs at all).
 package worlds
 
 import (
@@ -337,13 +344,13 @@ func TestSolFidelity_MoonToPlanet_Io(t *testing.T) {
 //
 // Real-world values used as inputs:
 //
-//	Europa SizeCode "1" (diameter 3,122 km); OrbitPD 4.80 (671,034 km / 139,820 km);
+//	Europa SizeCode "2" (diameter 3,122 km closest to anchor 3,200 km); OrbitPD 4.80 (671,034 km / 139,820 km);
 //	ecc 0.0090; period 85.23 h. Jupiter mass 317.8 M⊕. Sol age 4.6 Gyr.
 //
 // DM trace (commonTidalLockDMs + moonToPlanetDMs):
 //
 //	Common:
-//	  SizeCode "1" → n=1 → ceil(1/3)=1 → +1
+//	  SizeCode "2" → n=2 → ceil(2/3)=1 → +1
 //	  ecc 0.0090 ≤ 0.1 → 0
 //	  no AxialTilt pressure → 0
 //	  age 4.6 Gyr → 0
@@ -364,7 +371,7 @@ func TestSolFidelity_MoonToPlanet_Io(t *testing.T) {
 func TestSolFidelity_MoonToPlanet_Europa(t *testing.T) {
 	moonRef := &Body{
 		Kind:         BodyMoon,
-		SizeCode:     "1",
+		SizeCode:     "2",
 		OrbitPD:      4.80,
 		Eccentricity: 0.0090,
 	}
@@ -374,7 +381,7 @@ func TestSolFidelity_MoonToPlanet_Europa(t *testing.T) {
 	}
 	body := &Body{
 		Kind:         BodyMoon,
-		SizeCode:     "1",
+		SizeCode:     "2",
 		Eccentricity: 0.0090,
 		AxialTilt:    &AxialTilt{Degrees: 0, BaselineDegrees: 0},
 		DayLength:    &DayLength{SiderealHours: 24, BaselineSiderealHours: 24},
