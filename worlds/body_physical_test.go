@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestRollComposition_TableValues(t *testing.T) {

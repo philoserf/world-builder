@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"testing"
 
-	"wbh/iiss"
-	"wbh/stars"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/iiss"
+	"github.com/philoserf/world-builder/stars"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // updateRegression rewrites the testdata/seed_*.md snapshots with the

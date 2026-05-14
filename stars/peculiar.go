@@ -3,7 +3,7 @@ package stars
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // generatePrimaryAtClass rolls a complete primary star at a specified

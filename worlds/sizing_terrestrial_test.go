@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // TestBasicTerrestrialDiameter verifies the WBH p.54 Basic Terrestrial

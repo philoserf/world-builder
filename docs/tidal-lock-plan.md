@@ -256,8 +256,8 @@ package worlds_test
 import (
     "testing"
 
-    "wbh/roller"
-    "wbh/worlds"
+    "github.com/philoserf/world-builder/roller"
+    "github.com/philoserf/world-builder/worlds"
 )
 
 // TestApplyRotationTilt_PlanetToMoon_RequiresPreEvaluatedMoonLocks verifies
@@ -615,7 +615,7 @@ Per the handoff doc, #54 produces "more locks" (some MoonToPlanet 1:1 outcomes t
 
 ```bash
 for seed in 1 2 3 4 5 42 100 200 500 1000; do
-  go run ./cmd/wbh -seed $seed -format markdown | grep -c "→ "
+  go run ./cmd/world-builder -seed $seed -format markdown | grep -c "→ "
 done
 ```
 
@@ -1214,7 +1214,7 @@ Expect substantial drift — this is the largest of the four PRs.
 
 ```bash
 for seed in 1 2 3 4 5 42 100 200 500 1000; do
-  go run ./cmd/wbh -seed $seed -format markdown | grep -c "→ "
+  go run ./cmd/world-builder -seed $seed -format markdown | grep -c "→ "
 done
 ```
 

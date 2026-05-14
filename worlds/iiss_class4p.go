@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"wbh/iiss"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/iiss"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // Class4PPartP is the planet/moon mainworld view consumed by the

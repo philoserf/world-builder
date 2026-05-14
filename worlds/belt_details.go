@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // BeltDetails — Size-0 body planetoid belt characteristics, WBH pp. 72-74.

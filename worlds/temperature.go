@@ -4,8 +4,8 @@ package worlds
 import (
 	"math"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // MeanTemperatureK computes the world's mean temperature in Kelvin per WBH p.111:

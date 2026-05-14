@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/stars"
+	"github.com/philoserf/world-builder/stars"
 )
 
 func TestAllocateOrbitsByStar_SingleStar(t *testing.T) {

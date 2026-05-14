@@ -1,8 +1,8 @@
 package worlds
 
 import (
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // RollPlanetEccentricities implements WBH Step 9 (p. 52).

@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestRollBasicAxialTilt_Rows2to9(t *testing.T) {

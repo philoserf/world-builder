@@ -3,8 +3,8 @@ package worlds
 import (
 	"math"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // CheckRunawayGreenhouse evaluates and applies WBH p.79 Optional Runaway

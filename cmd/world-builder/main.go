@@ -1,4 +1,4 @@
-// Command wbh generates a Mongoose Traveller World Builder's Handbook
+// Command world-builder generates a Mongoose Traveller World Builder's Handbook
 // star system from a seed and renders it as Markdown (default), JSON,
 // or a short profile string.
 package main
@@ -11,8 +11,8 @@ import (
 	"os"
 	"time"
 
-	"wbh/iiss"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/iiss"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer) error {
-	fs := flag.NewFlagSet("wbh", flag.ContinueOnError)
+	fs := flag.NewFlagSet("world-builder", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	seed := fs.Int64("seed", 0, "random seed (0 = time-based)")
 	format := fs.String("format", "markdown", "output format: markdown | json | short")

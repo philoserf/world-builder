@@ -1,6 +1,6 @@
 package worlds
 
-import "wbh/stars"
+import "github.com/philoserf/world-builder/stars"
 
 // Period — orbital period; both Years and Days are populated and the
 // renderer picks based on magnitude (form p.63 uses days for periods

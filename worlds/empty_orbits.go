@@ -1,6 +1,6 @@
 package worlds
 
-import "wbh/roller"
+import "github.com/philoserf/world-builder/roller"
 
 // RollEmptyOrbits implements WBH Step 4 (p. 48). Returns the number of
 // extra orbital slots to insert across the system.

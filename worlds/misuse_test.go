@@ -3,10 +3,10 @@ package worlds_test
 import (
 	"testing"
 
-	"wbh/iiss"
-	"wbh/roller"
-	"wbh/stars"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/iiss"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // TestMisuse_ApplyClimatePasses_GGSkipped verifies ApplyClimatePasses's

@@ -3,7 +3,7 @@ package stars
 import (
 	"fmt"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // ErrSpecialPrimary is returned by RollPrimaryTypeAndClass when the

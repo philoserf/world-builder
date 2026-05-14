@@ -1,4 +1,4 @@
-// Package roller provides dice-rolling abstractions used throughout wbh.
+// Package roller provides dice-rolling abstractions used throughout the world-builder module.
 //
 // Every random draw in the library passes through a Roller. This makes
 // seeded reproducibility and scripted-test injection both straightforward.
@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"wbh/dice"
+	"github.com/philoserf/world-builder/dice"
 )
 
 // Roller is the interface every dice-driven procedure depends on.

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 // MainSequenceLifespan returns the main-sequence lifespan in Gyr (WBH p. 20):

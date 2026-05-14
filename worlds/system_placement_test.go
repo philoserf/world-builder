@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // TestGenerateSystemPlacement_WrappedErrorMessage asserts that errors

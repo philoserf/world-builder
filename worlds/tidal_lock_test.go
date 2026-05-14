@@ -5,8 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 func TestEvaluateTidalLockDMs_PlanetToStar_Mercury(t *testing.T) {

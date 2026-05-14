@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"wbh/stars"
+	"github.com/philoserf/world-builder/stars"
 )
 
 func TestGroup_Total_SingleInterval(t *testing.T) {

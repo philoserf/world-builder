@@ -3,8 +3,8 @@ package worlds
 import (
 	"math"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // RollBaselineNumber implements WBH Step 2 (pp. 44-45). The baseline

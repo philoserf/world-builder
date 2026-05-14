@@ -1,6 +1,6 @@
 package worlds
 
-import "wbh/stars"
+import "github.com/philoserf/world-builder/stars"
 
 // HZCO returns the group's Habitable Zone Centre Orbit#.
 //

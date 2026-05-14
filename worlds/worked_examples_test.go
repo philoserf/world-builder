@@ -4,9 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"wbh/roller"
-	"wbh/stars"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // composeSol builds a single-star Sol-like system (G2 V) using

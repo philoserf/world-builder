@@ -1,8 +1,8 @@
 package worlds
 
 import (
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // ApplyGeology applies the WBH pp.125-127 geology pass to every

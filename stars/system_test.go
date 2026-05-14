@@ -3,7 +3,7 @@ package stars
 import (
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestSystem_TypeFieldsZeroValue(t *testing.T) {

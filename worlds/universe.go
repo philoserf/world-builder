@@ -3,13 +3,13 @@ package worlds
 import (
 	"iter"
 
-	"wbh/iiss"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/iiss"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // Universe is the top-level container produced by the full pipeline.
 // Per docs/api-surface.md § The Universe model, this is the
-// handoff to renderers and to cmd/wbh.
+// handoff to renderers and to cmd/world-builder.
 type Universe struct {
 	System    stars.System
 	Placement SystemPlacement
@@ -20,7 +20,7 @@ type Universe struct {
 // aggregations (profiles, IISS forms, mainworld pick).
 //
 // The IISS-form fields are carried via an embedded iiss.SystemForms so
-// iiss/ can render the system without importing worlds/. cmd/wbh
+// iiss/ can render the system without importing worlds/. cmd/world-builder
 // extracts u.Detail.SystemForms and passes it to iiss.MarkdownSystem.
 type SystemDetail struct {
 	Bodies        []Body

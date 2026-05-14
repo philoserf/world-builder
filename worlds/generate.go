@@ -3,13 +3,13 @@ package worlds
 import (
 	"fmt"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // Generate constructs a Seeded Roller from seed and delegates to
 // GenerateWithRoller. The convenience entry for production callers
-// (cmd/wbh and end-users with a seed in hand).
+// (cmd/world-builder and end-users with a seed in hand).
 func Generate(seed int64) (Universe, error) {
 	return GenerateWithRoller(roller.NewSeeded(seed))
 }
@@ -17,7 +17,7 @@ func Generate(seed int64) (Universe, error) {
 // GenerateWithRoller runs the entire pass-2 pipeline against any
 // Roller. Tests use it with a Scripted roller for narrow per-procedure
 // fixtures and with a Seeded roller for façade end-to-end fixtures
-// (per docs/harness.md § Façade end-to-end). cmd/wbh and
+// (per docs/harness.md § Façade end-to-end). cmd/world-builder and
 // Generate use it via the seed convenience.
 //
 // All other entry points (GenerateSystem, GenerateSystemPlacement,

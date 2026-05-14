@@ -12,12 +12,12 @@ WBH pp.14–146 (Stars + System Worlds and Orbits + World Physical Characteristi
 This walkthrough follows the code top-down: from the CLI entry, through the deterministic roller, into stars/worlds/iiss pipelines, ending with the rendered Markdown.
 
 ```bash
-find . -maxdepth 2 -type d \( -name "cmd" -o -name "stars" -o -name "worlds" -o -name "iiss" -o -name "dice" -o -name "roller" -o -name "docs" -o -path "*/cmd/wbh" \) | sort
+find . -maxdepth 2 -type d \( -name "cmd" -o -name "stars" -o -name "worlds" -o -name "iiss" -o -name "dice" -o -name "roller" -o -name "docs" -o -path "*/cmd/world-builder" \) | sort
 ```
 
 ```output
 ./cmd
-./cmd/wbh
+./cmd/world-builder
 ./dice
 ./docs
 ./iiss
@@ -28,21 +28,21 @@ find . -maxdepth 2 -type d \( -name "cmd" -o -name "stars" -o -name "worlds" -o 
 
 ## Package layout
 
-Six Go packages plus the CLI. Dependencies point inward: `cmd/wbh` imports `worlds` and `iiss`; `worlds` imports `stars`; `stars` and `worlds` import `roller`; `roller` imports `dice`. `iiss` does not import `worlds`.
+Six Go packages plus the CLI. Dependencies point inward: `cmd/world-builder` imports `worlds` and `iiss`; `worlds` imports `stars`; `stars` and `worlds` import `roller`; `roller` imports `dice`. `iiss` does not import `worlds`.
 
 - `dice/` — WBH dice notation parser (`"2D"`, `"2D-7"`, `"D3-1"`).
 - `roller/` — `Roller` interface with `Seeded` (production), `Scripted` (test gold), and `Fixed` impls. The only RNG seam in the project.
 - `stars/` — WBH pp.14–35: stellar generation, MAO, companion orbits.
 - `worlds/` — WBH pp.36–146: placement, per-body procedures, the climate solver, mainworld pick, Notable Features.
 - `iiss/` — Pure renderer package. Holds the IISS form types and `MarkdownSystem`. Does not import `worlds/`.
-- `cmd/wbh/` — CLI entry; three lines of pipeline plus format dispatch.
+- `cmd/world-builder/` — CLI entry; three lines of pipeline plus format dispatch.
 
-## Entry point: cmd/wbh/main.go
+## Entry point: cmd/world-builder/main.go
 
 The CLI takes `-seed`, `-format`, and dispatches. Three branches: `markdown` (default), `json`, `short`.
 
 ```bash
-sed -n '18,65p' cmd/wbh/main.go
+sed -n '18,65p' cmd/world-builder/main.go
 ```
 
 ```output
@@ -54,7 +54,7 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer) error {
-	fs := flag.NewFlagSet("wbh", flag.ContinueOnError)
+	fs := flag.NewFlagSet("world-builder", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	seed := fs.Int64("seed", 0, "random seed (0 = time-based)")
 	format := fs.String("format", "markdown", "output format: markdown | json | short")
@@ -107,7 +107,7 @@ sed -n '1,40p' roller/roller.go
 ```
 
 ```output
-// Package roller provides dice-rolling abstractions used throughout wbh.
+// Package roller provides dice-rolling abstractions used throughout the world-builder module.
 //
 // Every random draw in the library passes through a Roller. This makes
 // seeded reproducibility and scripted-test injection both straightforward.
@@ -117,7 +117,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"wbh/dice"
+	"github.com/philoserf/world-builder/dice"
 )
 
 // Roller is the interface every dice-driven procedure depends on.
@@ -165,7 +165,7 @@ func Generate(seed int64) (Universe, error) {
 // GenerateWithRoller runs the entire pass-2 pipeline against any
 // Roller. Tests use it with a Scripted roller for narrow per-procedure
 // fixtures and with a Seeded roller for façade end-to-end fixtures
-// (per docs/harness.md § Façade end-to-end). cmd/wbh and
+// (per docs/harness.md § Façade end-to-end). cmd/world-builder and
 // Generate use it via the seed convenience.
 //
 // All other entry points (GenerateSystem, GenerateSystemPlacement,
@@ -545,7 +545,7 @@ const (
 	notableMeanLivableK   = 250 // ~ -23°C; below this the mean is already too cold for a "snap" to be the story
 // mainworld's habitability rationale. Returns "" if nothing notable.
 //
-// Inserted by BuildIISSForms above the IISS forms in cmd/wbh's
+// Inserted by BuildIISSForms above the IISS forms in cmd/world-builder's
 // Markdown output. The block is informational only — every fact
 // surfaced is already present in the IISS forms, just dispersed
 // across them.
@@ -647,7 +647,7 @@ Coverage is four-layered (per `docs/harness.md`):
 3. **Property tests** — 8 invariants × 1000 seeds each (`worlds/property_test.go`). Smoke tests for systemic correctness; fire when a procedure silently does nothing for a class of bodies.
 4. **Markdown regression baseline** — 5 seeds × full Markdown output at `iiss/testdata/seed_*.md`. Refreshable with `go test ./iiss/... -update.regression -run TestRegression`.
 
-Plus a 10 000-seed bulk-sweep verification (one-off `cmd/wbh-bulk/` runner) confirms zero errors in default operation. See `docs/history/generator-error-catalog.md` for the journey.
+Plus a 10 000-seed bulk-sweep verification (one-off `cmd/world-builder-bulk/` runner) confirms zero errors in default operation. See `docs/history/generator-error-catalog.md` for the journey.
 
 ```bash
 find . -name "*_test.go" -not -path "./docs/*" | wc -l | xargs printf "Test files: %s\n"; grep -rhc "^func Test" --include="*_test.go" . | awk "{ s+=\$1 } END { printf \"Test functions: %d\\n\", s }"
@@ -663,7 +663,7 @@ Test functions: 692
 End-to-end: generate seed 42 in short-profile form, then show the first 30 lines of the Markdown output to see the shape.
 
 ```bash
-go run ./cmd/wbh -seed 42 -format short
+go run ./cmd/world-builder -seed 42 -format short
 ```
 
 ```output
@@ -671,7 +671,7 @@ go run ./cmd/wbh -seed 42 -format short
 ```
 
 ```bash
-go run ./cmd/wbh -seed 42 -format markdown | head -30
+go run ./cmd/world-builder -seed 42 -format markdown | head -30
 ```
 
 ```output

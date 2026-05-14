@@ -1,8 +1,8 @@
 package worlds
 
 import (
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // ComputeAlbedo returns the body's Bond/bolometric albedo per WBH p.110.

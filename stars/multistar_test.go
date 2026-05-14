@@ -3,7 +3,7 @@ package stars
 import (
 	"testing"
 
-	"wbh/roller"
+	"github.com/philoserf/world-builder/roller"
 )
 
 func TestPresenceDM_GiantClasses(t *testing.T) {

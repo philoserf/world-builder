@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"wbh/stars"
-	"wbh/worlds"
+	"github.com/philoserf/world-builder/stars"
+	"github.com/philoserf/world-builder/worlds"
 )
 
 // TestSol_Generate is the Sol/Generate façade fixture per

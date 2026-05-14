@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"wbh/roller"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/roller"
+	"github.com/philoserf/world-builder/stars"
 )
 
 func TestSelectExoticLiquid_Water_Terra(t *testing.T) {

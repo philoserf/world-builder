@@ -9,13 +9,13 @@ The public surface is intentionally compact — roughly 200–300 public symbols
 ### Package boundaries
 
 ```text
-wbh/
+world-builder/
   dice/        — WBH dice notation parser; verbatim port from pass 1
   roller/      — Roller interface + Seeded/Scripted/Fixed; verbatim port
   stars/       — Stage 0
   worlds/      — Stages 1–10 (everything after stars)
   iiss/        — IISS form structs + renderers (split out from worlds/)
-  cmd/wbh/     — thin CLI wrapper
+  cmd/world-builder/     — thin CLI wrapper
 ```
 
 `iiss/` is a new package in pass 2. Pass 1 mixed renderers, form structs, and pipeline machinery in `worlds/`; splitting them out makes the renderer concerns explicitly separable and shrinks `worlds/` to its actual concern (per-body procedures + system-wide aggregations).
@@ -396,12 +396,12 @@ package worlds
 
 // Generate constructs a Seeded Roller from seed and delegates to
 // GenerateWithRoller. The convenience entry for production callers
-// (cmd/wbh and end-users with a seed in hand).
+// (cmd/world-builder and end-users with a seed in hand).
 func Generate(seed int64) (Universe, error)
 
 // GenerateWithRoller runs the entire pipeline against any Roller.
 // Tests use it with a Scripted roller to drive end-to-end fixtures
-// through one entry point; cmd/wbh and Generate use it via the seed
+// through one entry point; cmd/world-builder and Generate use it via the seed
 // convenience. All other entry points (GenerateSystem,
 // GenerateSystemPlacement, individual Apply* stages) remain available
 // for callers that need finer control.
@@ -418,7 +418,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error)
 
 `Generate(seed)` constructs a `roller.NewSeeded(seed)` and delegates. Splitting the two means harness fixtures (`harness.md` § Façade end-to-end) can drive the full pipeline through the public API with a Scripted roller — without the seed convenience getting in the way.
 
-`cmd/wbh/main.go` becomes:
+`cmd/world-builder/main.go` becomes:
 
 ```go
 u, err := worlds.Generate(*seedFlag)

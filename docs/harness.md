@@ -10,7 +10,7 @@ The harness is one of four coverage layers, not the only one. Per-procedure test
 - **Named worked-example fixtures** (this catalog). Where the book threads a multi-procedure example (Sol, Corella, Zed, Zed Prime) with explicit dice, the fixture re-walks that chain end-to-end.
 - **Property tests.** 8 invariants × 1000 seeds each (`worlds/property_test.go`). Smoke tests for systemic correctness that catch silent-zero / silent-skip bugs across the population.
 - **Markdown regression baseline.** 5 seeds × full Markdown output at `iiss/testdata/seed_*.md`. Refreshed with `go test ./iiss/... -update.regression -run TestRegression`.
-- **Bulk-sweep verification.** 10 000-seed sweep via a one-off `cmd/wbh-bulk` runner; today produces 10 000 successes, zero errors. See [`history/generator-error-catalog.md`](history/generator-error-catalog.md).
+- **Bulk-sweep verification.** 10 000-seed sweep via a one-off `cmd/world-builder-bulk` runner; today produces 10 000 successes, zero errors. See [`history/generator-error-catalog.md`](history/generator-error-catalog.md).
 
 A named worked-example fixture is only authored when the book itself narrates the dice chain across multiple procedures. For everything else, per-procedure tests cover the same surface. The original pre-v1.0 plan tracked every example slot in this catalog as 🔴 / 🟢 / ⚠️; post-v1.0 the doc is a catalog of what was authored, not a punch list of what wasn't.
 

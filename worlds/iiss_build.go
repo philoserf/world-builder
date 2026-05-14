@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"wbh/iiss"
-	"wbh/stars"
+	"github.com/philoserf/world-builder/iiss"
+	"github.com/philoserf/world-builder/stars"
 )
 
 // BuildIISSForms populates u.Detail.SystemForms (Class0I, Class23,
