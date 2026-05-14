@@ -300,10 +300,10 @@ func TestApplyTidalLockReEval_HighPressureTriggersReEval(t *testing.T) {
 	}
 	u.Detail.Bodies = []Body{*body}
 
-	// GenerateTidalLock will roll dice even if all DMs are low; provide a
-	// scripted result so the test is deterministic. The specific result
-	// doesn't matter — what matters is the orchestration path.
-	r := roller.NewScripted(4) // one 2D roll; result 4 is a low final result
+	// When all DMs total ≤ -10 SelectHighestDMCases filters them out and
+	// GenerateTidalLock returns early with nil — no dice consumed.
+	// The scripted roller is empty to prove this; any roll would panic.
+	r := roller.NewScripted()
 
 	if err := ApplyTidalLockReEval(r, u); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -325,5 +325,13 @@ func TestApplyTidalLockReEval_HighPressureTriggersReEval(t *testing.T) {
 	// is a no-op on non-HZ bodies, so no new atmosphere is generated.
 	if got.Atmosphere != nil {
 		t.Errorf("Atmosphere not cleared after re-eval; got %+v", got.Atmosphere)
+	}
+
+	// TidalEffects must be non-nil: reEvalBody recomputes surface tidal
+	// effects from the new TidalLock before clearing Stage-5 output.
+	// Even when TidalLock becomes nil (no case fired), the stellar tide
+	// component is always computed for non-empty bodies.
+	if got.TidalEffects == nil {
+		t.Error("TidalEffects is nil after re-eval; recompute did not run")
 	}
 }
