@@ -53,7 +53,6 @@ func RederiveAtmosphereHydrographics(
 	r roller.Roller,
 	body *Body,
 	sys stars.System,
-	parent *Body,
 ) error {
 	if body.Kind == BodyEmpty || body.Temperature == nil {
 		return nil
@@ -135,7 +134,6 @@ func RederiveAtmosphereHydrographics(
 		}
 	}
 
-	_ = parent // parent reserved for future moon-specific logic (e.g., parent radiance from atm composition)
 	return nil
 }
 

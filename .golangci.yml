@@ -1,6 +1,6 @@
 version: "2"
 
-# Note: gofumpt is enforced by the `just check` recipe via the gofumpt CLI,
+# Note: gofumpt is enforced by the `task check` recipe via the gofumpt CLI,
 # not by golangci-lint's bundled gofumpt. The two disagreed on import
 # grouping (CLI is more recent), so we use the CLI as the single source
 # of truth and keep golangci-lint focused on lint checks.
@@ -19,11 +19,3 @@ linters:
     - misspell
     - unconvert
     - unparam
-  settings:
-    revive:
-      rules:
-        # Cycle 0 has stub functions whose bodies are just panic("unimplemented").
-        # Their parameters are part of the documented signature but are not
-        # referenced. Re-enable when stubs gain implementations (cycle 4+).
-        - name: unused-parameter
-          disabled: true

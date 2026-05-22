@@ -282,44 +282,6 @@ func SelectHighestDMCases(dms map[TidalLockCase]int) ([]TidalLockCase, int) {
 	return tied, bestDM
 }
 
-// SelectHighestDMCase returns the case to roll, applying p.106 tiebreakers:
-//   - Cases with DM ≤ -10 are filtered out (no roll required for those).
-//   - On ties, moon-cases ordered first (MoonToPlanet before PlanetToStar).
-//   - On ties between multiple moons (future: moonToPlanet for multiple moons),
-//     closest moon first — handled at orchestration level via per-moon iteration.
-//   - Returns TidalLockCaseNone if no case applies.
-//
-// Deprecated: silently drops tied cases — use SelectHighestDMCases (plural)
-// for the WBH p.106 cascade. Retained for backwards compatibility with tests.
-func SelectHighestDMCase(dms map[TidalLockCase]int, _ *Body) (TidalLockCase, int) {
-	bestCase := TidalLockCaseNone
-	bestDM := -10 // exclusive lower bound
-	// Order: MoonToPlanet > PlanetToMoon > PlanetToStar.
-	// (Moon cases first on tie per p.106.)
-	priority := []TidalLockCase{
-		TidalLockCaseMoonToPlanet,
-		TidalLockCasePlanetToMoon,
-		TidalLockCasePlanetToStar,
-	}
-	for _, kase := range priority {
-		dm, ok := dms[kase]
-		if !ok {
-			continue
-		}
-		if dm <= -10 {
-			continue
-		}
-		if dm > bestDM {
-			bestDM = dm
-			bestCase = kase
-		}
-	}
-	if bestCase == TidalLockCaseNone {
-		return TidalLockCaseNone, 0
-	}
-	return bestCase, bestDM
-}
-
 // RollTidalLockStatus rolls 2D + DM. Caller handles the natural-12-verification
 // and effect application separately.
 func RollTidalLockStatus(r roller.Roller, dm int) int {
@@ -467,9 +429,11 @@ func ApplyTidalLockEffect(
 			// source of truth). Capture the probe value into tl.NewSiderealHours
 			// so the effect switch below skips its own 1D roll for those results.
 			wouldBeDay := rerolledDayLength(r, rerolled, body, yearHours)
-			if kase == TidalLockCaseMoonToPlanet && wouldBeDay > yearHours {
-				// Guard fires: keep FinalResult = initialResult (1:1 lock held).
-			} else {
+			// WBH p.105 † moon-period guard: for MoonToPlanet only, if the
+			// rerolled day length would exceed the moon's orbital period,
+			// the 1:1 lock holds — keep FinalResult = initialResult.
+			guardFires := kase == TidalLockCaseMoonToPlanet && wouldBeDay > yearHours
+			if !guardFires {
 				tl.FinalResult = rerolled
 				// For results 7-10 only: reuse the probe's 1D as the committed
 				// day length so the effect switch below skips its own 1D roll.

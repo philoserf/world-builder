@@ -177,7 +177,7 @@ func climatePass(r roller.Roller, body *Body, sys stars.System, parent *Body, pa
 		body.Atmosphere.ScaleHeight = DeriveScaleHeight(temp.MeanK, body.Physical.Gravity)
 	}
 
-	if err := RederiveAtmosphereHydrographics(r, body, sys, parent); err != nil {
+	if err := RederiveAtmosphereHydrographics(r, body, sys); err != nil {
 		return fmt.Errorf("rederive pass %d: %w", pass, err)
 	}
 	return nil
