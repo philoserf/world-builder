@@ -9,7 +9,7 @@ package worlds
 // For atms outside 5/6/8 or with ppO2 in band, returns (atmCode, nil).
 //
 // The pre-seeded Taint has Severity and Persistence == 0; the
-// runStep5DPrime orchestrator fills them from the severity/persistence
+// ApplyTaintTypology orchestrator fills them from the severity/persistence
 // rolls so callers don't have to special-case pre-seeded taints.
 func PromoteOxygenTaint(atmCode int, ppO2 float64) (int, *Taint) {
 	if atmCode != 5 && atmCode != 6 && atmCode != 8 {

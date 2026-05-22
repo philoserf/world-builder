@@ -8,9 +8,9 @@ import (
 
 // Hydrographics — surface liquid coverage per WBH p.99.
 //
-// Code is populated by 3A1 with HZCO-bucketed provisional temperature; Step 5D
-// (3A2b-rederive) re-derives Code under real Temperature.MeanK and populates
-// Profile (composition tail). Post-5D values are final.
+// Code is populated by 3A1 with HZCO-bucketed provisional temperature; ApplyClimate
+// (Stage 5) re-derives Code under real Temperature.MeanK and populates Profile
+// (composition tail). Post-rederive values are final.
 // Format: "H<code>:<liquid>-100" (e.g., "H6:H2O-100", "H4:CH4-100").
 // Empty for vacuum or zero-hydrographics bodies.
 type Hydrographics struct {

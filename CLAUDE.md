@@ -28,49 +28,55 @@ go run ./cmd/world-builder -seed 42 -format short    # run the CLI
 
 ## Architecture
 
-**Before adding a pipeline step:** verify moons are visited (including moons of gas-giant parents). Per-step planet/moon divergence is the highest-frequency Critical bug in this codebase — see _Moons mirror planets_ below.
+**Before adding a pipeline stage:** verify moons are visited (including moons of gas-giant parents). Per-stage planet/moon divergence is the highest-frequency Critical bug in this codebase — see _Moons mirror planets_ below.
 
-### Pure-function pipeline with deterministic dice
+### Deterministic-dice pipeline
 
 Every dice roll passes through `roller.Roller`. There are no package-level RNG calls. A seed plus a sequence of options fully determines a system. This is the core invariant — anything that calls `math/rand` or `crypto/rand` outside `roller/` is a bug.
 
 ```text
-dice → roller → stars → worlds → cmd/world-builder
+dice → roller → stars → worlds → iiss → cmd/world-builder
 ```
 
 - `dice/` — parses WBH dice notation (`"2D"`, `"2D-7"`, `"D3-1"`); returns `Spec{Count, Sides, Modifier}`.
 - `roller/` — `Roller` interface with three impls: `Seeded` (production), `Scripted` (replays book values for worked-example tests; **panics on exhaustion** — that always indicates a test bug), `Fixed`.
-- `stars/` — WBH pp. 14–35 (Stars chapter). Public entry: `stars.GenerateSystem(r, opts)`.
-- `worlds/` — WBH pp. 36–146. Layered façades: `worlds.SystemPlacement` → `worlds.SystemDetail`.
+- `stars/` — WBH pp. 14–35 (Stars chapter). **Stage 0.** Public entry: `stars.GenerateSystem(r, opts)`.
+- `worlds/` — WBH pp. 36–146. **Stages 1–10.** `GenerateSystemPlacement` produces Stage 1; `Apply*` stages 2–10 walk a `*Universe` and write to bodies in place.
+- `iiss/` — IISS form structs (Class 0/I, Class II/III, Class IV-P) and their renderers. Split out from `worlds/` so renderer concerns are separately replaceable.
 - `cmd/world-builder/` — thin CLI wrapper; emits Markdown (default), JSON, or short profile. See _Output_ below.
 
-Each `Generate*` takes upstream results plus a `Roller`, returns immutable value types. No package-level state. Variance and accuracy options live on per-call `*Opts` structs, off by default.
+The function-naming discipline (`Generate*`, `Roll*`, `Compute*`, `Derive*`, `Apply*`, `Render*`) is documented in detail at `docs/api-surface.md` § Naming. The short version: `Generate*` rolls a sub-system from a Roller; `Apply*` mutates `*Universe`; `Compute*`/`Derive*`/`Roll*` return values without mutation. No package-level state.
 
-### `worlds` package — DetailSystem pipeline
+### `worlds` package — Stage pipeline
 
-`DetailSystem` orchestrates the per-body procedures in `runDetailPipeline` (extracted from `DetailSystem` for testability):
+`Generate(seed)` (and `GenerateWithRoller(r)` for tests) is the top-level entry. It builds a `Universe` from `stars.GenerateSystem` + `GenerateSystemPlacement`, then walks the `Apply*` stages in fixed order. See `worlds/generate.go`:
 
 ```text
-Steps 1–4   sizing → moons → designations → periods
-Step 5      HZ tagging
-Steps 5A–5G 3A1 (body-physical) → 3A2a (rotation/tilt/tidal)
-            → 3A2b-temp (temperature) → 3A2b-rederive (atmosphere/hydro)
-            → 3B-geology → 3B-biology → 3B-final (habitability)
-Step 6      backfill StarAllocation.BaselineN
-Step 7      Short/Long profiles
-Step 8      RenderIISSClass23 (the survey form)
-            pickMainworld
+Stage 0    stars.GenerateSystem                          pp. 14–35
+Stage 1    GenerateSystemPlacement                       pp. 36–68
+Stage 2    ApplyDetailFrontEnd                           sizing, moons, designations, periods
+Stage 3    ApplyBodyPhysical + ApplyBeltDetails          composition/density/gravity/mass; belt details
+Stage 4    ApplyMoonRefinement + ApplyRotationTilt       rotation, axial tilt, surface tidal effects
+Stage 5    ApplyClimate                                  temperature, atmosphere, hydrographics
+Stage 5'   ApplyTidalLockReEval                          tidal-lock cascade per WBH p.106
+Stage 6    ApplyTaintTypology + ApplySurfaceDistribution
+Stage 7    ApplyGeology                                  pp. 125–127
+Stage 8    ApplyBiology                                  pp. 127–131
+Stage 9    ApplyHabitability                             pp. 132–138
+Stage 10   AggregateSystem + BuildIISSForms              per-allocation BaselineN, profiles, mainworld pick, all three IISS forms
 ```
 
-`DetailedPlacement` embeds `Placement` (2B) and adds nullable pointer fields (`*Atmosphere`, `*Geology`, `*Biology`, `*Habitability`, …). Pointer = nil means "not applicable to this body type". `Has*()` predicates wrap the nil checks. Use them — don't deref blindly.
+The one-file-per-stage convention (`worlds/stage[2-10].go`) holds the orchestrators; per-feature files (`atmosphere.go`, `tidal_lock.go`, `biology.go`, …) hold the actual procedures.
+
+Bodies carry nullable pointer fields (`*Atmosphere`, `*Geology`, `*Biology`, `*Habitability`, …). Pointer = nil means "not applicable to this body type". Use the `Has*()` predicates — don't deref blindly.
 
 Bodies are walked in ascending-orbit order within each group; `LongProfile` and `AssignPlanetDesignations` rely on this. Preserve the ordering when modifying the pipeline.
 
 ### Moons mirror planets
 
-Per WBH, moons run through nearly the same physical pipeline as their parent planet. Implementation pattern: `buildMoonPlacementView(m, parent)` synthesizes a `*DetailedPlacement` from a `Moon` so per-body procedures (sizing, atmosphere, etc.) reuse one code path.
+Per WBH, moons run through nearly the same physical pipeline as their parent planet. The implementation seam is `Universe.AllBodies()` — a single unified iterator that yields every body (planet or moon, including gas-giant moons) exactly once, with `body.Host()` supplying the parent for moons and the body itself for planets so HZ inheritance flows uniformly. A new stage that calls `for body := range u.AllBodies()` is moon-correct by construction.
 
-**Anti-pattern alert:** historically, `runStep5*` additions have added planet logic without iterating moons, producing silent-zero bugs. When adding a new step, verify moons are visited (including moons of gas-giant parents).
+**Anti-pattern alert:** historically, `Apply*` stage additions have added planet logic without iterating moons, producing silent-zero bugs. See `docs/anti-patterns.md` § A.1. When adding a new stage, verify moons are visited (including moons of gas-giant parents).
 
 ### Tables as Go literals
 

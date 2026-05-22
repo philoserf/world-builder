@@ -34,9 +34,9 @@ func MeanKToTempRange(meanK float64) TempRange {
 
 // RederiveAtmosphereHydrographics re-derives 3A1's temperature-sensitive
 // Atmosphere/Hydrographics fields under the body's current Temperature.MeanK.
-// Mutates body in place. Called twice as part of Step 5D's 2-pass iteration.
+// Mutates body in place. Called twice as part of ApplyClimate's 2-pass iteration.
 //
-// Currently mutates (Tasks 6-9):
+// Mutates:
 //   - Atmosphere.ScaleHeight   (re-derived from current MeanK + gravity via DeriveScaleHeight)
 //   - Atmosphere.Code          (mutated to A/B/C only on the runaway-greenhouse 2-9/D/E path;
 //     atm A/B/C/F+ stay unchanged on a "boiling-only" runaway fire
@@ -49,9 +49,6 @@ func MeanKToTempRange(meanK float64) TempRange {
 //   - Atmosphere.Profile       (gas mix for exotic A/B/C/F atm with hydro > 0)
 //
 // No-op when body.Kind == BodyEmpty or body.Temperature == nil.
-//
-// Pending in subsequent tasks of this sub-project:
-//   - Step 5D pipeline wiring (Task 10)
 func RederiveAtmosphereHydrographics(
 	r roller.Roller,
 	body *Body,

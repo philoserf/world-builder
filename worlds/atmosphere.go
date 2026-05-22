@@ -9,11 +9,11 @@ import (
 // Atmosphere — surface atmosphere characteristics per WBH pp.79-91.
 //
 // Pressure, ScaleHeight, Subtype, and Profile are populated by 3A1 with
-// HZCO-bucketed provisional temperature; Step 5D (3A2b-rederive) re-derives
-// these fields under the real Temperature.MeanK. Post-5D values are final
-// for those fields.
+// HZCO-bucketed provisional temperature; ApplyClimate (Stage 5) re-derives
+// these fields under the real Temperature.MeanK. Post-rederive values are
+// final for those fields.
 //
-// Taints and InsidiousHazards are populated by Step 5D-prime (post-rederive)
+// Taints and InsidiousHazards are populated by ApplyTaintTypology (Stage 6)
 // per WBH pp.81-90. Taints contains 0-3 entries; InsidiousHazards is
 // non-empty only for atm C (Insidious) — typically 1 hazard, but 2 when
 // the subtype is D or E (auto-T plus rolled, per the p.90 footnote).

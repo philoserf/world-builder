@@ -9,7 +9,7 @@ import (
 )
 
 // Geology — seismic activity and inherent temperature contribution per
-// WBH pp.125-127. Populated by Step 5E for any non-empty, non-belt body.
+// WBH pp.125-127. Populated by ApplyGeology (Stage 7) for any non-empty, non-belt body.
 //
 // Conditional applicability:
 //   - Terrestrials: ResidualSeismicStress, TidalStressFactor,
@@ -80,7 +80,7 @@ func ComputeResidualSeismicStress(body *Body, ageGyr float64, isMoon bool) int {
 }
 
 // ComputeTidalStressFactor per WBH p.126: floor(ΣTidalEffects / 10).
-// Reads body.TidalEffects.Total (metres, populated in Step 5B.5).
+// Reads body.TidalEffects.Total (metres, populated in ApplyRotationTilt — Stage 4).
 // Returns 0 if body or TidalEffects is nil.
 func ComputeTidalStressFactor(body *Body) int {
 	if body == nil || body.TidalEffects == nil {

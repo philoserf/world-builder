@@ -2,13 +2,7 @@
 
 Open work, ordered most-deterministic to least.
 
-## #46 — long functions
-
-Eight callouts exceed the 50-line guideline (`stars/system.go`, `stars/survey.go`, `worlds/temperature.go`, others). Each is one cohesive WBH procedure with sequential phases; length isn't mixed responsibility, but extracting named phase helpers would improve diffability. Touch opportunistically.
-
-## #47 — large files
-
-Seven callouts exceed the 300-line A.7 guideline, mostly in `worlds/`. Same opportunistic disposition as #46.
+The 50-line / 300-line guidelines from A.7 (issues #46, #47) are **triggers, not caps** — they prompt the question "is this still one concern?" rather than mandate a split. Both issues are closed as policy. Touch opportunistically when the cohesion answer changes; do not split for the line count alone.
 
 ## C2 — optional referee knobs
 

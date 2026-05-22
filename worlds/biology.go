@@ -9,7 +9,7 @@ import (
 )
 
 // Biology — native lifeform ratings + resource rating per WBH pp.127-131.
-// Populated by Step 5F for terrestrial bodies (and their HZ-planet moons)
+// Populated by ApplyBiology (Stage 8) for terrestrial bodies (and their HZ-planet moons)
 // that have Atmosphere data.
 //
 // Conditional applicability:
