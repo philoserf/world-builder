@@ -318,7 +318,7 @@ func TestRederive_TerraLike_StableInTemperate(t *testing.T) {
 	preHydro := body.Hydrographics.Code
 
 	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -344,7 +344,7 @@ func TestRederive_NilTemperature_NoOp(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{}}
 
 	r := roller.NewScripted()
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -361,7 +361,7 @@ func TestRederive_BodyEmpty_NoOp(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{}}
 
 	r := roller.NewScripted()
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -381,7 +381,7 @@ func TestRederive_ScaleHeightUpdate(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -410,7 +410,7 @@ func TestRederive_AtmosphereB_NoRunaway_NoSubtypeChange(t *testing.T) {
 	// Scripted dice: 1 for hydro re-roll + gas-mix budget for exotic atm B + hydro > 0 (Task 8).
 	// rerollAtmSubtypeAndPressure is not called here (Task 9 wires that).
 	r := roller.NewScripted(7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5) // hydro 2D + percent d10 + gas mix
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -457,7 +457,7 @@ func TestRederive_AtmProfile_ExoticC(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5) // hydro 2D + percent d10 + gas mix
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -492,7 +492,7 @@ func TestRederive_AtmProfile_StandardAtm_NotMutated(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -517,7 +517,7 @@ func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(1, 5) // hydro 2D=1 → digit 0; percent d10 still consumed; no gas mix
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -554,7 +554,7 @@ func TestRederive_RunawayFires_AtmAndHydroMutate(t *testing.T) {
 	// 5. RollHydroDigit with TempBoiling: 1 dice (2D)
 	// 6. RollGasMix for new atm B + hydro: ~6-12 dice
 	r := roller.NewScripted(2, 3, 8, 7, 5, 5, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8) // trigger + atm code + subtype + hydro 2D + percent d10 + gas mix
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -588,7 +588,7 @@ func TestRederive_RunawayDoesNotFire_NoBoilingDM(t *testing.T) {
 
 	// Scripted: hydro 2D + percent d10 (runaway short-circuits without consuming dice when MeanK ≤ 303).
 	r := roller.NewScripted(7, 5)
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -614,7 +614,7 @@ func TestRederive_NonHZBody_NoRunawayCheck(t *testing.T) {
 
 	// Scripted: hydro 2D + percent d10 (no runaway check for non-HZ).
 	r := roller.NewScripted(7, 5)
-	err := RederiveAtmosphereHydrographics(r, body, sys, nil)
+	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -651,7 +651,7 @@ func TestRederive_AtmosphereB_RunawayBoilingOnly_PreservesSubtype(t *testing.T) 
 	//   No subtype/pressure re-roll (caller skips for boiling-only).
 	//   Hydrographics + gas mix re-rolls consume the rest (over-script for safety).
 	r := roller.NewScripted(3, 7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8)
-	if err := RederiveAtmosphereHydrographics(r, body, sys, nil); err != nil {
+	if err := RederiveAtmosphereHydrographics(r, body, sys); err != nil {
 		t.Fatal(err)
 	}
 

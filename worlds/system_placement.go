@@ -1,7 +1,6 @@
 package worlds
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/philoserf/world-builder/roller"
@@ -21,13 +20,6 @@ type SystemPlacement struct {
 	Placements    []Placement
 }
 
-// ErrContinuationMethodUnsupported is returned when sys carries
-// pre-existing mainworld data (no field today; placeholder for the
-// future Continuation Method sub-project).
-var ErrContinuationMethodUnsupported = errors.New(
-	"worlds: pre-existing mainworld input requires Continuation Method, not yet encoded",
-)
-
 // GenerateSystemPlacement runs the WBH 9-step pipeline end-to-end:
 //
 //  0. GenerateCounts (pp. 36-38)
@@ -41,9 +33,6 @@ var ErrContinuationMethodUnsupported = errors.New(
 //  8. PlaceWorlds (pp. 51-52)
 //  9. RollPlanetEccentricities (p. 52)
 func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement, error) {
-	// TODO(continuation-method): when stars.System gains a pre-existing
-	// mainworld field, return ErrContinuationMethodUnsupported here before
-	// running the clean-slate pipeline.
 	counts, err := GenerateCounts(r, sys, CountsOpts{})
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: counts: %w", err)

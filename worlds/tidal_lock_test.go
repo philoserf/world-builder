@@ -225,47 +225,6 @@ func TestEvaluateTidalLockDMs_NoMoonCases_NotAMoon(t *testing.T) {
 	}
 }
 
-func TestSelectHighestDMCase_FilterBelowMinusTen(t *testing.T) {
-	// Cases with DM ≤ -10 → filtered out per p.106.
-	dms := map[TidalLockCase]int{
-		TidalLockCasePlanetToStar: -12,
-		TidalLockCaseMoonToPlanet: 5,
-	}
-	body := &Body{}
-	kase, dm := SelectHighestDMCase(dms, body)
-	if kase != TidalLockCaseMoonToPlanet {
-		t.Errorf("got case %v, want MoonToPlanet (planet→star filtered as ≤-10)", kase)
-	}
-	if dm != 5 {
-		t.Errorf("got DM %d, want 5", dm)
-	}
-}
-
-func TestSelectHighestDMCase_AllFiltered_ReturnsNone(t *testing.T) {
-	dms := map[TidalLockCase]int{
-		TidalLockCasePlanetToStar: -15,
-		TidalLockCaseMoonToPlanet: -11,
-	}
-	body := &Body{}
-	kase, _ := SelectHighestDMCase(dms, body)
-	if kase != TidalLockCaseNone {
-		t.Errorf("got case %v, want None", kase)
-	}
-}
-
-func TestSelectHighestDMCase_TieMoonFirst(t *testing.T) {
-	// Per p.106: when tied, moon-cases roll first.
-	dms := map[TidalLockCase]int{
-		TidalLockCasePlanetToStar: 5,
-		TidalLockCaseMoonToPlanet: 5,
-	}
-	body := &Body{}
-	kase, _ := SelectHighestDMCase(dms, body)
-	if kase != TidalLockCaseMoonToPlanet {
-		t.Errorf("got case %v, want MoonToPlanet (moon-cases first on tie)", kase)
-	}
-}
-
 func TestIsTerrestrial(t *testing.T) {
 	cases := []struct {
 		name string
@@ -588,7 +547,7 @@ func TestApplyTidalLockEffect_BecomesRetrograde_NilAxialTilt(t *testing.T) {
 func TestGenerateTidalLock_ZedPrime_FullPath(t *testing.T) {
 	// Zed Prime moon→planet path:
 	//   1. EvaluateTidalLockDMs returns DM+7 for moon→planet case.
-	//   2. SelectHighestDMCase picks moon→planet (no other cases applicable).
+	//   2. SelectHighestDMCases picks moon→planet (no other cases applicable).
 	//   3. RollTidalLockStatus: 2D=6 + 7 = 13 (1:1 lock pending).
 	//   4. Verification: 2D=12 (natural 12) → reroll status with no DMs.
 	//   5. Reroll: 2D=4 → FinalResult=4 → day × 2.

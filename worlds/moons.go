@@ -130,15 +130,14 @@ func terrestrialMoonFirst6(r roller.Roller, parent ParentInfo) (Body, error) {
 		return moonBody("S"), nil
 	}
 
-	// "Exactly 2 less than parent" 2D adjustment.
+	// "Exactly 2 less than parent" 2D adjustment. Default case (any other
+	// roll) keeps resultN at 2-less.
 	if resultN == parentN-2 && resultN > 0 {
-		switch twoD := r.Roll("2D"); twoD {
+		switch r.Roll("2D") {
 		case 2:
 			resultN = parentN - 1 // upgrade by 1
 		case 12:
 			resultN = parentN // twin world
-		default:
-			_ = twoD // keep at 2-less
 		}
 	}
 
