@@ -157,6 +157,7 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Tidal lock: no, Tides (m): 0.00
 
 ### GAS GIANT
+- Residual temperature (K): — (below 1 K, WBH p.125)
 - No discrete surface: atmosphere, hydrographics, life, and habitability do not apply.
 
 ### SUBORDINATES
@@ -384,6 +385,7 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Tidal lock: no, Tides (m): 0.00
 
 ### GAS GIANT
+- Residual temperature (K): — (below 1 K, WBH p.125)
 - No discrete surface: atmosphere, hydrographics, life, and habitability do not apply.
 
 ### SUBORDINATES

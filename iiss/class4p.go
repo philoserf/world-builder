@@ -247,6 +247,8 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 		b.WriteString("### GAS GIANT\n")
 		if p.ResidualTempK > 0 {
 			fmt.Fprintf(b, "- Residual temperature (K): %.1f (WBH p.125)\n", p.ResidualTempK)
+		} else {
+			b.WriteString("- Residual temperature (K): — (below 1 K, WBH p.125)\n")
 		}
 		b.WriteString("- No discrete surface: atmosphere, hydrographics, life, and habitability do not apply.\n\n")
 	} else {

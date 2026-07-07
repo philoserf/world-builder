@@ -204,5 +204,5 @@ func ggClassLabel(c GasGiantClass) string {
 	case GasGiantLarge:
 		return "Large"
 	}
-	return ""
+	return "Unknown"
 }

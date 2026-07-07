@@ -49,6 +49,9 @@ func TestClass4P_GasGiant(t *testing.T) {
 	if !strings.Contains(out, "Medium gas giant") || !strings.Contains(out, "### GAS GIANT") {
 		t.Errorf("GG PART P missing gas-giant detail:\n%s", out)
 	}
+	if !strings.Contains(out, "Residual temperature (K): 187.0") {
+		t.Errorf("GG PART P missing residual temperature:\n%s", out)
+	}
 	if strings.Contains(out, "vacuum") || strings.Contains(out, "### HYDROGRAPHICS") {
 		t.Errorf("GG PART P leaked terrestrial sections:\n%s", out)
 	}
