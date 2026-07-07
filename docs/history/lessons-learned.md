@@ -161,7 +161,7 @@ After v1.0, a fresh read of `main` catalogued six seams and proposed a from-scra
 
 `rebuild-spec.md` laid out C1–C6 as a clean-room rebuild. Only one change — C1, the per-body sub-roller tree — delivered something the existing architecture structurally could not (position-independent per-body dice, which makes a full-pipeline gold fixture survivable); the rest were in-place refactors. Spiking C1 alone (about a day) proved it retrofits onto `main` with no orchestrator signature changes, because `Seeded.Fork` derives children from the immutable construction seed. So the "rebuild" became five incremental PRs and the rewrite's risk was never taken on.
 
-**Implication.** A rebuild spec is a thinking tool, not a commitment. Find the one or two changes that genuinely need a clean slate, spike those, and the rest usually retrofit. The spec's own risk section predicted exactly this — "if the C1 spike disappoints, refactor `main` for C2–C6, skip the rebuild" — and it was right in the other direction: the spike succeeded, so all of it retrofit.
+**Implication.** A rebuild spec is a thinking tool, not a commitment. Find the one or two changes that genuinely need a clean slate, spike those, and the rest usually retrofit. The spec's own risk section predicted exactly this — "if the C1 spike disappoints, refactor `main` for C2–C6, skip the rebuild" — and it was right in the other direction: the spike succeeded, so all of it retrofitted onto `main`.
 
 ### L16 — Byte-identical output is necessary but not sufficient for "no behavior change"
 

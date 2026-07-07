@@ -16,7 +16,7 @@ Design, reference, and living docs live at this directory's root:
 - [`summary.md`](summary.md) — one-page overview of what was built.
 - [`next-steps.md`](next-steps.md) — living post-v1.0 open-items list.
 - [`rebuild-spec.md`](rebuild-spec.md) — the post-v1.0 seam catalogue, originally framed as a from-scratch rebuild. Its cleanups (C1–C5) were instead **retrofitted onto `main`** incrementally; each section carries a "Resolved" note. See `history/lessons-learned.md` § "Post-v1.0" for what the arc taught.
-- [`c1-subroller-plan.md`](c1-subroller-plan.md) — the concrete plan for C1 (the per-body sub-roller tree), the one change that needed a spike before it retrofit. Landed; the plan records the spike verdict.
+- [`c1-subroller-plan.md`](c1-subroller-plan.md) — the concrete plan for C1 (the per-body sub-roller tree), the one change that needed a spike to prove it would retrofit. Landed; the plan records the spike verdict.
 
 ## Historical — preserved for context
 
