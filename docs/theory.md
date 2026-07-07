@@ -10,9 +10,9 @@ The system encodes a published roleplaying-game supplement — Mongoose's _World
 
 The vocabulary is the book's, not Go's and not astronomy's. `HZCO` is the habitable-zone central orbit of a star. `SAH` is the Size-Atmosphere-Hydrographics triplet that becomes one cell of an IISS Class II/III form. `MAO` is the maximum allowed orbit for an interior body. `TSS` is total seismic stress: residual plus tidal-stress factor plus tidal-heating factor. `IISS` is the fictional in-setting survey service whose three printed forms (Class 0/I, Class II/III, Class IV-P) are the output the program is ultimately trying to produce. `Zed`, `Zed Prime`, `Corella`, `Sol`/`Terra` are the worked examples the book itself threads through its chapters — and they are first-class fixtures in the test suite, by name, with dice scripts that match what the book reports.
 
-The output is one of three forms of the same content:
+The output is one of three renderings of the same content:
 
-- A complete Markdown rendering of all three IISS forms for the generated system (default; the canonical output).
+- A complete Markdown rendering of the IISS Class IV Survey — PART 1 (system census) plus a per-body PART P / PART P.B — for the generated system (default; the canonical output).
 - A JSON dump of the same.
 - A `G-P-T-N-S` short profile string (gas giants, belts, terrestrials, baseline number, spread) per WBH p.58.
 
@@ -101,7 +101,7 @@ These are not aesthetic. `Compute*` previously coexisted with `Roll*` confusingl
 
 ## The IISS package boundary
 
-`iiss/` (the package, not the in-fiction service) is the boundary between system construction and rendering. The form types — `Class0IForm`, `Class23Form`, `Class4PForm` (and its `Class4PPartP` / `Class4PPartPB` bodies), `SystemForms`, `FormHeader` — live there. The Markdown renderers (`MarkdownClass0I`, `MarkdownClass23`, `MarkdownClass4P`, `MarkdownSystem`) live there. **`iiss/` does not import `worlds/`.** The boundary type passed across the seam is `iiss.SystemForms`, populated by `worlds.BuildIISSForms` and consumed by the renderers.
+`iiss/` (the package, not the in-fiction service) is the boundary between system construction and rendering. The form types — `Class0IForm`, `Class23Form`, `Class4PForm` (and its `Class4PPartP` / `Class4PPartPB` bodies), `SystemForms`, `FormHeader` — live there. The Markdown renderer `MarkdownClass4Survey` (with `markdownClass4Part1` and per-part helpers) lives there. **`iiss/` does not import `worlds/`.** The boundary type passed across the seam is `iiss.SystemForms`, populated by `worlds.BuildIISSForms` and consumed by the renderer.
 
 This is principled and pays off — package boundary decisions are cheap during design and expensive during implementation, and pass 2 made the decision before any code shipped. The cycle never had to surface.
 
@@ -151,7 +151,7 @@ If you introduce a new procedure, the per-procedure test is mandatory (it's wher
 - _Adding a procedure inside an existing WBH section._ Port or write the function in the appropriate file, with WBH page citations in the doc-comment. Add a per-procedure dice-script test. If it's per-body, slot it into the relevant `Apply*` orchestrator's body loop; if it's per-allocation or per-system, slot it into the relevant aggregation. The unified `Body` and the iterator make the per-body case mostly mechanical.
 - _Fixing a misinterpretation of a procedure._ Change the function, change the fixture, run `task`. Worked-example tests catch correctness regressions immediately.
 - _Adding a seventh book-internal inconsistency._ Add the entry to `wbh-inconsistencies.md` with both sources cited, encode the interpretation in code with a doc-comment, flip the fixture status to ⚠️.
-- _Adjusting renderer output for Class 0/I or Class II/III._ Edit `iiss/render.go`. Refresh the regression baseline if the change is intentional.
+- _Adjusting the Class IV Survey rendering (PART 1 or the per-body parts)._ Edit `iiss/render.go`. Refresh the regression + Zed gold baselines if the change is intentional.
 - _Adding a new output format._ Add `JSONClass0I`, `XMLClass0I`, etc., as new sibling functions in `iiss/`. No interface required — that's what `design-intent.md` § "Stop rules" rejects.
 
 **Changes that require rethinking something fundamental:**

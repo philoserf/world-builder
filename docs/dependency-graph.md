@@ -289,7 +289,7 @@ Run once after every body's per-body pipeline is complete.
 - `RenderClass0I`, `RenderClass23`, `RenderClass4P` — typed structs (design; see `api-surface.md`).
 - `pickMainworld(detailed)` — priority chain: native sophonts → highest habitability → highest resource → first in iteration order.
 
-**Notes:** `pickMainworld` admits planets, moons, and belts as candidates. Class IV-P renders only for the auto-picked mainworld; PART P or PART P.B variant is selected by mainworld type.
+**Notes:** `pickMainworld` admits planets, moons, and belts as candidates. A Class IV Survey PART P (planet/moon/gas-giant) or PART P.B (belt) is rendered for every non-empty body; the auto-picked mainworld's part is flagged.
 
 ## Per-body iteration patterns
 

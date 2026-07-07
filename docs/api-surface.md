@@ -66,19 +66,15 @@ type Universe struct {
 // SystemDetail aggregates the per-body bodies and the system-wide
 // aggregations (profiles, IISS forms, mainworld pick).
 type SystemDetail struct {
-    Bodies               []Body
-    Allocations          []StarAllocation
-    BaselineN            int
-    BaselineOrbit        float64
-    EmptyOrbits          int
-    SystemSpread         float64
-    ShortProfile         string
-    LongProfile          string
-    Class0I              iiss.Class0IForm
-    Class23              iiss.Class23Form
-    Class4P              iiss.Class4PForm     // mainworld only
-    MainworldDesignation string
+    Bodies      []Body
+    Allocations []StarAllocation
+    Mainworld   *Body
+    iiss.SystemForms   // Class0I + Class23 (PART 1 data carriers),
+                       // Class4PForms []Class4PForm (one PART P/P.B per
+                       // body), Census, profiles, NotableFeatures
 }
+// placement scalars (baseline number/orbit, spread, empty orbits) live on
+// Universe.Placement; SystemForms.Census carries them for PART 1 rendering.
 ```
 
 ## The Body — unified per-body type
@@ -369,7 +365,7 @@ func JSONClass0I(f Class0IForm) ([]byte, error)
 func JSONClass23(f Class23Form) ([]byte, error)
 func JSONClass4P(f Class4PForm) ([]byte, error)
 
-func MarkdownSystem(u *worlds.Universe) string   // concatenates all three under H1/H2
+func MarkdownClass4Survey(sf SystemForms) string // PART 1 census + a per-body PART P/P.B, under H1/H2
 
 func PlainTextClass0I(f Class0IForm) string
 func PlainTextClass23(f Class23Form) string
@@ -412,7 +408,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error)
 ```go
 u, err := worlds.Generate(*seedFlag)
 if err != nil { /* ... */ }
-fmt.Print(iiss.MarkdownSystem(&u))
+fmt.Print(iiss.MarkdownClass4Survey(u.Detail.SystemForms))
 ```
 
 Three lines of pipeline. Same shape as pass 1's CLI.
