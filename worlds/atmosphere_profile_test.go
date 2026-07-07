@@ -269,7 +269,7 @@ func TestRollGasMix_BasicShape(t *testing.T) {
 	// since meanTempK is not passed to RollGasMix — it uses table DMs only.
 	// Scripted rolls: 2D=7, 1D=4, d10=4, 2D=7, 1D=4, d10=0, 2D=3, 1D=4, d10=0.
 	r := roller.NewScripted(7, 4, 4, 7, 4, 0, 3, 4, 0)
-	prof, err := RollGasMix(r, "A", "7", TempFrozen, SizeCode("4"))
+	prof, err := RollGasMix(r, "A", 0, TempFrozen, SizeCode("4"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +303,7 @@ func TestRollGasMix_TempRangeLabel(t *testing.T) {
 		{TempFrozen, "Frozen"},
 	} {
 		r := roller.NewScripted(rolls12...)
-		prof, err := RollGasMix(r, "A", "", tc.tr, SizeCode("5"))
+		prof, err := RollGasMix(r, "A", 0, tc.tr, SizeCode("5"))
 		if err != nil {
 			t.Fatalf("%s: %v", tc.want, err)
 		}
@@ -324,7 +324,7 @@ func TestRollGasMix_GasMerging(t *testing.T) {
 		3, 3, 5, // third gas
 		3, 3, 5, // fourth gas
 	)
-	prof, err := RollGasMix(r, "A", "", TempFrozen, SizeCode("5"))
+	prof, err := RollGasMix(r, "A", 0, TempFrozen, SizeCode("5"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,4 +338,33 @@ func TestRollGasMix_GasMerging(t *testing.T) {
 	}
 	// If N2 not found, check that something valid was produced.
 	t.Logf("Gases produced: %v", prof.Gases)
+}
+
+// TestRollGasMix_TempDMApplied asserts the WBH p.96/p.98 mean-temperature
+// DM shifts the gas-mix table row (regression: the DM helpers existed but
+// were never wired into any call path).
+func TestRollGasMix_TempDMApplied(t *testing.T) {
+	t.Parallel()
+	// Same dice, same column/size/range — only the temp DM differs. With
+	// a DM shift of +5 (Frozen below 70K) the first-gas table row moves,
+	// so the leading gas must differ from the no-DM roll for at least one
+	// scripted stream. 2D=7 → row 7 vs row 12.
+	dice := []int{7, 3, 5, 7, 3, 5, 7, 3, 5, 7, 3, 5}
+	base, err := RollGasMix(roller.NewScripted(dice...), "A", 0, TempFrozen, SizeCode("5"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	shifted, err := RollGasMix(roller.NewScripted(dice...), "A", GasMixFrozenTempDM(60), TempFrozen, SizeCode("5"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if GasMixFrozenTempDM(60) != 5 {
+		t.Fatalf("GasMixFrozenTempDM(60) = %d, want 5", GasMixFrozenTempDM(60))
+	}
+	if len(base.Gases) == 0 || len(shifted.Gases) == 0 {
+		t.Fatal("empty gas mixes")
+	}
+	if base.Gases[0].Name == shifted.Gases[0].Name {
+		t.Errorf("temp DM had no effect on leading gas: both %q", base.Gases[0].Name)
+	}
 }

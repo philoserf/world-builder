@@ -327,3 +327,51 @@ func TestCorrosiveInsidiousPressureRange(t *testing.T) {
 		}
 	}
 }
+
+// TestRollAtmoCode_UpperClamp asserts the 0-15 (0-F) world-atmosphere
+// clamp: codes 16 (G) and 17 (H) are gas-giant rows of the p.79 table
+// and must never be produced for worlds (docs/wbh-inconsistencies.md
+// documents this as a package invariant).
+func TestRollAtmoCode_UpperClamp(t *testing.T) {
+	t.Parallel()
+	// Size F (15) with max 2D=12: unclamped 12-7+15 = 20 → must clamp to 15.
+	got, err := RollAtmoCode(roller.NewScripted(12), SizeCode("F"), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != 15 {
+		t.Errorf("RollAtmoCode(Size F, 2D=12) = %d, want 15 (clamped)", got)
+	}
+	// Size B (11) with 2D=12: 12-7+11 = 16 (G) → clamp to 15.
+	got, err = RollAtmoCode(roller.NewScripted(12), SizeCode("B"), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != 15 {
+		t.Errorf("RollAtmoCode(Size B, 2D=12) = %d, want 15 (clamped)", got)
+	}
+}
+
+// TestAtmosphereCodes_TableConsistency asserts the single p.79 table
+// transcription is complete (codes 0-17) and its chars match the UWP
+// hex convention.
+func TestAtmosphereCodes_TableConsistency(t *testing.T) {
+	t.Parallel()
+	wantChars := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H"}
+	for code, want := range wantChars {
+		entry, ok := atmosphereCodes[code]
+		if !ok {
+			t.Errorf("atmosphereCodes missing code %d", code)
+			continue
+		}
+		if entry.Char != want {
+			t.Errorf("atmosphereCodes[%d].Char = %q, want %q", code, entry.Char, want)
+		}
+		if entry.Name == "" {
+			t.Errorf("atmosphereCodes[%d].Name is empty", code)
+		}
+	}
+	if len(atmosphereCodes) != len(wantChars) {
+		t.Errorf("atmosphereCodes has %d entries, want %d", len(atmosphereCodes), len(wantChars))
+	}
+}

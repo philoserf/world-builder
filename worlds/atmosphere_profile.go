@@ -417,12 +417,13 @@ func tempRangeLabel(t TempRange) string {
 // is retained in the signature for future profile shorthand decoration.
 func RollGasMix(
 	r roller.Roller,
-	atmosphereColumnLetter, _ string,
+	atmosphereColumnLetter string,
+	tempDM int,
 	tempRange TempRange,
 	sizeCode SizeCode,
 ) (AtmosphereProfile, error) {
 	prof := AtmosphereProfile{TempRange: tempRangeLabel(tempRange)}
-	dm := gasMixSizeDM(tempRange, sizeCode)
+	dm := gasMixSizeDM(tempRange, sizeCode) + tempDM
 
 	remainingBP := 10000
 	for iter := 0; iter < 4 && remainingBP > 500; iter++ {
@@ -463,30 +464,10 @@ func RollGasMix(
 	return prof, nil
 }
 
-// atmosphereCodeChar returns the UWP hex character for an atmosphere code integer.
+// atmosphereCodeChar returns the UWP hex character for an atmosphere code
+// integer, from the single p.79 table transcription in atmosphere.go.
 func atmosphereCodeChar(code int) string {
-	if code >= 0 && code <= 9 {
-		return fmt.Sprintf("%d", code)
-	}
-	switch code {
-	case 10:
-		return "A"
-	case 11:
-		return "B"
-	case 12:
-		return "C"
-	case 13:
-		return "D"
-	case 14:
-		return "E"
-	case 15:
-		return "F"
-	case 16:
-		return "G"
-	case 17:
-		return "H"
-	}
-	return ""
+	return atmosphereCodes[code].Char
 }
 
 // FormatAtmoProfileShorthand produces the atmosphere profile string per WBH p.82 (N-O codes),
@@ -525,6 +506,13 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 		subtypeWithHazard = atmo.Subtype + "." + codes.String()
 	}
 	base := fmt.Sprintf("%s-St%s", codeChar, subtypeWithHazard)
+	if subtypeWithHazard == "" {
+		// Exotic (A) and Unusual (F) atmospheres carry no subtype in the
+		// live pipeline — their WBH p.85 / p.90 subtype tables are not
+		// encoded (issue #69). Emit the bare code char rather than a
+		// dangling "A-St".
+		base = codeChar
+	}
 	if atmo.Pressure > 0 {
 		base += fmt.Sprintf(":%.2f", atmo.Pressure)
 	}

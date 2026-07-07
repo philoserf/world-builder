@@ -102,7 +102,7 @@ func TestMisuse_RollGasMix_EmptyColumn(t *testing.T) {
 			t.Errorf("RollGasMix panicked on empty column letter: %v", rec)
 		}
 	}()
-	_, _ = worlds.RollGasMix(r, "", "", worlds.TempTemperate, "5")
+	_, _ = worlds.RollGasMix(r, "", 0, worlds.TempTemperate, "5")
 }
 
 // TestMisuse_RollAtmoCode_SizeZero — SizeCode "0" (belt) — function

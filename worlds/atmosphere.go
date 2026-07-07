@@ -72,32 +72,36 @@ func HZCOOffsetToTempRange(orbitNumber, hzco float64) TempRange {
 	}
 }
 
-// atmosphereLabels maps WBH p.79 Atmosphere Codes.
-var atmosphereLabels = map[int]string{
-	0:  "None",
-	1:  "Trace",
-	2:  "Very Thin, Tainted",
-	3:  "Very Thin",
-	4:  "Thin, Tainted",
-	5:  "Thin",
-	6:  "Standard",
-	7:  "Standard, Tainted",
-	8:  "Dense",
-	9:  "Dense, Tainted",
-	10: "Exotic",
-	11: "Corrosive",
-	12: "Insidious",
-	13: "Very Dense",
-	14: "Low",
-	15: "Unusual",
-	16: "Gas, Helium",
-	17: "Gas, Hydrogen",
+// atmosphereCodes is the single transcription of the WBH p.79
+// Atmosphere Codes table: UWP hex character and label per code 0-17.
+// Every code→char and code→label lookup in the package derives from
+// this table — do not re-transcribe it (three independent copies once
+// drifted; see docs/wbh-inconsistencies.md § atmosphere code labels).
+var atmosphereCodes = map[int]struct{ Char, Name string }{
+	0:  {"0", "None"},
+	1:  {"1", "Trace"},
+	2:  {"2", "Very Thin, Tainted"},
+	3:  {"3", "Very Thin"},
+	4:  {"4", "Thin, Tainted"},
+	5:  {"5", "Thin"},
+	6:  {"6", "Standard"},
+	7:  {"7", "Standard, Tainted"},
+	8:  {"8", "Dense"},
+	9:  {"9", "Dense, Tainted"},
+	10: {"A", "Exotic"},
+	11: {"B", "Corrosive"},
+	12: {"C", "Insidious"},
+	13: {"D", "Very Dense"},
+	14: {"E", "Low"},
+	15: {"F", "Unusual"},
+	16: {"G", "Gas, Helium"},
+	17: {"H", "Gas, Hydrogen"},
 }
 
 // AtmosphereCompositionLabel returns the human-readable label for a WBH p.79
 // atmosphere code. Returns "" for unknown codes.
 func AtmosphereCompositionLabel(code int) string {
-	return atmosphereLabels[code]
+	return atmosphereCodes[code].Name
 }
 
 // SizeAsInt converts a SizeCode to its integer equivalent for arithmetic.
@@ -356,7 +360,12 @@ func HZRegionAtmosphereDM(code int) int {
 // RollAtmoCode rolls the unified WBH atmosphere digit formula: 2D-7+Size.
 //
 // Sizes 0, 1, and S return automatic atmo code 0 without consuming a roll.
-// Results below 0 are clamped to 0.
+// Results are clamped to the world-atmosphere range 0-15 (0-F): codes 16
+// (G) and 17 (H) are gas-giant rows of the p.79 table and must never be
+// produced for worlds — docs/wbh-inconsistencies.md documents "RollAtmoCode
+// cannot produce them" as a package invariant, which the upper clamp
+// enforces for SizeCode B-F worlds (e.g. Size F: 2D=12 → 12-7+15 = 20
+// unclamped).
 //
 // The third argument (hzcoOffset) is reserved for non-HZ Hot/Cold table column
 // selection in Task 11; it does not affect the roll formula here.
@@ -365,52 +374,6 @@ func RollAtmoCode(r roller.Roller, sizeCode SizeCode, _ float64) (int, error) {
 		return 0, nil
 	}
 	roll := r.Roll("2D")
-	code := max(roll-7+SizeAsInt(sizeCode), 0)
+	code := min(max(roll-7+SizeAsInt(sizeCode), 0), 15)
 	return code, nil
-}
-
-// AtmosphereCodeName returns the WBH p.79 atmosphere code description.
-// Returns "" for codes outside the book's table (0-17 ↔ 0..H).
-//
-// Source: WBH p.79 "Atmosphere Codes" table — values copied verbatim.
-func AtmosphereCodeName(code int) string {
-	switch code {
-	case 0:
-		return "None (Vacuum)"
-	case 1:
-		return "Trace"
-	case 2:
-		return "Very Thin, Tainted"
-	case 3:
-		return "Very Thin"
-	case 4:
-		return "Thin, Tainted"
-	case 5:
-		return "Thin"
-	case 6:
-		return "Standard"
-	case 7:
-		return "Standard, Tainted"
-	case 8:
-		return "Dense"
-	case 9:
-		return "Dense, Tainted"
-	case 10: // A
-		return "Exotic"
-	case 11: // B
-		return "Corrosive"
-	case 12: // C
-		return "Insidious"
-	case 13: // D
-		return "Very Dense"
-	case 14: // E
-		return "Low"
-	case 15: // F
-		return "Unusual"
-	case 16: // G
-		return "Gas, Helium"
-	case 17: // H
-		return "Gas, Hydrogen"
-	}
-	return ""
 }

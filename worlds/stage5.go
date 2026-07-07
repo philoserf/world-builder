@@ -60,6 +60,11 @@ func initialAtmosphere(r roller.Roller, body *Body, ageGyr float64) (Atmosphere,
 		return Atmosphere{}, false, fmt.Errorf("atmo code: %w", err)
 	}
 	atmo := Atmosphere{Code: atmoCode}
+	// Subtype is rolled only for B (11) / C (12) from the WBH p.89
+	// Corrosive and Insidious Atmosphere Subtype table. Exotic (A/10)
+	// and Unusual (F/15) have their own subtype tables (p.85 / p.90)
+	// that are not yet encoded — their Subtype stays "" and the profile
+	// shorthand renders the bare code char. Tracked in issue #69.
 	if atmoCode == 11 || atmoCode == 12 {
 		st, serr := RollCorrosiveInsidiousSubtype(r, body.SizeCode, host.Orbit, hzco, atmoCode == 12, false)
 		if serr != nil {

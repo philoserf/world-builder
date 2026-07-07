@@ -126,7 +126,16 @@ func RederiveAtmosphereHydrographics(
 	if body.Atmosphere != nil && body.Hydrographics != nil && body.Hydrographics.Code > 0 {
 		columnLetter := gasMixColumnForAtmCode(body.Atmosphere.Code)
 		if columnLetter != "" {
-			newProfile, err := RollGasMix(r, columnLetter, "", tempRange, body.SizeCode)
+			// WBH p.96/p.98: the Boiling and Frozen gas-mix tables take an
+			// additional mean-temperature DM on top of the size DM.
+			tempDM := 0
+			switch tempRange {
+			case TempBoiling:
+				tempDM = GasMixBoilingTempDM(meanK)
+			case TempFrozen:
+				tempDM = GasMixFrozenTempDM(meanK)
+			}
+			newProfile, err := RollGasMix(r, columnLetter, tempDM, tempRange, body.SizeCode)
 			if err != nil {
 				return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: gas mix: %w", err)
 			}
