@@ -74,11 +74,13 @@ const (
 	Class4PBelt
 )
 
-// Class4PForm is the IISS Class IV-P "Planetary Detail" Survey form,
-// rendered only for the auto-picked mainworld. Exactly one of PartP
-// (planet/moon) or PartPB (belt) is populated, per Variant; the other is
-// nil. Both are concrete iiss types, so the form is fully owned by iiss/
-// and marshals to JSON without a worlds-side payload.
+// Class4PForm is one per-body "Planetary Detail" part of the IISS Class IV
+// Survey — a PART P (planet/moon) or PART P.B (belt). SystemForms holds one
+// per non-empty body in Class4PForms; the auto-picked mainworld's part is
+// flagged via PartP/PartPB.IsMainworld. Exactly one of PartP (planet/moon)
+// or PartPB (belt) is populated, per Variant; the other is nil. Both are
+// concrete iiss types, so the form is fully owned by iiss/ and marshals to
+// JSON without a worlds-side payload.
 type Class4PForm struct {
 	FormHeader
 	// Designation is the surveyed body's designation (e.g. "Aab IV d"),
