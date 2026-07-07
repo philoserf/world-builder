@@ -61,20 +61,60 @@ func generateBodyPhysicalIfTerrestrial(r roller.Roller, body, hostForHZ *Body, s
 // ApplyBeltDetails generates per-belt details (span, composition,
 // bulk, resource rating, significant-size body counts) for every belt
 // body. Stage-3 orchestrator entry per WBH pp.91-93.
+//
+// Gates on Kind, not SizeCode: belts carry SizeCode "" per the SizeCode
+// contract (sizing_terrestrial.go); the historical `SizeCode == "0"`
+// gate matched no body, so belt details were never generated.
 func ApplyBeltDetails(r roller.Roller, u *Universe) error {
 	for i := range u.Detail.Bodies {
 		body := &u.Detail.Bodies[i]
-		if body.SizeCode != "0" {
+		if body.Kind != BodyPlanetoidBelt {
 			continue
 		}
+		adjacentToGG, outermostSlot := beltSpanFlags(u.Detail.Bodies, i)
 		hzco := body.Group.HZCO()
-		bd, err := GenerateBeltDetails(r, body.Orbit, u.Placement.SystemSpread, hzco, u.System.Primary.AgeGyr, false, false)
+		bd, err := GenerateBeltDetails(r, body.Orbit, u.Placement.SystemSpread, hzco, u.System.Primary.AgeGyr, adjacentToGG, outermostSlot)
 		if err != nil {
 			return fmt.Errorf("worlds: stage3 belt %s: %w", body.Designation, err)
 		}
 		body.Belt = &bd
 	}
 	return nil
+}
+
+// beltSpanFlags computes the WBH p.72 belt-span DM inputs for the belt
+// at bodies[i]:
+//
+//   - adjacentToGG: the directly neighboring orbit slot on either side
+//     (within the same star group, empty slots included as slots) holds
+//     a gas giant. A gas giant beyond an intervening empty orbit is not
+//     adjacent.
+//   - outermostSlot: no non-empty body of the same group sits at a
+//     higher orbit. Trailing empty slots do not disqualify — the DM's
+//     intent is "nothing beyond the belt", and an empty slot is not a
+//     body. (Book unavailable to confirm slot-vs-body wording; this
+//     interpretation is asserted by TestBeltSpanFlags.)
+func beltSpanFlags(bodies []Body, i int) (adjacentToGG, outermostSlot bool) {
+	belt := &bodies[i]
+	if i > 0 && bodies[i-1].Group.Designation == belt.Group.Designation &&
+		bodies[i-1].Kind == BodyGasGiant {
+		adjacentToGG = true
+	}
+	if i < len(bodies)-1 && bodies[i+1].Group.Designation == belt.Group.Designation &&
+		bodies[i+1].Kind == BodyGasGiant {
+		adjacentToGG = true
+	}
+	outermostSlot = true
+	for j := range bodies {
+		if bodies[j].Group.Designation != belt.Group.Designation || bodies[j].Kind == BodyEmpty {
+			continue
+		}
+		if bodies[j].Orbit > belt.Orbit {
+			outermostSlot = false
+			break
+		}
+	}
+	return adjacentToGG, outermostSlot
 }
 
 // ApplyMoonRefinement runs the WBH pp.75-77 moon refinement pass:

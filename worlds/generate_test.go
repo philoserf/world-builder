@@ -105,3 +105,42 @@ func TestZed_Generate(t *testing.T) {
 		}
 	}
 }
+
+// TestGenerate_BeltsHaveDetails guards the ApplyBeltDetails gate: every
+// planetoid belt in a generated system must carry Belt details (span,
+// composition, resource rating). Regression for the historical
+// SizeCode-"0" gate that matched no body, leaving Belt nil for every
+// belt ever generated.
+func TestGenerate_BeltsHaveDetails(t *testing.T) {
+	t.Parallel()
+
+	belts := 0
+	for iter := range 100 {
+		u, err := worlds.Generate(int64(iter))
+		if err != nil {
+			continue // post-stellar primaries etc. — covered elsewhere
+		}
+		for i := range u.Detail.Bodies {
+			body := &u.Detail.Bodies[i]
+			if body.Kind != worlds.BodyPlanetoidBelt {
+				continue
+			}
+			belts++
+			if body.Belt == nil {
+				t.Errorf("seed %d: belt %s has nil Belt details", iter, body.Designation)
+				continue
+			}
+			if body.Belt.Span <= 0 {
+				t.Errorf("seed %d: belt %s span = %v, want > 0", iter, body.Designation, body.Belt.Span)
+			}
+			total := body.Belt.Composition.MTypePct + body.Belt.Composition.STypePct +
+				body.Belt.Composition.CTypePct + body.Belt.Composition.OtherPct
+			if total != 100 {
+				t.Errorf("seed %d: belt %s composition sums to %d, want 100", iter, body.Designation, total)
+			}
+		}
+	}
+	if belts == 0 {
+		t.Fatal("no belts across 100 seeds — sweep is vacuous")
+	}
+}

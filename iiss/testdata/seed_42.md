@@ -9,8 +9,11 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 ## Notable Features
 
 ### Tidal locks
-- A I: planet → star, 3:2
-- A II b: moon → planet, 1:1
+- A I: planet → star, 1:1, twilight zone
+- A II: planet → star, 1:1, twilight zone
+- A II a: moon → planet, 1:1
+- A II b: moon → planet, 3:2
+- A III: planet → moon, 1:1
 - A III a: moon → planet, 1:1
 - A III b: moon → planet, 1:1
 - A III c: moon → planet, 1:1
@@ -32,11 +35,8 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - B II d: moon → planet, 1:1
 - B II e: moon → planet, 1:1
 
-### Cold snaps
-- A VII: WorstLow 198 K (mean 285 K)
-
 ### Mainworld habitability
-- A VII — Rating 6/12 (Regionally habitable): Tainted thin or dense atmospheres; Desert conditions prevalent
+- A VII — Rating 8/12 (Suitable): Tainted thin or dense atmospheres
 
 
 ## Class 0/I — A VII
@@ -93,7 +93,7 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 | A | A V i |  |  |  |  | S |  |  |
 | A | A V j |  |  |  |  | S |  |  |
 | A | A VI | 4.21 | 1.85 | 0.06 | 1.886y | 4?? | 0 |  |
-| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 743 | 0 | HZ |
+| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 797 | 0 | HZ |
 | B | B I | 0.75 | 0.30 | 0.00 | 0.139y | B?? | 0 |  |
 | B | B II | 1.45 | 0.54 | 0.00 | 0.333y | C?? | 5 | 6, 2, 1, S, S |
 | B | B II a |  |  |  |  | 6 |  |  |
@@ -101,7 +101,7 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 | B | B II c |  |  |  |  | 1 |  |  |
 | B | B II d |  |  |  |  | S |  |  |
 | B | B II e |  |  |  |  | S |  |  |
-| B | B PI | 2.30 | 0.79 |  | 0.596y | 000 | ? |  |
+| B | B PI | 2.30 | 0.79 |  | 0.596y | 000 | ? | 0.77-55.35.02.08-9-C-5-3 |
 | A | A I | 8.40 | 28.00 | 0.35 | 111.052y | 4?? | 0 |  |
 | B | B I | 7.40 | 14.00 | 0.00 | 44.592y | 5?? | 0 |  |
 
@@ -119,33 +119,33 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Diameter (km): 11200, Density: 1.03, Gravity: 0.91, Mass (Earth): 0.699
 
 ### ATMOSPHERE
-- Code: 4, Pressure (bar): 0.610, O₂ (bar): 0.140, Scale Height: 9.30
-- Profile: 4-0.610-0.140:G.4.5
+- Code: 9, Pressure (bar): 2.226, O₂ (bar): 1.246, Scale Height: 9.64
+- Profile: 9-2.226-1.246:H.8.9
 
 ### HYDROGRAPHICS
-- Code: 3, Coverage (%): 32, Profile: H3:H2O-100
+- Code: 7, Coverage (%): 70, Profile: H7:H2O-100
 
 ### ROTATION
-- Sidereal (h): 43.60, Solar (h): 43.63, Solar days/year: 1412.81
-- Axial Tilt: 0.06°
+- Sidereal (h): 33.79, Solar (h): 33.81, Solar days/year: 1823.07
+- Axial Tilt: 1.20°
 - Tidal lock: no, Tides (m): 0.00
 
 ### TEMPERATURE
-- High (K): 300.7, Mean (K): 285.4, Low (K): 267.6
-- Luminosity: 19.785, Albedo: 0.28, Greenhouse: 0.52
+- High (K): 304.5, Mean (K): 295.8, Low (K): 286.6
+- Luminosity: 19.785, Albedo: 0.30, Greenhouse: 0.81
 
 ### SEISMIC
-- TSS: 9, Residual: 9, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+- TSS: 9, Residual: 9, Tidal Stress: 0, Tidal Heating: 0, Plates: 7
 
 ### LIFE
-- Biomass: 1, Biocomplexity: 1, Sophonts: no, Biodiversity: 1, Compatibility: 1
+- Biomass: 11, Biocomplexity: 11, Sophonts: extinct, Biodiversity: 7, Compatibility: 0
 
 ### RESOURCES
-- Rating: 4
+- Rating: 9
 
 ### HABITABILITY
-- Rating: 6
-- Notes: Tainted thin or dense atmospheres; Desert conditions prevalent
+- Rating: 8
+- Notes: Tainted thin or dense atmospheres
 
 ### COMMENTS
 - This is the system mainworld.

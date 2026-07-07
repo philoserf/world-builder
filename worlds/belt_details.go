@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/philoserf/world-builder/roller"
 )
@@ -214,12 +215,15 @@ func RollSigSizeSBodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64
 // Caller supplies pre-resolved geometric parameters (orbit, spread, hzco, age) and
 // neighbor flags (adjacentToGG triggers DM-1 on span; outermostSlot triggers DM+3).
 func GenerateBeltDetails(r roller.Roller, beltOrbit, spreadOrbits, hzco, ageGyr float64, adjacentToGG, outermostSlot bool) (BeltDetails, error) {
+	// The two span DMs stack additively (net +2 when a belt is both
+	// adjacent to a gas giant and in the outermost slot) — WBH p.72 lists
+	// them as independent DMs with no either/or wording.
 	spanDM := 0
 	if adjacentToGG {
-		spanDM = -1
+		spanDM--
 	}
 	if outermostSlot {
-		spanDM = 3
+		spanDM += 3
 	}
 	span, err := RollBeltSpan(r, spreadOrbits, spanDM)
 	if err != nil {
@@ -278,9 +282,13 @@ func FormatBeltProfile(b BeltDetails) string {
 	case 12:
 		resourceStr = "C"
 	}
+	// Span prints to at most 2 decimals with trailing zeros trimmed,
+	// matching the book's "0.25" / "0.3" examples — %g would leak full
+	// float64 precision for seeded (non-round) spreads.
+	span := strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.2f", b.Span), "0"), ".")
 	return fmt.Sprintf(
-		"%g-%02d.%02d.%02d.%02d-%d-%s-%d-%d",
-		b.Span,
+		"%s-%02d.%02d.%02d.%02d-%d-%s-%d-%d",
+		span,
 		b.Composition.MTypePct, b.Composition.STypePct,
 		b.Composition.CTypePct, b.Composition.OtherPct,
 		b.Bulk,

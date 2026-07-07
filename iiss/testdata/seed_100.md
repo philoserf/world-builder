@@ -1,6 +1,6 @@
-# A IV — System Survey
+# A III — System Survey
 
-**Mainworld:** A IV
+**Mainworld:** A III
 
 Short profile: `0-2-6-5-0.1`
 
@@ -10,20 +10,22 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 
 ### Tidal locks
 - A PI: planet → star, 1:1, twilight zone
-- A V: planet → star, 3:2
+- A I: planet → star, 1:1, twilight zone
 
 ### Cold snaps
-- A III: WorstLow 196 K (mean 281 K)
-- A IV: WorstLow 193 K (mean 268 K)
+- A I: WorstLow 232 K (mean 356 K)
+- A II: WorstLow 201 K (mean 288 K)
+- A III: WorstLow 211 K (mean 290 K)
+- A IV: WorstLow 152 K (mean 262 K)
 
 ### Taint chains
-- A III: L, R
+- A II: P, S
 
 ### Mainworld habitability
-- A IV — Rating 7/12 (Regionally habitable): Too cold most of the time; Low gravity
+- A III — Rating 9/12 (Suitable): Too hot at times; Gravity very comfortable
 
 
-## Class 0/I — A IV
+## Class 0/I — A III
 
 - System: A
 - Sector / Location: — / —
@@ -35,7 +37,7 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 | --------- | ----- | ---- | -------- | -------- | ---------- | ---- |
 | A | M0 V | 0.440 | 0.672 | 3700 | 0.0763 | 0.69 |
 
-## Class II/III — A IV
+## Class II/III — A III
 
 - Gas giants: 0
 - Belts: 2
@@ -52,56 +54,56 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 
 | Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
-| A | A PI | 0.18 | 0.07 |  | 10.716d | 000 | ? | HZ |
-| A | A I | 0.44 | 0.17 | 0.01 | 0.110y | 445 | 0 | HZ |
-| A | A II | 0.56 | 0.22 | 0.00 | 0.158y | 685 | 0 | HZ |
-| A | A III | 0.69 | 0.28 | 0.03 | 0.219y | 640 | 0 | HZ |
-| A | A IV | 0.81 | 0.32 | 0.09 | 0.279y | 665 | 0 | HZ |
-| A | A PII | 0.96 | 0.38 |  | 0.358y | 000 | ? | HZ |
-| A | A V | 1.07 | 0.42 | 0.08 | 0.410y | 562 | 0 | HZ |
-| A | A VI | 1.25 | 0.48 | 0.01 | 0.495y | 46A | 0 | HZ |
+| A | A PI | 0.18 | 0.07 |  | 10.716d | 000 | ? | HZ, 0.08-65.25.02.08-10-C-1-4 |
+| A | A I | 0.44 | 0.17 | 0.01 | 0.110y | 4A5 | 0 | HZ |
+| A | A II | 0.56 | 0.22 | 0.00 | 0.158y | 6B4 | 0 | HZ |
+| A | A III | 0.69 | 0.28 | 0.03 | 0.219y | 667 | 0 | HZ |
+| A | A IV | 0.81 | 0.32 | 0.09 | 0.279y | 634 | 0 | HZ |
+| A | A PII | 0.96 | 0.38 |  | 0.358y | 000 | ? | HZ, 0.05-07.35.50.08-17-C-11-7 |
+| A | A V | 1.07 | 0.42 | 0.08 | 0.410y | 521 | 0 | HZ |
+| A | A VI | 1.25 | 0.48 | 0.01 | 0.495y | 443 | 0 | HZ |
 
-## Class IV-P PART P — A IV
+## Class IV-P PART P — A III
 
-**WORLD:** A IV
+**WORLD:** A III
 **SECTOR | LOCATION:** — | —
 **INITIAL SURVEY:**    **LAST UPDATED:** 
 **SYSTEM AGE (Gyr):** 3.200
 
 ### ORBIT
-- AU: 0.32, Eccentricity: 0.09, Period (h): 2441.70
+- AU: 0.28, Eccentricity: 0.03, Period (h): 1917.59
 
 ### SIZE
-- Diameter (km): 9600, Density: 0.71, Gravity: 0.53, Mass (Earth): 0.304
+- Diameter (km): 9600, Density: 0.97, Gravity: 0.73, Mass (Earth): 0.415
 
 ### ATMOSPHERE
-- Code: 6, Pressure (bar): 0.937, O₂ (bar): 0.103, Scale Height: 14.78
-- Profile: 6-0.937-0.103
+- Code: 6, Pressure (bar): 0.832, O₂ (bar): 0.208, Scale Height: 11.73
+- Profile: 6-0.832-0.208
 
 ### HYDROGRAPHICS
-- Code: 5, Coverage (%): 54, Profile: H5:H2O-100
+- Code: 7, Coverage (%): 69, Profile: H7:H2O-100
 
 ### ROTATION
-- Sidereal (h): 2880.00, Solar (h): -16044.17, Solar days/year: -0.15
-- Axial Tilt: 4.00°
-- Tidal lock: no, Tides (m): 0.15
+- Sidereal (h): 2400.00, Solar (h): -9539.99, Solar days/year: -0.20
+- Axial Tilt: 179.90°
+- Tidal lock: no, Tides (m): 0.25
 
 ### TEMPERATURE
-- High (K): 311.6, Mean (K): 267.9, Low (K): 214.0
-- Luminosity: 0.076, Albedo: 0.25, Greenhouse: 0.56
+- High (K): 328.0, Mean (K): 290.5, Low (K): 235.5
+- Luminosity: 0.076, Albedo: 0.23, Greenhouse: 0.53
 
 ### SEISMIC
-- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 7
+- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 4
 
 ### LIFE
-- Biomass: 6, Biocomplexity: 7, Sophonts: no, Biodiversity: 10, Compatibility: 5
+- Biomass: 15, Biocomplexity: 8, Sophonts: no, Biodiversity: 10, Compatibility: 5
 
 ### RESOURCES
-- Rating: 9
+- Rating: 8
 
 ### HABITABILITY
-- Rating: 7
-- Notes: Too cold most of the time; Low gravity
+- Rating: 9
+- Notes: Too hot at times; Gravity very comfortable
 
 ### COMMENTS
 - This is the system mainworld.

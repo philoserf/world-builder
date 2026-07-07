@@ -185,3 +185,86 @@ func TestZed_CabPI_BeltProfile(t *testing.T) {
 		t.Logf("Cab PI profile: got %q, want %q (book worked example reproduction is approximate due to formula divergences)", got, want)
 	}
 }
+
+func TestGenerateBeltDetails_BothSpanDMsStack(t *testing.T) {
+	t.Parallel()
+	// Both flags → DM -1 + 3 = +2 (additive per WBH p.72, not
+	// last-writer-wins). Spread 0.5, 2D=6 → effective 6+2=8 →
+	// span 0.5 × 8 / 10 = 0.4.
+	r := roller.NewScripted(6, 8, 6, 6, 4, 7, 10, 12, 10)
+	belt, err := GenerateBeltDetails(r, 1.4, 0.5, 0.75, 6.3, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if math.Abs(belt.Span-0.4) > 1e-6 {
+		t.Errorf("span with both DMs = %v, want 0.4 (DM must stack to +2)", belt.Span)
+	}
+}
+
+func TestBeltSpanFlags(t *testing.T) {
+	t.Parallel()
+	gA := Group{Designation: "A"}
+	gB := Group{Designation: "B"}
+	cases := []struct {
+		name       string
+		bodies     []Body
+		i          int
+		wantAdjGG  bool
+		wantOuterm bool
+	}{
+		{
+			name: "GG directly inward",
+			bodies: []Body{
+				{Kind: BodyGasGiant, Group: gA, Orbit: 1},
+				{Kind: BodyPlanetoidBelt, Group: gA, Orbit: 2},
+				{Kind: BodyTerrestrial, Group: gA, Orbit: 3},
+			},
+			i: 1, wantAdjGG: true, wantOuterm: false,
+		},
+		{
+			name: "GG beyond an empty slot is not adjacent",
+			bodies: []Body{
+				{Kind: BodyGasGiant, Group: gA, Orbit: 1},
+				{Kind: BodyEmpty, Group: gA, Orbit: 2},
+				{Kind: BodyPlanetoidBelt, Group: gA, Orbit: 3},
+			},
+			i: 2, wantAdjGG: false, wantOuterm: true,
+		},
+		{
+			name: "outermost despite trailing empty slot",
+			bodies: []Body{
+				{Kind: BodyTerrestrial, Group: gA, Orbit: 1},
+				{Kind: BodyPlanetoidBelt, Group: gA, Orbit: 2},
+				{Kind: BodyEmpty, Group: gA, Orbit: 3},
+			},
+			i: 1, wantAdjGG: false, wantOuterm: true,
+		},
+		{
+			name: "neighboring GG from another group does not count",
+			bodies: []Body{
+				{Kind: BodyGasGiant, Group: gB, Orbit: 1},
+				{Kind: BodyPlanetoidBelt, Group: gA, Orbit: 2},
+			},
+			i: 1, wantAdjGG: false, wantOuterm: true,
+		},
+		{
+			name: "other-group outer body does not disqualify outermost",
+			bodies: []Body{
+				{Kind: BodyPlanetoidBelt, Group: gA, Orbit: 2},
+				{Kind: BodyTerrestrial, Group: gB, Orbit: 9},
+			},
+			i: 0, wantAdjGG: false, wantOuterm: true,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			adjGG, outerm := beltSpanFlags(c.bodies, c.i)
+			if adjGG != c.wantAdjGG {
+				t.Errorf("adjacentToGG = %v, want %v", adjGG, c.wantAdjGG)
+			}
+			if outerm != c.wantOuterm {
+				t.Errorf("outermostSlot = %v, want %v", outerm, c.wantOuterm)
+			}
+		})
+	}
+}
