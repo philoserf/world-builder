@@ -20,8 +20,8 @@ import (
 // Per anti-pattern A.1, every moon is walked alongside its parent —
 // AllBodies descends into Children automatically.
 func ApplyTaintTypology(r roller.Roller, u *Universe) error {
-	for body := range u.AllBodies() {
-		applyBodyTaints(r, body)
+	for body, parent := range u.AllBodiesWithParent() {
+		applyBodyTaints(bodySub(r, body, parent, "taint"), body)
 	}
 	return nil
 }
@@ -55,11 +55,11 @@ func applyBodyTaints(r roller.Roller, body *Body) {
 // Per anti-pattern A.1, every moon is walked alongside its parent —
 // AllBodies descends into Children automatically.
 func ApplySurfaceDistribution(r roller.Roller, u *Universe) error {
-	for body := range u.AllBodies() {
+	for body, parent := range u.AllBodiesWithParent() {
 		if !body.HasHydrographics() {
 			continue
 		}
-		sd, err := GenerateSurfaceDistribution(r, body.Hydrographics)
+		sd, err := GenerateSurfaceDistribution(bodySub(r, body, parent, "surface"), body.Hydrographics)
 		if err != nil {
 			return fmt.Errorf("worlds: stage6 surface distribution %s: %w", body.Designation, err)
 		}

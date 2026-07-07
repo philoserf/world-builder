@@ -9,8 +9,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 ## Notable Features
 
 ### Tidal locks
-- A II: planet → star, 1:1, twilight zone
+- A I: planet → star, 1:1, twilight zone
 - A II a: moon → planet, 1:1
+- A II b: moon → planet, 1:1
+- A III: planet → moon, 1:1
 - A III a: moon → planet, 1:1
 - A III b: moon → planet, 1:1
 - A V a: moon → planet, 1:1
@@ -24,7 +26,6 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - A V i: moon → planet, 1:1
 - A V j: moon → planet, 1:1
 - B I: planet → star, 1:1, twilight zone
-- B II: planet → moon, 3:2
 - B II a: moon → planet, 1:1
 - B II b: moon → planet, 1:1
 - B II c: moon → planet, 1:1
@@ -32,7 +33,7 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - B II e: moon → planet, 1:1
 
 ### Mainworld habitability
-- A VII — Rating 8/12 (Suitable): Tainted thin or dense atmospheres
+- A VII — Rating 6/12 (Regionally habitable): Tainted thin or dense atmospheres; Little useable land surface area; Gravity somewhat high
 
 
 ## Class 0/I — A VII
@@ -89,15 +90,15 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 | A | A V i |  |  |  |  | S |  |  |
 | A | A V j |  |  |  |  | S |  |  |
 | A | A VI | 4.21 | 1.85 | 0.06 | 1.886y | 4?? | 0 |  |
-| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 798 | 0 | HZ |
-| B | B I | 0.75 | 0.30 |  | 0.139y | B?? | 0 |  |
+| A | A VII | 5.69 | 4.45 | 0.01 | 7.031y | 799 | 0 | HZ |
+| B | B I | 0.75 | 0.30 | 0.01 | 0.139y | B?? | 0 |  |
 | B | B II | 1.45 | 0.54 | 0.50 | 0.333y | C?? | 5 | 6, 2, 1, S, S |
 | B | B II a |  |  |  |  | 6 |  |  |
 | B | B II b |  |  |  |  | 2 |  |  |
 | B | B II c |  |  |  |  | 1 |  |  |
 | B | B II d |  |  |  |  | S |  |  |
 | B | B II e |  |  |  |  | S |  |  |
-| B | B PI | 2.30 | 0.79 |  | 0.596y | 000 | ? | 0.77-55.35.02.08-9-C-5-3 |
+| B | B PI | 2.30 | 0.79 |  | 0.596y | 000 | ? | 0.77-15.65.17.03-13-C-9-12 |
 | A | A I | 8.40 | 28.00 | 0.35 | 111.052y | 4?? | 0 |  |
 | B | B I | 7.40 | 14.00 | 0.00 | 44.592y | 5?? | 0 |  |
 
@@ -112,36 +113,36 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 4.45, Eccentricity: 0.01, Period (h): 61636.40
 
 ### SIZE
-- Diameter (km): 11200, Density: 1.03, Gravity: 0.91, Mass (Earth): 0.699
+- Diameter (km): 11200, Density: 1.30, Gravity: 1.14, Mass (Earth): 0.883
 
 ### ATMOSPHERE
-- Code: 9, Pressure (bar): 1.830, O₂ (bar): 0.787, Scale Height: 9.30
-- Profile: 9-1.830-0.787:B.5.8
+- Code: 9, Pressure (bar): 1.797, O₂ (bar): 0.737, Scale Height: 7.34
+- Profile: 9-1.797-0.737:G.1.9
 
 ### HYDROGRAPHICS
-- Code: 8, Coverage (%): 77, Profile: H8:H2O-100
+- Code: 9, Coverage (%): 89, Profile: H9:H2O-100
 
 ### ROTATION
-- Sidereal (h): 30.77, Solar (h): 30.79, Solar days/year: 2001.83
-- Axial Tilt: 0.10°
+- Sidereal (h): 36.59, Solar (h): 36.61, Solar days/year: 1683.60
+- Axial Tilt: 0.00°
 - Tidal lock: no, Tides (m): 0.01
 
 ### TEMPERATURE
-- High (K): 295.3, Mean (K): 285.3, Low (K): 274.5
-- Luminosity: 19.785, Albedo: 0.37, Greenhouse: 0.74
+- High (K): 290.7, Mean (K): 284.0, Low (K): 277.0
+- Luminosity: 19.785, Albedo: 0.40, Greenhouse: 0.79
 
 ### SEISMIC
-- TSS: 9, Residual: 9, Tidal Stress: 0, Tidal Heating: 0, Plates: 8
+- TSS: 9, Residual: 9, Tidal Stress: 0, Tidal Heating: 0, Plates: 9
 
 ### LIFE
-- Biomass: 7, Biocomplexity: 5, Sophonts: no, Biodiversity: 4, Compatibility: 2
+- Biomass: 13, Biocomplexity: 12, Sophonts: no, Biodiversity: 16, Compatibility: 4
 
 ### RESOURCES
-- Rating: 8
+- Rating: 12
 
 ### HABITABILITY
-- Rating: 8
-- Notes: Tainted thin or dense atmospheres
+- Rating: 6
+- Notes: Tainted thin or dense atmospheres; Little useable land surface area; Gravity somewhat high
 
 ### COMMENTS
 - This is the system mainworld.

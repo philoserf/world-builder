@@ -23,8 +23,9 @@ import (
 // short-circuit at zero cost. Per anti-pattern A.1, every HZ-planet
 // moon is walked alongside its parent.
 func ApplyClimate(r roller.Roller, u *Universe) error {
-	for body := range u.AllBodies() {
-		if err := ApplyClimatePasses(r, body, u.System); err != nil {
+	for body, parent := range u.AllBodiesWithParent() {
+		sub := bodySub(r, body, parent, "climate")
+		if err := ApplyClimatePasses(sub, body, u.System); err != nil {
 			return fmt.Errorf("worlds: stage5 climate %s: %w", body.Designation, err)
 		}
 	}

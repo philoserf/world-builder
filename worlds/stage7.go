@@ -29,7 +29,7 @@ func ApplyGeology(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty || body.SizeCode == "0" {
 			continue
 		}
-		applyBodyGeology(r, body, sys, parent != nil)
+		applyBodyGeology(bodySub(r, body, parent, "geology"), body, sys, parent != nil)
 	}
 	return nil
 }

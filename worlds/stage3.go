@@ -19,8 +19,9 @@ import (
 // already have MassEarth from Stage 2's gasGiantSpecialMoon and skip
 // physical generation. Belts (Size 0) handled by ApplyBeltDetails.
 func ApplyBodyPhysical(r roller.Roller, u *Universe) error {
-	for body := range u.AllBodies() {
-		if err := generateBodyPhysicalIfTerrestrial(r, body, body.Host(), u.System); err != nil {
+	for body, parent := range u.AllBodiesWithParent() {
+		sub := bodySub(r, body, parent, "body-physical")
+		if err := generateBodyPhysicalIfTerrestrial(sub, body, body.Host(), u.System); err != nil {
 			return err
 		}
 	}
@@ -73,7 +74,8 @@ func ApplyBeltDetails(r roller.Roller, u *Universe) error {
 		}
 		adjacentToGG, outermostSlot := beltSpanFlags(u.Detail.Bodies, i)
 		hzco := body.Group.HZCO()
-		bd, err := GenerateBeltDetails(r, body.Orbit, u.Placement.SystemSpread, hzco, u.System.Primary.AgeGyr, adjacentToGG, outermostSlot)
+		sub := bodySub(r, body, nil, "belt")
+		bd, err := GenerateBeltDetails(sub, body.Orbit, u.Placement.SystemSpread, hzco, u.System.Primary.AgeGyr, adjacentToGG, outermostSlot)
 		if err != nil {
 			return fmt.Errorf("worlds: stage3 belt %s: %w", body.Designation, err)
 		}
@@ -169,10 +171,11 @@ func refineParentMoons(r roller.Roller, parent *Body) {
 		effSize = int(parent.DiameterEarth * 8)
 	}
 	for j := range parent.Children {
-		orbit, mr := RollMoonOrbit(r, mor)
+		csub := bodySub(r, parent.Children[j], parent, "moon-refine")
+		orbit, mr := RollMoonOrbit(csub, mor)
 		parent.Children[j].OrbitPD = orbit
 		parent.Children[j].OrbitKm = orbit * planetDiameter
-		parent.Children[j].Retrograde = RollMoonRetrograde(r, mr, orbit > float64(mor))
+		parent.Children[j].Retrograde = RollMoonRetrograde(csub, mr, orbit > float64(mor))
 		if effSize > 0 {
 			parent.Children[j].PeriodHours = MoonPeriodHours(orbit, effSize, planetMass)
 		}

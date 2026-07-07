@@ -15,11 +15,11 @@ import (
 // parent type (Zed Prime canonical example: moon of Aab IV gas giant).
 func ApplyBiology(r roller.Roller, u *Universe) error {
 	ageGyr := u.System.Primary.AgeGyr
-	for body := range u.AllBodies() {
+	for body, parent := range u.AllBodiesWithParent() {
 		if !biologyApplies(body) {
 			continue
 		}
-		body.Biology = computeBiology(r, body, ageGyr)
+		body.Biology = computeBiology(bodySub(r, body, parent, "biology"), body, ageGyr)
 	}
 	return nil
 }
