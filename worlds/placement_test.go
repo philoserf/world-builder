@@ -98,3 +98,14 @@ func TestPlaceWorlds_IncludesEmptyBody(t *testing.T) {
 		t.Errorf("A1 = %v, want Empty", got[0].Body)
 	}
 }
+
+// TestPlaceWorlds_EmptySlotsErrors asserts the input-contract guard:
+// an empty slots slice with a non-zero world count must return an
+// error, not hang in rollSlot's rejection-sampling loop forever.
+func TestPlaceWorlds_EmptySlotsErrors(t *testing.T) {
+	t.Parallel()
+	_, err := PlaceWorlds(roller.NewSeeded(1), nil, Counts{Terrestrials: 3, Total: 3})
+	if err == nil {
+		t.Fatal("PlaceWorlds(nil slots, Total=3) = nil error, want slot-capacity error")
+	}
+}

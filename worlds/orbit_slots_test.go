@@ -215,3 +215,41 @@ func TestPlaceOrbitSlots_SecondaryCapApplied(t *testing.T) {
 		}
 	}
 }
+
+// TestPlaceOrbitSlots_BaselineOvershootStaysMonotonic covers the case
+// where the accumulated 2D variance of the pre-baseline slots passes
+// the independently computed baseline orbit: the forced slot must not
+// regress the ascending orbit sequence (a pipeline invariant), and
+// instead continues the outward walk by one variance-free spread step.
+func TestPlaceOrbitSlots_BaselineOvershootStaysMonotonic(t *testing.T) {
+	t.Parallel()
+	primary := Group{
+		Members:   []stars.Star{{}},
+		MAO:       0.5,
+		Intervals: []Interval{{Min: 0.5, Max: 40.0}},
+	}
+	allocs := []StarAllocation{{Group: primary, AllocatedWorlds: 5}}
+	// baselineN=5 but baselineOrbit=3.0, while slots 1-4 roll max
+	// variance (2D=12 → +0.5 spread each):
+	//   slot 1: 0.5 + 1.5 = 2.0
+	//   slot 2: 2.0 + 1.5 = 3.5   ← already past baselineOrbit 3.0
+	//   slot 3: 3.5 + 1.5 = 5.0
+	//   slot 4: 5.0 + 1.5 = 6.5
+	//   slot 5: BASELINE 3.0 < cur → fallback 6.5 + 1.0 = 7.5
+	got, err := PlaceOrbitSlots(roller.NewScripted(12, 12, 12, 12), allocs, 5, 3.0, 1.0, 0)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if len(got) != 5 {
+		t.Fatalf("len = %d, want 5", len(got))
+	}
+	for i := 1; i < len(got); i++ {
+		if got[i].Orbit < got[i-1].Orbit {
+			t.Errorf("orbit sequence regressed at slot %d: %v then %v",
+				i, got[i-1].Orbit, got[i].Orbit)
+		}
+	}
+	if math.Abs(got[4].Orbit-7.5) > 0.05 {
+		t.Errorf("overshot baseline slot Orbit = %v, want 7.5 (cur + spread)", got[4].Orbit)
+	}
+}

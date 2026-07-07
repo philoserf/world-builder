@@ -26,7 +26,7 @@ func main() {
 func run(args []string, stdout, stderr io.Writer) error {
 	fs := flag.NewFlagSet("world-builder", flag.ContinueOnError)
 	fs.SetOutput(stderr)
-	seed := fs.Int64("seed", 0, "random seed (0 = time-based)")
+	seed := fs.Int64("seed", 0, "random seed (omit for time-based)")
 	format := fs.String("format", "markdown", "output format: markdown | json | short")
 	peculiar := fs.String("peculiar", "special", "column for Special (2D=2) primary rolls: special | unusual | peculiar")
 	if err := fs.Parse(args); err != nil {
@@ -45,8 +45,16 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("unknown peculiar column: %q (want special, unusual, or peculiar)", *peculiar)
 	}
 
+	// Distinguish "flag omitted" from "-seed 0": an explicit 0 is a
+	// legitimate reproducible seed, not a request for time-based.
+	seedSet := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "seed" {
+			seedSet = true
+		}
+	})
 	s := *seed
-	if s == 0 {
+	if !seedSet {
 		s = time.Now().UnixNano()
 	}
 

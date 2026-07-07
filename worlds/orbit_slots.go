@@ -100,6 +100,24 @@ func PlaceOrbitSlots(
 			var orbit float64
 			if isBaselineSlot {
 				orbit = baselineOrbit
+				// Equality is allowed: the override may legitimately land
+				// exactly on the previous slot's orbit (asserted by the
+				// SinglePrimary fixture). Only an actual regression breaks
+				// the ordering invariant.
+				if orbit < cur {
+					// The accumulated 2D variance of the preceding slots
+					// can overshoot the independently computed baseline
+					// orbit for larger baselineN. Ascending orbit order is
+					// a pipeline invariant (designations, LongProfile), so
+					// when the walk has already passed the baseline orbit,
+					// continue the outward walk (one variance-free spread
+					// step) instead of regressing the sequence.
+					proposed := cur + groupSpread
+					if zone := excludedZoneAt(alloc.Group, proposed); zone != 0 {
+						proposed += zone
+					}
+					orbit = proposed
+				}
 			} else {
 				v := r.Roll("2D")
 				proposed := cur + groupSpread + float64(v-7)*groupSpread/10.0

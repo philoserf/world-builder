@@ -30,6 +30,12 @@ type Placement struct {
 // Mainworld and Continuation-only branches (moon of GG, size-1 in belt,
 // atmosphere-DM raw-temp reverse-engineering) are out of scope.
 func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Placement, error) {
+	// Input contract: enough slots for the requested worlds. Without
+	// this, rollSlot's rejection-sampling loop can never produce a
+	// valid index for an empty slots slice and spins forever.
+	if counts.Total > 0 && len(slots) < counts.Total {
+		return nil, fmt.Errorf("worlds: PlaceWorlds: %d slots cannot hold %d worlds", len(slots), counts.Total)
+	}
 	out := make([]Placement, len(slots))
 	for i, s := range slots {
 		out[i] = Placement{AnomalousSlot: s}
