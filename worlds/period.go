@@ -24,6 +24,10 @@ type Period struct {
 // factor: 1 Terra mass in solar units.
 const massSolarPerEarth = 0.000003
 
+// hoursPerYear is the number of standard hours in one standard year
+// (WBH p.104): 365.25 × 24. The single home for the 8766 conversion.
+const hoursPerYear = 8766.0
+
 // PeriodFor computes a Period for a body at orbit (au) given the sum
 // of stellar masses interior to that orbit (sumStellarMassSolar) and
 // the body's mass in Terra masses (bodyMassEarth, 0 for the standard
@@ -33,6 +37,6 @@ func PeriodFor(au, sumStellarMassSolar, bodyMassEarth float64) Period {
 	return Period{
 		Years: years,
 		Days:  years * 365.25,
-		Hours: years * 8766,
+		Hours: years * hoursPerYear,
 	}
 }

@@ -100,13 +100,23 @@ func ApplyTidalLockReEval(r roller.Roller, u *Universe) error {
 	return nil
 }
 
-// lockFingerprint summarizes a body's tidal-lock outcome for
-// change detection across the re-eval passes.
-func lockFingerprint(body *Body) string {
+// lockState is a comparable snapshot of a body's tidal-lock outcome,
+// used to detect changes across the re-eval passes. The `set` field
+// distinguishes "no TidalLock evaluated" (nil) from an evaluated
+// TidalLockCaseNone with an empty ratio.
+type lockState struct {
+	set   bool
+	kase  TidalLockCase
+	ratio string
+}
+
+// lockFingerprint captures a body's tidal-lock outcome for change
+// detection across the re-eval passes.
+func lockFingerprint(body *Body) lockState {
 	if body.TidalLock == nil {
-		return ""
+		return lockState{}
 	}
-	return fmt.Sprintf("%d|%s", body.TidalLock.Case, body.TidalLock.LockRatio)
+	return lockState{set: true, kase: body.TidalLock.Case, ratio: body.TidalLock.LockRatio}
 }
 
 // reEvalBody performs the tidal-lock re-evaluation for a single body.

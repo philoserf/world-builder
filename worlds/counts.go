@@ -13,6 +13,14 @@ type Counts struct {
 	Total          int // GasGiants + PlanetoidBelts + Terrestrials
 }
 
+// ComponentSum returns GasGiants + PlanetoidBelts + Terrestrials — the
+// definition of Total, and the count of worlds actually placed. Callers
+// that must not trust the separately-stored Total field (which nothing
+// enforces) use this instead.
+func (c Counts) ComponentSum() int {
+	return c.GasGiants + c.PlanetoidBelts + c.Terrestrials
+}
+
 // CountsOpts is reserved for future knobs (e.g., the alternate "Gas Giant
 // Exists on 2+: roll 1D" existence form). Empty for now; the standard
 // CRB form is used.
@@ -55,7 +63,7 @@ func GenerateCounts(r roller.Roller, sys stars.System, _ CountsOpts) (Counts, er
 	default:
 		c.Terrestrials = raw + r.Roll("D3") - 1
 	}
-	c.Total = c.GasGiants + c.PlanetoidBelts + c.Terrestrials
+	c.Total = c.ComponentSum()
 	return c, nil
 }
 

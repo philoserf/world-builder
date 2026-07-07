@@ -141,13 +141,13 @@ func isPostStellar(k stars.StarKind) bool {
 // Cluster, and Anomaly. MAO for these kinds lives in the Special
 // Circumstances chapter (not yet encoded).
 //
-// The three aggregate kinds are included because specialObjectAge
-// (stars/system.go) now lets them survive the age step with AgeGyr 0;
-// without this gate they reach maoCell and raise a raw table-miss
-// error instead of the classifiable ErrPostStellarPrimaryUnsupported.
+// The aggregate kinds (stars.IsAggregateObject) are included because
+// specialObjectAge (stars/system.go) lets them survive the age step
+// with AgeGyr 0; without this gate they reach maoCell and raise a raw
+// table-miss error instead of the classifiable
+// ErrPostStellarPrimaryUnsupported.
 func lacksP39MAORow(k stars.StarKind) bool {
-	switch k {
-	case stars.KindProtostar, stars.KindNebula, stars.KindStarCluster, stars.KindAnomaly:
+	if k == stars.KindProtostar || stars.IsAggregateObject(k) {
 		return true
 	}
 	return isPostStellar(k)

@@ -329,14 +329,14 @@ func computeAxialTiltFactor(body *Body) float64 {
 	// period around its planet (Body.PeriodHours) — NOT Body.Period,
 	// which Stage 4 overwrites with the parent's stellar period for
 	// calendar math. For planets: prefer Period.Years, fall back to
-	// Period.Hours / 8766.
-	yrs := 0.0
+	// Period.Hours converted to years.
+	var yrs float64
 	if body.Kind == BodyMoon {
-		yrs = body.PeriodHours / 8766.0
+		yrs = body.PeriodHours / hoursPerYear
 	} else {
 		yrs = body.Period.Years
 		if yrs == 0 && body.Period.Hours > 0 {
-			yrs = body.Period.Hours / 8766.0
+			yrs = body.Period.Hours / hoursPerYear
 		}
 	}
 	if yrs > 0 && yrs < 0.1 {

@@ -36,7 +36,7 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 	// against the component sum — that is what the placement loops
 	// below actually consume; Counts.Total is a separately-stored
 	// field that nothing enforces.
-	need := counts.GasGiants + counts.PlanetoidBelts + counts.Terrestrials
+	need := counts.ComponentSum()
 	if need > len(slots) {
 		return nil, fmt.Errorf("worlds: PlaceWorlds: %d slots cannot hold %d worlds", len(slots), need)
 	}

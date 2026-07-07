@@ -200,7 +200,7 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 	variance := zoneAdj
 	if !isTropical {
 		// Adjusted Fractional Year per WBH p.115.
-		stdYearDays := 8766.0 / 24.0 // 365.25
+		stdYearDays := hoursPerYear / 24.0 // 365.25
 		lagDays := 0.1 * math.Min(stdYearDays, localYearDays)
 		adjFracYear := (daysSinceSolstice - 0.1*lagDays) / localYearDays
 

@@ -268,6 +268,20 @@ func isStellarKind(k StarKind) bool {
 	return false
 }
 
+// IsAggregateObject reports whether a StarKind is a diffuse/aggregate
+// primary — Nebula, Star Cluster, or Anomaly — rather than a single
+// compact object. These kinds have no meaningful stellar age (they age
+// to 0 in specialObjectAge) and no WBH p.39 MAO row. It is the single
+// definition of that set; both stars and worlds gate on it rather than
+// re-enumerating the three kinds.
+func IsAggregateObject(k StarKind) bool {
+	switch k {
+	case KindNebula, KindStarCluster, KindAnomaly:
+		return true
+	}
+	return false
+}
+
 // generateSpecialPrimary handles the WBH p.16 "Special" primary branch
 // (when the regular 2D Type roll yields 2). It walks the Unusual column
 // of the Star Type Determination table and produces either a
@@ -325,8 +339,7 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 // generation through AgeSpecialObject's missing-row error.
 // AgeSpecialObject itself stays strictly table-faithful.
 func specialObjectAge(r roller.Roller, kind StarKind, deadStarMass float64) (float64, error) {
-	switch kind {
-	case KindNebula, KindStarCluster, KindAnomaly:
+	if IsAggregateObject(kind) {
 		return 0, nil
 	}
 	return AgeSpecialObject(r, kind, deadStarMass)
