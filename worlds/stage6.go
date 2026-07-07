@@ -21,6 +21,13 @@ import (
 // AllBodies descends into Children automatically.
 func ApplyTaintTypology(r roller.Roller, u *Universe) error {
 	for body, parent := range u.AllBodiesWithParent() {
+		// Guard before forking, mirroring ApplySurfaceDistribution and
+		// ApplyBiology: applyBodyTaints is a no-op without an atmosphere,
+		// so skip constructing an unused sub-roller. Behavior-preserving —
+		// eligible bodies key the same "taint" sub-stream regardless.
+		if !body.HasAtmosphere() {
+			continue
+		}
 		applyBodyTaints(bodySub(r, body, parent, "taint"), body)
 	}
 	return nil
