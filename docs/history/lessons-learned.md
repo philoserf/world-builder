@@ -152,3 +152,37 @@ What changed: the type system (unified Body), the iteration pattern (`iter.Seq[*
 What survived: every per-procedure file in `stars/` (verbatim), every Stage-1 file in `worlds/` (verbatim, plus minor Body-rename adaptations), every per-procedure test (mechanical sed), `roller/`, `dice/`, the dice scripts themselves (the book's narrated dice), every WBH-inconsistency interpretation, every anti-pattern checklist item, the modernizer-as-mandatory-gate discipline, the brainstorm → spec → plan → TDD workflow shape.
 
 Pass 2 is not a rewrite. It is a re-layering. The same WBH procedures run in a different orchestration and produce results through a different data model. The book is still the spec.
+
+## Post-v1.0 — the C1–C5 cleanup arc (retrofitted, not rewritten)
+
+After v1.0, a fresh read of `main` catalogued six seams and proposed a from-scratch rebuild to fix them (`../rebuild-spec.md`). The rebuild never happened: the one load-bearing idea was spiked, found retrofittable, and every cleanup (C1–C5) landed incrementally on `main` as an ordinary PR with byte-identical output at each step. New lessons from that arc.
+
+### L15 — Spec the rebuild, spike the keystone, then usually retrofit
+
+`rebuild-spec.md` laid out C1–C6 as a clean-room rebuild. Only one change — C1, the per-body sub-roller tree — delivered something the existing architecture structurally could not (position-independent per-body dice, which makes a full-pipeline gold fixture survivable); the rest were in-place refactors. Spiking C1 alone (about a day) proved it retrofits onto `main` with no orchestrator signature changes, because `Seeded.Fork` derives children from the immutable construction seed. So the "rebuild" became five incremental PRs and the rewrite's risk was never taken on.
+
+**Implication.** A rebuild spec is a thinking tool, not a commitment. Find the one or two changes that genuinely need a clean slate, spike those, and the rest usually retrofit. The spec's own risk section predicted exactly this — "if the C1 spike disappoints, refactor `main` for C2–C6, skip the rebuild" — and it was right in the other direction: the spike succeeded, so all of it retrofitted onto `main`.
+
+### L16 — Byte-identical output is necessary but not sufficient for "no behavior change"
+
+The C5 belt-geology fix passed the Markdown regression baselines and the Zed gold-master byte-identically, so it was pushed as safe — and immediately failed a shape-invariant property test (`TestZed_ApplyStage7`) that asserts internal state (`HasGeology` on belts) the golden files never render.
+
+**Implication.** Golden-file diffs prove the _rendered_ output is unchanged; they say nothing about internal state a logic change touches. For any logic change, run the full property/shape suite (`go test -race ./...`), not just the golden targets, before concluding safety. The four-layer harness (L8, `../harness.md`) has non-interchangeable layers precisely for this: the baselines and the property tests catch different things.
+
+### L17 — External LLM review keeps earning its keep, most on the PRs you think are trivial
+
+Every PR in the arc drew a Copilot review. The signal was consistently real: a doc-accuracy gap (aggregate objects missing from the MAO-gate description), a backwards directionality in a comment, an incomplete find-and-replace (a "fixed-point" straggler in `walkthrough.md`) — and, on the most mechanical PR of all (C5, a pure file rename), a genuine latent bug that had survived since pass 1: `ApplyGeology` gating belts on the dead `SizeCode == "0"` check (belts carry `SizeCode ""`, so the gate matched nothing and belts entered the geology pass).
+
+**Implication.** L14 holds at PR granularity. A cold reviewer reads what is there, not what the author remembers should be there — and the highest-value catch came on the PR the author was most confident was trivial.
+
+### L18 — "Resolved (Cn)" notes keep a forward-looking spec honest as it is consumed
+
+Each `rebuild-spec.md` section got a one-paragraph "Resolved" note the moment its change merged, and each affected evergreen doc (theory, api-surface, dependency-graph, walkthrough) had its now-stale claims corrected in the _same_ PR. The spec stayed trustworthy while being executed piecemeal, and the vocabulary-lag failure L13 documented did not recur.
+
+**Implication.** Per-PR doc reconciliation beats an end-of-project doc-drift cleanup (L7, reaffirmed): fix the doc claim in the PR that falsifies it, not later.
+
+### L19 — Co-locating the orchestrator with its procedures read better than the stage split
+
+Retiring `stageN.go` (C5) forced the question of where each `Apply*` orchestrator belongs. For single-feature passes the answer was "next to the procedures it drives" — `ApplyGeology` into `geology.go`, `ApplyBiology` into `biology.go`, `ApplyHabitability` into `habitability.go` — which reads better than the artificial orchestrator-vs-procedure file split. Cross-cutting passes (climate, aggregate, detail-frontend) kept their own role-named files.
+
+**Implication.** The pass-2 "one-file-per-stage" convention was itself a mild pagination residue. The durable rule: role-named files where a feature owns its pass, dedicated files where the pass is cross-cutting — never chapter/stage numbers in filenames.
