@@ -88,7 +88,7 @@ Per-procedure tests cover moon counts, periods (via `MoonPeriodHours` / `Kepler*
 | ----------------------- | -------: | :----: | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `ZedPrime/Habitability` |      132 |   ⚠️   | Habitability = 7 (matches book p.141 form). Gravity 0.66 → DM−1 (narrower band wins, footnote ignored). See wbh-inconsistencies.md § 6. |
 
-## Climate fixed-point (WBH pp.79, 81, 96–99, 102, 108–126)
+## Climate passes (WBH pp.79, 81, 96–99, 102, 108–126)
 
 | ID                           | WBH page | Status | Asserts                                                                                                                                 |
 | ---------------------------- | -------: | :----: | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -146,7 +146,7 @@ Per `api-surface.md` § Misuse-path test pattern, every public function ships wi
 
 | ID                                 | Status | Asserts                                                                                                                            |
 | ---------------------------------- | :----: | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `RandomSystem/Convergence`         |   🟢   | `TestProperty_ConvergenceCompletes` — Generate completes (or fails with Special-Circumstances) for every seed in 0..999.           |
+| `RandomSystem/GenerateCompletes`   |   🟢   | `TestProperty_GenerateCompletes` — Generate completes (or fails with Special-Circumstances) for every seed in 0..999.              |
 | `RandomSystem/HZBodyHasClimate`    |   🟢   | `TestProperty_HZBodyHasClimate` — every HZ terrestrial / HZ-planet moon has atm + hydro + temp populated.                          |
 | `RandomSystem/MoonsHaveBodies`     |   🟢   | `TestProperty_MoonsHaveBodies` — every Child has `Kind == BodyMoon`, populated Designation, Parent set. Anti-pattern A.1 sentinel. |
 | `RandomSystem/MainworldExists`     |   🟢   | `TestProperty_MainworldExists` — non-empty mainworld designation when terrestrial/moon/belt candidates exist.                      |

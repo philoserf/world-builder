@@ -1,6 +1,6 @@
 # World Builder Walkthrough
 
-*2026-05-12T17:23:13Z by Showboat 0.6.1*
+_2026-05-12T17:23:13Z by Showboat 0.6.1_
 <!-- showboat-id: e1831189-dd6b-47d5-a0e2-70e2118aa7fd -->
 
 ## Overview
@@ -365,7 +365,7 @@ type Body struct {
 
 ## The climate solver: ApplyClimatePasses
 
-Stage 5 is the only fixed-point cluster: atmosphere ↔ temperature ↔ hydrographics depend on each other. The solver runs **two passes**. It is not a fixed-point solver in the strict sense — `RederiveAtmosphereHydrographics` consumes fresh dice each pass, so each iteration is a stochastic sample, not a convergence step. The second sample is trusted. The name pre-dated the empirical finding; the function is named for the behaviour.
+Stage 5 is the only cyclic cluster: atmosphere ↔ temperature ↔ hydrographics depend on each other. `ApplyClimatePasses` runs **two passes** and trusts the second. It is not a fixed-point solver — `RederiveAtmosphereHydrographics` consumes fresh dice each pass, so each pass is a stochastic sample, not a convergence step. There is no fixed point to reach; the function is named for what it does.
 
 ```bash
 sed -n '109,162p' worlds/stage5.go
@@ -705,9 +705,8 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 
 - [`docs/design-intent.md`](design-intent.md) — why the architecture looks this way.
 - [`docs/api-surface.md`](api-surface.md) — the public API reference.
-- [`docs/dependency-graph.md`](dependency-graph.md) — every value, its inputs, the fixed-point clusters.
+- [`docs/dependency-graph.md`](dependency-graph.md) — every value, its inputs, the one cyclic (climate) cluster.
 - [`docs/anti-patterns.md`](anti-patterns.md) — failure modes the code guards against.
 - [`docs/harness.md`](harness.md) — fixture catalog + the four-layer test strategy.
 - [`docs/wbh-inconsistencies.md`](wbh-inconsistencies.md) — six book-internal divergences with chosen interpretations.
 - [`docs/next-steps.md`](next-steps.md) — open post-v1.0 items.
-

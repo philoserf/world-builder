@@ -113,13 +113,13 @@ func (b *Body) HasTidalLock() bool { return b.TidalLock != nil }
 // HasTidalEffects reports whether the surface tidal-effects pass has run.
 func (b *Body) HasTidalEffects() bool { return b.TidalEffects != nil }
 
-// HasAtmosphere reports whether climate convergence produced an atmosphere.
+// HasAtmosphere reports whether the climate passes produced an atmosphere.
 func (b *Body) HasAtmosphere() bool { return b.Atmosphere != nil }
 
-// HasHydrographics reports whether climate convergence produced hydrographics.
+// HasHydrographics reports whether the climate passes produced hydrographics.
 func (b *Body) HasHydrographics() bool { return b.Hydrographics != nil }
 
-// HasTemperature reports whether climate convergence produced a temperature.
+// HasTemperature reports whether the climate passes produced a temperature.
 func (b *Body) HasTemperature() bool { return b.Temperature != nil }
 
 // HasSurfaceDistribution reports whether the surface-distribution pass has run.

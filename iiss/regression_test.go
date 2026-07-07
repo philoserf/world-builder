@@ -15,9 +15,9 @@ import (
 
 // updateRegression rewrites the testdata/seed_*.md snapshots with the
 // current pipeline output. Set with `go test -update.regression` when
-// pass-2 intentionally changes output (cycle 17+18 landed convergence
-// changes, for instance — running with -update.regression captures
-// the new baseline).
+// the pipeline intentionally changes output (the C1 sub-roller retrofit,
+// for instance, changed the dice stream — running with -update.regression
+// captures the new baseline).
 var updateRegression = flag.Bool("update.regression", false,
 	"rewrite iiss/testdata/seed_*.md regression snapshots from current pipeline")
 
@@ -29,8 +29,8 @@ var updateRegression = flag.Bool("update.regression", false,
 // when the change is reviewed.
 //
 // Note: this is NOT a pass-1-vs-pass-2 comparison — pass-2's design
-// explicitly diverges (TSS fold, surface-distribution-after-converge,
-// climate fixed-point reorder). It IS a guard against unintentional
+// explicitly diverges (TSS fold, surface-distribution-after-climate,
+// two-pass climate reorder). It IS a guard against unintentional
 // pass-2-vs-pass-2 drift.
 func TestRegression_MarkdownSeeds(t *testing.T) {
 	t.Parallel()

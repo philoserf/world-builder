@@ -123,7 +123,7 @@ Known limitations (out of pass-2 scope):
 
 ## Documentation
 
-- **Evergreen design + reference docs** (under `docs/` root): `design-intent.md` (the why and the cuts), `api-surface.md` (every public signature), `dependency-graph.md` (every value, its inputs, fixed-point clusters), `anti-patterns.md` (don't-do-this catalog), `harness.md` (fixture catalog with status indicators), `wbh-inconsistencies.md` (six book-internal divergences with chosen interpretations), `summary.md` (one-page overview), `next-steps.md` (post-v1.0 open items).
+- **Evergreen design + reference docs** (under `docs/` root): `design-intent.md` (the why and the cuts), `api-surface.md` (every public signature), `dependency-graph.md` (every value, its inputs, the one cyclic climate cluster), `anti-patterns.md` (don't-do-this catalog), `harness.md` (fixture catalog with status indicators), `wbh-inconsistencies.md` (six book-internal divergences with chosen interpretations), `summary.md` (one-page overview), `next-steps.md` (post-v1.0 open items).
 - **Historical artifacts** (under `docs/history/`): pass-1 specs/plans/retrospective from the original implementation, plus the pass-2 rebuild's retrospective (`lessons-learned.md`, `plan-clean-every-run.md`, `generator-error-catalog.md`, `spike-findings.md`, `allbodies-migration.md`). Preserved for context; not authoritative. Pass-1 was buildable at tag `pass-1-final`; pass-2 design is now what's on `main`.
 
 ## Development

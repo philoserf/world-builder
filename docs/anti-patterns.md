@@ -78,15 +78,15 @@ Read before introducing a structural change. New anti-patterns discovered post-v
 
 **Spec checklist.** Does this sub-project add code to an existing file > 300 lines? If yes, is the addition a clear extension of the file's single concern, or should it spawn a sibling file?
 
-### A.8 Stale pre-fixed-point inputs
+### A.8 Stale pre-climate inputs
 
-**What.** A procedure consumes a value that is later refined (climate fixed-point recovery) but does not re-run after the value stabilizes. The output is silently wrong for cases where the refinement crosses a band boundary.
+**What.** A procedure consumes a value that is later refined (in the climate passes) but does not re-run after the value stabilizes. The output is silently wrong for cases where the refinement crosses a band boundary.
 
-**How it surfaced.** Pass 1's Stage 5B ran `GenerateSurfaceDistribution` against the preliminary hydrographics from Stage 5A; it never re-ran after Stage 5D's rederive recovery. For HZ worlds the preliminary and converged hydro happened to be identical, so the bug never fired in fixtures, but the dependency was unsound.
+**How it surfaced.** Pass 1's Stage 5B ran `GenerateSurfaceDistribution` against the preliminary hydrographics from Stage 5A; it never re-ran after Stage 5D's rederive. For HZ worlds the preliminary and post-climate hydro happened to be identical, so the bug never fired in fixtures, but the dependency was unsound.
 
-**How prevented.** The dependency graph (`dependency-graph.md`) is the source of truth for ordering. Any procedure that consumes climate-cluster output runs after `ConvergeClimate` returns. Surface distribution and tectonic plates move to post-climate stages.
+**How prevented.** The dependency graph (`dependency-graph.md`) is the source of truth for ordering. Any procedure that consumes climate-cluster output runs after `ApplyClimatePasses` returns. Surface distribution and tectonic plates move to post-climate stages.
 
-**Spec checklist.** Does this procedure read `Atmosphere`, `Hydrographics`, `Temperature`, or any TSS-dependent value? If yes, is it scheduled after `ConvergeClimate`?
+**Spec checklist.** Does this procedure read `Atmosphere`, `Hydrographics`, `Temperature`, or any TSS-dependent value? If yes, is it scheduled after `ApplyClimatePasses`?
 
 ### A.9 Implicit transaction across multiple writers
 

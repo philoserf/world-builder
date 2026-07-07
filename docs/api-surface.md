@@ -133,7 +133,7 @@ type Body struct {
     TidalLock           *TidalLock
     TidalEffects        *SurfaceTidalEffects
 
-    // Stage 5 (climate; populated post-ConvergeClimate)
+    // Stage 5 (climate; populated by ApplyClimatePasses)
     Atmosphere    *Atmosphere
     Hydrographics *Hydrographics
     Temperature  *Temperature
@@ -168,8 +168,8 @@ func (u *Universe) AllBodies() iter.Seq[*Body] { ... }
 
 // Bodies filters AllBodies to a predicate. Iteration order is *not* contract —
 // consumers that need a specific order use AllBodies and filter inline. This
-// leaves room for future order-agnostic callers (per-body climate convergence
-// does not need ordering and could parallelize).
+// leaves room for future order-agnostic callers (the per-body climate passes
+// do not need ordering and could parallelize).
 func (u *Universe) Bodies(filter func(*Body) bool) iter.Seq[*Body] { ... }
 ```
 
@@ -177,48 +177,37 @@ Procedures take `*Body` directly. The "moon path" is not a separate iteration �
 
 **Trade-off.** A moon's `Orbit` (around the parent planet) and its parent's `Orbit` (around the star) overlap in name. Resolution: for moons, `Body.Orbit` is unset (or zero), `OrbitPD`/`OrbitKm` carry the moon's orbit around its parent. Procedures that need "the orbit around the star" call `body.StellarOrbit()` which returns `body.Parent.Orbit` for moons or `body.Orbit` for planets. Explicit indirection.
 
-## The Climate solver — ConvergeClimate
+## The climate solver — ApplyClimatePasses
 
 Replaces pass-1's 5A-atm/hydro + 5C-temp + 5D-rederive 2-pass loop + 5E TSS-temperature-back-edge with a single explicit per-body entry that folds partial-geology (Residual + TSF + THF) into each rederive pass.
 
-The original design called this a "fixed-point solver" with formal N-iteration convergence assertion. Empirical investigation post-cycle-17 showed the climate cluster is NOT a fixed point in the strict mathematical sense — `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which consumes fresh dice from the Roller each call. Every iteration is a fresh stochastic sample of hydro (and via albedo, temperature), not a convergence step. The name "ConvergeClimate" is retained for continuity but is a misnomer; pass-2 runs exactly 2 passes (matching pass-1's behaviour) and accepts the second sample. See `lessons-learned.md` § L13.
+This is **not** a fixed-point solver. The original pass-2 design framed it as one — iterate until atm/hydro/temp stabilise, assert convergence within N — but investigation post-cycle-17 showed the climate cluster is not a fixed point: `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which consumes fresh dice each call, so every pass is a fresh stochastic sample of hydro (and via albedo, temperature), not a convergence step. There is no fixed point to converge to. The code runs **exactly 2 passes** (matching pass-1) and trusts the second sample; the function was renamed `ConvergeClimate → ApplyClimatePasses` and the `Climate` convergence-variable struct was removed as dead code. See `lessons-learned.md` §§ L13, L14.
 
 ```go
 package worlds
 
-// Climate is the convergence variable for the atmosphere ↔ hydrographics
-// ↔ temperature fixed-point cluster (WBH pp.79, 81, 96-99, 102, 108-126).
-// It is local to ConvergeClimate; the result is unpacked back onto Body.
-type Climate struct {
-    Atmosphere    *Atmosphere
-    Hydrographics *Hydrographics
-    Temperature   *Temperature
-    PartialGeology *PartialGeology   // residual + TSF + THF; excludes
-                                     // tectonic plates (post-converge)
-}
-
-// ConvergeClimate runs the atm/hydro/temp/TSS cluster for the given
-// body. Mutates body.Atmosphere, body.Hydrographics, body.Temperature,
-// and body.Geology (partial — TectonicPlates added in Stage 7) on
-// return.
+// ApplyClimatePasses runs the atmosphere ↔ hydrographics ↔ temperature
+// cluster (WBH pp.79, 81, 96-99, 102, 108-126) for the given body,
+// folding partial geology (Residual + TSF + THF) into each pass so the
+// post-TSS Temperature re-derives atm/hydro consistently. Mutates
+// body.Atmosphere, body.Hydrographics, body.Temperature, and body.Geology
+// (partial — TectonicPlates added in Stage 7) on return.
 //
 // Eligibility: HZ-orbit terrestrials and HZ-planet moons get a full
 // climate. Non-HZ terrestrials and atm-less bodies short-circuit (no
 // atm / hydro / temp populated).
 //
-// Behaviour: runs exactly 2 passes of (temp → partial-geology → TSS
-// apply → rederive). Matches pass-1's 2-rederive flow. The "convergence"
-// framing of the original design proved unrealizable — see
-// lessons-learned.md § L13 (the cluster isn't a fixed point because
-// hydro is re-sampled per pass).
+// Behaviour: exactly 2 passes of (temp → partial-geology → TSS apply →
+// rederive atm/hydro); the second sample is trusted. Not a fixed point —
+// hydro is re-sampled from fresh dice each pass (lessons-learned.md § L13).
 //
-// Dice consumption: 2 × (atm + hydro + temp + partial-geology inner-roll
-// counts) plus the initial atm + hydro rolls. Determined entirely by
-// the Roller's sequence.
-func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error
+// Dice consumption: 2 × (temp + partial-geology + rederive atm/hydro
+// inner-roll counts) plus the initial atm + hydro rolls, all drawn from
+// the body's per-body "climate" sub-roller (docs/c1-subroller-plan.md).
+func ApplyClimatePasses(r roller.Roller, body *Body, sys stars.System) error
 ```
 
-**Why a struct, not just successive mutations on Body.** The convergence variable is local to the loop. Exposing it externally would let callers reach into a half-converged state. The Climate type is internal-by-design; only ConvergeClimate constructs it. Post-parity, a sibling `ConvergeClimateWithTrace` may expose iteration history for debugging unexpected atm flips; the type signature leaves room.
+**No convergence-variable struct.** Pass-2's original design proposed a `Climate` value type to hold the loop's working state; cycle-17's revert to 2-pass sampling made it dead code, and it was removed (`lessons-learned.md` § L14). `ApplyClimatePasses` mutates the `body` fields directly across the two passes.
 
 **Why the partial-geology fold-in.** Per `dependency-graph.md` § Stage 7, the TSS back-edge into Temperature is real. The geology factors that depend only on body physical / orbital parameters (Residual, TSF, THF) are computed inside the loop. The factors that depend on stable TSS (Tectonic Plates, GG residual heat propagation) are computed after.
 
@@ -280,15 +269,15 @@ Internal sub-procedures: `GenerateDayLength`, `GenerateAxialTilt`, `GenerateTida
 
 **Surface distribution moves to Stage 6** (post-climate). The project defers.
 
-### Stage 5: ConvergeClimate
+### Stage 5: ApplyClimatePasses
 
 ```go
-func ConvergeClimate(r roller.Roller, body *Body, sys stars.System) error
+func ApplyClimatePasses(r roller.Roller, body *Body, sys stars.System) error
 ```
 
 (Detailed contract above.)
 
-System-wide entry: `ApplyClimate(r, u, sys)` walks all bodies and calls ConvergeClimate per body.
+System-wide entry: `ApplyClimate(r, u)` walks all bodies and calls ApplyClimatePasses per body.
 
 ### Stage 6: Atmosphere taint typology + post-climate followups
 
@@ -297,7 +286,7 @@ func ApplyTaintTypology(r roller.Roller, u *Universe) error
 func ApplySurfaceDistribution(r roller.Roller, u *Universe) error
 ```
 
-`ApplyTaintTypology` mutates `Body.Atmosphere` in place (oxygen-taint promotion can change `atm.Code`). Surface distribution runs after climate has converged; uses post-converge `Body.Hydrographics`.
+`ApplyTaintTypology` mutates `Body.Atmosphere` in place (oxygen-taint promotion can change `atm.Code`). Surface distribution runs after the climate passes; uses the post-climate `Body.Hydrographics`.
 
 ### Stage 7: Geology follow-ups
 
@@ -306,7 +295,7 @@ func ApplyTectonicPlates(r roller.Roller, u *Universe) error
 func ApplyGGResidualHeat(r roller.Roller, u *Universe) error
 ```
 
-The TSS factors and partial geology are computed inside ConvergeClimate. These remaining geology procedures are forward-only and depend on stable post-climate state.
+The TSS factors and partial geology are computed inside ApplyClimatePasses. These remaining geology procedures are forward-only and depend on stable post-climate state.
 
 ### Stage 8: Biology
 

@@ -9,8 +9,9 @@ import (
 // non-empty non-belt body in the universe. Stage-7 orchestrator.
 //
 // Per dependency-graph.md § Stage 7, partial geology (Residual + TSF
-// + THF) is computed inside ApplyClimatePasses so the post-TSS Temperature
-// converges with rederived atm/hydro. Stage 7's remaining work is:
+// + THF) is computed inside ApplyClimatePasses so that atmosphere and
+// hydrographics are re-derived from the post-TSS Temperature across the
+// two climate passes. Stage 7's remaining work is:
 //
 //   - HZ bodies (body.Geology already set by climate): roll
 //     TectonicPlates and append.
@@ -58,7 +59,7 @@ func applyBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bool
 // computePartialGeology populates a Geology with Residual + TSF + THF +
 // TotalSeismicStress + InherentTemperatureK for the given body, but
 // leaves TectonicPlates at 0. Called by ApplyClimatePasses inside the
-// climate fixed-point loop (atm/hydro-independent) and by ApplyGeology
+// two climate passes (atm/hydro-independent) and by ApplyGeology
 // for non-HZ bodies that didn't go through climate.
 func computePartialGeology(body *Body, sys stars.System, isMoon bool) *Geology {
 	g := &Geology{}
