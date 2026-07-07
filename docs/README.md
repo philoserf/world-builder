@@ -9,7 +9,7 @@ Design, reference, and living docs live at this directory's root:
 - [`walkthrough.md`](walkthrough.md) — linear code tour from CLI entry through the pipeline to the rendered Markdown. Best starting point for new contributors.
 - [`design-intent.md`](design-intent.md) — why the code looks the way it does. Read before proposing structural changes.
 - [`api-surface.md`](api-surface.md) — every public signature with its rationale.
-- [`dependency-graph.md`](dependency-graph.md) — every value, its inputs, the fixed-point clusters.
+- [`dependency-graph.md`](dependency-graph.md) — every value, its inputs, the one cyclic (climate) cluster.
 - [`anti-patterns.md`](anti-patterns.md) — don't-do-this catalog. Every entry comes from a real incident; check before introducing a new pattern.
 - [`harness.md`](harness.md) — fixture catalog with status indicators.
 - [`wbh-inconsistencies.md`](wbh-inconsistencies.md) — six book-internal divergences with chosen interpretations.

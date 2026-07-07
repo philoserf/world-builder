@@ -1,6 +1,6 @@
 # Data Dependency Graph
 
-This document maps every value in WBH pp.14–146 to its inputs. The graph determines the project's structural ordering: bodies are walked in dependency order, not in book pagination order. Where the graph cycles, the code builds an explicit fixed-point solver. Where it is acyclic, the code builds a topological pipeline.
+This document maps every value in WBH pp.14–146 to its inputs. The graph determines the project's structural ordering: bodies are walked in dependency order, not in book pagination order. Where the graph cycles — there is exactly one cycle, the climate cluster — the code resolves it by two-pass sampling, not by a fixed-point solver (see Stage 5). Where it is acyclic, the code builds a topological pipeline.
 
 The graph treats the atmosphere ↔ temperature ↔ hydrographics edge as load-bearing and designs for it explicitly via `ApplyClimatePasses` (two stochastic-sample passes, second is trusted). WBH page citations are preserved on every value.
 
@@ -13,7 +13,7 @@ Stage 2: Sizing + Moons + Designations + Periods + HZ          (pp.53–67)
 Stage 3: Body Physical + Belt Details                          (pp.69–78, 91–93)
 Stage 4: 3A2a — Surface dist + Day length + Axial tilt
          + Tidal lock + Surface tidal effects                  (pp.100–108)
-Stage 5: CLIMATE FIXED-POINT                                   (pp.79, 81, 96–99,
+Stage 5: CLIMATE (cyclic; two-pass sampling)                   (pp.79, 81, 96–99,
          { Atmosphere, Hydrographics, Temperature }             102, 108–126)
 Stage 6: Atmosphere taint typology                             (pp.81–90)
 Stage 7: Geology — TSS + post-TSS temperature update           (pp.125–127)
@@ -24,7 +24,7 @@ Stage 10: System aggregations — BaselineN backfill + profiles
          + IISS forms + mainworld pick                         (pp.58, 132–146)
 ```
 
-Stages 0–4 and 6–10 are forward-only. Stage 5 is the one fixed-point cluster. Stage 7 contains a one-shot back-edge into stage 5 (TSS-temperature-addition); pass 2 evaluates whether to fold it into the climate solver or accept the one-shot update with explicit drift bounds — see the TSS section below.
+Stages 0–4 and 6–10 are forward-only. Stage 5 is the one cyclic cluster, resolved by two-pass sampling rather than fixed-point iteration. Stage 7 contains a one-shot back-edge into stage 5 (TSS-temperature-addition), folded into the climate passes — see the TSS section below.
 
 ## Stage 0: Stars (WBH pp.14–35)
 
@@ -131,7 +131,7 @@ Runs only if the planet has moons and resolvable mass. Computes Hill-sphere moon
 
 Per-body, every planet and moon (plus HZ-planet moons get surface distribution and the others). Five sub-passes in order:
 
-1. **`GenerateSurfaceDistribution(hydro)`** → `SurfaceDistribution`. Requires `Hydrographics` to be present. **NB:** at this point in pass 1, `Hydrographics` is the _preliminary_ Stage-5A output, not the post-fixed-point value. The code restructures so Stage 4 runs against the converged climate (see "Pass-2 sequencing" below).
+1. **`GenerateSurfaceDistribution(hydro)`** → `SurfaceDistribution`. Requires `Hydrographics` to be present. **NB:** in pass 1 this ran here against the _preliminary_ Stage-5A hydrographics; pass 2 moves it to Stage 6 so it reads the post-climate value (see "Pass-2 sequencing" below).
 2. **`GenerateDayLength(dp, sys)`** → `DayLength{SiderealHours, SolarHours, YearDays, IsLong, ...}`. For moons, uses parent's period for calendar quantities (the moon's year around the star is its parent's year).
 3. **`GenerateAxialTilt(dp)`** → `AxialTilt{Degrees, IsExtreme}`.
 4. **`GenerateTidalLock(dp, m, sys, parent, periodHours)`** → `TidalLock`. May reroll `Eccentricity` if 1:1 lock fires.
@@ -140,13 +140,13 @@ Per-body, every planet and moon (plus HZ-planet moons get surface distribution a
 **Notes:**
 
 - Tidal-lock 1:1 mutates `Eccentricity` — this is a one-shot forward update, not a loop, but it must precede any computation that reads eccentricity (notably tidal heating in Stage 7).
-- The earlier code placed Stage 4 between the preliminary atm/hydro (5A) and the temperature pass (5C). Pass 2 must decide: does Stage 4 belong before, after, or inside the climate fixed-point? Day length and axial tilt feed into temperature variance; tidal lock affects greenhouse caps. The honest answer is: **inside or alongside the climate fixed-point**, since tidal lock state can affect temperature which can affect atm. Conservative decision: run Stage 4 once before the fixed-point, then re-run only the parts that read climate state if the fixed-point converges to a different equilibrium. Most worlds will be insensitive, but the rule must be explicit, not accidental.
+- Stage 4 runs once before the climate passes (Stage 5). Day length and axial tilt feed into temperature variance; tidal lock affects greenhouse caps. There is one back-edge — an atmosphere-pressure DM (WBH p.106) that can re-fire tidal lock once atmosphere exists — and it is handled explicitly after Stage 5 by `ApplyTidalLockReEval`, which restores the pre-tidal snapshot, re-runs tidal lock with the pressure known, and re-runs the affected body's climate passes. That cascade is confined to bodies with pressure > 2.5 bar; see `wbh-inconsistencies.md` § 7.
 
-## Stage 5: Climate Fixed-Point — Atmosphere ↔ Hydrographics ↔ Temperature
+## Stage 5: Climate cluster (cyclic; two-pass sampling) — Atmosphere ↔ Hydrographics ↔ Temperature
 
-This is the load-bearing structural insight pass 2 corrects. The earlier code generated atm/hydro from preliminary inputs, generated temperature from those, then re-derived atm/hydro from real temperature, then re-generated temperature, then re-derived again — a 2-pass iteration that empirically converged.
+This is the load-bearing structural insight pass 2 corrects. The earlier code generated atm/hydro from preliminary inputs, generated temperature from those, then re-derived atm/hydro from real temperature, then re-generated temperature, then re-derived again — a 2-pass rederive.
 
-**The code implements an explicit fixed-point solver.**
+**The code resolves the cycle by two-pass sampling — not a fixed-point solver.** There is no fixed point to converge to (see "Solver shape" below): `RederiveAtmosphereHydrographics` re-samples hydro from fresh dice each pass, so successive passes are stochastic samples, not iterations toward equilibrium. The code runs exactly two passes and trusts the second.
 
 ### The cycle
 
@@ -168,42 +168,40 @@ Concrete dependency edges (verified from source):
 - **`ComputeAlbedo`** reads `Hydrographics.Code` (`temperature_albedo.go:71`). Different hydro bands give different albedo modifiers per WBH p.110. Therefore `Temperature` depends on `Hydrographics`.
 - **`ComputeGreenhouseFactor`** reads `Atmosphere.Code` and `Atmosphere.Pressure` (`temperature_greenhouse.go`). Therefore `Temperature` depends on `Atmosphere`.
 - **`RederiveAtmosphereHydrographics`** reads `Temperature.MeanK` and may mutate `Atmosphere.Code` via `CheckRunawayGreenhouse` (`temperature_rederive.go`). Therefore `Atmosphere` depends on `Temperature`.
-- **`GenerateHydrographics`** takes `tempRange` as input. `tempRange` is derived from `Temperature.MeanK` (post-fixed-point) — though pass 1 used `HZCOOffsetToTempRange` as a preliminary proxy in Stage 5A. Therefore `Hydrographics` depends on `Temperature`.
+- **`GenerateHydrographics`** takes `tempRange` as input. `tempRange` is derived from `Temperature.MeanK` (post-climate) — though pass 1 used `HZCOOffsetToTempRange` as a preliminary proxy in Stage 5A. Therefore `Hydrographics` depends on `Temperature`.
 
-Three-way bidirectional dependence. Single-pass evaluation in any order produces wrong answers for non-trivial worlds. Earlier code recovered with two iterations.
+Three-way bidirectional dependence. Single-pass evaluation in any order produces wrong answers for non-trivial worlds. The code runs two passes and trusts the second.
 
 ### Solver shape
 
 ```go
-// Pseudocode — to be specified in api-surface.md.
-type Climate struct {
-    Atmosphere    Atmosphere
-    Hydrographics Hydrographics
-    Temperature   Temperature
-}
+// Actual: worlds/stage5.go. ApplyClimatePasses mutates the body directly;
+// there is no Climate value type (a proposed convergence-variable struct
+// was removed as dead code — lessons-learned.md § L14).
 
-func ConvergeClimate(r Roller, body, sys, parent) Climate {
-    // 1. Initial atm/hydro from HZ-offset proxy (pass 1's Stage 5A).
-    // 2. Loop:
+func ApplyClimatePasses(r Roller, body *Body, sys System) error {
+    // 1. Initial atm/hydro from the HZ-offset proxy (pass 1's Stage 5A).
+    // 2. Two passes, each:
     //    a. Compute Temperature(atm, hydro, body, sys, parent).
-    //    b. Re-derive Atmosphere from Temperature (CheckRunawayGreenhouse, ScaleHeight).
-    //    c. Re-derive Hydrographics from Temperature (tempRange-driven table).
-    //    d. If atm.Code, hydro.Code, and Temperature.MeanK are stable, return.
-    // 3. Cap iterations at N (pass 1 used 2; pass 2 picks a hard cap and asserts convergence).
+    //    b. Compute partial geology (Residual + TSF + THF) and add the
+    //       TSS inherent-temperature term.
+    //    c. RederiveAtmosphereHydrographics from the post-TSS Temperature
+    //       (CheckRunawayGreenhouse, ScaleHeight, tempRange-driven hydro).
+    // 3. Trust the second pass. No stability check, no iteration cap.
 }
 ```
 
-Convergence cap: pass 1 used N=2 and it sufficed for the worked examples. The code uses N=3 and asserts convergence within the cap; if a fixture fails, the model is wrong and the failure should be loud.
+**Not a fixed point.** The original pass-2 design specced an N-iteration loop with a convergence assertion (N=3). Cycle 17 implemented it, hit overflow on common seeds, and an instrumentation spike found the cause: `RederiveAtmosphereHydrographics` calls `RollHydroDigit`, which draws fresh dice each pass — so every pass is a fresh stochastic sample, not a step toward a fixed point. The code reverted to pass-1's two-pass behaviour and dropped the convergence assertion. Adding a third pass or a stability assertion reproduces the cycle-17 overflow. See `lessons-learned.md` § L13.
 
 ### Eligibility
 
-Climate runs for HZ-orbit terrestrials and HZ-planet moons. Vacuum worlds, gas giants, and belts skip the cycle (no atmosphere). Non-HZ terrestrials get a degenerate climate with no atmosphere; pass 2 represents this as a `Climate` with nil-pointer atmosphere/hydrographics, mirrored into the body's `Has*()` predicates.
+Climate runs for HZ-orbit terrestrials and HZ-planet moons. Vacuum worlds, gas giants, and belts skip the cluster (no atmosphere). Non-HZ terrestrials get no atmosphere; this is represented as nil-pointer `Atmosphere`/`Hydrographics`/`Temperature` on the body, surfaced through the `Has*()` predicates.
 
 ## Stage 6: Atmosphere taint typology (WBH pp.81–90)
 
-Forward-only. Runs after climate has converged.
+Forward-only. Runs after the climate passes.
 
-**Inputs:** post-fixed-point `Atmosphere`, `OxygenPartialPressure`.
+**Inputs:** post-climate `Atmosphere`, `OxygenPartialPressure`.
 
 **Procedures:**
 
@@ -211,7 +209,7 @@ Forward-only. Runs after climate has converged.
 - `RollAllTaints(dp, preseed)` — multi-roll up to 3 taints with reroll on result 10. Eligible codes: 2/4/7/9, A/B/C.
 - `RollInsidiousHazards(subtype, isExtremelyDense)` — atm C only.
 
-**Notes:** Mutates `Atmosphere` in place (promotion can change `Code`). The promotion does not feed back into the climate fixed-point because the changes are in atm code-grouping (still oxygen-bearing), not in greenhouse parameters that would shift temperature meaningfully. A fixture verifies this assumption.
+**Notes:** Mutates `Atmosphere` in place (promotion can change `Code`). The promotion does not feed back into the climate passes because the changes are in atm code-grouping (still oxygen-bearing), not in greenhouse parameters that would shift temperature meaningfully. A fixture verifies this assumption.
 
 ## Stage 7: Geology — TSS + post-TSS temperature update (WBH pp.125–127)
 
@@ -237,10 +235,10 @@ Per-body. Terrestrials get full geology; gas giants get residual heat only; belt
 
 > For HZ worlds: TSS ~17 alters T by ~0.001K — negligible. For cold/rogue worlds (base T near 25K), TSS can dominate and add 4-5K. The math converges in one pass — no iteration needed. There is no path back into atm/hydro that would re-trigger 3A2b-rederive in practice (the temperature delta is too small to cross any band boundary except in extreme cases worth flagging as `t.Logf` divergences).
 
-Decision: **fold TSS into the climate fixed-point's convergence variable.** `Temperature.MeanK` post-TSS is the value atm/hydro should be derived from. The cost is computing partial geology (residual + TSF + THF) inside the convergence loop, but those quantities themselves don't depend on climate state — they depend on body physical, tidal effects, and orbital parameters, all from earlier stages. So:
+Decision: **fold TSS into the climate passes.** `Temperature.MeanK` post-TSS is the value atm/hydro should be derived from. The cost is computing partial geology (residual + TSF + THF) inside each pass, but those quantities themselves don't depend on climate state — they depend on body physical, tidal effects, and orbital parameters, all from earlier stages. So:
 
 ```text
-ConvergeClimate now includes:
+ApplyClimatePasses now includes:
    1. Compute pre-TSS Temperature from atm/hydro/body/sys/parent.
    2. Compute TSS factors (Stage 7 partial; atm/hydro-independent).
    3. Apply TSS to Temperature.
@@ -255,7 +253,7 @@ If the fixture catalog reveals a case where pass 1's "ignore" and pass 2's "incl
 
 ## Stage 8: Biology (WBH pp.127–131)
 
-Forward-only. Runs after climate + geology converge.
+Forward-only. Runs after the climate passes and geology.
 
 **Eligibility:** terrestrials with `Atmosphere`; HZ-planet moons with `Atmosphere`. GGs, belts, atm-less terrestrials skip.
 
@@ -283,7 +281,7 @@ Forward-only. Deterministic — no rolls.
 
 ## Stage 10: System aggregations (WBH pp.58, 132–146)
 
-Run once after every body has converged.
+Run once after every body's per-body pipeline is complete.
 
 - `computeBaselineN(group, detailed)` per allocation — backfills `StarAllocation.BaselineN`.
 - `ShortProfile(sd)` — "G-P-T-N-S" form per WBH p.58.
@@ -332,14 +330,14 @@ The dependency graph reorders pass-1's pipeline as follows:
     - Moon refinement
 3. ApplyRotationTilt (3A2a — surface dist gated on later climate; rest forward):
     - Day length, axial tilt, tidal lock, surface tidal effects
-    - (Surface distribution deferred until after climate converges)
-4. ConvergeClimate per body (the fixed-point solver; includes TSS):
+    - (Surface distribution deferred until after the climate passes)
+4. ApplyClimatePasses per body (two-pass sampling; includes TSS):
     - Atmosphere, Hydrographics, Temperature, partial Geology
     - Yields final atm/hydro/temp/TSS for downstream stages
 5. ApplyTaintTypology (post-climate atm mutations)
 6. ApplyClimateDependentFollowups:
-    - Surface distribution (now using converged hydro)
-    - Tectonic plates (now using converged TSS)
+    - Surface distribution (now using post-climate hydro)
+    - Tectonic plates (now using post-climate TSS)
     - GG residual heat (no climate dep, but lives in geology stage)
 7. ApplyBiology (terrestrials with atm + HZ-planet moons with atm)
 8. ApplyHabitability (terrestrials, atm optional)
@@ -348,17 +346,17 @@ The dependency graph reorders pass-1's pipeline as follows:
 
 Differences from pass-1's pipeline:
 
-- **`ConvergeClimate` replaces 5A-atm/hydro + 5C + 5D + the TSS-temperature-update edge of 5E.** The 2-pass iteration becomes an explicit solver with assertable convergence.
-- **Surface distribution moves to step 6** because it depends on hydrographics, which is only stable post-climate. Pass 1 ran it in 5B against the preliminary hydro and never re-ran it; the result happened to be correct because the preliminary and converged hydro were nearly always identical for HZ worlds. Pass 2 makes the dependency explicit.
+- **`ApplyClimatePasses` replaces 5A-atm/hydro + 5C + 5D + the TSS-temperature-update edge of 5E.** The 2-pass rederive becomes an explicit per-body entry; there is no convergence assertion (the cluster is sampled twice, not iterated to a fixed point).
+- **Surface distribution moves to step 6** because it depends on hydrographics, which is only stable post-climate. Pass 1 ran it in 5B against the preliminary hydro and never re-ran it; the result happened to be correct because the preliminary and post-climate hydro were nearly always identical for HZ worlds. Pass 2 makes the dependency explicit.
 - **Tectonic plates moves to step 6** for the same reason — depends on stable TSS.
 - **Atmosphere taint typology moves before TSS-dependent geology follow-ups** because taint promotion can mutate `atm.Code` and downstream consumers should see the post-promotion code. The project keeps that ordering.
 
 ## What this graph commits pass 2 to
 
-1. **One climate solver, not three sequential atm/hydro/temperature passes plus a re-derive recovery.**
+1. **One climate solver (two-pass sampling), not three sequential atm/hydro/temperature passes plus a re-derive recovery.**
 2. **One per-body iterator** that walks planets and moons uniformly. The moon-vs-planet distinction is a parameter, not a code path.
 3. **Forward-only stages after climate.** Geology's tectonic plates, biology, habitability, system aggregations: all single-pass.
-4. **TSS folded into the climate solver's convergence variable** — pass 2 takes the more honest interpretation than pass 1's "ignore the back-edge."
+4. **TSS folded into the climate passes** — pass 2 takes the more honest interpretation than pass 1's "ignore the back-edge."
 5. **Ordering by data dependency, not by WBH pagination.** Pass-2 sub-projects are sized by what set of fixtures gets green next, not by what chapter is being implemented.
 
 The graph is the structural spine. `api-surface.md` enumerates the public signatures that realize it. `harness.md` enumerates the worked-example fixtures that gate it. `wbh-inconsistencies.md` documents the divergent interpretations that were judgment calls in pass 1 and are committed code in pass 2. `anti-patterns.md` makes the unified-body-iterator a checklist item.

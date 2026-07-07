@@ -8,7 +8,7 @@ The historical context — why the architecture looks this way rather than mirro
 
 The book's pagination is not the data's dependency structure. A WBH-pagination-shaped implementation produces:
 
-- A fixed-point system (atmosphere ↔ temperature ↔ hydrographics) discovered mid-flight, recovered awkwardly.
+- A cyclic climate cluster (atmosphere ↔ temperature ↔ hydrographics) discovered mid-flight, recovered awkwardly with a two-pass rederive.
 - A moon-path silent-zero anti-pattern that recurs every time per-body procedures aren't first-class.
 - Renderer asymmetries (one form returning a struct, another returning a string) when forms are designed chapter-by-chapter.
 - API gotchas (misnamed parameters, signature inconsistencies) that slip past chapter-level reviews because no chapter owns the API surface as a whole.
@@ -65,7 +65,7 @@ Decisions baked in from the start:
 These documents are the design backbone. Together they define what the code commits to.
 
 1. **`design-intent.md`** (this file) — the why and the cuts.
-2. **`dependency-graph.md`** — every value, what it depends on, where the fixed-point loops are.
+2. **`dependency-graph.md`** — every value, what it depends on, where the one cyclic (climate) cluster is.
 3. **`api-surface.md`** — every public signature with rationale.
 4. **`wbh-inconsistencies.md`** — six book-internal divergences, with the chosen interpretation per case.
 5. **`anti-patterns.md`** — failure modes the code guards against.
