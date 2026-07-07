@@ -20,6 +20,11 @@ type Class4PPartP struct {
 	Eccentricity float64
 	PeriodHours  float64
 
+	// Moon-mainworld extras (Kind == BodyMoon): the moon's own orbit
+	// around its parent. Zero/empty for planet mainworlds.
+	MoonOrbitKm       float64 `json:",omitempty"`
+	ParentDesignation string  `json:",omitempty"`
+
 	DiameterKm float64
 	Density    float64
 	Gravity    float64
@@ -146,6 +151,18 @@ func buildClass4PPlanet(u *Universe, body *Body) *Class4PPartP {
 		MassEarth:    body.MassEarth,
 		IsMainworld:  true,
 	}
+	if body.Kind == BodyMoon {
+		// Body.Orbit and Body.Period are star-relative and zero for
+		// moons — use the parent's stellar orbit for the AU context and
+		// the moon's own parent-relative orbit and period.
+		p.OrbitNumber = body.StellarOrbit()
+		p.AU = stars.OrbitToAU(body.StellarOrbit())
+		p.PeriodHours = body.PeriodHours
+		p.MoonOrbitKm = body.OrbitKm
+		if body.Parent != nil {
+			p.ParentDesignation = body.Parent.Designation
+		}
+	}
 	if body.HasPhysical() {
 		p.Density = body.Physical.Density
 		p.Gravity = body.Physical.Gravity
@@ -247,8 +264,14 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h iiss.FormHeader) {
 	fmt.Fprintf(b, "**SYSTEM AGE (Gyr):** %.3f\n\n", p.SystemAgeGyr)
 
 	b.WriteString("### ORBIT\n")
-	fmt.Fprintf(b, "- AU: %.2f, Eccentricity: %.2f, Period (h): %.2f\n\n",
-		p.AU, p.Eccentricity, p.PeriodHours)
+	if p.ParentDesignation != "" {
+		fmt.Fprintf(b, "- AU: %.2f (via %s), Eccentricity: %.2f, Period (h): %.2f\n",
+			p.AU, p.ParentDesignation, p.Eccentricity, p.PeriodHours)
+		fmt.Fprintf(b, "- Moon orbit (km): %.0f around %s\n\n", p.MoonOrbitKm, p.ParentDesignation)
+	} else {
+		fmt.Fprintf(b, "- AU: %.2f, Eccentricity: %.2f, Period (h): %.2f\n\n",
+			p.AU, p.Eccentricity, p.PeriodHours)
+	}
 
 	b.WriteString("### SIZE\n")
 	fmt.Fprintf(b, "- Diameter (km): %.0f, Density: %.2f, Gravity: %.2f, Mass (Earth): %.3f\n\n",
@@ -386,15 +409,16 @@ func (pb *Class4PPartPB) RenderBody(b *strings.Builder, h iiss.FormHeader) {
 	b.WriteString("### COMPOSITION\n")
 	fmt.Fprintf(b, "- m-type%%: %d, s-type%%: %d, c-type%%: %d, other%%: %d\n",
 		pb.MTypePct, pb.STypePct, pb.CTypePct, pb.OtherPct)
-	fmt.Fprintf(b, "- Bulk: %d\n", pb.Bulk)
-	fmt.Fprintf(b, "- Major Bodies: Size 1 = %d, Size S = %d\n\n",
-		pb.SigSize1Bodies, pb.SigSizeSBodies)
+	fmt.Fprintf(b, "- Bulk: %d\n\n", pb.Bulk)
 
 	b.WriteString("### RESOURCES\n")
 	fmt.Fprintf(b, "- Rating: %d\n\n", pb.ResourceRating)
 
+	// WBH pp.72-74 produces significant-body COUNTS by size class only;
+	// the belt procedure never individuates members, so counts are the
+	// complete book-faithful content of this section (not a stub).
 	b.WriteString("### MAJOR BODIES\n")
-	fmt.Fprintf(b, "- Counts only: %d size-1 + %d size-S; per-body detail post-parity.\n\n",
+	fmt.Fprintf(b, "- Size 1: %d, Size S: %d\n\n",
 		pb.SigSize1Bodies, pb.SigSizeSBodies)
 
 	if pb.IsMainworld {

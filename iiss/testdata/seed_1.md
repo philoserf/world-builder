@@ -144,7 +144,8 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 **SYSTEM AGE (Gyr):** 9.500
 
 ### ORBIT
-- AU: 0.00, Eccentricity: 0.00, Period (h): 10622.30
+- AU: 1.34 (via Aab IV), Eccentricity: 0.00, Period (h): 113.66
+- Moon orbit (km): 941209 around Aab IV
 
 ### SIZE
 - Diameter (km): 9600, Density: 1.27, Gravity: 0.96, Mass (Earth): 0.543

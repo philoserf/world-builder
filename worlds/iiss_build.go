@@ -76,11 +76,17 @@ func buildClass23(u *Universe, c0 iiss.Class0IForm) iiss.Class23Form {
 		},
 	}
 
-	// Post-fill MAO on Stars rows from the AvailableOrbits result —
+	// Post-fill MAO on Stars rows from the Stage-1 star groups —
 	// stars.BuildSurveyForm leaves MAO=0 for the Class 0/I header.
-	if avail, err := AvailableOrbits(u.System); err == nil {
-		fillStarsMAO(form.Stars, avail, u.System)
+	// The groups come from u.Placement (already computed by
+	// GenerateSystemPlacement via AvailableOrbits, which fails the
+	// whole generation on error), so no recompute and no swallowed
+	// error path here.
+	groups := make([]Group, 0, len(u.Placement.Allocations))
+	for _, alloc := range u.Placement.Allocations {
+		groups = append(groups, alloc.Group)
 	}
+	fillStarsMAO(form.Stars, groups, u.System)
 
 	for i := range u.Detail.Bodies {
 		body := &u.Detail.Bodies[i]
@@ -113,9 +119,9 @@ func buildClass23(u *Universe, c0 iiss.Class0IForm) iiss.Class23Form {
 // fillStarsMAO walks Stars rows and copies MAO from AvailableOrbits.
 // Composite rows ("Aab", "AB", "ABC") get MAO from the corresponding
 // outer companion's AU.
-func fillStarsMAO(rows []iiss.Class0IStarRow, avail Result, sys stars.System) {
+func fillStarsMAO(rows []iiss.Class0IStarRow, groups []Group, sys stars.System) {
 	maoByGroup := map[string]float64{}
-	for _, g := range avail.Groups {
+	for _, g := range groups {
 		maoByGroup[g.Designation] = g.MAO
 	}
 	composeMAO := map[string]float64{}
