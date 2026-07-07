@@ -325,10 +325,19 @@ func computeAxialTiltFactor(body *Body) float64 {
 	}
 	factor := math.Sin(tilt * math.Pi / 180.0)
 
-	// Local year for halving: prefer body.Period.Years; fall back to body.Period.Hours / 8766.
-	yrs := body.Period.Years
-	if yrs == 0 && body.Period.Hours > 0 {
-		yrs = body.Period.Hours / 8766.0
+	// Local year for halving. For moons this is the moon's own orbit
+	// period around its planet (Body.PeriodHours) — NOT Body.Period,
+	// which Stage 4 overwrites with the parent's stellar period for
+	// calendar math. For planets: prefer Period.Years, fall back to
+	// Period.Hours / 8766.
+	yrs := 0.0
+	if body.Kind == BodyMoon {
+		yrs = body.PeriodHours / 8766.0
+	} else {
+		yrs = body.Period.Years
+		if yrs == 0 && body.Period.Hours > 0 {
+			yrs = body.Period.Hours / 8766.0
+		}
 	}
 	if yrs > 0 && yrs < 0.1 {
 		factor /= 2

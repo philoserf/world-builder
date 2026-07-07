@@ -1260,3 +1260,29 @@ func TestTemperature_MeanBySeason_PartB_ArcticZone_HasSeasonalSwing(t *testing.T
 		t.Errorf("Part B arctic zone should swing seasonally: summer=%v winter=%v", summer, winter)
 	}
 }
+
+// TestComputeAxialTiltFactor_MoonUsesOwnPeriod asserts the p.113 rule
+// that a moon's "local year" is its orbit period around its planet
+// (Body.PeriodHours), not Body.Period — which Stage 4 overwrites with
+// the parent's stellar period for calendar math (regression: the
+// halving read the stellar year and never fired for moons).
+func TestComputeAxialTiltFactor_MoonUsesOwnPeriod(t *testing.T) {
+	t.Parallel()
+	moon := &Body{
+		Kind:        BodyMoon,
+		AxialTilt:   &AxialTilt{Degrees: 30}, // sin(30°) = 0.5
+		PeriodHours: 120,                     // ~0.014 std years → halve
+		Period:      Period{Hours: 10000},    // parent's stellar year (~1.14y) — must be ignored
+	}
+	if got := computeAxialTiltFactor(moon); math.Abs(got-0.25) > 1e-9 {
+		t.Errorf("moon factor = %v, want 0.25 (sin(30°)/2 — halved by the moon's OWN short year)", got)
+	}
+	planet := &Body{
+		Kind:      BodyTerrestrial,
+		AxialTilt: &AxialTilt{Degrees: 30},
+		Period:    Period{Hours: 10000},
+	}
+	if got := computeAxialTiltFactor(planet); math.Abs(got-0.5) > 1e-9 {
+		t.Errorf("planet factor = %v, want 0.5 (no halving for a ~1.14y year)", got)
+	}
+}

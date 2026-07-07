@@ -229,19 +229,23 @@ func TestIsTerrestrial(t *testing.T) {
 	cases := []struct {
 		name string
 		kind BodyKind
+		size SizeCode
 		want bool
 	}{
-		{"terrestrial true", BodyTerrestrial, true},
-		{"gas giant false", BodyGasGiant, false},
-		{"belt false", BodyPlanetoidBelt, false},
-		{"empty false", BodyEmpty, false},
-		{"moon false (planet→moon evaluated from planet only)", BodyMoon, false},
+		{"terrestrial Size 1 true", BodyTerrestrial, "1", true},
+		{"terrestrial Size F true", BodyTerrestrial, "F", true},
+		{"terrestrial Size 0 planetoid false (p.107 Size 1-F)", BodyTerrestrial, "0", false},
+		{"terrestrial Size S false", BodyTerrestrial, "S", false},
+		{"gas giant false", BodyGasGiant, "", false},
+		{"belt false", BodyPlanetoidBelt, "", false},
+		{"empty false", BodyEmpty, "", false},
+		{"moon false (planet→moon evaluated from planet only)", BodyMoon, "5", false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			b := &Body{Kind: c.kind}
+			b := &Body{Kind: c.kind, SizeCode: c.size}
 			if got := isTerrestrial(b); got != c.want {
-				t.Errorf("isTerrestrial(%v) = %v, want %v", c.kind, got, c.want)
+				t.Errorf("isTerrestrial(%v/%q) = %v, want %v", c.kind, c.size, got, c.want)
 			}
 		})
 	}

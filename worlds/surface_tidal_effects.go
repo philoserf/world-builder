@@ -98,7 +98,13 @@ func GenerateSurfaceTidalEffects(
 		return nil, nil
 	}
 
-	bodySizeN := nForSizeCode(body.SizeCode)
+	// The WBH p.107-108 amplitude formulas scale linearly with numeric
+	// Size, but nForSizeCode returns a -1 sentinel for bodies without a
+	// 0-F code — gas giants and belts (SizeCode "") and sub-Size-1
+	// bodies ("S", "R"). Clamp to 0 so such bodies get zero-amplitude
+	// components (no solid surface / negligible size) instead of
+	// NEGATIVE tide amplitudes summed into Total.
+	bodySizeN := max(nForSizeCode(body.SizeCode), 0)
 	var components []TidalComponent
 
 	// ── 1. Parent planet → moon ───────────────────────────────────────────

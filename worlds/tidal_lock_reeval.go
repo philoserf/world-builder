@@ -61,12 +61,21 @@ func ClearStage5Output(body *Body) {
 func ApplyTidalLockReEval(r roller.Roller, u *Universe) error {
 	// Pass 1: moons. Re-eval moons first so their TidalLock is current
 	// by the time the parent planet's re-eval reads hasLockedMoon.
+	// Parents whose moons change lock state are recorded: a planet in a
+	// PlanetToMoon lock derives its DM and day length from a child
+	// moon's lock, so a moon-side change staleness-forces the parent's
+	// re-eval even when the parent's own pressure gate wouldn't fire.
+	changedParents := map[*Body]bool{}
 	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty || parent == nil {
 			continue
 		}
-		if err := reEvalBody(r, u, body, parent); err != nil {
+		before := lockFingerprint(body)
+		if err := reEvalBody(r, u, body, parent, false); err != nil {
 			return err
+		}
+		if lockFingerprint(body) != before {
+			changedParents[parent] = true
 		}
 	}
 	// Pass 2: planets and belts. Parent is nil for top-level bodies.
@@ -74,19 +83,40 @@ func ApplyTidalLockReEval(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty || parent != nil {
 			continue
 		}
-		if err := reEvalBody(r, u, body, parent); err != nil {
+		force := changedParents[body] && body.TidalLock != nil &&
+			body.TidalLock.Case == TidalLockCasePlanetToMoon
+		if err := reEvalBody(r, u, body, parent, force); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+// lockFingerprint summarizes a body's tidal-lock outcome for
+// change detection across the re-eval passes.
+func lockFingerprint(body *Body) string {
+	if body.TidalLock == nil {
+		return ""
+	}
+	return fmt.Sprintf("%d|%s", body.TidalLock.Case, body.TidalLock.LockRatio)
+}
+
 // reEvalBody performs the tidal-lock re-evaluation for a single body.
-// Skipped if the body has no pre-tidal-lock snapshot or pressure ≤ 2.5
-// bar. Factored out of ApplyTidalLockReEval so both passes call the
-// same logic.
-func reEvalBody(r roller.Roller, u *Universe, body, parent *Body) error {
-	if body.Atmosphere == nil || body.Atmosphere.Pressure <= 2.5 {
+// Skipped if the body has no pre-tidal-lock snapshot or (unless force)
+// pressure ≤ 2.5 bar. force is set for a planet in a PlanetToMoon lock
+// whose referenced moon changed lock state in pass 1 — its DM and day
+// length are derived from that moon and would otherwise go stale.
+// Factored out of ApplyTidalLockReEval so both passes call the same
+// logic.
+//
+// Known, accepted asymmetry: the -2 atmosphere DM is applied from the
+// pre-re-eval pressure, and the climate re-run afterwards can settle on
+// a pressure ≤ 2.5 bar that would no longer justify it. This mirrors
+// stage5.go's documented non-convergence: each climate pass is a
+// stochastic sample, not a fixed point, and the book's p.106 cascade
+// re-rolls forward only — it does not iterate to consistency.
+func reEvalBody(r roller.Roller, u *Universe, body, parent *Body, force bool) error {
+	if !force && (body.Atmosphere == nil || body.Atmosphere.Pressure <= 2.5) {
 		return nil
 	}
 	if body.preTidalLockSnapshot == nil {
@@ -96,8 +126,12 @@ func reEvalBody(r roller.Roller, u *Universe, body, parent *Body) error {
 	sys := u.System
 
 	// Restore pre-tidal-lock state. Atmosphere stays as-is so
-	// commonTidalLockDMs can see the pressure on the re-roll.
+	// commonTidalLockDMs can see the pressure on the re-roll. The
+	// snapshot's lifetime is "set once by Stage 4, consumed at most
+	// once here" — clear it so an accidental second invocation fails
+	// closed (skips) instead of reusing stale data.
 	body.preTidalLockSnapshot.RestoreInto(body)
+	body.preTidalLockSnapshot = nil
 	body.TidalLock = nil
 
 	// Re-run tidal lock — now with atmosphere DM active.

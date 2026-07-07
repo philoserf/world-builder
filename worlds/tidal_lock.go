@@ -294,9 +294,11 @@ func RollTidalLockStatus(r roller.Roller, dm int) int {
 // --- helpers ---
 
 // isTerrestrial reports whether a body is eligible for the Planet→Moon
-// tidal-lock case per WBH p.107 (terrestrial worlds, Size 1–F).
+// tidal-lock case per WBH p.107 (terrestrial worlds, Size 1–F). The
+// size gate matters: BodyTerrestrial can carry SizeCode "0" (planetoid),
+// which the p.107 rule excludes.
 func isTerrestrial(body *Body) bool {
-	return body.Kind == BodyTerrestrial
+	return body.Kind == BodyTerrestrial && nForSizeCode(body.SizeCode) >= 1
 }
 
 func hasSignificantMoon(body *Body) bool {
