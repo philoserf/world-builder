@@ -128,13 +128,17 @@ func GenerateSurfaceTidalEffects(
 	// primary and any OrbitCompanion-class (close-binary) members with
 	// ParentIndex == -1, then compute a single StarTide at the group AU.
 	//
-	// The planet's orbit in AU is used as the distance to all star groups,
-	// matching the WBH worked example ("from the two relatively distant
-	// suns … at 1.06 AU").
-	auFromStar := body.Orbit
+	// The planet's orbit distance in AU is used as the distance to all
+	// star groups, matching the WBH worked example ("from the two
+	// relatively distant suns … at 1.06 AU"). body.Orbit is a WBH
+	// Orbit#, so it must be converted to AU (StarTide's formula divides
+	// by AU³) — every other consumer of a stellar orbit distance
+	// (refineParentMoons, buildClass4PPlanet, temperature.go) converts
+	// via stars.OrbitToAU too.
+	auFromStar := stars.OrbitToAU(body.Orbit)
 	if moonRef != nil && parentPlanet != nil {
 		// Moon orbits a planet; use the planet's stellar orbit.
-		auFromStar = parentPlanet.Orbit
+		auFromStar = stars.OrbitToAU(parentPlanet.Orbit)
 	}
 
 	// Sum primary group: primary mass + OrbitCompanion-class mates (sub-AU pairs

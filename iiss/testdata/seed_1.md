@@ -160,7 +160,7 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 ### ROTATION
 - Sidereal (h): 113.66, Solar (h): 0.00, Solar days/year: 0.00
 - Axial Tilt: 0.30°
-- Tidal lock: 1:1, Tides (m): 0.01
+- Tidal lock: 1:1, Tides (m): 0.18
 
 ### TEMPERATURE
 - High (K): 278.2, Mean (K): 271.1, Low (K): 264.0

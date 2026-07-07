@@ -86,20 +86,20 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 ### ROTATION
 - Sidereal (h): 2400.00, Solar (h): -9539.99, Solar days/year: -0.20
 - Axial Tilt: 179.90°
-- Tidal lock: no, Tides (m): 0.25
+- Tidal lock: no, Tides (m): 3.92
 
 ### TEMPERATURE
 - High (K): 328.0, Mean (K): 290.5, Low (K): 235.5
 - Luminosity: 0.076, Albedo: 0.23, Greenhouse: 0.53
 
 ### SEISMIC
-- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 4
+- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 2
 
 ### LIFE
-- Biomass: 15, Biocomplexity: 8, Sophonts: no, Biodiversity: 10, Compatibility: 5
+- Biomass: 11, Biocomplexity: 9, Sophonts: no, Biodiversity: 10, Compatibility: 3
 
 ### RESOURCES
-- Rating: 8
+- Rating: 12
 
 ### HABITABILITY
 - Rating: 9
