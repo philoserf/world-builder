@@ -127,26 +127,24 @@ func kindFromCell(cell string) (kind StarKind, ok bool) {
 }
 
 // KindFromUnusualCell maps an Unusual-column cell from the Star Type
-// Determination table (WBH p. 15) to a StarKind.
+// Determination table (WBH p. 15) to a StarKind. The Unusual column
+// only admits BD and D.
 func KindFromUnusualCell(cell string) (StarKind, error) {
-	switch cell {
-	case "BD", "D":
+	if cell == "BD" || cell == "D" {
 		k, _ := kindFromCell(cell)
 		return k, nil
-	default:
-		return "", fmt.Errorf("stars: unknown Unusual cell: %q", cell)
 	}
+	return "", fmt.Errorf("stars: unknown Unusual cell: %q", cell)
 }
 
 // KindFromPeculiarCell maps a Peculiar-column cell from the Star Type
-// Determination table (WBH p. 15) to a StarKind.
+// Determination table (WBH p. 15) to a StarKind. BD and D belong to the
+// Unusual column, not Peculiar.
 func KindFromPeculiarCell(cell string) (StarKind, error) {
-	switch cell {
-	case "BD", "D":
-		return "", fmt.Errorf("stars: unknown Peculiar cell: %q", cell)
-	}
-	if k, ok := kindFromCell(cell); ok {
-		return k, nil
+	if cell != "BD" && cell != "D" {
+		if k, ok := kindFromCell(cell); ok {
+			return k, nil
+		}
 	}
 	return "", fmt.Errorf("stars: unknown Peculiar cell: %q", cell)
 }
@@ -182,6 +180,19 @@ const (
 	PeculiarPathUnusual  PeculiarPath = "unusual"
 	PeculiarPathPeculiar PeculiarPath = "peculiar"
 )
+
+// ParsePeculiarPath converts a column name ("special" / "unusual" /
+// "peculiar") to its PeculiarPath, returning an error for any other
+// value. The single source of truth for the column vocabulary so
+// callers (e.g. the CLI flag) don't re-transcribe the constant names.
+func ParsePeculiarPath(s string) (PeculiarPath, error) {
+	switch PeculiarPath(s) {
+	case PeculiarPathSpecial, PeculiarPathUnusual, PeculiarPathPeculiar:
+		return PeculiarPath(s), nil
+	default:
+		return "", fmt.Errorf("stars: unknown peculiar column %q (want special, unusual, or peculiar)", s)
+	}
+}
 
 // RollSpecialPrimary resolves a "Special" (2D=2) primary roll by walking
 // the Unusual or Peculiar column of the Star Type Determination table

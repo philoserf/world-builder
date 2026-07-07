@@ -33,16 +33,9 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	var column stars.PeculiarPath
-	switch *peculiar {
-	case "special":
-		column = stars.PeculiarPathSpecial
-	case "unusual":
-		column = stars.PeculiarPathUnusual
-	case "peculiar":
-		column = stars.PeculiarPathPeculiar
-	default:
-		return fmt.Errorf("unknown peculiar column: %q (want special, unusual, or peculiar)", *peculiar)
+	column, err := stars.ParsePeculiarPath(*peculiar)
+	if err != nil {
+		return err
 	}
 
 	// Distinguish "flag omitted" from "-seed 0": an explicit 0 is a

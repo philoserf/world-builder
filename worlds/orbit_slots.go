@@ -93,6 +93,23 @@ func PlaceOrbitSlots(
 		}
 
 		cur := alloc.Group.MAO
+		// advance walks one slot outward from cur by groupSpread plus the
+		// given (2D-7) variance term, then widens past any primary-group
+		// exclusion zone. The zone widening applies only to the primary
+		// group (i == 0), including its j == 0 inner slot so a primary
+		// whose MAO sits adjacent to a companion exclusion zone doesn't
+		// silently drop a world inside the gap. Both the variance walk and
+		// the variance-free baseline-overshoot fallback go through here so
+		// the walk step lives in one place.
+		advance := func(variance float64) float64 {
+			proposed := cur + groupSpread + variance*groupSpread/10.0
+			if i == 0 {
+				if zone := excludedZoneAt(alloc.Group, proposed); zone != 0 {
+					proposed += zone
+				}
+			}
+			return proposed
+		}
 		for j := range slotCount {
 			label := slotLabel(alloc.Group.Designation, j, alloc.AllocatedWorlds)
 			isBaselineSlot := i == 0 && j == baselineN-1
@@ -103,34 +120,17 @@ func PlaceOrbitSlots(
 				// Equality is allowed: the override may legitimately land
 				// exactly on the previous slot's orbit (asserted by the
 				// SinglePrimary fixture). Only an actual regression breaks
-				// the ordering invariant.
+				// the ordering invariant. When the accumulated 2D variance
+				// of the preceding slots has overshot the independently
+				// computed baseline orbit (possible for larger baselineN),
+				// continue the outward walk one variance-free step instead
+				// of regressing the ascending-orbit sequence that
+				// designations and LongProfile rely on.
 				if orbit < cur {
-					// The accumulated 2D variance of the preceding slots
-					// can overshoot the independently computed baseline
-					// orbit for larger baselineN. Ascending orbit order is
-					// a pipeline invariant (designations, LongProfile), so
-					// when the walk has already passed the baseline orbit,
-					// continue the outward walk (one variance-free spread
-					// step) instead of regressing the sequence.
-					proposed := cur + groupSpread
-					if zone := excludedZoneAt(alloc.Group, proposed); zone != 0 {
-						proposed += zone
-					}
-					orbit = proposed
+					orbit = advance(0)
 				}
 			} else {
-				v := r.Roll("2D")
-				proposed := cur + groupSpread + float64(v-7)*groupSpread/10.0
-				// Exclusion-zone widening applies only to the primary
-				// group. Includes the j == 0 inner slot so a primary whose
-				// MAO sits adjacent to a companion exclusion zone doesn't
-				// silently drop a world inside the gap.
-				if i == 0 {
-					if zone := excludedZoneAt(alloc.Group, proposed); zone != 0 {
-						proposed += zone
-					}
-				}
-				orbit = proposed
+				orbit = advance(float64(r.Roll("2D") - 7))
 			}
 			out = append(out, Slot{
 				StarSlot: label,

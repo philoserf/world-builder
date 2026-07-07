@@ -278,3 +278,26 @@ func TestGeneratePrimaryAtClass_III(t *testing.T) {
 		t.Errorf("Luminosity = %v, want > 0", got.Luminosity)
 	}
 }
+
+func TestParsePeculiarPath(t *testing.T) {
+	t.Parallel()
+	ok := map[string]PeculiarPath{
+		"special":  PeculiarPathSpecial,
+		"unusual":  PeculiarPathUnusual,
+		"peculiar": PeculiarPathPeculiar,
+	}
+	for in, want := range ok {
+		got, err := ParsePeculiarPath(in)
+		if err != nil {
+			t.Errorf("ParsePeculiarPath(%q) errored: %v", in, err)
+		}
+		if got != want {
+			t.Errorf("ParsePeculiarPath(%q) = %q, want %q", in, got, want)
+		}
+	}
+	for _, bad := range []string{"", "Special", "giant", "bogus"} {
+		if _, err := ParsePeculiarPath(bad); err == nil {
+			t.Errorf("ParsePeculiarPath(%q) = nil error, want error", bad)
+		}
+	}
+}
