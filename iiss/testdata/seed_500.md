@@ -1,6 +1,6 @@
-# A V g — System Survey
+# A VI — System Survey
 
-**Mainworld:** A V g
+**Mainworld:** A VI
 
 Short profile: `2-0-5-4-0.1`
 
@@ -10,8 +10,6 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 
 ### Tidal locks
 - A I: planet → star, 1:1, twilight zone
-- A II: planet → star, 1:1, twilight zone
-- A III: planet → star, 1:1, twilight zone
 - A III a: moon → planet, 1:1
 - A III b: moon → planet, 1:1
 - A III c: moon → planet, 1:1
@@ -32,25 +30,19 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 - A VII: planet → star, 1:1, twilight zone
 
 ### Cold snaps
-- A III a: WorstLow 24 K (mean 328 K)
-- A III c: WorstLow 41 K (mean 328 K)
-- A IV: WorstLow 231 K (mean 288 K)
-- A V a: WorstLow 32 K (mean 251 K)
-- A V d: WorstLow 145 K (mean 251 K)
-- A V g: WorstLow 174 K (mean 260 K)
-- A V k: WorstLow 35 K (mean 251 K)
-
-### Crush worlds
-- A II: gravity 2.26 G, pressure 6.00 bar
+- A III a: WorstLow 40 K (mean 325 K)
+- A III b: WorstLow 202 K (mean 327 K)
+- A III c: WorstLow 33 K (mean 328 K)
+- A V a: WorstLow 169 K (mean 265 K)
 
 ### Taint chains
-- A IV: P, G
+- A VI: H, P
 
 ### Mainworld habitability
-- A V g — Rating 6/12 (Regionally habitable): Thin, taint (standard), or dense Atmospheres; Too cold all of the time; Too cold most of the time; Gravity very comfortable
+- A VI — Rating 2/12 (Barely habitable): Tainted thin or dense atmospheres; Very little useable land surface area; Too cold all of the time; Too cold most of the time
 
 
-## Class 0/I — A V g
+## Class 0/I — A VI
 
 - System: A
 - Sector / Location: — / —
@@ -62,7 +54,7 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 | --------- | ----- | ---- | -------- | -------- | ---------- | ---- |
 | A | M4 V | 0.219 | 0.312 | 3140 | 0.0085 | 0.23 |
 
-## Class II/III — A V g
+## Class II/III — A VI
 
 - Gas giants: 2
 - Belts: 0
@@ -79,14 +71,14 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 
 | Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
-| A | A I | 0.06 | 0.02 | 0.02 | 2.830d | 7C5 | 0 | HZ |
-| A | A II | 0.11 | 0.04 | 0.03 | 6.814d | AB4 | 0 | HZ |
+| A | A I | 0.06 | 0.02 | 0.02 | 2.830d | 7C0 | 0 | HZ |
+| A | A II | 0.11 | 0.04 | 0.03 | 6.814d | AA0 | 0 | HZ, ring |
 | A | A III | 0.16 | 0.06 | 0.00 | 12.404d | GM9 | 4 | 260⊕, HZ, 1??, 4??, 1??, R?? |
 | A | A III a |  |  |  |  | 1?? |  |  |
 | A | A III b |  |  |  |  | 4?? |  |  |
 | A | A III c |  |  |  |  | 1?? |  |  |
 | A | A III d |  |  |  |  | R?? |  |  |
-| A | A IV | 0.22 | 0.09 | 0.00 | 0.056y | 77A | 0 | HZ |
+| A | A IV | 0.22 | 0.09 | 0.00 | 0.056y | 7A6 | 0 | HZ |
 | A | A V | 0.27 | 0.11 | 0.03 | 0.077y | GM9 | 11 | 220⊕, HZ, 2??, E??, 1??, 2??, S??, S??, 7??, S??, S??, S??, 2?? |
 | A | A V a |  |  |  |  | 2?? |  |  |
 | A | A V b |  |  |  |  | E?? |  |  |
@@ -99,50 +91,50 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 | A | A V i |  |  |  |  | S?? |  |  |
 | A | A V j |  |  |  |  | S?? |  |  |
 | A | A V k |  |  |  |  | 2?? |  |  |
-| A | A VI | 0.33 | 0.13 | 0.03 | 0.103y | 841 | 0 | HZ |
-| A | A VII | 0.37 | 0.15 | 0.00 | 0.123y | 263 | 0 | HZ |
+| A | A VI | 0.33 | 0.13 | 0.03 | 0.103y | 898 | 0 | HZ |
+| A | A VII | 0.37 | 0.15 | 0.00 | 0.123y | 210 | 0 | HZ |
 
-## Class IV-P PART P — A V g (Moon mainworld)
+## Class IV-P PART P — A VI
 
-**WORLD:** A V g
+**WORLD:** A VI
 **SECTOR | LOCATION:** — | —
 **INITIAL SURVEY:**    **LAST UPDATED:** 
 **SYSTEM AGE (Gyr):** 9.200
 
 ### ORBIT
-- AU: 0.00, Eccentricity: 0.00, Period (h): 675.28
+- AU: 0.13, Eccentricity: 0.03, Period (h): 900.52
 
 ### SIZE
-- Diameter (km): 11200, Density: 0.97, Gravity: 0.85, Mass (Earth): 0.659
+- Diameter (km): 12800, Density: 1.09, Gravity: 1.09, Mass (Earth): 1.105
 
 ### ATMOSPHERE
-- Code: 5, Pressure (bar): 0.538, O₂ (bar): 0.231, Scale Height: 8.99
-- Profile: 5-0.538-0.231
+- Code: 9, Pressure (bar): 1.665, O₂ (bar): 0.583, Scale Height: 6.62
+- Profile: 9-1.665-0.583:H.2.9,P.1.4
 
 ### HYDROGRAPHICS
-- Code: 4, Coverage (%): 40, Profile: H4:H2O-100
+- Code: 8, Coverage (%): 84, Profile: H8:H2O-100
 
 ### ROTATION
-- Sidereal (h): 65.74, Solar (h): 0.00, Solar days/year: 0.00
-- Axial Tilt: 0.80°
-- Tidal lock: 1:1, Tides (m): 2.35
+- Sidereal (h): 900.52, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.70°
+- Tidal lock: 1:1, Tides (m): 1.52
 
 ### TEMPERATURE
-- High (K): 278.8, Mean (K): 259.6, Low (K): 237.5
-- Luminosity: 0.009, Albedo: 0.27, Greenhouse: 0.44
+- High (K): 270.1, Mean (K): 245.7, Low (K): 215.2
+- Luminosity: 0.009, Albedo: 0.29, Greenhouse: 0.74
 
 ### SEISMIC
 - TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
 
 ### LIFE
-- Biomass: 4, Biocomplexity: 6, Sophonts: no, Biodiversity: 3, Compatibility: 5
+- Biomass: 4, Biocomplexity: 3, Sophonts: no, Biodiversity: 6, Compatibility: 0
 
 ### RESOURCES
-- Rating: 8
+- Rating: 11
 
 ### HABITABILITY
-- Rating: 6
-- Notes: Thin, taint (standard), or dense Atmospheres; Too cold all of the time; Too cold most of the time; Gravity very comfortable
+- Rating: 2
+- Notes: Tainted thin or dense atmospheres; Very little useable land surface area; Too cold all of the time; Too cold most of the time
 
 ### COMMENTS
 - This is the system mainworld.

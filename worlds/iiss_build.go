@@ -207,6 +207,9 @@ func renderObjectNotes(body *Body) string {
 		}
 		parts = append(parts, strings.Join(moonSAH, ", "))
 	}
+	if body.Ring {
+		parts = append(parts, "ring")
+	}
 	if body.HasBelt() && body.Belt.Profile != "" {
 		parts = append(parts, body.Belt.Profile)
 	}

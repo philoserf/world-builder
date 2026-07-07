@@ -55,6 +55,11 @@ type Body struct {
 	PeriodHours float64
 	Retrograde  bool // moon orbits its parent retrograde (anomalous slot)
 
+	// Ring is set on a parent when WBH calls for a planetary ring in
+	// place of significant moons: a moon-quantity roll of exactly 0
+	// (p.55) or Hill-sphere moon removal (p.76).
+	Ring bool
+
 	// Stage 3
 	Physical *BodyPhysical
 	Belt     *BeltDetails

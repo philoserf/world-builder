@@ -144,3 +144,40 @@ func TestGenerate_BeltsHaveDetails(t *testing.T) {
 		t.Fatal("no belts across 100 seeds — sweep is vacuous")
 	}
 }
+
+// TestGenerate_MoonOrbitsMaterialized guards the moon-refinement outputs
+// that were historically computed but never assigned: OrbitKm must be
+// positive for every refined moon (regression for the OrbitKm
+// silent-zero), and the retrograde roll must be wired (over a seed
+// sweep, at least one moon should come up retrograde — WBH p.78 gives
+// outer-range moons a ~1-in-6+ chance).
+func TestGenerate_MoonOrbitsMaterialized(t *testing.T) {
+	t.Parallel()
+
+	moons, retro := 0, 0
+	for iter := range 100 {
+		u, err := worlds.Generate(int64(iter))
+		if err != nil {
+			continue
+		}
+		for i := range u.Detail.Bodies {
+			parent := &u.Detail.Bodies[i]
+			for _, m := range parent.Children {
+				moons++
+				if m.OrbitPD > 0 && m.OrbitKm <= 0 {
+					t.Errorf("seed %d: moon %s has OrbitPD %.2f but OrbitKm %v",
+						iter, m.Designation, m.OrbitPD, m.OrbitKm)
+				}
+				if m.Retrograde {
+					retro++
+				}
+			}
+		}
+	}
+	if moons == 0 {
+		t.Fatal("no moons across 100 seeds — sweep is vacuous")
+	}
+	if retro == 0 {
+		t.Errorf("0 retrograde moons across %d moons — RollMoonRetrograde likely unwired", moons)
+	}
+}

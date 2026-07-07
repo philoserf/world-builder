@@ -36,32 +36,35 @@ type ParentInfo struct {
 // are met. Caller is responsible for evaluating conditions and passing
 // dms = 0 or dms = -1.
 //
-// Negative result → returns 0 (no significant moons). Exactly 0 →
-// returns 0 (caller treats as a planetary ring per p.55).
-func CountMoons(r roller.Roller, parent ParentInfo, dms int) (int, error) {
+// Negative result → (0, false): no significant moons and no ring.
+// Exactly 0 → (0, true): no significant moons, planetary ring per p.55.
+func CountMoons(r roller.Roller, parent ParentInfo, dms int) (count int, ring bool, err error) {
 	// Sub-1-Size terrestrial parents (SizeCode "0", "R", "S") cannot
 	// host significant moons per WBH p.55 — the Quantity table starts
 	// at Size 1-2. Short-circuit before consuming a die.
 	if !parent.IsGasGiant {
 		switch parent.SizeCode {
 		case "0", "R", "S":
-			return 0, nil
+			return 0, false, nil
 		}
 	}
 
 	notation, base, dieCount, err := moonQuantityFormula(parent)
 	if err != nil {
-		return 0, err
+		return 0, false, err
 	}
 
 	rawSum := r.Roll(notation)
 	// dms is per-die: each of the dieCount dice gets dms applied.
 	adjusted := rawSum + dms*dieCount
 	result := adjusted + base
-	if result < 0 {
-		return 0, nil
+	switch {
+	case result < 0:
+		return 0, false, nil
+	case result == 0:
+		return 0, true, nil
 	}
-	return result, nil
+	return result, false, nil
 }
 
 // SizeMoon rolls one significant moon's size per WBH p.57 Significant

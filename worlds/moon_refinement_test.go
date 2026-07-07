@@ -52,26 +52,22 @@ func TestRocheLimit_ZeroDensity(t *testing.T) {
 
 func TestMoonRemovalCheck_Keep(t *testing.T) {
 	t.Parallel()
-	removeAll, addRing := MoonRemovalCheck(34)
-	if removeAll || addRing {
-		t.Errorf("expected (false, false), got (%v, %v)", removeAll, addRing)
+	if MoonRemovalCheck(34) {
+		t.Errorf("expected keep, got drop")
 	}
 	// Boundary check: 1.5 keeps; 1.49 drops
-	removeAll, _ = MoonRemovalCheck(1.5)
-	if removeAll {
+	if MoonRemovalCheck(1.5) {
 		t.Errorf("limit=1.5: expected keep, got drop")
 	}
 }
 
 func TestMoonRemovalCheck_Drop(t *testing.T) {
 	t.Parallel()
-	removeAll, addRing := MoonRemovalCheck(1.0)
-	if !removeAll || !addRing {
-		t.Errorf("expected (true, true), got (%v, %v)", removeAll, addRing)
+	if !MoonRemovalCheck(1.0) {
+		t.Errorf("limit=1.0: expected drop, got keep")
 	}
-	removeAll, addRing = MoonRemovalCheck(0)
-	if !removeAll || !addRing {
-		t.Errorf("expected (true, true), got (%v, %v)", removeAll, addRing)
+	if !MoonRemovalCheck(0) {
+		t.Errorf("limit=0: expected drop, got keep")
 	}
 }
 

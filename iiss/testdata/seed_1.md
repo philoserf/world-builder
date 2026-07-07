@@ -9,7 +9,7 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 ## Notable Features
 
 ### Tidal locks
-- Aab I a: moon → planet, 1:1
+- Aab I b: moon → planet, 1:1
 - Aab I c: moon → planet, 1:1
 - Aab II a: moon → planet, 1:1
 - Aab II b: moon → planet, 1:1
@@ -21,35 +21,37 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 - Aab IV a: moon → planet, 1:1
 - Aab IV b: moon → planet, 1:1
 - Aab IV c: moon → planet, 1:1
-- Aab VII a: moon → planet, 1:1
 - Aab VII b: moon → planet, 1:1
-- Aab VIII a: moon → planet, 1:1
+- Aab VIII a: moon → planet, 3:2
 - Aab VIII b: moon → planet, 1:1
-- Aab VIII c: moon → planet, 1:1
+- Aab VIII c: moon → planet, 3:2
 - Aab VIII d: moon → planet, 1:1
-- Aab VIII e: moon → planet, 1:1
 - Aab VIII f: moon → planet, 1:1
 - Aab VIII g: moon → planet, 1:1
 - Aab VIII h: moon → planet, 1:1
 - Aab VIII i: moon → planet, 1:1
 - Aab IX a: moon → planet, 1:1
-- Aab IX b: moon → planet, 3:2
+- Aab IX b: moon → planet, 1:1
 - Aab IX c: moon → planet, 1:1
 - Aab IX d: moon → planet, 1:1
 - Aab IX e: moon → planet, 1:1
 - Aab IX f: moon → planet, 1:1
 - Aab IX g: moon → planet, 1:1
 - Aab IX h: moon → planet, 1:1
-- Aab IX i: moon → planet, 1:1
+- Aab IX i: moon → planet, 3:2
 - B I: planet → star, 3:2
 
 ### Cold snaps
-- Aab IV a: WorstLow 202 K (mean 273 K)
-- Aab IV b: WorstLow 34 K (mean 250 K)
-- Aab IV c: WorstLow 35 K (mean 259 K)
+- Aab IV a: WorstLow 228 K (mean 271 K)
+- Aab IV b: WorstLow 16 K (mean 252 K)
+- Aab IV c: WorstLow 34 K (mean 261 K)
+
+### Taint chains
+- Aab IV a: H, G
+- Aab V: L, G
 
 ### Mainworld habitability
-- Aab IV a — Rating 10/12 (Garden world)
+- Aab IV a — Rating 2/12 (Barely habitable): Tainted thin or dense atmospheres; Very little useable land surface area; Too cold all of the time; Too cold most of the time
 
 
 ## Class 0/I — Aab IV a
@@ -101,13 +103,13 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 | Aab | Aab II e |  |  |  |  | R |  |  |
 | Aab | Aab II f |  |  |  |  | 5 |  |  |
 | Aab | Aab II g |  |  |  |  | S |  |  |
-| Aab | Aab III | 2.48 | 0.84 | 0.03 | 0.606y | 4B2 | 0 | HZ |
+| Aab | Aab III | 2.48 | 0.84 | 0.03 | 0.606y | 4B4 | 0 | HZ, ring |
 | Aab | Aab IV | 3.57 | 1.34 | 0.02 | 1.212y | GL8 | 3 | 500⊕, HZ, 6??, 1??, 1?? |
 | Aab | Aab IV a |  |  |  |  | 6?? |  |  |
 | Aab | Aab IV b |  |  |  |  | 1?? |  |  |
 | Aab | Aab IV c |  |  |  |  | 1?? |  |  |
-| Aab | Aab V | 4.31 | 1.97 | 0.00 | 2.170y | 596 | 0 | HZ |
-| Aab | Aab VI | 5.06 | 2.94 | 0.01 | 3.946y | 7?? | 0 |  |
+| Aab | Aab V | 4.31 | 1.97 | 0.00 | 2.170y | 546 | 0 | HZ, ring |
+| Aab | Aab VI | 5.06 | 2.94 | 0.01 | 3.946y | 7?? | 0 | ring |
 | Aab | Aab VII | 5.53 | 4.08 | 0.01 | 6.451y | 9?? | 2 | 1, 8 |
 | Aab | Aab VII a |  |  |  |  | 1 |  |  |
 | Aab | Aab VII b |  |  |  |  | 8 |  |  |
@@ -132,7 +134,7 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 | Aab | Aab IX h |  |  |  |  | R |  |  |
 | Aab | Aab IX i |  |  |  |  | S |  |  |
 | B | B I | 0.97 | 0.39 | 0.06 | 0.285y | GS5 | 0 | 20⊕, HZ |
-| B | B II | 1.72 | 0.62 | 0.30 | 0.569y | 5A0 | 0 | HZ |
+| B | B II | 1.72 | 0.62 | 0.30 | 0.569y | 5A0 | 0 | HZ, ring |
 
 ## Class IV-P PART P — Aab IV a (Moon mainworld)
 
@@ -148,32 +150,33 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 - Diameter (km): 9600, Density: 1.27, Gravity: 0.96, Mass (Earth): 0.543
 
 ### ATMOSPHERE
-- Code: 6, Pressure (bar): 0.911, O₂ (bar): 0.401, Scale Height: 8.42
-- Profile: 6-0.911-0.401
+- Code: 9, Pressure (bar): 2.160, O₂ (bar): 1.015, Scale Height: 8.36
+- Profile: 9-2.160-1.015:H.8.9,G.3.6
 
 ### HYDROGRAPHICS
-- Code: 7, Coverage (%): 71, Profile: H7:H2O-100
+- Code: 10, Coverage (%): 97, Profile: HA:H2O-100
 
 ### ROTATION
-- Sidereal (h): 1453.84, Solar (h): 0.00, Solar days/year: 0.00
-- Axial Tilt: 0.50°
+- Sidereal (h): 113.66, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.30°
 - Tidal lock: 1:1, Tides (m): 0.01
 
 ### TEMPERATURE
-- High (K): 286.3, Mean (K): 273.0, Low (K): 258.7
-- Luminosity: 1.487, Albedo: 0.28, Greenhouse: 0.54
+- High (K): 278.2, Mean (K): 271.1, Low (K): 264.0
+- Luminosity: 1.487, Albedo: 0.42, Greenhouse: 0.85
 
 ### SEISMIC
 - TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
 
 ### LIFE
-- Biomass: 6, Biocomplexity: 6, Sophonts: no, Biodiversity: 7, Compatibility: 8
+- Biomass: 14, Biocomplexity: 12, Sophonts: yes, Biodiversity: 14, Compatibility: 0
 
 ### RESOURCES
 - Rating: 10
 
 ### HABITABILITY
-- Rating: 10
+- Rating: 2
+- Notes: Tainted thin or dense atmospheres; Very little useable land surface area; Too cold all of the time; Too cold most of the time
 
 ### COMMENTS
 - This is the system mainworld.

@@ -133,9 +133,12 @@ func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
 		}
 		parent := parentInfoOf(&bodies[i])
 		dm := moonCountDM(&bodies[i], sp)
-		count, err := CountMoons(r, parent, dm)
+		count, ring, err := CountMoons(r, parent, dm)
 		if err != nil {
 			return fmt.Errorf("worlds: stage2 moon-count[%d]: %w", i, err)
+		}
+		if ring {
+			bodies[i].Ring = true
 		}
 		if count == 0 {
 			continue

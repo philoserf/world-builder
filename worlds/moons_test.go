@@ -38,7 +38,7 @@ func TestCountMoons_PerSizeBand(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			r := roller.NewScripted(tc.dice...)
-			got, err := CountMoons(r, tc.parent, tc.dms)
+			got, _, err := CountMoons(r, tc.parent, tc.dms)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
@@ -57,18 +57,21 @@ func TestCountMoons_DM(t *testing.T) {
 	// Size A → 2D-6 with dms=-1 (per-die for 2 dice = -2 total).
 	// 2D=8, with dms=-1 (×2 dice = -2): 8 + (-2) - 6 = 0.
 	r := roller.NewScripted(8)
-	got, err := CountMoons(r, ParentInfo{SizeCode: "A"}, -1)
+	got, ring, err := CountMoons(r, ParentInfo{SizeCode: "A"}, -1)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
 	if got != 0 {
 		t.Errorf("CountMoons with dms=-1 = %d, want 0", got)
 	}
+	if !ring {
+		t.Errorf("exact-zero result should flag a planetary ring (WBH p.55)")
+	}
 
 	// Small GG → 3D-7 with dms=-1 (per-die for 3 dice = -3 total).
 	// 3D=12, with dms-applied: 12 + (-3) - 7 = 2.
 	r = roller.NewScripted(12)
-	got, err = CountMoons(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantSmall}, -1)
+	got, _, err = CountMoons(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantSmall}, -1)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -82,12 +85,15 @@ func TestCountMoons_NegativeReturnsZero(t *testing.T) {
 	t.Parallel()
 	// Size 1 → 1D-5: 1D=2 → -3 → clamped to 0.
 	r := roller.NewScripted(2)
-	got, err := CountMoons(r, ParentInfo{SizeCode: "1"}, 0)
+	got, ring, err := CountMoons(r, ParentInfo{SizeCode: "1"}, 0)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
 	if got != 0 {
 		t.Errorf("CountMoons = %d, want 0 (negative clamped)", got)
+	}
+	if ring {
+		t.Errorf("negative result must NOT flag a ring — only exactly 0 does")
 	}
 }
 
@@ -104,12 +110,15 @@ func TestCountMoons_SubOneSizeShortCircuit(t *testing.T) {
 			// Use a NewScripted with no dice — if the function consumes
 			// a die, it will panic ("exhausted on Roll(...)").
 			r := roller.NewScripted()
-			got, err := CountMoons(r, ParentInfo{SizeCode: sc}, 0)
+			got, ring, err := CountMoons(r, ParentInfo{SizeCode: sc}, 0)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
 			if got != 0 {
 				t.Errorf("CountMoons(SizeCode=%q) = %d, want 0", sc, got)
+			}
+			if ring {
+				t.Errorf("sub-1-size short circuit must not flag a ring")
 			}
 		})
 	}
@@ -121,7 +130,7 @@ func TestCountMoons_SubOneSizeShortCircuit(t *testing.T) {
 func TestCountMoons_ZedAabIV(t *testing.T) {
 	t.Parallel()
 	r := roller.NewScripted(11)
-	got, err := CountMoons(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge}, 0)
+	got, _, err := CountMoons(r, ParentInfo{IsGasGiant: true, GGClass: GasGiantLarge}, 0)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}

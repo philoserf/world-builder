@@ -146,8 +146,10 @@ func refineParentMoons(r roller.Roller, parent *Body) {
 	au := stars.OrbitToAU(parent.Orbit)
 	_, pd := HillSphere(au, parent.Eccentricity, planetMass, sumStellarMass, planetDiameter)
 	limit := HillSphereMoonLimit(pd)
-	if removeAll, _ := MoonRemovalCheck(limit); removeAll {
+	if MoonRemovalCheck(limit) {
+		// p.76: all significant moons removed, first promoted to a ring.
 		parent.Children = nil
+		parent.Ring = true
 		return
 	}
 	mor := MoonOrbitRange(limit, len(parent.Children))
@@ -158,8 +160,10 @@ func refineParentMoons(r roller.Roller, parent *Body) {
 		effSize = int(parent.DiameterEarth * 8)
 	}
 	for j := range parent.Children {
-		orbit, _ := RollMoonOrbit(r, mor)
+		orbit, mr := RollMoonOrbit(r, mor)
 		parent.Children[j].OrbitPD = orbit
+		parent.Children[j].OrbitKm = orbit * planetDiameter
+		parent.Children[j].Retrograde = RollMoonRetrograde(r, mr, orbit > float64(mor))
 		if effSize > 0 {
 			parent.Children[j].PeriodHours = MoonPeriodHours(orbit, effSize, planetMass)
 		}

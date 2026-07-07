@@ -47,12 +47,10 @@ func RocheLimit(planetDiameterKm, planetDensityRel, moonDensityRel float64) floa
 
 // MoonRemovalCheck implements WBH p.76: if HillSphereMoonLimit < 1.5 PD,
 // all significant moons are removed and the first is promoted to a ring.
-// Returns (removeAll, promoteFirstToRing).
-func MoonRemovalCheck(hillSphereMoonLimit float64) (removeAll, promoteFirstToRing bool) {
-	if hillSphereMoonLimit < 1.5 {
-		return true, true
-	}
-	return false, false
+// The two outcomes never diverge in the book's rule, so a single bool
+// covers both; the caller sets Body.Ring when it fires.
+func MoonRemovalCheck(hillSphereMoonLimit float64) bool {
+	return hillSphereMoonLimit < 1.5
 }
 
 // MoonOrbitRange returns the Moon Orbit Range (MOR) per WBH p.77:
