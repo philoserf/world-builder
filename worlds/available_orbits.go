@@ -169,10 +169,11 @@ func adjacentEccGT02(sys stars.System, self stars.OrbitClass) bool {
 // Implementation walks rules 1–11 in order, mutating each group's
 // interval set. See spec for the rule list.
 //
-// Returns stars.ErrPostStellarPrimaryUnsupported if the primary star is a
-// Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar, or
-// Protostar (their MAO is in the Special Circumstances chapter, not
-// yet encoded).
+// Returns stars.ErrPostStellarPrimaryUnsupported if the primary star has
+// no p.39 MAO row (per stars.LacksP39MAORow): any post-stellar kind
+// (Brown Dwarf, White Dwarf, Neutron Star, Black Hole, Pulsar), a
+// Protostar, or an aggregate object (Nebula, Star Cluster, Anomaly).
+// Their MAO is in the Special Circumstances chapter, not yet encoded.
 func AvailableOrbits(sys stars.System) (Result, error) {
 	if stars.LacksP39MAORow(sys.Primary.Kind) {
 		return Result{}, stars.ErrPostStellarPrimaryUnsupported

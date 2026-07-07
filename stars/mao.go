@@ -33,7 +33,7 @@ var ErrPostStellarPrimaryUnsupported = fmt.Errorf(
 // spectral type / class combination does not exist as a star.
 var ErrNoMAOForStar = errors.New("stars: spectral type / class combination has no MAO entry")
 
-// lacksP39MAORow reports whether a StarKind has no row in the WBH p.39
+// LacksP39MAORow reports whether a StarKind has no row in the WBH p.39
 // Minimum Allowable Orbit# table — every post-stellar kind, the
 // pre-stellar Protostar, and the aggregate/pre-stellar Nebula, Star
 // Cluster, and Anomaly. MAO for these kinds lives in the Special
@@ -56,8 +56,9 @@ type maoRow struct {
 	Ia, Ib, II, III, IV, V, VI *float64
 }
 
-// maoTablePage39 is the WBH p.39 MAO table, keyed by spectral-type short
-// code ("O0", "B5", "G7", ...).
+// maoTablePage39 is the WBH p.39 MAO table, keyed by the grid spectral
+// types ("O0", "O5", "B0", ..., "K5", "M0", "M5", "M9"). Off-grid types
+// (e.g. G7) are interpolated by bracketSpectralType, not looked up here.
 //
 // nil pointer means the book leaves the cell as "—" (combination does
 // not exist as a star).
