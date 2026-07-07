@@ -61,10 +61,13 @@ func ClearStage5Output(body *Body) {
 func ApplyTidalLockReEval(r roller.Roller, u *Universe) error {
 	// Pass 1: moons. Re-eval moons first so their TidalLock is current
 	// by the time the parent planet's re-eval reads hasLockedMoon.
-	// Parents whose moons change lock state are recorded: a planet in a
-	// PlanetToMoon lock derives its DM and day length from a child
-	// moon's lock, so a moon-side change staleness-forces the parent's
-	// re-eval even when the parent's own pressure gate wouldn't fire.
+	// Parents whose moons change lock state are recorded: a terrestrial
+	// planet's PlanetToMoon case (its DM and day length) is derived from
+	// a child moon's lock, so a moon-side change staleness-forces the
+	// parent's re-eval even when the parent's own pressure gate wouldn't
+	// fire — both when the parent is already PlanetToMoon (its derived
+	// data went stale) and when a newly-locked moon makes PlanetToMoon a
+	// candidate that could now win over the parent's Stage-4 case.
 	changedParents := map[*Body]bool{}
 	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty || parent == nil {
@@ -83,8 +86,13 @@ func ApplyTidalLockReEval(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty || parent != nil {
 			continue
 		}
-		force := changedParents[body] && body.TidalLock != nil &&
-			body.TidalLock.Case == TidalLockCasePlanetToMoon
+		// Force re-eval of any PlanetToMoon-candidate parent (terrestrial,
+		// significant moon) whose moon-set changed lock state — not just
+		// parents already in that case. reEvalBody re-runs GenerateTidalLock,
+		// which re-picks the winning case, so a newly-locked moon can
+		// promote the parent to PlanetToMoon and a newly-unlocked moon can
+		// demote it.
+		force := changedParents[body] && isTerrestrial(body) && hasSignificantMoon(body)
 		if err := reEvalBody(r, u, body, parent, force); err != nil {
 			return err
 		}

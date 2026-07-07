@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/philoserf/world-builder/roller"
@@ -280,14 +281,26 @@ func TestBeltSpanFlags(t *testing.T) {
 
 func TestFormatBeltProfile_TinySpanNotZero(t *testing.T) {
 	t.Parallel()
-	b := BeltDetails{Span: 0.003, Composition: BeltComposition{MTypePct: 50, STypePct: 30, CTypePct: 15, OtherPct: 5}, Bulk: 3, ResourceRating: 7}
-	got := FormatBeltProfile(b)
-	if want := "0.003-50.30.15.05-3-7-0-0"; got != want {
-		t.Errorf("tiny span profile = %q, want %q", got, want)
+	comp := BeltComposition{MTypePct: 50, STypePct: 30, CTypePct: 15, OtherPct: 5}
+	cases := []struct {
+		span float64
+		want string // expected span segment (before the first '-')
+	}{
+		{0.25, "0.25"},   // normal: 2-decimal book style
+		{0.3, "0.3"},     // trailing zero trimmed
+		{0.003, "0.003"}, // rounds to 0 at 2dp → exact decimal
+		{0.0004, "0.0004"},
+		{0.00007, "0.00007"}, // below the old fixed-3-decimal fallback
 	}
-	// Regular spans keep the 2-decimal book style.
-	b.Span = 0.25
-	if got := FormatBeltProfile(b); got[:4] != "0.25" {
-		t.Errorf("span 0.25 renders %q, want prefix 0.25", got)
+	for _, c := range cases {
+		b := BeltDetails{Span: c.span, Composition: comp, Bulk: 3, ResourceRating: 7}
+		got := FormatBeltProfile(b)
+		seg := got[:strings.IndexByte(got, '-')]
+		if seg == "0" {
+			t.Errorf("span %v rendered as bare \"0\" — nonzero span must never print as 0 (full %q)", c.span, got)
+		}
+		if seg != c.want {
+			t.Errorf("span %v: segment = %q, want %q (full %q)", c.span, seg, c.want, got)
+		}
 	}
 }

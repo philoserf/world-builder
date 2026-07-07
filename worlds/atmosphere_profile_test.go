@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/philoserf/world-builder/roller"
@@ -366,5 +367,33 @@ func TestRollGasMix_TempDMApplied(t *testing.T) {
 	}
 	if base.Gases[0].Name == shifted.Gases[0].Name {
 		t.Errorf("temp DM had no effect on leading gas: both %q", base.Gases[0].Name)
+	}
+}
+
+// TestFormatAtmoProfileShorthand_NoneTraceBareCode locks the behavior
+// for codes with no subtype at all: None (0) and Trace (1) reach the
+// non-N-O branch with an empty Subtype and must render the bare code
+// char, not a dangling "-St". Only B/C populate Subtype and keep "-St".
+func TestFormatAtmoProfileShorthand_NoneTraceBareCode(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		code int
+		bar  float64
+		want string
+	}{
+		{0, 0, "0"},         // None, no pressure
+		{1, 0.05, "1:0.05"}, // Trace with pressure — no dangling "1-St"
+		{10, 0, "A"},        // Exotic, subtype not yet encoded (issue #69)
+		{15, 0.5, "F:0.50"}, // Unusual with pressure
+	}
+	for _, c := range cases {
+		atmo := Atmosphere{Code: c.code, Pressure: c.bar}
+		got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+		if got != c.want {
+			t.Errorf("code %d: got %q, want %q", c.code, got, c.want)
+		}
+		if strings.Contains(got, "-St") {
+			t.Errorf("code %d: rendered a dangling %q with empty subtype", c.code, got)
+		}
 	}
 }

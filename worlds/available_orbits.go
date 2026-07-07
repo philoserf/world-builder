@@ -79,11 +79,11 @@ type Result struct {
 
 // ErrPostStellarPrimaryUnsupported indicates the primary star has no
 // p.39 MAO row — Brown Dwarf, White Dwarf, Neutron Star, Black Hole,
-// Pulsar, or Protostar. MAO for these kinds lives in the WBH Special
-// Circumstances chapter and is not yet encoded. (The name predates
-// protostar inclusion; pre-stellar kinds like nebulae and star
-// clusters fail earlier at the age-formula step and never reach MAO.)
-// Wraps stars.ErrSpecialCircumstances so callers can classify uniformly.
+// Pulsar, Protostar, or the aggregate/pre-stellar kinds Nebula, Star
+// Cluster, and Anomaly. MAO for these kinds lives in the WBH Special
+// Circumstances chapter and is not yet encoded. (The name predates the
+// non-post-stellar additions.) Wraps stars.ErrSpecialCircumstances so
+// callers can classify uniformly.
 var ErrPostStellarPrimaryUnsupported = fmt.Errorf(
 	"worlds: post-stellar primary MAO requires Special Circumstances chapter: %w",
 	stars.ErrSpecialCircumstances,
@@ -136,11 +136,21 @@ func isPostStellar(k stars.StarKind) bool {
 }
 
 // lacksP39MAORow reports whether a StarKind has no row in the WBH
-// p.39 Minimum Allowable Orbit# table — every post-stellar kind plus
-// the pre-stellar Protostar. MAO for these kinds lives in the
-// Special Circumstances chapter (not yet encoded).
+// p.39 Minimum Allowable Orbit# table — every post-stellar kind, the
+// pre-stellar Protostar, and the aggregate/pre-stellar Nebula, Star
+// Cluster, and Anomaly. MAO for these kinds lives in the Special
+// Circumstances chapter (not yet encoded).
+//
+// The three aggregate kinds are included because specialObjectAge
+// (stars/system.go) now lets them survive the age step with AgeGyr 0;
+// without this gate they reach maoCell and raise a raw table-miss
+// error instead of the classifiable ErrPostStellarPrimaryUnsupported.
 func lacksP39MAORow(k stars.StarKind) bool {
-	return isPostStellar(k) || k == stars.KindProtostar
+	switch k {
+	case stars.KindProtostar, stars.KindNebula, stars.KindStarCluster, stars.KindAnomaly:
+		return true
+	}
+	return isPostStellar(k)
 }
 
 // maoCell reads the MAO cell for an exact spectral type key (e.g. "G5")

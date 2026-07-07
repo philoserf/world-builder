@@ -834,3 +834,21 @@ func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 		t.Errorf("Cab sourceCompanion.OrbitNumber = %v, want 12.10", groups[2].sourceCompanion.OrbitNumber)
 	}
 }
+
+// TestMAO_AggregateKindsClassifiable asserts Nebula, Star Cluster, and
+// Anomaly primaries return the classifiable ErrPostStellarPrimaryUnsupported
+// (wrapping stars.ErrSpecialCircumstances) rather than a raw internal
+// table-miss error — a regression guard for specialObjectAge letting
+// these kinds survive the age step and reach the MAO lookup.
+func TestMAO_AggregateKindsClassifiable(t *testing.T) {
+	t.Parallel()
+	for _, k := range []stars.StarKind{stars.KindNebula, stars.KindStarCluster, stars.KindAnomaly} {
+		_, err := MAO(stars.Star{Kind: k})
+		if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
+			t.Errorf("MAO(%s) = %v, want ErrPostStellarPrimaryUnsupported", k, err)
+		}
+		if !errors.Is(err, stars.ErrSpecialCircumstances) {
+			t.Errorf("MAO(%s) error does not wrap stars.ErrSpecialCircumstances: %v", k, err)
+		}
+	}
+}

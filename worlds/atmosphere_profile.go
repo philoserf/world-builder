@@ -508,10 +508,12 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 	}
 	base := fmt.Sprintf("%s-St%s", codeChar, subtypeWithHazard)
 	if subtypeWithHazard == "" {
-		// Exotic (A) and Unusual (F) atmospheres carry no subtype in the
-		// live pipeline — their WBH p.85 / p.90 subtype tables are not
-		// encoded (issue #69). Emit the bare code char rather than a
-		// dangling "A-St".
+		// Any code reaching this branch with no subtype emits the bare
+		// code char rather than a dangling "-St". This covers Exotic (A)
+		// and Unusual (F) — whose WBH p.85 / p.90 subtype tables are not
+		// yet encoded (issue #69) — and also None (0) / Trace (1), which
+		// legitimately have no subtype at all. Only B/C (Corrosive /
+		// Insidious) populate Subtype, so only they keep the "-St" form.
 		base = codeChar
 	}
 	if atmo.Pressure > 0 {
