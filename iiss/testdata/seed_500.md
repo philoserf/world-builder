@@ -187,7 +187,7 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 - Notes: Additional surface area; Hostile Atmosphere; Lack of accessible liquid water; Very little useable land surface area; Too hot at times; Too hot most of the time; Gravity somewhat high
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:0.90-0.16 (centre 0.90 PD, span 0.16 PD, WBH p.77).
 
 
 ## PART P — A III

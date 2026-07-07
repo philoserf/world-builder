@@ -134,7 +134,7 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Notes: Additional surface area; Non-breathable atmosphere; Lack of accessible liquid water; Gravity very comfortable
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:1.40-0.18 (centre 1.40 PD, span 0.18 PD, WBH p.77).
 
 
 ## PART P — Aab II

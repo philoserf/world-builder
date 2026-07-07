@@ -684,7 +684,7 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 - Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too hot at times; Too hot most of the time; Much too cold some of the time; Low gravity
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:1.77-0.18 (centre 1.77 PD, span 0.18 PD, WBH p.77).
 
 
 ## PART P — Aab IV
@@ -927,7 +927,7 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 - Notes: Non-breathable atmosphere; Lack of accessible liquid water; Too cold all of the time; Too cold most of the time; Much too cold some of the time; Low gravity
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:1.15-0.20 (centre 1.15 PD, span 0.20 PD, WBH p.77).
 
 
 ## PART P — Aab VI
@@ -971,7 +971,7 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 - Notes: Non-breathable atmosphere; Lack of accessible liquid water; Low gravity
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:1.40-0.18 (centre 1.40 PD, span 0.18 PD, WBH p.77).
 
 
 ## PART P — Aab VII
@@ -2036,5 +2036,5 @@ Long profile: `Aab-4-T-G-T-G-T-T-T-G-G-0.7:B-2-G-T-0.7`
 - Notes: Very hostile Atmosphere; Lack of accessible liquid water; Too hot at times; Too hot most of the time; Low gravity
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:1.90-0.15 (centre 1.90 PD, span 0.15 PD, WBH p.77).
 

@@ -166,3 +166,18 @@ func TestRollMoonRetrograde(t *testing.T) {
 		t.Errorf("expected retrograde (exceedsMOR)")
 	}
 }
+
+// TestRollRingProfile checks the WBH p.77 ring formulas:
+// centre = 0.4 + 2D/8, span = 3D/100 + 0.07.
+func TestRollRingProfile(t *testing.T) {
+	t.Parallel()
+	// 2D = 8 → centre = 0.4 + 8/8 = 1.4; 3D = 10 → span = 10/100 + 0.07 = 0.17.
+	r := roller.NewScripted(8, 10)
+	centre, span := RollRingProfile(r)
+	if math.Abs(centre-1.4) > 1e-9 {
+		t.Errorf("centre = %v, want 1.4", centre)
+	}
+	if math.Abs(span-0.17) > 1e-9 {
+		t.Errorf("span = %v, want 0.17", span)
+	}
+}

@@ -474,7 +474,7 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Notes: Additional surface area; Non-breathable atmosphere; Lack of accessible liquid water; Gravity uncomfortably high
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:0.90-0.22 (centre 0.90 PD, span 0.22 PD, WBH p.77).
 
 
 ## PART P — A V

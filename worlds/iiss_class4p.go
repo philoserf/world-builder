@@ -20,6 +20,8 @@ func buildClass4PPlanet(u *Universe, body *Body, isMainworld bool) *iiss.Class4P
 		DiameterKm:   body.DiameterKm,
 		MassEarth:    body.MassEarth,
 		Ring:         body.Ring,
+		RingCentrePD: body.RingCentrePD,
+		RingSpanPD:   body.RingSpanPD,
 		IsMainworld:  isMainworld,
 	}
 	if body.Kind == BodyMoon {

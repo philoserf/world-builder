@@ -57,8 +57,12 @@ type Body struct {
 
 	// Ring is set on a parent when WBH calls for a planetary ring in
 	// place of significant moons: a moon-quantity roll of exactly 0
-	// (p.55) or Hill-sphere moon removal (p.76).
-	Ring bool
+	// (p.55) or Hill-sphere moon removal (p.76). RingCentrePD / RingSpanPD
+	// carry the ring's centre location and span in planet-diameters
+	// (WBH p.77), rolled in ApplyMoonRefinement when Ring is set.
+	Ring         bool
+	RingCentrePD float64
+	RingSpanPD   float64
 
 	// Stage 3
 	Physical *BodyPhysical
