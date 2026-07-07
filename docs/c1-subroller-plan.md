@@ -13,9 +13,13 @@ Scripted-and-Fixed-transparent semantics. Suite green, `gofumpt`/`go vet`/modern
 clean. Footprint: ~200 lines across `roller/roller.go`, the stage orchestrators, and a
 new `worlds/subroller.go` helper; plus `roller` Fork unit tests and
 `worlds/subroller_test.go` (whole-suffix isolation over 40 seeds × 3 shifts,
-seed-dependence, fork-key stability canary). Markdown baseline regenerated once. What
-remains before merge to `main`: review the baseline diff, decide branch naming, and land
-the follow-on Zed gold fixture (below).
+seed-dependence, fork-key stability canary). Markdown baseline regenerated once. The
+follow-on Zed full-pipeline gold-master has landed too: `worlds/zed_gold_test.go` +
+`worlds/testdata/zed_gold.md` pin the named Zed system (seed 27, a moon mainworld → the
+Class IV-P moon path) end-to-end, with `TestZed_GoldSurvivesStageReorder` proving the
+output is byte-identical when two independent post-climate stages are swapped — the
+durable full-pipeline fixture pass-1/pass-2 could not maintain. What remains before merge
+to `main`: review the diff.
 
 ## Spike verdict (branch `c1-subroller`)
 
