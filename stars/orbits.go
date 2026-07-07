@@ -20,8 +20,8 @@ func IsGiantClass(lc LuminosityClass) bool {
 }
 
 // RollCompanionOrbitOfGiant computes the Orbit# for a companion of a
-// giant primary per WBH p.27: Orbit# = 1D × MAO(primary). Callers must
-// pass in the primary's MAO since the table lives in worlds/.
+// giant primary per WBH p.27: Orbit# = 1D × MAO(primary). Callers pass
+// in the primary's MAO (via MAO); this stays a pure roll.
 func RollCompanionOrbitOfGiant(r roller.Roller, primaryMAO float64) float64 {
 	return float64(r.Roll("1D")) * primaryMAO
 }
@@ -35,9 +35,10 @@ func RollCompanionOrbitOfGiant(r roller.Roller, primaryMAO float64) float64 {
 //   - Companion: 1D / 10 + (2D - 7) / 100  (range 0.05 to 0.65)
 //
 // Companions of Class Ia/Ib/II/III primaries use 1D × MAO of the primary
-// (page 39); this function returns ErrCompanionOfGiantMAO for that case
-// since MAO data lives in worlds/. Callers with MAO access should use
-// RollCompanionOrbitOfGiant directly for giant-class companions.
+// (page 39); this function has only the luminosity class, not the full
+// star that MAO needs, so it returns ErrCompanionOfGiantMAO for that
+// case. Compute MAO(primary) and use RollCompanionOrbitOfGiant directly
+// for giant-class companions.
 func RollStellarOrbit(r roller.Roller, oc OrbitClass, primaryClass LuminosityClass) (float64, error) {
 	switch oc {
 	case OrbitClose:

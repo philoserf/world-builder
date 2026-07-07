@@ -21,9 +21,9 @@ const (
 // PresenceDM returns the WBH p.23 DM applied to all multi-star presence
 // rolls for a system whose primary has the given properties.
 func PresenceDM(primary Star) int {
-	// Special-object primaries: BD, D, and post-stellar all -1.
-	switch primary.Kind {
-	case KindBrownDwarf, KindWhiteDwarf, KindPulsar, KindNeutronStar, KindBlackHole:
+	// Post-stellar primaries (Brown Dwarf, White Dwarf, Neutron Star,
+	// Black Hole, Pulsar): -1.
+	if IsPostStellar(primary.Kind) {
 		return -1
 	}
 	// Class Ia/Ib/II/III/IV: +1.

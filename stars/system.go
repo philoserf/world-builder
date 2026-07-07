@@ -14,18 +14,14 @@ import (
 // p.15 Referee option for "Special" (2D=2) primary rolls; zero value
 // is Special (the cleaner setting — no BD/D/Peculiar primaries).
 //
-// MAO is an optional callback the caller supplies for the WBH p.27
-// companion-of-giant orbit rule: Orbit# = 1D × MAO(primary) when a
-// companion orbits a giant primary (class Ia/Ib/II/III). The MAO
-// table lives in worlds/ to keep with the book's chapter layout
-// (p.39, "System Worlds and Orbits"); stars/ takes it via callback
-// rather than importing worlds/. If nil and a giant has a companion,
-// stars.ErrCompanionOfGiantMAO is returned.
+// The WBH p.27 companion-of-giant orbit rule (Orbit# = 1D × MAO(primary)
+// when a companion orbits a giant primary of class Ia/Ib/II/III) reads
+// the p.39 MAO table, which lives in this package (MAO); GenerateSystem
+// computes it directly.
 type GenerateSystemOpts struct {
 	WithVariance   bool
 	Accuracy       int          // 1 or 2
 	PeculiarColumn PeculiarPath // zero value = PeculiarPathSpecial
-	MAO            func(Star) (float64, error)
 }
 
 // GenerateSystem rolls a complete multi-star system from a Roller.
@@ -199,10 +195,7 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 		var orbit float64
 		if c.OrbitClass == OrbitCompanion && IsGiantClass(primary.LuminosityClass) {
 			// WBH p.27: companion of giant primary uses 1D × MAO(primary).
-			if opts.MAO == nil {
-				return System{}, fmt.Errorf("companion[%d] orbit: %w", i, ErrCompanionOfGiantMAO)
-			}
-			mao, merr := opts.MAO(primary)
+			mao, merr := MAO(primary)
 			if merr != nil {
 				return System{}, fmt.Errorf("companion[%d] orbit MAO: %w", i, merr)
 			}

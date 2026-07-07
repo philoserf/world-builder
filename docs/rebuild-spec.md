@@ -226,6 +226,12 @@ includes Class IV-P at parity with the other two forms; `iiss/` imports nothing 
 
 ### C4 — `stars/` is standalone
 
+> **Resolved (C4).** MAO (the p.39 table, `MAO`, `LacksP39MAORow`, `IsPostStellar`)
+> moved into `stars/mao.go`; the `GenerateSystemOpts.MAO` callback was removed and
+> `GenerateSystem` computes the companion-of-giant orbit in-package. `stars/` has no
+> inbound dependency on `worlds/`. Behavior byte-identical (regression + gold baselines
+> unchanged). The rest of this section is the original spec rationale.
+
 **Problem.** `worlds.MAO` is injected into `stars.GenerateSystemOpts.MAO`
 (`generate.go:52`). This is the one place worlds-side knowledge flows into `stars/`
 (`theory.md` § "MAO flows into stars"). It means `stars/` cannot be built or reasoned

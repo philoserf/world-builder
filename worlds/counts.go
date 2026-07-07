@@ -77,7 +77,7 @@ func gasGiantExistenceDMs(sys stars.System) int {
 	if sys.Primary.Kind == stars.KindBrownDwarf {
 		dm -= 2
 	}
-	if isPostStellar(sys.Primary.Kind) {
+	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm -= 2
 	}
 	dm -= postStellarCount(sys)
@@ -97,7 +97,7 @@ func gasGiantQuantityDMs(sys stars.System) int {
 	if sys.Primary.Kind == stars.KindBrownDwarf {
 		dm -= 2
 	}
-	if isPostStellar(sys.Primary.Kind) {
+	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm -= 2
 	}
 	dm -= postStellarCount(sys)
@@ -139,11 +139,11 @@ func isSingleClassVSystem(sys stars.System) bool {
 // system, including the primary if it is post-stellar.
 func postStellarCount(sys stars.System) int {
 	n := 0
-	if isPostStellar(sys.Primary.Kind) {
+	if stars.IsPostStellar(sys.Primary.Kind) {
 		n++
 	}
 	for _, c := range sys.Companions {
-		if isPostStellar(c.Star.Kind) {
+		if stars.IsPostStellar(c.Star.Kind) {
 			n++
 		}
 	}
@@ -170,7 +170,7 @@ func beltExistenceDMs(sys stars.System) int {
 	if isPrimordial(sys.Primary) {
 		dm += 2
 	}
-	if isPostStellar(sys.Primary.Kind) {
+	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm++
 	}
 	// postStellarCount includes the primary; the spec lists a flat

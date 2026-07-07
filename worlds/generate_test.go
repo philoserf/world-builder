@@ -203,7 +203,6 @@ func TestGenerateWithOpts_PeculiarColumn(t *testing.T) {
 		sys, err := stars.GenerateSystem(roller.NewSeeded(seed), stars.GenerateSystemOpts{
 			WithVariance:   true,
 			Accuracy:       2,
-			MAO:            worlds.MAO,
 			PeculiarColumn: stars.PeculiarPathPeculiar,
 		})
 		if err != nil {
