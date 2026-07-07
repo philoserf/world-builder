@@ -43,6 +43,18 @@ func buildClass4PPlanet(u *Universe, body *Body, isMainworld bool) *iiss.Class4P
 		p.EscapeVelocity = body.Physical.EscapeVelocity
 		p.SizeProfile = body.Physical.SizeProfile
 	}
+	if body.Kind == BodyGasGiant {
+		// Gas giants have no BodyPhysical/atmosphere/hydro/life; their SIZE
+		// is class + Earth-diameters, and their only temperature is the
+		// WBH p.125 residual heat (stored in Geology.InherentTemperatureK).
+		p.IsGasGiant = true
+		p.GasGiantClass = ggClassLabel(body.GGClass)
+		p.DiameterEarth = body.DiameterEarth
+		p.DiameterKm = body.DiameterEarth * DiameterTerra
+		if body.HasGeology() {
+			p.ResidualTempK = body.Geology.InherentTemperatureK
+		}
+	}
 	if body.HasAtmosphere() {
 		atm := body.Atmosphere
 		a := &iiss.Class4PAtmosphere{
@@ -179,4 +191,18 @@ func geographyLabel(g FundamentalGeography) string {
 		return "Ocean"
 	}
 	return "Land"
+}
+
+// ggClassLabel renders the gas-giant size class (WBH p.55) for the
+// Class IV-P size block.
+func ggClassLabel(c GasGiantClass) string {
+	switch c {
+	case GasGiantSmall:
+		return "Small"
+	case GasGiantMedium:
+		return "Medium"
+	case GasGiantLarge:
+		return "Large"
+	}
+	return ""
 }

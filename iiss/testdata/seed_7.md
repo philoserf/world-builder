@@ -669,30 +669,17 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.42, Eccentricity: 0.00, Period (h): 3684.27
 
 ### SIZE
-- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 35.000
-
-### ATMOSPHERE
-- (none — vacuum)
-
-### HYDROGRAPHICS
-- (none)
+- Class: Small gas giant
+- Diameter (km): 63710 (5.00 × Terra), Mass (Earth): 35.000
 
 ### ROTATION
 - Sidereal (h): 2456.18, Solar (h): 7368.53, Solar days/year: 0.50
 - Axial Tilt: 0.60°
 - Tidal lock: 3:2, Tides (m): 0.00
 
-### TEMPERATURE
-- (not computed)
-
-### SEISMIC
-- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
-
-### LIFE
-- (not computed)
-
-### HABITABILITY
-- Rating: 0
+### GAS GIANT
+- Residual temperature (K): 61.8 (WBH p.125)
+- No discrete surface: atmosphere, hydrographics, life, and habitability do not apply.
 
 
 ## PART P.B — A PII (Belt)
@@ -727,30 +714,17 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.47, Eccentricity: 0.01, Period (h): 4394.37
 
 ### SIZE
-- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 30.000
-
-### ATMOSPHERE
-- (none — vacuum)
-
-### HYDROGRAPHICS
-- (none)
+- Class: Small gas giant
+- Diameter (km): 50968 (4.00 × Terra), Mass (Earth): 30.000
 
 ### ROTATION
 - Sidereal (h): 104.88, Solar (h): 107.44, Solar days/year: 40.90
 - Axial Tilt: 10.00°
 - Tidal lock: no, Tides (m): 0.00
 
-### TEMPERATURE
-- (not computed)
-
-### SEISMIC
-- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
-
-### LIFE
-- (not computed)
-
-### HABITABILITY
-- Rating: 0
+### GAS GIANT
+- Residual temperature (K): 59.5 (WBH p.125)
+- No discrete surface: atmosphere, hydrographics, life, and habitability do not apply.
 
 ### SUBORDINATES
 | Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
