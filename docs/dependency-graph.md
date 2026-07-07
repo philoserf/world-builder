@@ -175,7 +175,7 @@ Three-way bidirectional dependence. Single-pass evaluation in any order produces
 ### Solver shape
 
 ```go
-// Actual: worlds/stage5.go. ApplyClimatePasses mutates the body directly;
+// Actual: worlds/climate.go. ApplyClimatePasses mutates the body directly;
 // there is no Climate value type (a proposed convergence-variable struct
 // was removed as dead code — lessons-learned.md § L14).
 

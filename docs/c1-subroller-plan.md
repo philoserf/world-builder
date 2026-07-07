@@ -32,7 +32,7 @@ to `main`: review the diff.
   seeds, while climate (still shared-stream) diverges — proving the perturbation is real
   and the isolation non-vacuous. Rotation-tilt is seed-dependent, so not degenerate.
 - **Blast radius = the 5 Markdown snapshots only** (regenerated; all still render as
-  complete systems). +78 lines across `roller/roller.go` and `worlds/stage4.go`.
+  complete systems). +78 lines across `roller/roller.go` and `worlds/rotation_tilt.go`.
 
 ## The enabling decision (why this is non-invasive)
 
@@ -67,7 +67,7 @@ so the key is stable the moment the suffix begins.
 
 - **Body id:** `bodyForkID(body, parent)` — `body.Designation` for top-level bodies,
   `parent.Designation + "/" + body.Designation` for moons (guarantees system-wide
-  uniqueness). Already implemented in the spike (`worlds/stage4.go`). Promote it to a
+  uniqueness). Already implemented in the spike (`worlds/rotation_tilt.go`). Promote it to a
   shared helper (e.g. `worlds/subroller.go`).
 - **One family key per stage** (the substream a body draws that stage's dice from):
 

@@ -66,7 +66,7 @@ Stage 9    ApplyHabitability                             pp. 132–138
 Stage 10   AggregateSystem + BuildIISSForms              per-allocation BaselineN, profiles, mainworld pick, all three IISS forms
 ```
 
-The one-file-per-stage convention (`worlds/stage[2-10].go`) holds the orchestrators; per-feature files (`atmosphere.go`, `tidal_lock.go`, `biology.go`, …) hold the actual procedures.
+Orchestrators live in role-named files: cross-cutting passes get their own (`detail_frontend.go`, `physical_detail.go`, `rotation_tilt.go`, `climate.go`, `taint_surface.go`, `aggregate.go`), and the single-feature passes live with their procedures (`geology.go`, `biology.go`, `habitability.go` each hold both the `Apply*` orchestrator and the feature's `Roll*`/`Compute*` procedures). Other per-feature files (`atmosphere.go`, `tidal_lock.go`, …) hold procedures only.
 
 Bodies carry nullable pointer fields (`*Atmosphere`, `*Geology`, `*Biology`, `*Habitability`, …). Pointer = nil means "not applicable to this body type". Use the `Has*()` predicates — don't deref blindly.
 
