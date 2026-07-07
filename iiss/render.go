@@ -5,100 +5,14 @@ import (
 	"strings"
 )
 
-// MarkdownClass0I renders the Class 0/I form as Markdown — header,
-// system age, stellar census table.
-func MarkdownClass0I(f Class0IForm) string {
+// MarkdownClass4Survey renders the full IISS Class IV Survey document as
+// Markdown: PART 1 (the system census) followed by a per-body PART P /
+// PART P.B for every surveyed body. This is the sole Markdown output — the
+// Class 0/I and Class II/III "short forms" (earlier survey stages) are
+// folded into PART 1.
+func MarkdownClass4Survey(sf SystemForms) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "## Class 0/I — %s\n\n", f.IISSDesig)
-	fmt.Fprintf(&b, "- System: %s\n", f.SystemName)
-	fmt.Fprintf(&b, "- Sector / Location: %s / %s\n", f.Sector, f.Location)
-	fmt.Fprintf(&b, "- Survey: initial %s, last updated %s\n", f.InitialSurvey, f.LastUpdated)
-	fmt.Fprintf(&b, "- System age: %.3f Gyr\n", f.SystemAgeGyr)
-	fmt.Fprintf(&b, "- Stellar count: %d\n\n", f.StellarCount)
-	if len(f.Stars) > 0 {
-		b.WriteString("| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO |\n")
-		b.WriteString("| --------- | ----- | ---- | -------- | -------- | ---------- | ---- |\n")
-		for _, s := range f.Stars {
-			fmt.Fprintf(&b, "| %s | %s | %.3f | %.3f | %.0f | %.4f | %.2f |\n",
-				s.Component, s.Class, s.Mass, s.Diameter, s.Temperature, s.Luminosity, s.HZCO)
-		}
-	}
-	return b.String()
-}
-
-// MarkdownClass23 renders the Class II/III form as Markdown —
-// counts, stellar census with MAO, and the WBH p.61 Objects table.
-func MarkdownClass23(f Class23Form) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "## Class II/III — %s\n\n", f.IISSDesig)
-	fmt.Fprintf(&b, "- Gas giants: %d\n", f.Counts.GasGiants)
-	fmt.Fprintf(&b, "- Belts: %d\n", f.Counts.PlanetoidBelts)
-	fmt.Fprintf(&b, "- Terrestrials: %d\n", f.Counts.Terrestrials)
-	fmt.Fprintf(&b, "- Total: %d\n\n", f.Counts.Total)
-
-	if len(f.Stars) > 0 {
-		b.WriteString("### Stars (with MAO)\n\n")
-		b.WriteString("| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO | MAO |\n")
-		b.WriteString("| --------- | ----- | ---- | -------- | -------- | ---------- | ---- | --- |\n")
-		for _, s := range f.Stars {
-			fmt.Fprintf(&b, "| %s | %s | %.3f | %.3f | %.0f | %.4f | %.2f | %.2f |\n",
-				s.Component, s.Class, s.Mass, s.Diameter, s.Temperature, s.Luminosity, s.HZCO, s.MAO)
-		}
-		b.WriteString("\n")
-	}
-
-	if len(f.Objects) > 0 {
-		b.WriteString("### Objects\n\n")
-		b.WriteString("| Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |\n")
-		b.WriteString("| ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |\n")
-		for _, o := range f.Objects {
-			ecc := ""
-			if o.Ecc > 0 {
-				ecc = fmt.Sprintf("%.2f", o.Ecc)
-			}
-			orbit := ""
-			if o.Orbit > 0 {
-				orbit = fmt.Sprintf("%.2f", o.Orbit)
-			}
-			au := ""
-			if o.AU > 0 {
-				au = fmt.Sprintf("%.2f", o.AU)
-			}
-			fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
-				o.Primary, o.Designation, orbit, au, ecc, o.PeriodStr, o.SAH, o.Sub, o.Notes)
-		}
-	}
-	return b.String()
-}
-
-// MarkdownClass4P renders the WBH p.138 IISS Class IV Survey Form
-// (FORM 0407F-IV PART P) for planet/moon mainworlds; for belts,
-// FORM 0407K-IV PART P.B. The body is rendered from the concrete
-// PartP / PartPB struct on the form.
-func MarkdownClass4P(f Class4PForm) string {
-	var b strings.Builder
-	switch f.Variant {
-	case Class4PBelt:
-		fmt.Fprintf(&b, "## Class IV-P PART P.B — %s (Belt mainworld)\n\n", f.IISSDesig)
-	case Class4PMoon:
-		fmt.Fprintf(&b, "## Class IV-P PART P — %s (Moon mainworld)\n\n", f.IISSDesig)
-	default:
-		fmt.Fprintf(&b, "## Class IV-P PART P — %s\n\n", f.IISSDesig)
-	}
-	switch {
-	case f.PartPB != nil:
-		f.PartPB.RenderBody(&b, f.FormHeader)
-	case f.PartP != nil:
-		f.PartP.RenderBody(&b, f.FormHeader)
-	}
-	return b.String()
-}
-
-// MarkdownSystem concatenates all three forms under H1/H2 headings in
-// book order. Class IV-P renders only for the auto-picked mainworld.
-func MarkdownSystem(sf SystemForms) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "# %s — System Survey\n\n", sf.Class0I.IISSDesig)
+	fmt.Fprintf(&b, "# %s — IISS Class IV Survey\n\n", sf.Class0I.IISSDesig)
 	if sf.MainworldDesignation != "" {
 		fmt.Fprintf(&b, "**Mainworld:** %s\n\n", sf.MainworldDesignation)
 	}
@@ -112,13 +26,98 @@ func MarkdownSystem(sf SystemForms) string {
 		b.WriteString(sf.NotableFeatures)
 		b.WriteString("\n")
 	}
-	b.WriteString(MarkdownClass0I(sf.Class0I))
-	b.WriteString("\n")
-	b.WriteString(MarkdownClass23(sf.Class23))
-	b.WriteString("\n")
-	if sf.MainworldDesignation != "" {
-		b.WriteString(MarkdownClass4P(sf.Class4P))
+	b.WriteString(markdownClass4Part1(sf))
+	for _, f := range sf.Class4PForms {
 		b.WriteString("\n")
+		b.WriteString(markdownClass4Part(f))
 	}
 	return b.String()
+}
+
+// markdownClass4Part1 renders PART 1 — the system census: system-level
+// scalars, world counts, the stellar roster (with full orbital data), and
+// the body roster. Its data source is the retained Class0I star rows and
+// Class23 object rows (the content the old short forms carried).
+func markdownClass4Part1(sf SystemForms) string {
+	var b strings.Builder
+	c0 := sf.Class0I
+	b.WriteString("## PART 1 — System Census\n\n")
+
+	fmt.Fprintf(&b, "- System: %s\n", c0.SystemName)
+	fmt.Fprintf(&b, "- Sector / Location: %s / %s\n", c0.Sector, c0.Location)
+	fmt.Fprintf(&b, "- Survey: initial %s, last updated %s\n", c0.InitialSurvey, c0.LastUpdated)
+	fmt.Fprintf(&b, "- System age: %.3f Gyr\n", c0.SystemAgeGyr)
+	fmt.Fprintf(&b, "- Stellar count: %d\n", c0.StellarCount)
+	fmt.Fprintf(&b, "- Worlds: %d gas giants, %d belts, %d terrestrials (total %d)\n",
+		sf.Class23.Counts.GasGiants, sf.Class23.Counts.PlanetoidBelts,
+		sf.Class23.Counts.Terrestrials, sf.Class23.Counts.Total)
+	fmt.Fprintf(&b, "- Baseline: number %d, Orbit# %.2f; spread %.2f; empty orbits %d\n\n",
+		sf.Census.BaselineNumber, sf.Census.BaselineOrbit, sf.Census.Spread, sf.Census.EmptyOrbits)
+
+	if len(c0.Stars) > 0 {
+		b.WriteString("### Stars\n\n")
+		b.WriteString("| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO |\n")
+		b.WriteString("| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- |\n")
+		for _, s := range c0.Stars {
+			fmt.Fprintf(&b, "| %s | %s | %.3f | %.3f | %.0f | %.4f | %s | %s | %s | %s | %.2f | %.2f |\n",
+				s.Component, s.Class, s.Mass, s.Diameter, s.Temperature, s.Luminosity,
+				blankFloat(s.Orbit), blankFloat(s.AU), blankFloat(s.Eccentricity),
+				blankFloat(s.PeriodYears), s.MAO, s.HZCO)
+		}
+		b.WriteString("\n")
+	}
+
+	if len(sf.Class23.Objects) > 0 {
+		b.WriteString("### Bodies\n\n")
+		b.WriteString("| Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |\n")
+		b.WriteString("| ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |\n")
+		for _, o := range sf.Class23.Objects {
+			fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
+				o.Primary, o.Designation, blankFloat(o.Orbit), blankFloat(o.AU),
+				blankFloat(o.Ecc), o.PeriodStr, o.SAH, o.Sub, o.Notes)
+		}
+	}
+	return b.String()
+}
+
+// markdownClass4Part renders one per-body PART P / PART P.B, titled by the
+// body's own Designation. The body content comes from the concrete
+// PartP / PartPB RenderBody methods.
+func markdownClass4Part(f Class4PForm) string {
+	var b strings.Builder
+	switch f.Variant {
+	case Class4PBelt:
+		fmt.Fprintf(&b, "## PART P.B — %s (Belt)%s\n\n", f.Designation, mainworldSuffix(f))
+		if f.PartPB != nil {
+			f.PartPB.RenderBody(&b, f.FormHeader)
+		}
+	case Class4PMoon:
+		fmt.Fprintf(&b, "## PART P — %s (Moon)%s\n\n", f.Designation, mainworldSuffix(f))
+		if f.PartP != nil {
+			f.PartP.RenderBody(&b, f.FormHeader)
+		}
+	default:
+		fmt.Fprintf(&b, "## PART P — %s%s\n\n", f.Designation, mainworldSuffix(f))
+		if f.PartP != nil {
+			f.PartP.RenderBody(&b, f.FormHeader)
+		}
+	}
+	return b.String()
+}
+
+// mainworldSuffix returns " — mainworld" for the auto-picked mainworld's
+// part, empty otherwise.
+func mainworldSuffix(f Class4PForm) string {
+	if (f.PartP != nil && f.PartP.IsMainworld) || (f.PartPB != nil && f.PartPB.IsMainworld) {
+		return " — mainworld"
+	}
+	return ""
+}
+
+// blankFloat formats a float for a table cell, blanking a zero value.
+func blankFloat(v float64) string {
+	if v == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%.2f", v)
 }

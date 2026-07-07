@@ -44,7 +44,7 @@ func TestRegression_MarkdownSeeds(t *testing.T) {
 				}
 				t.Fatalf("seed %d: Generate: %v", seed, err)
 			}
-			got := iiss.MarkdownSystem(u.Detail.SystemForms)
+			got := iiss.MarkdownClass4Survey(u.Detail.SystemForms)
 
 			snapshot := filepath.Join("testdata", "seed_"+strconv.FormatInt(seed, 10)+".md")
 

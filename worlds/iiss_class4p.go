@@ -9,7 +9,7 @@ import (
 // Form 0407F-IV PART P) from the generated body. The struct and its
 // Markdown renderer live in iiss/; this is the worlds→iiss boundary that
 // reads the universe and fills the form.
-func buildClass4PPlanet(u *Universe, body *Body) *iiss.Class4PPartP {
+func buildClass4PPlanet(u *Universe, body *Body, isMainworld bool) *iiss.Class4PPartP {
 	p := &iiss.Class4PPartP{
 		Designation:  body.Designation,
 		SystemAgeGyr: u.System.Primary.AgeGyr,
@@ -20,7 +20,7 @@ func buildClass4PPlanet(u *Universe, body *Body) *iiss.Class4PPartP {
 		DiameterKm:   body.DiameterKm,
 		MassEarth:    body.MassEarth,
 		Ring:         body.Ring,
-		IsMainworld:  true,
+		IsMainworld:  isMainworld,
 	}
 	if body.Kind == BodyMoon {
 		// Body.Orbit and Body.Period are star-relative and zero for
@@ -128,7 +128,7 @@ func buildClass4PPlanet(u *Universe, body *Body) *iiss.Class4PPartP {
 
 // buildClass4PBelt builds the belt-mainworld view (WBH p.139 FORM
 // 0407K-IV PART P.B). The struct and its Markdown renderer live in iiss/.
-func buildClass4PBelt(u *Universe, body *Body) *iiss.Class4PPartPB {
+func buildClass4PBelt(u *Universe, body *Body, isMainworld bool) *iiss.Class4PPartPB {
 	pb := &iiss.Class4PPartPB{
 		Designation:  body.Designation,
 		PrimaryGroup: body.Group.Designation,
@@ -136,7 +136,7 @@ func buildClass4PBelt(u *Universe, body *Body) *iiss.Class4PPartPB {
 		OrbitNumber:  body.Orbit,
 		AU:           stars.OrbitToAU(body.Orbit),
 		PeriodHours:  body.Period.Hours,
-		IsMainworld:  true,
+		IsMainworld:  isMainworld,
 	}
 	if body.HasBelt() {
 		pb.SpanOrbits = body.Belt.Span

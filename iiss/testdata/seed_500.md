@@ -1,4 +1,4 @@
-# A V g — System Survey
+# A V g — IISS Class IV Survey
 
 **Mainworld:** A V g
 
@@ -45,32 +45,23 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 - A V g — Rating 5/12 (Marginally survivable): Too cold all of the time; Too cold most of the time; Low gravity
 
 
-## Class 0/I — A V g
+## PART 1 — System Census
 
 - System: A
 - Sector / Location: — / —
 - Survey: initial , last updated 
 - System age: 9.200 Gyr
 - Stellar count: 1
+- Worlds: 2 gas giants, 0 belts, 5 terrestrials (total 7)
+- Baseline: number 4, Orbit# 0.22; spread 0.05; empty orbits 0
 
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ---- |
-| A | M4 V | 0.219 | 0.312 | 3140 | 0.0085 | 0.23 |
+### Stars
 
-## Class II/III — A V g
+| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO |
+| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- |
+| A | M4 V | 0.219 | 0.312 | 3140 | 0.0085 |  |  |  |  | 0.01 | 0.23 |
 
-- Gas giants: 2
-- Belts: 0
-- Terrestrials: 5
-- Total: 7
-
-### Stars (with MAO)
-
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO | MAO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ---- | --- |
-| A | M4 V | 0.219 | 0.312 | 3140 | 0.0085 | 0.23 | 0.01 |
-
-### Objects
+### Bodies
 
 | Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
@@ -97,7 +88,671 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 | A | A VI | 0.33 | 0.13 | 0.03 | 0.103y | 8A2 | 0 | HZ |
 | A | A VII | 0.37 | 0.15 | 0.00 | 0.123y | 238 | 0 | HZ |
 
-## Class IV-P PART P — A V g (Moon mainworld)
+## PART P — A I
+
+**WORLD:** A I
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.02, Eccentricity: 0.02, Period (h): 67.91
+
+### SIZE
+- Diameter (km): 11200, Density: 0.97, Gravity: 0.85, Mass (Earth): 0.659
+
+### ATMOSPHERE
+- Code: 12, Pressure (bar): 2.160, O₂ (bar): 0.000, Scale Height: 415.91
+- Profile: C-St8.T:2.16:H2SO4-91:HCl-07:Other-00 G.9.9
+
+### HYDROGRAPHICS
+- Code: 3, Coverage (%): 31, Profile: 
+
+### ROTATION
+- Sidereal (h): 67.91, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 3644.91
+
+### TEMPERATURE
+- High (K): 12015.0, Mean (K): 12015.0, Low (K): 12015.0
+- Luminosity: 0.009, Albedo: 0.42, Greenhouse: 1.47
+
+### SEISMIC
+- TSS: 12015, Residual: 0, Tidal Stress: 364, Tidal Heating: 11651, Plates: 3
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 4
+
+### HABITABILITY
+- Rating: 0
+- Notes: Very hostile Atmosphere; Desert conditions prevalent; Very little useable land surface area; Too hot at times; Too hot most of the time; Gravity very comfortable
+
+
+## PART P — A II
+
+**WORLD:** A II
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.04, Eccentricity: 0.03, Period (h): 163.53
+
+### SIZE
+- Diameter (km): 16000, Density: 0.94, Gravity: 1.18, Mass (Earth): 1.861
+
+### ATMOSPHERE
+- Code: 11, Pressure (bar): 1600.000, O₂ (bar): 0.000, Scale Height: 32.91
+- Profile: B-StE:1600.00:CO2-96:Other-03 P.3.6
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 4, Profile: 
+
+### ROTATION
+- Sidereal (h): 163.53, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 897.96
+
+### TEMPERATURE
+- High (K): 1316.2, Mean (K): 1316.0, Low (K): 1315.8
+- Luminosity: 0.009, Albedo: 0.53, Greenhouse: 20.00
+
+### SEISMIC
+- TSS: 1313, Residual: 0, Tidal Stress: 89, Tidal Heating: 1224, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 9
+
+### HABITABILITY
+- Rating: 0
+- Notes: Additional surface area; Hostile Atmosphere; Lack of accessible liquid water; Very little useable land surface area; Too hot at times; Too hot most of the time; Gravity somewhat high
+
+### COMMENTS
+- Has a planetary ring (WBH p.55/p.76).
+
+
+## PART P — A III
+
+**WORLD:** A III
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.06, Eccentricity: 0.00, Period (h): 297.69
+
+### SIZE
+- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 260.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 600.00, Solar (h): -590.82, Solar days/year: -0.50
+- Axial Tilt: 15.00°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+
+### SUBORDINATES
+| Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
+| ----------- | ---- | ------------- | ---------- | --- | ---------- |
+| A III a | 1 | 1600 | 458712 | 0.000 | 53.63 |
+| A III b | 4 | 6400 | 252291 | 0.000 | 21.87 |
+| A III c | 1 | 1600 | 412840 | 0.000 | 45.79 |
+| A III d | R | 0 | 263759 | 0.000 | 23.38 |
+
+
+## PART P — A III a (Moon)
+
+**WORLD:** A III a
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.06 (via A III), Eccentricity: 0.00, Period (h): 53.63
+- Moon orbit (km): 458712 around A III
+
+### SIZE
+- Diameter (km): 1600, Density: 0.62, Gravity: 0.08, Mass (Earth): 0.001
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 125.13
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 3, Profile: 
+
+### ROTATION
+- Sidereal (h): 53.63, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 27.00
+
+### TEMPERATURE
+- High (K): 366.3, Mean (K): 330.1, Low (K): 276.4
+- Luminosity: 0.009, Albedo: 0.08, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 2, Residual: 0, Tidal Stress: 2, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too hot at times; Too hot most of the time; Unhealthy low gravity levels
+
+
+## PART P — A III b (Moon)
+
+**WORLD:** A III b
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.06 (via A III), Eccentricity: 0.00, Period (h): 21.87
+- Moon orbit (km): 252292 around A III
+
+### SIZE
+- Diameter (km): 6400, Density: 0.71, Gravity: 0.36, Mass (Earth): 0.090
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 26.54
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 1, Coverage (%): 15, Profile: 
+
+### ROTATION
+- Sidereal (h): 21.87, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.80°
+- Tidal lock: 1:1, Tides (m): 108.01
+
+### TEMPERATURE
+- High (K): 356.0, Mean (K): 320.7, Low (K): 268.3
+- Luminosity: 0.009, Albedo: 0.18, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 10, Residual: 0, Tidal Stress: 10, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 8
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Desert conditions prevalent; Too hot at times; Too hot most of the time; Very low gravity
+
+
+## PART P — A III c (Moon)
+
+**WORLD:** A III c
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.06 (via A III), Eccentricity: 0.00, Period (h): 45.79
+- Moon orbit (km): 412841 around A III
+
+### SIZE
+- Diameter (km): 1600, Density: 0.65, Gravity: 0.08, Mass (Earth): 0.001
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 120.00
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 5, Profile: 
+
+### ROTATION
+- Sidereal (h): 45.79, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 27.00
+
+### TEMPERATURE
+- High (K): 368.3, Mean (K): 331.9, Low (K): 277.9
+- Luminosity: 0.009, Albedo: 0.06, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 2, Residual: 0, Tidal Stress: 2, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 3
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too hot at times; Too hot most of the time; Unhealthy low gravity levels
+
+
+## PART P — A III d (Moon)
+
+**WORLD:** A III d
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.06 (via A III), Eccentricity: 0.00, Period (h): 23.38
+- Moon orbit (km): 263759 around A III
+
+### SIZE
+- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 202.49, Solar (h): -26.44, Solar days/year: -0.88
+- Axial Tilt: 88.10°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water
+
+
+## PART P — A IV
+
+**WORLD:** A IV
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.09, Eccentricity: 0.00, Period (h): 491.91
+
+### SIZE
+- Diameter (km): 11200, Density: 1.09, Gravity: 0.96, Mass (Earth): 0.740
+
+### ATMOSPHERE
+- Code: 5, Pressure (bar): 0.574, O₂ (bar): 0.132, Scale Height: 8.33
+- Profile: 5-0.574-0.132
+
+### HYDROGRAPHICS
+- Code: 2, Coverage (%): 21, Profile: H2:H2O-100
+
+### ROTATION
+- Sidereal (h): 491.91, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 69.47
+
+### TEMPERATURE
+- High (K): 306.2, Mean (K): 270.3, Low (K): 209.6
+- Luminosity: 0.009, Albedo: 0.44, Greenhouse: 0.44
+
+### SEISMIC
+- TSS: 6, Residual: 0, Tidal Stress: 6, Tidal Heating: 0, Plates: 5
+
+### LIFE
+- Biomass: 4, Biocomplexity: 1, Sophonts: no, Biodiversity: 3, Compatibility: 6
+
+### RESOURCES
+- Rating: 9
+
+### HABITABILITY
+- Rating: 3
+- Notes: Thin, taint (standard), or dense Atmospheres; Desert conditions prevalent; Very little useable land surface area; Too cold most of the time
+
+
+## PART P — A V
+
+**WORLD:** A V
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11, Eccentricity: 0.03, Period (h): 675.28
+
+### SIZE
+- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 220.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 56.47, Solar (h): 61.62, Solar days/year: 10.96
+- Axial Tilt: 180.00°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+
+### SUBORDINATES
+| Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
+| ----------- | ---- | ------------- | ---------- | --- | ---------- |
+| A V a | 2 | 3200 | 282872 | 0.000 | 28.23 |
+| A V b | E | 22400 | 237001 | 0.000 | 21.65 |
+| A V c | 1 | 1600 | 290517 | 0.000 | 29.38 |
+| A V d | 2 | 3200 | 558099 | 0.000 | 78.24 |
+| A V e | S | 600 | 756874 | 0.000 | 123.57 |
+| A V f | S | 600 | 802746 | 0.000 | 134.97 |
+| A V g | 7 | 11200 | 481647 | 0.000 | 62.73 |
+| A V h | S | 600 | 481647 | 0.000 | 62.73 |
+| A V i | S | 600 | 259936 | 0.000 | 24.87 |
+| A V j | S | 600 | 305808 | 0.000 | 31.73 |
+| A V k | 2 | 3200 | 825681 | 0.000 | 140.79 |
+
+
+## PART P — A V a (Moon)
+
+**WORLD:** A V a
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 28.23
+- Moon orbit (km): 282872 around A V
+
+### SIZE
+- Diameter (km): 3200, Density: 1.00, Gravity: 0.25, Mass (Earth): 0.016
+
+### ATMOSPHERE
+- Code: 3, Pressure (bar): 0.217, O₂ (bar): 0.061, Scale Height: 31.55
+- Profile: 3-0.217-0.061
+
+### HYDROGRAPHICS
+- Code: 3, Coverage (%): 28, Profile: H3:H2O-100
+
+### ROTATION
+- Sidereal (h): 28.23, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 10.50
+
+### TEMPERATURE
+- High (K): 294.4, Mean (K): 268.5, Low (K): 235.9
+- Luminosity: 0.009, Albedo: 0.10, Greenhouse: 0.33
+
+### SEISMIC
+- TSS: 1, Residual: 0, Tidal Stress: 1, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 5
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Very thin or very dense atmosphere; Desert conditions prevalent; Too cold most of the time; Very low gravity
+
+
+## PART P — A V b (Moon)
+
+**WORLD:** A V b
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 21.65
+- Moon orbit (km): 237001 around A V
+
+### SIZE
+- Diameter (km): 22400, Density: 1.03, Gravity: 1.81, Mass (Earth): 5.596
+
+### ATMOSPHERE
+- Code: 14, Pressure (bar): 0.100, O₂ (bar): 0.000, Scale Height: 4.19
+- Profile: E-0.100-0.000
+
+### HYDROGRAPHICS
+- Code: 10, Coverage (%): 100, Profile: HA:H2O-100
+
+### ROTATION
+- Sidereal (h): 21.65, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 73.50
+
+### TEMPERATURE
+- High (K): 260.3, Mean (K): 256.8, Low (K): 253.4
+- Luminosity: 0.009, Albedo: 0.21, Greenhouse: 0.27
+
+### SEISMIC
+- TSS: 56, Residual: 49, Tidal Stress: 7, Tidal Heating: 0, Plates: 19
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 12
+
+### HABITABILITY
+- Rating: 0
+- Notes: Additional surface area; Very thin, tainted, or thin, low atmospheres; Very little useable land surface area; Too cold all of the time; Too cold most of the time; Gravity uncomfortably high
+
+
+## PART P — A V c (Moon)
+
+**WORLD:** A V c
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 29.38
+- Moon orbit (km): 290518 around A V
+
+### SIZE
+- Diameter (km): 1600, Density: 1.00, Gravity: 0.13, Mass (Earth): 0.002
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 59.37
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 6, Profile: 
+
+### ROTATION
+- Sidereal (h): 29.38, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 5.25
+
+### TEMPERATURE
+- High (K): 283.3, Mean (K): 252.6, Low (K): 209.3
+- Luminosity: 0.009, Albedo: 0.06, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too cold most of the time; Unhealthy low gravity levels
+
+
+## PART P — A V d (Moon)
+
+**WORLD:** A V d
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 78.24
+- Moon orbit (km): 558100 around A V
+
+### SIZE
+- Diameter (km): 3200, Density: 0.59, Gravity: 0.15, Mass (Earth): 0.009
+
+### ATMOSPHERE
+- Code: 5, Pressure (bar): 0.583, O₂ (bar): 0.321, Scale Height: 49.53
+- Profile: 5-0.583-0.321
+
+### HYDROGRAPHICS
+- Code: 3, Coverage (%): 33, Profile: H3:H2O-100
+
+### ROTATION
+- Sidereal (h): 78.24, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 3.00°
+- Tidal lock: 1:1, Tides (m): 10.50
+
+### TEMPERATURE
+- High (K): 262.2, Mean (K): 248.7, Low (K): 234.1
+- Luminosity: 0.009, Albedo: 0.40, Greenhouse: 0.47
+
+### SEISMIC
+- TSS: 1, Residual: 0, Tidal Stress: 1, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Thin, taint (standard), or dense Atmospheres; Desert conditions prevalent; Too cold all of the time; Too cold most of the time; Unhealthy low gravity levels
+
+
+## PART P — A V e (Moon)
+
+**WORLD:** A V e
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 123.57
+- Moon orbit (km): 756875 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 0.68, Gravity: 0.03, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 231.57
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 2, Profile: 
+
+### ROTATION
+- Sidereal (h): 123.57, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- High (K): 281.8, Mean (K): 251.2, Low (K): 208.2
+- Luminosity: 0.009, Albedo: 0.08, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too cold most of the time; Unhealthy low gravity levels
+
+
+## PART P — A V f (Moon)
+
+**WORLD:** A V f
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 134.97
+- Moon orbit (km): 802746 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 0.97, Gravity: 0.05, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 159.63
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 0, Profile: 
+
+### ROTATION
+- Sidereal (h): 134.97, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- High (K): 277.1, Mean (K): 247.0, Low (K): 204.7
+- Luminosity: 0.009, Albedo: 0.14, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too cold all of the time; Too cold most of the time; Unhealthy low gravity levels
+
+
+## PART P — A V g (Moon) — mainworld
 
 **WORLD:** A V g
 **SECTOR | LOCATION:** — | —
@@ -143,4 +798,265 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 ### COMMENTS
 - This is the system mainworld.
 
+
+## PART P — A V h (Moon)
+
+**WORLD:** A V h
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 62.73
+- Moon orbit (km): 481648 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 0.65, Gravity: 0.03, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 232.47
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 0, Profile: 
+
+### ROTATION
+- Sidereal (h): 62.73, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- High (K): 270.4, Mean (K): 241.1, Low (K): 199.8
+- Luminosity: 0.009, Albedo: 0.22, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too cold all of the time; Too cold most of the time; Much too cold some of the time; Unhealthy low gravity levels
+
+
+## PART P — A V i (Moon)
+
+**WORLD:** A V i
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 24.87
+- Moon orbit (km): 259937 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 0.59, Gravity: 0.03, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 259.33
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 0, Profile: 
+
+### ROTATION
+- Sidereal (h): 24.87, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.20°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- High (K): 273.7, Mean (K): 244.1, Low (K): 202.6
+- Luminosity: 0.009, Albedo: 0.18, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too cold all of the time; Too cold most of the time; Unhealthy low gravity levels
+
+
+## PART P — A V j (Moon)
+
+**WORLD:** A V j
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 31.73
+- Moon orbit (km): 305808 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 1.00, Gravity: 0.05, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 153.93
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 4, Profile: 
+
+### ROTATION
+- Sidereal (h): 31.73, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.02°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- High (K): 275.2, Mean (K): 245.6, Low (K): 204.0
+- Luminosity: 0.009, Albedo: 0.16, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too cold all of the time; Too cold most of the time; Unhealthy low gravity levels
+
+
+## PART P — A V k (Moon)
+
+**WORLD:** A V k
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.11 (via A V), Eccentricity: 0.00, Period (h): 140.79
+- Moon orbit (km): 825682 around A V
+
+### SIZE
+- Diameter (km): 3200, Density: 0.65, Gravity: 0.16, Mass (Earth): 0.010
+
+### ATMOSPHERE
+- Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 45.42
+- Profile: 0:0.00
+
+### HYDROGRAPHICS
+- Code: 0, Coverage (%): 6, Profile: 
+
+### ROTATION
+- Sidereal (h): 140.79, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 10.50
+
+### TEMPERATURE
+- High (K): 281.8, Mean (K): 251.2, Low (K): 208.2
+- Luminosity: 0.009, Albedo: 0.08, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 1, Residual: 0, Tidal Stress: 1, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 7
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Too cold most of the time; Unhealthy low gravity levels
+
+
+## PART P — A VI
+
+**WORLD:** A VI
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.13, Eccentricity: 0.03, Period (h): 900.52
+
+### SIZE
+- Diameter (km): 12800, Density: 0.74, Gravity: 0.74, Mass (Earth): 0.750
+
+### ATMOSPHERE
+- Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 8.47
+- Profile: A:N2-85:C2H6-10:Other-04 G.4.6
+
+### HYDROGRAPHICS
+- Code: 2, Coverage (%): 17, Profile: H2:NH3-100
+
+### ROTATION
+- Sidereal (h): 900.52, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 23.69
+
+### TEMPERATURE
+- High (K): 257.5, Mean (K): 213.3, Low (K): —
+- Luminosity: 0.009, Albedo: 0.30, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 2, Residual: 0, Tidal Stress: 2, Tidal Heating: 0, Plates: 3
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 5
+
+### HABITABILITY
+- Rating: 0
+- Notes: Non-breathable atmosphere; Desert conditions prevalent; Very little useable land surface area; Too cold all of the time; Too cold most of the time; Gravity very comfortable
+
+
+## PART P — A VII
+
+**WORLD:** A VII
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 9.200
+
+### ORBIT
+- AU: 0.15, Eccentricity: 0.00, Period (h): 1076.52
+
+### SIZE
+- Diameter (km): 3200, Density: 1.03, Gravity: 0.26, Mass (Earth): 0.016
+
+### ATMOSPHERE
+- Code: 3, Pressure (bar): 0.143, O₂ (bar): 0.046, Scale Height: 25.17
+- Profile: 3-0.143-0.046
+
+### HYDROGRAPHICS
+- Code: 8, Coverage (%): 85, Profile: H8:H2O-100
+
+### ROTATION
+- Sidereal (h): 717.68, Solar (h): 2153.04, Solar days/year: 0.50
+- Axial Tilt: 0.60°
+- Tidal lock: 3:2, Tides (m): 4.14
+
+### TEMPERATURE
+- High (K): 258.6, Mean (K): 220.6, Low (K): 130.9
+- Luminosity: 0.009, Albedo: 0.18, Greenhouse: 0.24
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 2
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Very thin or very dense atmosphere; Too cold all of the time; Too cold most of the time; Much too cold some of the time; Very low gravity
 

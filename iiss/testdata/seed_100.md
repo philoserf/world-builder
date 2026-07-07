@@ -1,4 +1,4 @@
-# A IV — System Survey
+# A IV — IISS Class IV Survey
 
 **Mainworld:** A IV
 
@@ -20,32 +20,23 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 - A IV — Rating 6/12 (Regionally habitable): Thin, taint (standard), or dense Atmospheres; Little useable land surface area; Too cold most of the time
 
 
-## Class 0/I — A IV
+## PART 1 — System Census
 
 - System: A
 - Sector / Location: — / —
 - Survey: initial , last updated 
 - System age: 3.200 Gyr
 - Stellar count: 1
+- Worlds: 0 gas giants, 2 belts, 6 terrestrials (total 8)
+- Baseline: number 5, Orbit# 0.69; spread 0.13; empty orbits 1
 
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ---- |
-| A | M0 V | 0.440 | 0.672 | 3700 | 0.0763 | 0.69 |
+### Stars
 
-## Class II/III — A IV
+| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO |
+| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- |
+| A | M0 V | 0.440 | 0.672 | 3700 | 0.0763 |  |  |  |  | 0.02 | 0.69 |
 
-- Gas giants: 0
-- Belts: 2
-- Terrestrials: 6
-- Total: 8
-
-### Stars (with MAO)
-
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO | MAO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ---- | --- |
-| A | M0 V | 0.440 | 0.672 | 3700 | 0.0763 | 0.69 | 0.02 |
-
-### Objects
+### Bodies
 
 | Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
@@ -58,7 +49,157 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 | A | A V | 1.07 | 0.42 | 0.08 | 0.410y | 579 | 0 | HZ |
 | A | A VI | 1.25 | 0.48 | 0.01 | 0.495y | 423 | 0 | HZ |
 
-## Class IV-P PART P — A IV
+## PART P.B — A PI (Belt)
+
+**WORLD:** A PI   **SAH/UWP:** 000
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**PRIMARY OBJECT(S):** A   **SYSTEM AGE (Gyr):** 3.200
+
+### ORBIT
+- O#: 0.18, AU: 0.07, Span: 0.121 Orbit#s, Period (h): 257.19
+
+### COMPOSITION
+- m-type%: 90, s-type%: 10, c-type%: 0, other%: 0
+- Bulk: 6
+
+### RESOURCES
+- Rating: 12
+
+### MAJOR BODIES
+- Size 1: 5, Size S: 2
+
+
+## PART P — A I
+
+**WORLD:** A I
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 3.200
+
+### ORBIT
+- AU: 0.17, Eccentricity: 0.01, Period (h): 961.19
+
+### SIZE
+- Diameter (km): 6400, Density: 0.65, Gravity: 0.33, Mass (Earth): 0.082
+
+### ATMOSPHERE
+- Code: 11, Pressure (bar): 1.148, O₂ (bar): 0.121, Scale Height: 30.87
+- Profile: B-St6:1.15:C2H6-88:CO-09:Other-02 G.2.9
+
+### HYDROGRAPHICS
+- Code: 1, Coverage (%): 9, Profile: H1:H2O-100
+
+### ROTATION
+- Sidereal (h): 961.19, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 10.40
+
+### TEMPERATURE
+- High (K): 384.9, Mean (K): 341.5, Low (K): 271.3
+- Luminosity: 0.076, Albedo: 0.42, Greenhouse: 0.54
+
+### SEISMIC
+- TSS: 1, Residual: 0, Tidal Stress: 1, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 5
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Hostile Atmosphere; Desert conditions prevalent; Very little useable land surface area; Too hot at times; Too hot most of the time; Very low gravity
+
+
+## PART P — A II
+
+**WORLD:** A II
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 3.200
+
+### ORBIT
+- AU: 0.22, Eccentricity: 0.00, Period (h): 1387.05
+
+### SIZE
+- Diameter (km): 9600, Density: 0.68, Gravity: 0.51, Mass (Earth): 0.291
+
+### ATMOSPHERE
+- Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 16.01
+- Profile: A:C2H6-60:N2-36:Other-03 B.6.5
+
+### HYDROGRAPHICS
+- Code: 6, Coverage (%): 58, Profile: H6:H2O-100
+
+### ROTATION
+- Sidereal (h): 32.33, Solar (h): 33.10, Solar days/year: 41.91
+- Axial Tilt: 93.78°
+- Tidal lock: no, Tides (m): 7.49
+
+### TEMPERATURE
+- High (K): 331.1, Mean (K): 278.0, Low (K): —
+- Luminosity: 0.076, Albedo: 0.36, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 9
+
+### LIFE
+- Biomass: 10, Biocomplexity: 3, Sophonts: no, Biodiversity: 8, Compatibility: 1
+
+### RESOURCES
+- Rating: 11
+
+### HABITABILITY
+- Rating: 0
+- Notes: Non-breathable atmosphere; Too hot at times; Low gravity
+
+
+## PART P — A III
+
+**WORLD:** A III
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 3.200
+
+### ORBIT
+- AU: 0.28, Eccentricity: 0.03, Period (h): 1917.59
+
+### SIZE
+- Diameter (km): 9600, Density: 0.53, Gravity: 0.40, Mass (Earth): 0.227
+
+### ATMOSPHERE
+- Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.459, Scale Height: 18.00
+- Profile: A:CO-98:Other-02 G.9.9
+
+### HYDROGRAPHICS
+- Code: 6, Coverage (%): 61, Profile: H6:SO2-100
+
+### ROTATION
+- Sidereal (h): 1917.59, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 3.92
+
+### TEMPERATURE
+- High (K): 293.2, Mean (K): 243.5, Low (K): —
+- Luminosity: 0.076, Albedo: 0.42, Greenhouse: 0.00
+
+### SEISMIC
+- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 3
+
+### LIFE
+- Biomass: 4, Biocomplexity: 1, Sophonts: no, Biodiversity: 4, Compatibility: 0
+
+### RESOURCES
+- Rating: 6
+
+### HABITABILITY
+- Rating: 0
+- Notes: Non-breathable atmosphere; Very little useable land surface area; Too cold most of the time; Very low gravity
+
+
+## PART P — A IV — mainworld
 
 **WORLD:** A IV
 **SECTOR | LOCATION:** — | —
@@ -103,4 +244,110 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 ### COMMENTS
 - This is the system mainworld.
 
+
+## PART P.B — A PII (Belt)
+
+**WORLD:** A PII   **SAH/UWP:** 000
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**PRIMARY OBJECT(S):** A   **SYSTEM AGE (Gyr):** 3.200
+
+### ORBIT
+- O#: 0.96, AU: 0.38, Span: 0.094 Orbit#s, Period (h): 3137.13
+
+### COMPOSITION
+- m-type%: 6, s-type%: 20, c-type%: 60, other%: 14
+- Bulk: 10
+
+### RESOURCES
+- Rating: 8
+
+### MAJOR BODIES
+- Size 1: 3, Size S: 6
+
+
+## PART P — A V
+
+**WORLD:** A V
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 3.200
+
+### ORBIT
+- AU: 0.42, Eccentricity: 0.08, Period (h): 3593.44
+
+### SIZE
+- Diameter (km): 8000, Density: 0.94, Gravity: 0.59, Mass (Earth): 0.233
+
+### ATMOSPHERE
+- Code: 7, Pressure (bar): 1.253, O₂ (bar): 0.251, Scale Height: 11.27
+- Profile: 7-1.253-0.251:R.6.4
+
+### HYDROGRAPHICS
+- Code: 9, Coverage (%): 91, Profile: H9:H2O-100
+
+### ROTATION
+- Sidereal (h): 1200.00, Solar (h): 1801.65, Solar days/year: 1.99
+- Axial Tilt: 172.00°
+- Tidal lock: no, Tides (m): 0.93
+
+### TEMPERATURE
+- High (K): 257.4, Mean (K): 225.5, Low (K): 187.8
+- Luminosity: 0.076, Albedo: 0.41, Greenhouse: 0.67
+
+### SEISMIC
+- TSS: 1, Residual: 1, Tidal Stress: 0, Tidal Heating: 0, Plates: 10
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 5
+
+### HABITABILITY
+- Rating: 1
+- Notes: Thin, taint (standard), or dense Atmospheres; Little useable land surface area; Too cold all of the time; Too cold most of the time; Much too cold some of the time; Low gravity
+
+
+## PART P — A VI
+
+**WORLD:** A VI
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 3.200
+
+### ORBIT
+- AU: 0.48, Eccentricity: 0.01, Period (h): 4340.30
+
+### SIZE
+- Diameter (km): 6400, Density: 0.85, Gravity: 0.43, Mass (Earth): 0.108
+
+### ATMOSPHERE
+- Code: 2, Pressure (bar): 0.313, O₂ (bar): 0.154, Scale Height: 15.16
+- Profile: 2-0.313-0.154:G.3.7
+
+### HYDROGRAPHICS
+- Code: 3, Coverage (%): 30, Profile: H3:H2O-100
+
+### ROTATION
+- Sidereal (h): 50.46, Solar (h): 51.05, Solar days/year: 85.02
+- Axial Tilt: 180.00°
+- Tidal lock: no, Tides (m): 0.51
+
+### TEMPERATURE
+- High (K): 244.1, Mean (K): 219.3, Low (K): 184.0
+- Luminosity: 0.076, Albedo: 0.16, Greenhouse: 0.35
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+
+### RESOURCES
+- Rating: 6
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Very thin, tainted, or thin, low atmospheres; Desert conditions prevalent; Too cold all of the time; Too cold most of the time; Much too cold some of the time; Low gravity
 

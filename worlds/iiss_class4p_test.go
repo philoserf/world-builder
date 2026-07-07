@@ -14,7 +14,7 @@ func TestClass4P_RingRendered(t *testing.T) {
 	t.Parallel()
 	u := &Universe{}
 	body := &Body{Designation: "A I", Kind: BodyTerrestrial, SizeCode: "7", Ring: true}
-	p := buildClass4PPlanet(u, body)
+	p := buildClass4PPlanet(u, body, true)
 	if !p.Ring {
 		t.Fatal("builder did not copy Body.Ring")
 	}

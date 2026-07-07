@@ -87,7 +87,7 @@ func TestZed_GoldMaster(t *testing.T) {
 	t.Parallel()
 
 	u := buildZedUniverse(t, false)
-	got := iiss.MarkdownSystem(u.Detail.SystemForms)
+	got := iiss.MarkdownClass4Survey(u.Detail.SystemForms)
 
 	golden := filepath.Join("testdata", "zed_gold.md")
 	if *updateZedGold {
@@ -125,7 +125,7 @@ func TestZed_GoldSurvivesStageReorder(t *testing.T) {
 	if !reflect.DeepEqual(canonical.Detail.Bodies, swapped.Detail.Bodies) {
 		t.Fatal("swapping taint/surface changed per-body output: a suffix stage is still position-dependent")
 	}
-	if iiss.MarkdownSystem(canonical.Detail.SystemForms) != iiss.MarkdownSystem(swapped.Detail.SystemForms) {
+	if iiss.MarkdownClass4Survey(canonical.Detail.SystemForms) != iiss.MarkdownClass4Survey(swapped.Detail.SystemForms) {
 		t.Fatal("swapping taint/surface changed the rendered system")
 	}
 }
