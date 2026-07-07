@@ -22,8 +22,11 @@ type Class4PPartP struct {
 	MoonOrbitKm       float64 `json:",omitempty"`
 	ParentDesignation string  `json:",omitempty"`
 
-	// Ring reports the WBH ring outcome (p.55 / p.76) for the mainworld.
-	Ring bool `json:",omitempty"`
+	// Ring reports the WBH ring outcome (p.55 / p.76); RingCentrePD /
+	// RingSpanPD carry its centre and span in planet-diameters (p.77).
+	Ring         bool    `json:",omitempty"`
+	RingCentrePD float64 `json:",omitempty"`
+	RingSpanPD   float64 `json:",omitempty"`
 
 	Composition    string `json:",omitempty"`
 	DiameterKm     float64
@@ -288,7 +291,12 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 			b.WriteString("- This is the system mainworld.\n")
 		}
 		if p.Ring {
-			b.WriteString("- Has a planetary ring (WBH p.55/p.76).\n")
+			if p.RingSpanPD > 0 {
+				fmt.Fprintf(b, "- Has a planetary ring — R01:%.2f-%.2f (centre %.2f PD, span %.2f PD, WBH p.77).\n",
+					p.RingCentrePD, p.RingSpanPD, p.RingCentrePD, p.RingSpanPD)
+			} else {
+				b.WriteString("- Has a planetary ring (WBH p.55/p.76).\n")
+			}
 		}
 		b.WriteString("\n")
 	}

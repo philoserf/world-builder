@@ -655,7 +655,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Notes: Limited surface area; Thin, taint (standard), or dense Atmospheres; Desert conditions prevalent; Too cold all of the time; Too cold most of the time; Much too cold some of the time; Very low gravity
 
 ### COMMENTS
-- Has a planetary ring (WBH p.55/p.76).
+- Has a planetary ring — R01:1.15-0.19 (centre 1.15 PD, span 0.19 PD, WBH p.77).
 
 
 ## PART P — A VI

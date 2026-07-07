@@ -139,6 +139,16 @@ func ApplyMoonRefinement(r roller.Roller, u *Universe) error {
 		}
 		refineParentMoons(r, parent)
 	}
+	// Ring detail: roll centre/span (WBH p.77) for every ringed body —
+	// the p.55 moon-count-0 rings set in ApplyDetailFrontEnd and the p.76
+	// Hill-removal rings just set by refineParentMoons. Each body draws
+	// from its own "ring" sub-roller, so this perturbs nothing else (C1).
+	for i := range u.Detail.Bodies {
+		body := &u.Detail.Bodies[i]
+		if body.Ring {
+			body.RingCentrePD, body.RingSpanPD = RollRingProfile(bodySub(r, body, nil, "ring"))
+		}
+	}
 	return nil
 }
 

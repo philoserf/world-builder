@@ -90,6 +90,21 @@ func MoonPeriodHours(orbitPD float64, effectiveSize int, parentMassEarth float64
 	return 0.176927 * math.Sqrt(cube/parentMassEarth)
 }
 
+// RollRingProfile rolls a significant ring's centre location and span in
+// planet-diameters (PD) per WBH p.77:
+//
+//	Ring Centre Location (PD) = 0.4 + 2D ÷ 8
+//	Ring Span (PD)            = 3D ÷ 100 + 0.07
+//
+// The model produces a single ring, so the book's multi-ring overlap
+// adjustments (two-ring push-out, surface-intersection narrowing) do not
+// apply. Rendered as the ring profile R01:centre-span.
+func RollRingProfile(r roller.Roller) (centrePD, spanPD float64) {
+	centrePD = 0.4 + float64(r.Roll("2D"))/8.0
+	spanPD = float64(r.Roll("3D"))/100.0 + 0.07
+	return centrePD, spanPD
+}
+
 // MoonRange categorizes a moon by its orbit relative to MOR.
 type MoonRange int
 
