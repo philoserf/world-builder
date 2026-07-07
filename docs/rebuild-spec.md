@@ -169,8 +169,8 @@ values unchanged. Only then adopt C1 as the pipeline's spine.
 
 **Problem A — the naming lie.** The climate cluster is called convergence / fixed-point
 in ~10 docs (`api-surface.md`, `dependency-graph.md`, `harness.md`, …) and the word
-survives in `worlds/stage5.go`, `worlds/tidal_lock_reeval.go`, `worlds/property_test.go`,
-`worlds/stage7.go`. It is not a fixed point: `RollHydroDigit` draws fresh dice each pass,
+survives in `worlds/climate.go`, `worlds/tidal_lock_reeval.go`, `worlds/property_test.go`,
+`worlds/geology.go`. It is not a fixed point: `RollHydroDigit` draws fresh dice each pass,
 so each pass is a stochastic sample (`lessons-learned.md` § L13, `theory.md` § "the names
 lie a little"). `main` renamed the function to `ApplyClimatePasses` but the vocabulary
 never fully propagated.
@@ -254,6 +254,12 @@ tests still require them; otherwise cut per `design-intent.md` § "one path."
 needs nothing from `worlds/`.
 
 ### C5 — File names describe dependency role, not chapter pagination
+
+> **Resolved (C5).** No `worlds/stageN.go` filenames remain. Cross-cutting orchestrators
+> moved to role-named files (`detail_frontend.go`, `physical_detail.go`, `rotation_tilt.go`,
+> `climate.go`, `taint_surface.go`, `aggregate.go`); the single-feature passes merged into
+> their feature files (`ApplyGeology`→`geology.go`, `ApplyBiology`→`biology.go`,
+> `ApplyHabitability`→`habitability.go`). Pure reorganization — output byte-identical.
 
 **Problem.** `worlds/stage2.go` … `worlds/stage10.go` survive from a chapter-numbered
 mental model the design explicitly rejected. The numbers are dependency-graph indices, but

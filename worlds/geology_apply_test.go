@@ -39,9 +39,11 @@ func TestZed_ApplyStage7(t *testing.T) {
 		}
 
 		// Every non-empty non-belt body has Geology populated. Per
-		// anti-pattern A.1, every Child does too.
+		// anti-pattern A.1, every Child does too. (Belts gate on Kind —
+		// they carry SizeCode "", so the old SizeCode=="0" filter never
+		// excluded them; it matched ApplyGeology's since-fixed gate.)
 		for i, body := range u.Detail.Bodies {
-			if body.Kind == worlds.BodyEmpty || body.SizeCode == "0" {
+			if body.Kind == worlds.BodyEmpty || body.Kind == worlds.BodyPlanetoidBelt {
 				continue
 			}
 			if !body.HasGeology() {

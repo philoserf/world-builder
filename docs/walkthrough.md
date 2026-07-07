@@ -368,7 +368,7 @@ type Body struct {
 Stage 5 is the only cyclic cluster: atmosphere ↔ temperature ↔ hydrographics depend on each other. `ApplyClimatePasses` runs **two passes** and trusts the second. It is not a fixed-point solver — `RederiveAtmosphereHydrographics` consumes fresh dice each pass, so each pass is a stochastic sample, not a convergence step. There is no fixed point to reach; the function is named for what it does.
 
 ```bash
-sed -n '109,162p' worlds/stage5.go
+sed -n '109,162p' worlds/climate.go
 ```
 
 ```output
@@ -438,8 +438,8 @@ grep -n '^func pickMainworld\|^func AggregateSystem\|^func BuildIISSForms' world
 
 ```output
 worlds/iiss_build.go:16:func BuildIISSForms(u *Universe) {
-worlds/stage10.go:14:func AggregateSystem(u *Universe) {
-worlds/stage10.go:153:func pickMainworld(u *Universe) (string, *Body) {
+worlds/aggregate.go:14:func AggregateSystem(u *Universe) {
+worlds/aggregate.go:153:func pickMainworld(u *Universe) (string, *Body) {
 ```
 
 ```bash
