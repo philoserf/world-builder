@@ -102,7 +102,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 0.25, Eccentricity: 0.08, Period (h): 806.10
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 6400, Density: 0.65, Gravity: 0.33, Mass (Earth): 0.082
+- Escape velocity (m/s): 4530
+- Size profile: `4-6400-0.65-0.33-0.08`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -184,7 +187,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 152904 around A II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 1.12, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 557
+- Size profile: `S-600-1.12-0.05-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -223,7 +229,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 165646 around A II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 1.09, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 550
+- Size profile: `S-600-1.09-0.05-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -261,7 +270,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 0.75, Eccentricity: 0.01, Period (h): 4266.53
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 4800, Density: 0.56, Gravity: 0.21, Mass (Earth): 0.030
+- Escape velocity (m/s): 3153
+- Size profile: `3-4800-0.56-0.21-0.03`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -307,7 +319,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 18240 around A III
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 3200, Density: 0.65, Gravity: 0.16, Mass (Earth): 0.010
+- Escape velocity (m/s): 2265
+- Size profile: `2-3200-0.65-0.16-0.01`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -346,7 +361,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 29040 around A III
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.88, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 494
+- Size profile: `S-600-0.88-0.04-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -385,7 +403,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 142320 around A III
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 1.00, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 527
+- Size profile: `S-600-1.00-0.05-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -423,7 +444,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 0.96, Eccentricity: 0.00, Period (h): 6190.76
 
 ### SIZE
+- Composition: Mostly Metal
 - Diameter (km): 16000, Density: 1.30, Gravity: 1.63, Mass (Earth): 2.574
+- Escape velocity (m/s): 16015
+- Size profile: `A-16000-1.30-1.63-2.57`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -516,7 +540,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 4403635 around A V
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 3200, Density: 1.00, Gravity: 0.25, Mass (Earth): 0.016
+- Escape velocity (m/s): 2809
+- Size profile: `2-3200-1.00-0.25-0.02`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -555,7 +582,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 229356 around A V
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 1.06, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 542
+- Size profile: `S-600-1.06-0.05-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -633,7 +663,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 393728 around A V
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 1600, Density: 0.80, Gravity: 0.10, Mass (Earth): 0.002
+- Escape velocity (m/s): 1256
+- Size profile: `1-1600-0.80-0.10-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -672,7 +705,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 640286 around A V
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.91, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 502
+- Size profile: `S-600-0.91-0.04-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -711,7 +747,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 969029 around A V
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 444
+- Size profile: `S-600-0.71-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -750,7 +789,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 969029 around A V
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 3200, Density: 0.91, Gravity: 0.23, Mass (Earth): 0.014
+- Escape velocity (m/s): 2680
+- Size profile: `2-3200-0.91-0.23-0.01`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -789,7 +831,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 1165893 around A V
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 3200, Density: 0.56, Gravity: 0.14, Mass (Earth): 0.009
+- Escape velocity (m/s): 2102
+- Size profile: `2-3200-0.56-0.14-0.01`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -828,7 +873,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 640286 around A V
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 1.12, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 557
+- Size profile: `S-600-1.12-0.05-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -867,7 +915,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 804657 around A V
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.53, Gravity: 0.02, Mass (Earth): 0.000
+- Escape velocity (m/s): 383
+- Size profile: `S-600-0.53-0.02-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -905,7 +956,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 1.85, Eccentricity: 0.06, Period (h): 16528.97
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 6400, Density: 0.88, Gravity: 0.44, Mass (Earth): 0.112
+- Escape velocity (m/s): 5271
+- Size profile: `4-6400-0.88-0.44-0.11`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -943,14 +997,19 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 4.45, Eccentricity: 0.01, Period (h): 61636.40
 
 ### SIZE
+- Composition: Mostly Metal
 - Diameter (km): 11200, Density: 1.30, Gravity: 1.14, Mass (Earth): 0.883
+- Escape velocity (m/s): 11211
+- Size profile: `7-11200-1.30-1.14-0.88`
 
 ### ATMOSPHERE
 - Code: 9, Pressure (bar): 1.797, O₂ (bar): 0.737, Scale Height: 7.34
 - Profile: 9-1.797-0.737:G.1.9
+- Taint: G (severity 1, persistence 9)
 
 ### HYDROGRAPHICS
 - Code: 9, Coverage (%): 89, Profile: H9:H2O-100
+- Surface distribution: Concentrated (Ocean)
 
 ### ROTATION
 - Sidereal (h): 36.59, Solar (h): 36.61, Solar days/year: 1683.60
@@ -989,7 +1048,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 0.30, Eccentricity: 0.01, Period (h): 1216.56
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 17600, Density: 0.97, Gravity: 1.34, Mass (Earth): 2.556
+- Escape velocity (m/s): 15217
+- Size profile: `B-17600-0.97-1.34-2.56`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1027,7 +1089,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 0.54, Eccentricity: 0.50, Period (h): 2920.47
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 19200, Density: 0.88, Gravity: 1.33, Mass (Earth): 3.011
+- Escape velocity (m/s): 15812
+- Size profile: `C-19200-0.88-1.33-3.01`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1075,7 +1140,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 256320 around B II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 9600, Density: 0.88, Gravity: 0.66, Mass (Earth): 0.376
+- Escape velocity (m/s): 7906
+- Size profile: `6-9600-0.88-0.66-0.38`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1114,7 +1182,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 277440 around B II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 3200, Density: 0.50, Gravity: 0.13, Mass (Earth): 0.008
+- Escape velocity (m/s): 1986
+- Size profile: `2-3200-0.50-0.13-0.01`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1153,7 +1224,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 235200 around B II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 1600, Density: 0.91, Gravity: 0.11, Mass (Earth): 0.002
+- Escape velocity (m/s): 1340
+- Size profile: `1-1600-0.91-0.11-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1192,7 +1266,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 45440 around B II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.62, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 415
+- Size profile: `S-600-0.62-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1231,7 +1308,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - Moon orbit (km): 113920 around B II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 444
+- Size profile: `S-600-0.71-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1290,7 +1370,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 28.00, Eccentricity: 0.35, Period (h): 973483.31
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 6400, Density: 0.65, Gravity: 0.33, Mass (Earth): 0.082
+- Escape velocity (m/s): 4530
+- Size profile: `4-6400-0.65-0.33-0.08`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1328,7 +1411,10 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - AU: 14.00, Eccentricity: 0.00, Period (h): 390889.47
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 8000, Density: 0.65, Gravity: 0.41, Mass (Earth): 0.161
+- Escape velocity (m/s): 5662
+- Size profile: `5-8000-0.65-0.41-0.16`
 
 ### ATMOSPHERE
 - (none — vacuum)

@@ -25,10 +25,13 @@ type Class4PPartP struct {
 	// Ring reports the WBH ring outcome (p.55 / p.76) for the mainworld.
 	Ring bool `json:",omitempty"`
 
-	DiameterKm float64
-	Density    float64
-	Gravity    float64
-	MassEarth  float64
+	Composition    string `json:",omitempty"`
+	DiameterKm     float64
+	Density        float64
+	Gravity        float64
+	MassEarth      float64
+	EscapeVelocity float64 `json:",omitempty"` // m/s
+	SizeProfile    string  `json:",omitempty"` // Size-Diameter-Density-Gravity-Mass (WBH p.71)
 
 	Atmosphere    *Class4PAtmosphere    `json:",omitempty"`
 	Hydrographics *Class4PHydrographics `json:",omitempty"`
@@ -55,10 +58,21 @@ type Class4PPartP struct {
 // Class4PAtmosphere captures the WBH p.138 ATMOSPHERE block.
 type Class4PAtmosphere struct {
 	Code                  int
+	Subtype               string `json:",omitempty"`
 	Pressure              float64
 	OxygenPartialPressure float64
 	ScaleHeight           float64
 	ProfileShorthand      string
+	Taints                []Class4PTaint `json:",omitempty"`
+	Hazards               []string       `json:",omitempty"` // Insidious atmosphere hazard codes
+}
+
+// Class4PTaint is one atmosphere taint (WBH p.83): code, severity,
+// persistence.
+type Class4PTaint struct {
+	Code        string
+	Severity    int
+	Persistence int
 }
 
 // Class4PHydrographics captures the WBH p.138 HYDROGRAPHICS block.
@@ -66,6 +80,9 @@ type Class4PHydrographics struct {
 	Code    int
 	Percent int
 	Profile string
+	// Surface-feature distribution (WBH p.99), present when computed.
+	Distribution string `json:",omitempty"` // "Extremely Concentrated" | … | "Extremely Dispersed"
+	Geography    string `json:",omitempty"` // "Ocean" | "Land"
 }
 
 // Class4PTemperature captures the WBH p.138 TEMPERATURE block.
@@ -154,8 +171,18 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 	}
 
 	b.WriteString("### SIZE\n")
-	fmt.Fprintf(b, "- Diameter (km): %.0f, Density: %.2f, Gravity: %.2f, Mass (Earth): %.3f\n\n",
+	if p.Composition != "" {
+		fmt.Fprintf(b, "- Composition: %s\n", p.Composition)
+	}
+	fmt.Fprintf(b, "- Diameter (km): %.0f, Density: %.2f, Gravity: %.2f, Mass (Earth): %.3f\n",
 		p.DiameterKm, p.Density, p.Gravity, p.MassEarth)
+	if p.EscapeVelocity > 0 {
+		fmt.Fprintf(b, "- Escape velocity (m/s): %.0f\n", p.EscapeVelocity)
+	}
+	if p.SizeProfile != "" {
+		fmt.Fprintf(b, "- Size profile: `%s`\n", p.SizeProfile)
+	}
+	b.WriteString("\n")
 
 	b.WriteString("### ATMOSPHERE\n")
 	if p.Atmosphere == nil {
@@ -164,8 +191,17 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 		atm := p.Atmosphere
 		fmt.Fprintf(b, "- Code: %d, Pressure (bar): %.3f, O₂ (bar): %.3f, Scale Height: %.2f\n",
 			atm.Code, atm.Pressure, atm.OxygenPartialPressure, atm.ScaleHeight)
+		if atm.Subtype != "" {
+			fmt.Fprintf(b, "- Subtype: %s\n", atm.Subtype)
+		}
 		if atm.ProfileShorthand != "" {
 			fmt.Fprintf(b, "- Profile: %s\n", atm.ProfileShorthand)
+		}
+		for _, t := range atm.Taints {
+			fmt.Fprintf(b, "- Taint: %s (severity %d, persistence %d)\n", t.Code, t.Severity, t.Persistence)
+		}
+		if len(atm.Hazards) > 0 {
+			fmt.Fprintf(b, "- Insidious hazards: %s\n", strings.Join(atm.Hazards, ", "))
 		}
 		b.WriteString("\n")
 	}
@@ -174,8 +210,12 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 	if p.Hydrographics == nil {
 		b.WriteString("- (none)\n\n")
 	} else {
-		fmt.Fprintf(b, "- Code: %d, Coverage (%%): %d, Profile: %s\n\n",
-			p.Hydrographics.Code, p.Hydrographics.Percent, p.Hydrographics.Profile)
+		h := p.Hydrographics
+		fmt.Fprintf(b, "- Code: %d, Coverage (%%): %d, Profile: %s\n", h.Code, h.Percent, h.Profile)
+		if h.Distribution != "" {
+			fmt.Fprintf(b, "- Surface distribution: %s (%s)\n", h.Distribution, h.Geography)
+		}
+		b.WriteString("\n")
 	}
 
 	b.WriteString("### ROTATION\n")

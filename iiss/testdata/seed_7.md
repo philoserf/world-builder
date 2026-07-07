@@ -104,7 +104,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.07, Eccentricity: 0.00, Period (h): 235.14
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 3200, Density: 0.68, Gravity: 0.17, Mass (Earth): 0.011
+- Escape velocity (m/s): 2317
+- Size profile: `2-3200-0.68-0.17-0.01`
 
 ### ATMOSPHERE
 - Code: 1, Pressure (bar): 0.022, O₂ (bar): 0.000, Scale Height: 91.05
@@ -112,6 +115,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 3, Profile: 
+- Surface distribution: Scattered (Land)
 
 ### ROTATION
 - Sidereal (h): 235.14, Solar (h): 0.00, Solar days/year: 0.00
@@ -147,14 +151,20 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.18, Eccentricity: 0.03, Period (h): 1006.21
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 16000, Density: 0.97, Gravity: 1.22, Mass (Earth): 1.921
+- Escape velocity (m/s): 13834
+- Size profile: `A-16000-0.97-1.22-1.92`
 
 ### ATMOSPHERE
 - Code: 11, Pressure (bar): 550.000, O₂ (bar): 0.921, Scale Height: 8.70
+- Subtype: D
 - Profile: B-StD:550.00:SO2-59:CO2-36:Other-04 R.4.9
+- Taint: R (severity 4, persistence 9)
 
 ### HYDROGRAPHICS
 - Code: 1, Coverage (%): 10, Profile: H1:H2O-100
+- Surface distribution: Slightly Scattered (Land)
 
 ### ROTATION
 - Sidereal (h): 1006.21, Solar (h): 0.00, Solar days/year: 0.00
@@ -199,7 +209,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 130133 around A II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.91, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 502
+- Size profile: `S-600-0.91-0.04-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 225.49
@@ -207,6 +220,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 2, Profile: 
+- Surface distribution: Slightly Scattered (Land)
 
 ### ROTATION
 - Sidereal (h): 93.65, Solar (h): 0.00, Solar days/year: 0.00
@@ -243,7 +257,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 40800 around A II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.88, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 494
+- Size profile: `S-600-0.88-0.04-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 229.19
@@ -251,6 +268,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 0, Profile: 
+- Surface distribution: Mixed (Land)
 
 ### ROTATION
 - Sidereal (h): 16.44, Solar (h): 0.00, Solar days/year: 0.00
@@ -287,7 +305,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 55467 around A II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 1.00, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 527
+- Size profile: `S-600-1.00-0.05-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 205.19
@@ -295,6 +316,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 0, Profile: 
+- Surface distribution: Very Dispersed (Land)
 
 ### ROTATION
 - Sidereal (h): 26.06, Solar (h): 0.00, Solar days/year: 0.00
@@ -331,7 +353,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 213600 around A II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.94, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 511
+- Size profile: `S-600-0.94-0.04-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 217.07
@@ -339,6 +364,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 5, Profile: 
+- Surface distribution: Skewed (Land)
 
 ### ROTATION
 - Sidereal (h): 196.93, Solar (h): 0.00, Solar days/year: 0.00
@@ -395,14 +421,19 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.26, Eccentricity: 0.09, Period (h): 1759.34
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 9600, Density: 0.91, Gravity: 0.69, Mass (Earth): 0.389
+- Escape velocity (m/s): 8040
+- Size profile: `6-9600-0.91-0.69-0.39`
 
 ### ATMOSPHERE
 - Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.249, Scale Height: 13.32
 - Profile: A S.5.9
+- Taint: S (severity 5, persistence 9)
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 4, Profile: 
+- Surface distribution: Scattered (Land)
 
 ### ROTATION
 - Sidereal (h): 1172.89, Solar (h): 3518.67, Solar days/year: 0.50
@@ -438,14 +469,19 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.32, Eccentricity: 0.01, Period (h): 2409.46
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 19200, Density: 0.85, Gravity: 1.28, Mass (Earth): 2.908
+- Escape velocity (m/s): 15540
+- Size profile: `C-19200-0.85-1.28-2.91`
 
 ### ATMOSPHERE
 - Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 4.57
 - Profile: A:CH4-70:CO2-24:N2-04:Other-00 G.4.7
+- Taint: G (severity 4, persistence 7)
 
 ### HYDROGRAPHICS
 - Code: 5, Coverage (%): 46, Profile: H5:NH3-100
+- Surface distribution: Extremely Concentrated (Land)
 
 ### ROTATION
 - Sidereal (h): 1606.31, Solar (h): 4818.93, Solar days/year: 0.50
@@ -488,7 +524,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 192000 around A IV
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 444
+- Size profile: `S-600-0.71-0.03-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 213.58
@@ -496,6 +535,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 2, Profile: 
+- Surface distribution: Slightly Skewed (Land)
 
 ### ROTATION
 - Sidereal (h): 136.38, Solar (h): 0.00, Solar days/year: 0.00
@@ -532,7 +572,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 359040 around A IV
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.82, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 477
+- Size profile: `S-600-0.82-0.04-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 182.74
@@ -540,6 +583,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 1, Profile: 
+- Surface distribution: Slightly Scattered (Land)
 
 ### ROTATION
 - Sidereal (h): 348.76, Solar (h): 0.00, Solar days/year: 0.00
@@ -575,7 +619,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.37, Eccentricity: 0.00, Period (h): 3062.47
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 4800, Density: 0.91, Gravity: 0.34, Mass (Earth): 0.049
+- Escape velocity (m/s): 4020
+- Size profile: `3-4800-0.91-0.34-0.05`
 
 ### ATMOSPHERE
 - Code: 5, Pressure (bar): 0.673, O₂ (bar): 0.249, Scale Height: 21.18
@@ -583,6 +630,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 2, Coverage (%): 25, Profile: H2:H2O-100
+- Surface distribution: Mixed (Land)
 
 ### ROTATION
 - Sidereal (h): 2041.64, Solar (h): 6124.93, Solar days/year: 0.50
@@ -728,7 +776,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 146108 around A VII
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 444
+- Size profile: `S-600-0.71-0.03-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 173.79
@@ -736,6 +787,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 0, Profile: 
+- Surface distribution: Mixed (Land)
 
 ### ROTATION
 - Sidereal (h): 28.38, Solar (h): 0.00, Solar days/year: 0.00
@@ -772,7 +824,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 1330265 around A VII
 
 ### SIZE
+- Composition: Mostly Metal
 - Diameter (km): 600, Density: 1.30, Gravity: 0.06, Mass (Earth): 0.000
+- Escape velocity (m/s): 601
+- Size profile: `S-600-1.30-0.06-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 95.47
@@ -780,6 +835,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 2, Profile: 
+- Surface distribution: Very Dispersed (Land)
 
 ### ROTATION
 - Sidereal (h): 779.69, Solar (h): 0.00, Solar days/year: 0.00
@@ -816,7 +872,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 1197748 around A VII
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 1600, Density: 0.94, Gravity: 0.12, Mass (Earth): 0.002
+- Escape velocity (m/s): 1362
+- Size profile: `1-1600-0.94-0.12-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 49.51
@@ -824,6 +883,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 0, Profile: 
+- Surface distribution: Mixed (Land)
 
 ### ROTATION
 - Sidereal (h): 666.13, Solar (h): 0.00, Solar days/year: 0.00
@@ -860,7 +920,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 1330265 around A VII
 
 ### SIZE
+- Composition: Mostly Metal
 - Diameter (km): 1600, Density: 1.33, Gravity: 0.17, Mass (Earth): 0.003
+- Escape velocity (m/s): 1620
+- Size profile: `1-1600-1.33-0.17-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 35.20
@@ -868,6 +931,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 0, Profile: 
+- Surface distribution: Dispersed (Land)
 
 ### ROTATION
 - Sidereal (h): 779.69, Solar (h): 0.00, Solar days/year: 0.00
@@ -904,14 +968,19 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 101936 around A VII
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 8000, Density: 1.03, Gravity: 0.65, Mass (Earth): 0.255
+- Escape velocity (m/s): 7128
+- Size profile: `5-8000-1.03-0.65-0.25`
 
 ### ATMOSPHERE
 - Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 6.57
 - Profile: A:CO-90:CH4-05:Other-04 P.4.6
+- Taint: P (severity 4, persistence 6)
 
 ### HYDROGRAPHICS
 - Code: 6, Coverage (%): 59, Profile: H6:C2H6-100
+- Surface distribution: Very Concentrated (Ocean)
 
 ### ROTATION
 - Sidereal (h): 16.54, Solar (h): 0.00, Solar days/year: 0.00
@@ -987,7 +1056,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 1330265 around A VII
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.85, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 486
+- Size profile: `S-600-0.85-0.04-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 146.86
@@ -995,6 +1067,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 0, Profile: 
+- Surface distribution: Skewed (Land)
 
 ### ROTATION
 - Sidereal (h): 779.69, Solar (h): 0.00, Solar days/year: 0.00
@@ -1030,7 +1103,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.51, Eccentricity: 0.02, Period (h): 4926.53
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 11200, Density: 1.06, Gravity: 0.93, Mass (Earth): 0.720
+- Escape velocity (m/s): 10123
+- Size profile: `7-11200-1.06-0.93-0.72`
 
 ### ATMOSPHERE
 - Code: 5, Pressure (bar): 0.673, O₂ (bar): 0.168, Scale Height: 6.51
@@ -1038,6 +1114,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 8, Coverage (%): 84, Profile: H8:H2O-100
+- Surface distribution: Very Dispersed (Ocean)
 
 ### ROTATION
 - Sidereal (h): 960.00, Solar (h): 1192.34, Solar days/year: 4.13
@@ -1076,7 +1153,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 0.58, Eccentricity: 0.00, Period (h): 6049.87
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 6400, Density: 0.94, Gravity: 0.47, Mass (Earth): 0.119
+- Escape velocity (m/s): 5447
+- Size profile: `4-6400-0.94-0.47-0.12`
 
 ### ATMOSPHERE
 - Code: 5, Pressure (bar): 0.430, O₂ (bar): 0.155, Scale Height: 11.79
@@ -1084,6 +1164,7 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### HYDROGRAPHICS
 - Code: 6, Coverage (%): 63, Profile: H6:H2O-100
+- Surface distribution: Mixed (Ocean)
 
 ### ROTATION
 - Sidereal (h): 240.00, Solar (h): 249.91, Solar days/year: 24.21
@@ -1119,7 +1200,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - AU: 4.96, Eccentricity: 0.70, Period (h): 150364.91
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 4800, Density: 0.65, Gravity: 0.24, Mass (Earth): 0.035
+- Escape velocity (m/s): 3397
+- Size profile: `3-4800-0.65-0.24-0.03`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1205,7 +1289,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 351840 around A X
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 444
+- Size profile: `S-600-0.71-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1244,7 +1331,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 156960 around A X
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 3200, Density: 0.80, Gravity: 0.20, Mass (Earth): 0.013
+- Escape velocity (m/s): 2513
+- Size profile: `2-3200-0.80-0.20-0.01`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1283,7 +1373,10 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 - Moon orbit (km): 49200 around A X
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.77, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 462
+- Size profile: `S-600-0.77-0.04-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)

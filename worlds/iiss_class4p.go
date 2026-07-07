@@ -35,26 +35,44 @@ func buildClass4PPlanet(u *Universe, body *Body, isMainworld bool) *iiss.Class4P
 		}
 	}
 	if body.HasPhysical() {
+		p.Composition = body.Physical.Composition
 		p.Density = body.Physical.Density
 		p.Gravity = body.Physical.Gravity
+		p.EscapeVelocity = body.Physical.EscapeVelocity
+		p.SizeProfile = body.Physical.SizeProfile
 	}
 	if body.HasAtmosphere() {
 		atm := body.Atmosphere
-		p.Atmosphere = &iiss.Class4PAtmosphere{
+		a := &iiss.Class4PAtmosphere{
 			Code:                  atm.Code,
+			Subtype:               atm.Subtype,
 			Pressure:              atm.Pressure,
 			OxygenPartialPressure: atm.OxygenPartialPressure,
 			ScaleHeight:           atm.ScaleHeight,
 			ProfileShorthand:      FormatAtmoProfileShorthand(*atm, atm.Profile),
 		}
+		for _, t := range atm.Taints {
+			a.Taints = append(a.Taints, iiss.Class4PTaint{
+				Code: t.Code, Severity: t.Severity, Persistence: t.Persistence,
+			})
+		}
+		for _, h := range atm.InsidiousHazards {
+			a.Hazards = append(a.Hazards, h.Code)
+		}
+		p.Atmosphere = a
 	}
 	if body.HasHydrographics() {
 		hydro := body.Hydrographics
-		p.Hydrographics = &iiss.Class4PHydrographics{
+		h := &iiss.Class4PHydrographics{
 			Code:    hydro.Code,
 			Percent: hydro.Percent,
 			Profile: hydro.Profile,
 		}
+		if body.HasSurfaceDistribution() {
+			h.Distribution = body.SurfaceDistribution.Description
+			h.Geography = geographyLabel(body.SurfaceDistribution.Geography)
+		}
+		p.Hydrographics = h
 	}
 	if body.HasDayLength() {
 		p.SiderealHours = body.DayLength.SiderealHours
@@ -150,4 +168,13 @@ func buildClass4PBelt(u *Universe, body *Body, isMainworld bool) *iiss.Class4PPa
 		pb.ResourceRating = body.Belt.ResourceRating
 	}
 	return pb
+}
+
+// geographyLabel renders the fundamental-geography enum for the Class IV-P
+// hydrographics block.
+func geographyLabel(g FundamentalGeography) string {
+	if g == GeographyOcean {
+		return "Ocean"
+	}
+	return "Land"
 }

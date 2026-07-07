@@ -104,7 +104,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - AU: 0.54, Eccentricity: 0.01, Period (h): 2601.29
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 14400, Density: 0.68, Gravity: 0.77, Mass (Earth): 0.981
+- Escape velocity (m/s): 10424
+- Size profile: `9-14400-0.68-0.77-0.98`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -191,7 +194,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 1673449 around Aab II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.50, Gravity: 0.02, Mass (Earth): 0.000
+- Escape velocity (m/s): 372
+- Size profile: `S-600-0.50-0.02-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.001, O₂ (bar): 0.000, Scale Height: 324.69
@@ -199,6 +205,7 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 1, Profile: 
+- Surface distribution: Slightly Scattered (Land)
 
 ### ROTATION
 - Sidereal (h): 360.09, Solar (h): 0.00, Solar days/year: 0.00
@@ -235,7 +242,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 739036 around Aab II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.59, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 405
+- Size profile: `S-600-0.59-0.03-0.00`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 272.05
@@ -243,6 +253,7 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 6, Profile: 
+- Surface distribution: Extremely Dispersed (Land)
 
 ### ROTATION
 - Sidereal (h): 105.68, Solar (h): 0.00, Solar days/year: 0.00
@@ -279,7 +290,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 1512051 around Aab II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 4800, Density: 0.62, Gravity: 0.23, Mass (Earth): 0.033
+- Escape velocity (m/s): 3318
+- Size profile: `3-4800-0.62-0.23-0.03`
 
 ### ATMOSPHERE
 - Code: 0, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 33.26
@@ -287,6 +301,7 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 
 ### HYDROGRAPHICS
 - Code: 0, Coverage (%): 0, Profile: 
+- Surface distribution: Concentrated (Land)
 
 ### ROTATION
 - Sidereal (h): 309.27, Solar (h): 0.00, Solar days/year: 0.00
@@ -323,14 +338,19 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 1834848 around Aab II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 4800, Density: 0.94, Gravity: 0.35, Mass (Earth): 0.050
+- Escape velocity (m/s): 4085
+- Size profile: `3-4800-0.94-0.35-0.05`
 
 ### ATMOSPHERE
 - Code: 4, Pressure (bar): 0.493, O₂ (bar): 0.089, Scale Height: 22.68
 - Profile: 4-0.493-0.089:B.5.7
+- Taint: B (severity 5, persistence 7)
 
 ### HYDROGRAPHICS
 - Code: 8, Coverage (%): 83, Profile: H8:H2O-100
+- Surface distribution: Skewed (Ocean)
 
 ### ROTATION
 - Sidereal (h): 413.42, Solar (h): 0.00, Solar days/year: 0.00
@@ -419,7 +439,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 2803240 around Aab III
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.65, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 425
+- Size profile: `S-600-0.65-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -497,7 +520,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 1304781 around Aab III
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 1.03, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 535
+- Size profile: `S-600-1.03-0.05-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -536,7 +562,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 2553497 around Aab III
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.65, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 425
+- Size profile: `S-600-0.65-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -575,7 +604,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 1554524 around Aab III
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.62, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 415
+- Size profile: `S-600-0.62-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -614,7 +646,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 7951008 around Aab III
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 444
+- Size profile: `S-600-0.71-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -653,7 +688,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 5953062 around Aab III
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 8000, Density: 1.09, Gravity: 0.68, Mass (Earth): 0.270
+- Escape velocity (m/s): 7332
+- Size profile: `5-8000-1.09-0.68-0.27`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -692,7 +730,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 6452549 around Aab III
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.68, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 434
+- Size profile: `S-600-0.68-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -751,7 +792,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - AU: 51.09, Eccentricity: 0.06, Period (h): 2362587.64
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 8000, Density: 0.59, Gravity: 0.37, Mass (Earth): 0.146
+- Escape velocity (m/s): 5395
+- Size profile: `5-8000-0.59-0.37-0.15`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -795,7 +839,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 560000 around Aab IV
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.77, Gravity: 0.04, Mass (Earth): 0.000
+- Escape velocity (m/s): 462
+- Size profile: `S-600-0.77-0.04-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -833,7 +880,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - AU: 0.67, Eccentricity: 0.20, Period (h): 4818.54
 
 ### SIZE
+- Composition: Mostly Metal
 - Diameter (km): 17600, Density: 1.45, Gravity: 2.00, Mass (Earth): 3.821
+- Escape velocity (m/s): 18605
+- Size profile: `B-17600-1.45-2.00-3.82`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -879,7 +929,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 207680 around Cab I
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 8000, Density: 1.06, Gravity: 0.67, Mass (Earth): 0.262
+- Escape velocity (m/s): 7231
+- Size profile: `5-8000-1.06-0.67-0.26`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -918,7 +971,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 323840 around Cab I
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 600, Density: 0.97, Gravity: 0.05, Mass (Earth): 0.000
+- Escape velocity (m/s): 519
+- Size profile: `S-600-0.97-0.05-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -957,7 +1013,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 506000 around Cab I
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 14400, Density: 0.50, Gravity: 0.57, Mass (Earth): 0.722
+- Escape velocity (m/s): 8939
+- Size profile: `9-14400-0.50-0.57-0.72`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -995,7 +1054,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - AU: 1.30, Eccentricity: 0.01, Period (h): 13021.70
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 8000, Density: 0.65, Gravity: 0.41, Mass (Earth): 0.161
+- Escape velocity (m/s): 5662
+- Size profile: `5-8000-0.65-0.41-0.16`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1042,7 +1104,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 192000 around Cab II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.65, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 425
+- Size profile: `S-600-0.65-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1081,7 +1146,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 58000 around Cab II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 600, Density: 0.65, Gravity: 0.03, Mass (Earth): 0.000
+- Escape velocity (m/s): 425
+- Size profile: `S-600-0.65-0.03-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1120,7 +1188,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 66400 around Cab II
 
 ### SIZE
+- Composition: Mostly Rock
 - Diameter (km): 1600, Density: 0.59, Gravity: 0.07, Mass (Earth): 0.001
+- Escape velocity (m/s): 1079
+- Size profile: `1-1600-0.59-0.07-0.00`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1159,7 +1230,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - Moon orbit (km): 66400 around Cab II
 
 ### SIZE
+- Composition: Rock and Metal
 - Diameter (km): 3200, Density: 1.12, Gravity: 0.28, Mass (Earth): 0.018
+- Escape velocity (m/s): 2973
+- Size profile: `2-3200-1.12-0.28-0.02`
 
 ### ATMOSPHERE
 - (none — vacuum)
@@ -1197,7 +1271,10 @@ Long profile: `Aab-2-T-G-G-P-T-1.5:B-0-1.5:Cab-0-T-T-T-1.5`
 - AU: 2.75, Eccentricity: 0.01, Period (h): 39953.35
 
 ### SIZE
+- Composition: Mostly Ice
 - Diameter (km): 4800, Density: 0.24, Gravity: 0.09, Mass (Earth): 0.013
+- Escape velocity (m/s): 2064
+- Size profile: `3-4800-0.24-0.09-0.01`
 
 ### ATMOSPHERE
 - (none — vacuum)
