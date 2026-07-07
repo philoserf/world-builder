@@ -9,9 +9,9 @@ import (
 // non-empty non-belt body in the universe. Stage-7 orchestrator.
 //
 // Per dependency-graph.md § Stage 7, partial geology (Residual + TSF
-// + THF) is computed inside ApplyClimatePasses so the post-TSS Temperature
-// is re-derived consistently with atm/hydro across the two climate passes.
-// Stage 7's remaining work is:
+// + THF) is computed inside ApplyClimatePasses so that atmosphere and
+// hydrographics are re-derived from the post-TSS Temperature across the
+// two climate passes. Stage 7's remaining work is:
 //
 //   - HZ bodies (body.Geology already set by climate): roll
 //     TectonicPlates and append.

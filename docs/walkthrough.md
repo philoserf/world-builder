@@ -365,7 +365,7 @@ type Body struct {
 
 ## The climate solver: ApplyClimatePasses
 
-Stage 5 is the only fixed-point cluster: atmosphere ↔ temperature ↔ hydrographics depend on each other. The solver runs **two passes**. It is not a fixed-point solver in the strict sense — `RederiveAtmosphereHydrographics` consumes fresh dice each pass, so each iteration is a stochastic sample, not a convergence step. The second sample is trusted. The name pre-dated the empirical finding; the function is named for the behaviour.
+Stage 5 is the only cyclic cluster: atmosphere ↔ temperature ↔ hydrographics depend on each other. `ApplyClimatePasses` runs **two passes** and trusts the second. It is not a fixed-point solver — `RederiveAtmosphereHydrographics` consumes fresh dice each pass, so each pass is a stochastic sample, not a convergence step. There is no fixed point to reach; the function is named for what it does.
 
 ```bash
 sed -n '109,162p' worlds/stage5.go
