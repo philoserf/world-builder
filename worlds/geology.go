@@ -274,7 +274,8 @@ func TidalHeatingFactorLabel(f int) string {
 //     skipped them): compute the full Geology including TectonicPlates
 //     (which will be 0 since they have no Hydrographics — the prereq).
 //   - Gas giants: compute GGResidualHeat (no plates).
-//   - Belts: skipped (Size 0).
+//   - Belts: skipped (gated on Kind — belts carry SizeCode "", so the
+//     old SizeCode=="0" gate matched no body and let belts through).
 //
 // Per anti-pattern A.1, every moon is walked alongside its parent via
 // AllBodiesWithParent — the parent value also distinguishes moon
@@ -282,7 +283,7 @@ func TidalHeatingFactorLabel(f int) string {
 func ApplyGeology(r roller.Roller, u *Universe) error {
 	sys := u.System
 	for body, parent := range u.AllBodiesWithParent() {
-		if body.Kind == BodyEmpty || body.SizeCode == "0" {
+		if body.Kind == BodyEmpty || body.Kind == BodyPlanetoidBelt {
 			continue
 		}
 		applyBodyGeology(bodySub(r, body, parent, "geology"), body, sys, parent != nil)
