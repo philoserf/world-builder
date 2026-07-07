@@ -476,17 +476,15 @@ func buildClass0I(u *Universe) iiss.Class0IForm {
 			InitialSurvey: sf.InitialSurvey,
 ```
 
-## Class IV-P: closure on the form
+## Class IV-P: a fully-owned iiss form
 
-The Class IV-P "Planetary Detail" form is the per-body deep dive for the auto-picked mainworld. To consolidate two render paths into one source of truth, `iiss.Class4PForm` carries a `RenderBody` closure set by `worlds` — `iiss` doesn't need to know `*Body`. Both the JSON payload (typed `any`) and the closure read from the same `*Class4PPartP` projection in `worlds/iiss_class4p.go`.
+The Class IV-P "Planetary Detail" form is the per-body deep dive for the auto-picked mainworld. Its body structs (`Class4PPartP` for planet/moon, `Class4PPartPB` for belt) and their Markdown renderers live in `iiss/class4p.go`; `Class4PForm` holds one of them as a concrete pointer per `Variant`. `worlds` builds the struct from the `Universe` (`buildClass4PPlanet` / `buildClass4PBelt` in `worlds/iiss_class4p.go`); `iiss` renders it. No closure, no `any` — the same struct serves both the Markdown and JSON paths.
 
 ```bash
-sed -n '64,89p' iiss/forms.go
+sed -n '64,87p' iiss/forms.go
 ```
 
 ```output
-}
-
 // Class4PVariant identifies which Class IV-P variant applies to the
 // auto-picked mainworld.
 type Class4PVariant int
@@ -501,16 +499,16 @@ const (
 )
 
 // Class4PForm is the IISS Class IV-P "Planetary Detail" Survey form,
-// rendered only for the auto-picked mainworld. PartP/PartPB carry the
-// JSON payload (concretely *worlds.Class4PPartP / *worlds.Class4PPartPB,
-// typed any to avoid an iiss→worlds import cycle); RenderBody is the
-// Markdown renderer.
+// rendered only for the auto-picked mainworld. Exactly one of PartP
+// (planet/moon) or PartPB (belt) is populated, per Variant; the other is
+// nil. Both are concrete iiss types, so the form is fully owned by iiss/
+// and marshals to JSON without a worlds-side payload.
 type Class4PForm struct {
 	FormHeader
-	Variant    Class4PVariant
-	PartP      any                                `json:",omitempty"`
-	PartPB     any                                `json:",omitempty"`
-	RenderBody func(*strings.Builder, FormHeader) `json:"-"`
+	Variant Class4PVariant
+	PartP   *Class4PPartP  `json:",omitempty"`
+	PartPB  *Class4PPartPB `json:",omitempty"`
+}
 ```
 
 ## Notable Features — the referee summary
@@ -597,7 +595,7 @@ func NotableFeatures(u *Universe) string {
 
 ## The renderer: iiss.MarkdownSystem
 
-The final step. Pure function over `iiss.SystemForms`; concatenates the four sections (notable features, Class 0/I, Class II/III, Class IV-P) under H1/H2 headings in book order. `iiss/` does not import `worlds/` — the Class IV-P body content comes via the `RenderBody` closure the worlds-side set on the form.
+The final step. Pure function over `iiss.SystemForms`; concatenates the four sections (notable features, Class 0/I, Class II/III, Class IV-P) under H1/H2 headings in book order. `iiss/` does not import `worlds/` — every form, including the Class IV-P body, is a concrete `iiss` struct that `worlds.BuildIISSForms` populated.
 
 ```bash
 sed -n '95,120p' iiss/render.go
