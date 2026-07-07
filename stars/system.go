@@ -121,7 +121,7 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 			star.AgeGyr = sys.AgeGyr
 		} else {
 			// Special object: recompute age via the table.
-			age, aerr := AgeSpecialObject(r, star.Kind, star.Mass)
+			age, aerr := specialObjectAge(r, star.Kind, star.Mass)
 			if aerr != nil {
 				return -1, fmt.Errorf("special-object age: %w", aerr)
 			}
@@ -307,15 +307,29 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 	// pulsar timing, etc.) to the Special Circumstances chapter (deferred).
 	star := specialObjectPrimaryStub(kind)
 
-	// Age via AgeSpecialObject. For BD and Protostar, deadStarMass is
+	// Age via specialObjectAge. For BD and Protostar, deadStarMass is
 	// unused (their formulas don't add a progenitor age). For D/NS/BH/PSR,
 	// the dead-star mass is the new object's mass.
-	age, err := AgeSpecialObject(r, kind, star.Mass)
+	age, err := specialObjectAge(r, kind, star.Mass)
 	if err != nil {
 		return Star{}, err
 	}
 	star.AgeGyr = age
 	return star, nil
+}
+
+// specialObjectAge wraps AgeSpecialObject for pipeline call sites. The
+// p.22 age table has no rows for Nebula, Star Cluster, or Anomaly —
+// age is not a meaningful property of these aggregate / pre-stellar
+// objects — so they age to 0 here rather than failing the whole
+// generation through AgeSpecialObject's missing-row error.
+// AgeSpecialObject itself stays strictly table-faithful.
+func specialObjectAge(r roller.Roller, kind StarKind, deadStarMass float64) (float64, error) {
+	switch kind {
+	case KindNebula, KindStarCluster, KindAnomaly:
+		return 0, nil
+	}
+	return AgeSpecialObject(r, kind, deadStarMass)
 }
 
 // specialObjectPrimaryStub returns a Star with placeholder physical

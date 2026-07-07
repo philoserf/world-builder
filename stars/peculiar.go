@@ -96,14 +96,43 @@ func kindForClass(lc LuminosityClass) StarKind {
 	}
 }
 
+// kindFromCell maps a terminal (non-redirect) Star Type Determination
+// cell (WBH p.15) to its StarKind. ok is false for cells that are not
+// terminal kinds (class redirects, "Giants", column recursion). The
+// single cell→Kind mapping — KindFromUnusualCell, KindFromPeculiarCell,
+// and rollSpecialPrimaryImpl all delegate here so the mapping cannot
+// drift between them.
+func kindFromCell(cell string) (kind StarKind, ok bool) {
+	switch cell {
+	case "BD":
+		return KindBrownDwarf, true
+	case "D":
+		return KindWhiteDwarf, true
+	case "Black Hole":
+		return KindBlackHole, true
+	case "Pulsar":
+		return KindPulsar, true
+	case "Neutron Star":
+		return KindNeutronStar, true
+	case "Nebula":
+		return KindNebula, true
+	case "Protostar":
+		return KindProtostar, true
+	case "Star Cluster":
+		return KindStarCluster, true
+	case "Anomaly":
+		return KindAnomaly, true
+	}
+	return "", false
+}
+
 // KindFromUnusualCell maps an Unusual-column cell from the Star Type
 // Determination table (WBH p. 15) to a StarKind.
 func KindFromUnusualCell(cell string) (StarKind, error) {
 	switch cell {
-	case "BD":
-		return KindBrownDwarf, nil
-	case "D":
-		return KindWhiteDwarf, nil
+	case "BD", "D":
+		k, _ := kindFromCell(cell)
+		return k, nil
 	default:
 		return "", fmt.Errorf("stars: unknown Unusual cell: %q", cell)
 	}
@@ -113,23 +142,13 @@ func KindFromUnusualCell(cell string) (StarKind, error) {
 // Determination table (WBH p. 15) to a StarKind.
 func KindFromPeculiarCell(cell string) (StarKind, error) {
 	switch cell {
-	case "Black Hole":
-		return KindBlackHole, nil
-	case "Pulsar":
-		return KindPulsar, nil
-	case "Neutron Star":
-		return KindNeutronStar, nil
-	case "Nebula":
-		return KindNebula, nil
-	case "Protostar":
-		return KindProtostar, nil
-	case "Star Cluster":
-		return KindStarCluster, nil
-	case "Anomaly":
-		return KindAnomaly, nil
-	default:
+	case "BD", "D":
 		return "", fmt.Errorf("stars: unknown Peculiar cell: %q", cell)
 	}
+	if k, ok := kindFromCell(cell); ok {
+		return k, nil
+	}
+	return "", fmt.Errorf("stars: unknown Peculiar cell: %q", cell)
 }
 
 // RollSpecialPrimarySimple resolves a "Special" primary roll using the
@@ -137,9 +156,9 @@ func KindFromPeculiarCell(cell string) (StarKind, error) {
 //
 //	1D: 1-5 -> Neutron Star, 6 -> Black Hole
 //
-// The full Unusual/Peculiar dispatch (which can produce brown dwarfs,
-// nebulae, protostars, star clusters, anomalies, and so on) lands in
-// Plan 2 alongside the rest of the multi-star pipeline.
+// Not wired into GenerateSystem — generateSpecialPrimary uses the full
+// column dispatch (RollSpecialPrimary). Retained as the book's
+// quick-path API for callers that want the p.16 shortcut.
 func RollSpecialPrimarySimple(r roller.Roller) (StarKind, error) {
 	roll := r.Roll("1D")
 	if roll == 6 {
@@ -215,25 +234,10 @@ func rollSpecialPrimaryImpl(r roller.Roller, path PeculiarPath, depth int) (Star
 		return "", "", fmt.Errorf("stars: unknown peculiar path: %q", path)
 	}
 
+	if kind, ok := kindFromCell(cell); ok {
+		return kind, "", nil
+	}
 	switch cell {
-	case "BD":
-		return KindBrownDwarf, "", nil
-	case "D":
-		return KindWhiteDwarf, "", nil
-	case "Black Hole":
-		return KindBlackHole, "", nil
-	case "Pulsar":
-		return KindPulsar, "", nil
-	case "Neutron Star":
-		return KindNeutronStar, "", nil
-	case "Nebula":
-		return KindNebula, "", nil
-	case "Protostar":
-		return KindProtostar, "", nil
-	case "Star Cluster":
-		return KindStarCluster, "", nil
-	case "Anomaly":
-		return KindAnomaly, "", nil
 	case "Class III":
 		return "", III, nil
 	case "Class IV":

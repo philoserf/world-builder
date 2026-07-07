@@ -143,7 +143,9 @@ var StarLuminosity = map[string]ClassRow{
 const MultipleStarsPresenceThreshold = 10
 
 // ExistingStarLocationsBinary is the WBH p.24 Existing Star Locations table
-// for binary systems, keyed by 1D.
+// for binary systems, keyed by 1D. Not consulted by GenerateSystem (which
+// uses the p.29 Non-Primary determination flow); retained per the
+// tables-as-literals convention as a book transcription for library callers.
 // "RollAgainOrCompanion" means the Referee may either reroll or treat
 // the new star as a companion of an existing star with the same Class
 // and Type. "RollAgain" means simply reroll on this table.
@@ -157,7 +159,9 @@ var ExistingStarLocationsBinary = map[int]string{
 }
 
 // ExistingStarLocationsTrinaryPlus is the WBH p.24 Existing Star Locations
-// table for trinary and larger systems, keyed by 1D.
+// table for trinary and larger systems, keyed by 1D. Like
+// ExistingStarLocationsBinary, retained as a book transcription; not
+// consulted by GenerateSystem.
 var ExistingStarLocationsTrinaryPlus = map[int]string{
 	1: "Companion",
 	2: "Close",

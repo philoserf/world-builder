@@ -2,8 +2,10 @@ package worlds_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
+	"github.com/philoserf/world-builder/roller"
 	"github.com/philoserf/world-builder/stars"
 	"github.com/philoserf/world-builder/worlds"
 )
@@ -179,5 +181,46 @@ func TestGenerate_MoonOrbitsMaterialized(t *testing.T) {
 	}
 	if retro == 0 {
 		t.Errorf("0 retrograde moons across %d moons — RollMoonRetrograde likely unwired", moons)
+	}
+}
+
+// TestGenerateWithOpts_PeculiarColumn exercises the Unusual/Peculiar
+// dispatch (regression: PeculiarColumn was unreachable from every
+// convenience entry point, and Nebula/Star Cluster/Anomaly primaries
+// always errored through AgeSpecialObject's missing p.22 row).
+//
+// The stars stage must produce all three aggregate kinds without
+// error; the worlds pipeline may still legitimately reject them at
+// placement (no p.39 MAO row — Special Circumstances scope), so the
+// worlds-level sweep only asserts that no error originates from the
+// stars stage.
+func TestGenerateWithOpts_PeculiarColumn(t *testing.T) {
+	t.Parallel()
+
+	kinds := map[stars.StarKind]int{}
+	for iter := range 3000 {
+		seed := int64(iter)
+		sys, err := stars.GenerateSystem(roller.NewSeeded(seed), stars.GenerateSystemOpts{
+			WithVariance:   true,
+			Accuracy:       2,
+			MAO:            worlds.MAO,
+			PeculiarColumn: stars.PeculiarPathPeculiar,
+		})
+		if err != nil {
+			t.Errorf("seed %d: stars stage errored under peculiar column: %v", seed, err)
+			continue
+		}
+		kinds[sys.Primary.Kind]++
+
+		if _, werr := worlds.GenerateWithOpts(seed, worlds.GenerateOpts{
+			PeculiarColumn: stars.PeculiarPathPeculiar,
+		}); werr != nil && strings.Contains(werr.Error(), "worlds: stars:") {
+			t.Errorf("seed %d: worlds pipeline errored in the stars stage: %v", seed, werr)
+		}
+	}
+	for _, k := range []stars.StarKind{stars.KindNebula, stars.KindStarCluster, stars.KindAnomaly} {
+		if kinds[k] == 0 {
+			t.Errorf("no %s primaries across 3000 peculiar-column seeds — dispatch or age formula broken", k)
+		}
 	}
 }

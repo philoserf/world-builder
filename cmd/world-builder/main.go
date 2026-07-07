@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/philoserf/world-builder/iiss"
+	"github.com/philoserf/world-builder/stars"
 	"github.com/philoserf/world-builder/worlds"
 )
 
@@ -27,8 +28,21 @@ func run(args []string, stdout, stderr io.Writer) error {
 	fs.SetOutput(stderr)
 	seed := fs.Int64("seed", 0, "random seed (0 = time-based)")
 	format := fs.String("format", "markdown", "output format: markdown | json | short")
+	peculiar := fs.String("peculiar", "special", "column for Special (2D=2) primary rolls: special | unusual | peculiar")
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+
+	var column stars.PeculiarPath
+	switch *peculiar {
+	case "special":
+		column = stars.PeculiarPathSpecial
+	case "unusual":
+		column = stars.PeculiarPathUnusual
+	case "peculiar":
+		column = stars.PeculiarPathPeculiar
+	default:
+		return fmt.Errorf("unknown peculiar column: %q (want special, unusual, or peculiar)", *peculiar)
 	}
 
 	s := *seed
@@ -36,7 +50,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 		s = time.Now().UnixNano()
 	}
 
-	u, err := worlds.Generate(s)
+	u, err := worlds.GenerateWithOpts(s, worlds.GenerateOpts{PeculiarColumn: column})
 	if err != nil {
 		return fmt.Errorf("generate: %w", err)
 	}
