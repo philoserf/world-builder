@@ -84,7 +84,7 @@ func (u *Universe) AllBodiesWithParent() iter.Seq2[*Body, *Body] {
 // Bodies filters AllBodies to a predicate. Iteration order is not
 // contract — consumers that need a specific order use AllBodies and
 // filter inline. This leaves room for future order-agnostic callers
-// (per-body climate convergence does not need ordering).
+// (the per-body climate passes do not need ordering).
 func (u *Universe) Bodies(filter func(*Body) bool) iter.Seq[*Body] {
 	return func(yield func(*Body) bool) {
 		for body := range u.AllBodies() {

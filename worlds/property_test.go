@@ -291,11 +291,11 @@ func TestProperty_ScaleHeightPositive(t *testing.T) {
 	}
 }
 
-// TestProperty_ConvergenceCompletes per harness.md § Property tests.
+// TestProperty_GenerateCompletes per harness.md § Property tests.
 // Generate must complete (or fail with the documented Special-
-// Circumstances primary error) for every seed in 0..999. No
-// convergence-overflow, panic, or stall.
-func TestProperty_ConvergenceCompletes(t *testing.T) {
+// Circumstances primary error) for every seed in 0..999 — no panic or
+// stall in the climate passes or anywhere else in the pipeline.
+func TestProperty_GenerateCompletes(t *testing.T) {
 	t.Parallel()
 	completed := 0
 	for iter := range 1000 {

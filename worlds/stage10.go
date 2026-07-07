@@ -8,7 +8,7 @@ import (
 )
 
 // AggregateSystem computes the system-wide aggregations after every
-// body has converged: BaselineN backfill per allocation, ShortProfile,
+// body's per-body pipeline is complete: BaselineN backfill per allocation, ShortProfile,
 // LongProfile, and the auto-picked mainworld. Pure function — no
 // rolls. Stage-10 entry point per docs/api-surface.md § Stage 10.
 func AggregateSystem(u *Universe) {

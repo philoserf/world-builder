@@ -10,7 +10,7 @@ import (
 )
 
 // BuildIISSForms populates u.Detail.SystemForms (Class0I, Class23,
-// Class4P) from the converged universe state per WBH p.35 / p.63 /
+// Class4P) from the fully-populated universe state per WBH p.35 / p.63 /
 // pp.141-142. Pure function — no rolls. Called by GenerateWithRoller
 // after AggregateSystem.
 func BuildIISSForms(u *Universe) {
