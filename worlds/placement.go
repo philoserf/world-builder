@@ -32,9 +32,13 @@ type Placement struct {
 func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Placement, error) {
 	// Input contract: enough slots for the requested worlds. Without
 	// this, rollSlot's rejection-sampling loop can never produce a
-	// valid index for an empty slots slice and spins forever.
-	if counts.Total > 0 && len(slots) < counts.Total {
-		return nil, fmt.Errorf("worlds: PlaceWorlds: %d slots cannot hold %d worlds", len(slots), counts.Total)
+	// valid index for an empty slots slice and spins forever. Validate
+	// against the component sum — that is what the placement loops
+	// below actually consume; Counts.Total is a separately-stored
+	// field that nothing enforces.
+	need := counts.GasGiants + counts.PlanetoidBelts + counts.Terrestrials
+	if need > len(slots) {
+		return nil, fmt.Errorf("worlds: PlaceWorlds: %d slots cannot hold %d worlds", len(slots), need)
 	}
 	out := make([]Placement, len(slots))
 	for i, s := range slots {

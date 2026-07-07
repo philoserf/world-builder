@@ -109,3 +109,15 @@ func TestPlaceWorlds_EmptySlotsErrors(t *testing.T) {
 		t.Fatal("PlaceWorlds(nil slots, Total=3) = nil error, want slot-capacity error")
 	}
 }
+
+// TestPlaceWorlds_InconsistentCountsErrors asserts the capacity guard
+// validates the component sum, not the separately-stored Counts.Total —
+// an inconsistent Counts (components set, Total left 0) must error, not
+// hang in rollSlot.
+func TestPlaceWorlds_InconsistentCountsErrors(t *testing.T) {
+	t.Parallel()
+	_, err := PlaceWorlds(roller.NewSeeded(1), nil, Counts{Terrestrials: 3})
+	if err == nil {
+		t.Fatal("PlaceWorlds(nil slots, Terrestrials=3, Total=0) = nil error, want slot-capacity error")
+	}
+}

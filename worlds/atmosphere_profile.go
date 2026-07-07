@@ -413,8 +413,9 @@ func tempRangeLabel(t TempRange) string {
 // Use gasMixColumnForAtmCode (in temperature_rederive.go) to map atm Code
 // to the correct column letter.
 //
-// The second string parameter (formerly exoticSubtypeCode) is unused; it
-// is retained in the signature for future profile shorthand decoration.
+// tempDM is the additional mean-temperature DM for the Boiling and
+// Frozen tables (WBH p.96/p.98) — compute it via GasMixBoilingTempDM /
+// GasMixFrozenTempDM and pass 0 for the other temperature ranges.
 func RollGasMix(
 	r roller.Roller,
 	atmosphereColumnLetter string,

@@ -94,26 +94,35 @@ func ApplyBeltDetails(r roller.Roller, u *Universe) error {
 //     intent is "nothing beyond the belt", and an empty slot is not a
 //     body. (Book unavailable to confirm slot-vs-body wording; this
 //     interpretation is asserted by TestBeltSpanFlags.)
+//
+// Neighbors are found by orbit value within the belt's group (nearest
+// slot below / above by Orbit), not by slice position, so the result
+// does not depend on Detail.Bodies' storage layout.
 func beltSpanFlags(bodies []Body, i int) (adjacentToGG, outermostSlot bool) {
 	belt := &bodies[i]
-	if i > 0 && bodies[i-1].Group.Designation == belt.Group.Designation &&
-		bodies[i-1].Kind == BodyGasGiant {
-		adjacentToGG = true
-	}
-	if i < len(bodies)-1 && bodies[i+1].Group.Designation == belt.Group.Designation &&
-		bodies[i+1].Kind == BodyGasGiant {
-		adjacentToGG = true
-	}
+	var inner, outer *Body // nearest same-group slots by orbit
 	outermostSlot = true
 	for j := range bodies {
-		if bodies[j].Group.Designation != belt.Group.Designation || bodies[j].Kind == BodyEmpty {
+		b := &bodies[j]
+		if j == i || b.Group.Designation != belt.Group.Designation {
 			continue
 		}
-		if bodies[j].Orbit > belt.Orbit {
-			outermostSlot = false
-			break
+		switch {
+		case b.Orbit < belt.Orbit:
+			if inner == nil || b.Orbit > inner.Orbit {
+				inner = b
+			}
+		case b.Orbit > belt.Orbit:
+			if outer == nil || b.Orbit < outer.Orbit {
+				outer = b
+			}
+			if b.Kind != BodyEmpty {
+				outermostSlot = false
+			}
 		}
 	}
+	adjacentToGG = (inner != nil && inner.Kind == BodyGasGiant) ||
+		(outer != nil && outer.Kind == BodyGasGiant)
 	return adjacentToGG, outermostSlot
 }
 

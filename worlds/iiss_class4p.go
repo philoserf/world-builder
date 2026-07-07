@@ -25,6 +25,10 @@ type Class4PPartP struct {
 	MoonOrbitKm       float64 `json:",omitempty"`
 	ParentDesignation string  `json:",omitempty"`
 
+	// Ring reports the WBH ring outcome (p.55 / p.76) for the
+	// mainworld, mirroring Body.Ring.
+	Ring bool `json:",omitempty"`
+
 	DiameterKm float64
 	Density    float64
 	Gravity    float64
@@ -149,6 +153,7 @@ func buildClass4PPlanet(u *Universe, body *Body) *Class4PPartP {
 		PeriodHours:  body.Period.Hours,
 		DiameterKm:   body.DiameterKm,
 		MassEarth:    body.MassEarth,
+		Ring:         body.Ring,
 		IsMainworld:  true,
 	}
 	if body.Kind == BodyMoon {
@@ -362,8 +367,15 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h iiss.FormHeader) {
 		b.WriteString("\n")
 	}
 
-	if p.IsMainworld {
-		b.WriteString("### COMMENTS\n- This is the system mainworld.\n\n")
+	if p.IsMainworld || p.Ring {
+		b.WriteString("### COMMENTS\n")
+		if p.IsMainworld {
+			b.WriteString("- This is the system mainworld.\n")
+		}
+		if p.Ring {
+			b.WriteString("- Has a planetary ring (WBH p.55/p.76).\n")
+		}
+		b.WriteString("\n")
 	}
 }
 

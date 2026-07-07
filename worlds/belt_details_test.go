@@ -255,6 +255,15 @@ func TestBeltSpanFlags(t *testing.T) {
 			},
 			i: 0, wantAdjGG: false, wantOuterm: true,
 		},
+		{
+			name: "adjacency found by orbit, not slice position",
+			bodies: []Body{
+				{Kind: BodyPlanetoidBelt, Group: gA, Orbit: 2},
+				{Kind: BodyTerrestrial, Group: gA, Orbit: 5},
+				{Kind: BodyGasGiant, Group: gA, Orbit: 1}, // slice-distant, orbit-adjacent
+			},
+			i: 0, wantAdjGG: true, wantOuterm: false,
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -266,5 +275,19 @@ func TestBeltSpanFlags(t *testing.T) {
 				t.Errorf("outermostSlot = %v, want %v", outerm, c.wantOuterm)
 			}
 		})
+	}
+}
+
+func TestFormatBeltProfile_TinySpanNotZero(t *testing.T) {
+	t.Parallel()
+	b := BeltDetails{Span: 0.003, Composition: BeltComposition{MTypePct: 50, STypePct: 30, CTypePct: 15, OtherPct: 5}, Bulk: 3, ResourceRating: 7}
+	got := FormatBeltProfile(b)
+	if want := "0.003-50.30.15.05-3-7-0-0"; got != want {
+		t.Errorf("tiny span profile = %q, want %q", got, want)
+	}
+	// Regular spans keep the 2-decimal book style.
+	b.Span = 0.25
+	if got := FormatBeltProfile(b); got[:4] != "0.25" {
+		t.Errorf("span 0.25 renders %q, want prefix 0.25", got)
 	}
 }

@@ -284,15 +284,9 @@ func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: allocations: %w", err)
 	}
-	baselineN, err := RollBaselineNumber(r, sys, counts)
-	if err != nil {
-		return SystemPlacement{}, fmt.Errorf("worlds: baseline-number: %w", err)
-	}
+	baselineN := RollBaselineNumber(r, sys, counts)
 	primary := allocs[0].Group
-	baselineOrbit, err := BaselineOrbit(r, primary, primary.HZCO(), baselineN, counts.Total)
-	if err != nil {
-		return SystemPlacement{}, fmt.Errorf("worlds: baseline-orbit: %w", err)
-	}
+	baselineOrbit := BaselineOrbit(r, primary, primary.HZCO(), baselineN, counts.Total)
 	emptyOrbits, err := RollEmptyOrbits(r)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: empty-orbits: %w", err)

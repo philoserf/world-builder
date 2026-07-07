@@ -284,8 +284,13 @@ func FormatBeltProfile(b BeltDetails) string {
 	}
 	// Span prints to at most 2 decimals with trailing zeros trimmed,
 	// matching the book's "0.25" / "0.3" examples — %g would leak full
-	// float64 precision for seeded (non-round) spreads.
+	// float64 precision for seeded (non-round) spreads. A real span
+	// that would round to "0" (< 0.005) falls back to 3 decimals so a
+	// nonzero span never prints as bare "0".
 	span := strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.2f", b.Span), "0"), ".")
+	if span == "0" && b.Span > 0 {
+		span = strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.3f", b.Span), "0"), ".")
+	}
 	return fmt.Sprintf(
 		"%s-%02d.%02d.%02d.%02d-%d-%s-%d-%d",
 		span,
