@@ -21,14 +21,10 @@ type Universe struct {
 //
 // The IISS-form fields are carried via an embedded iiss.SystemForms so
 // iiss/ can render the system without importing worlds/. cmd/world-builder
-// extracts u.Detail.SystemForms and passes it to iiss.MarkdownSystem.
+// extracts u.Detail.SystemForms and passes it to iiss.MarkdownClass4Survey.
 type SystemDetail struct {
-	Bodies        []Body
-	Allocations   []StarAllocation
-	BaselineN     int
-	BaselineOrbit float64
-	EmptyOrbits   int
-	SystemSpread  float64
+	Bodies      []Body
+	Allocations []StarAllocation
 
 	// Mainworld is the auto-picked mainworld body, set by AggregateSystem
 	// alongside MainworldDesignation. nil when the system has no

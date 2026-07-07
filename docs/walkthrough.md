@@ -34,7 +34,7 @@ Six Go packages plus the CLI. Dependencies point inward: `cmd/world-builder` imp
 - `roller/` — `Roller` interface with `Seeded` (production), `Scripted` (test gold), and `Fixed` impls. The only RNG seam in the project.
 - `stars/` — WBH pp.14–35: stellar generation, MAO, companion orbits.
 - `worlds/` — WBH pp.36–146: placement, per-body procedures, the climate solver, mainworld pick, Notable Features.
-- `iiss/` — Pure renderer package. Holds the IISS form types and `MarkdownSystem`. Does not import `worlds/`.
+- `iiss/` — Pure renderer package. Holds the IISS form types and `MarkdownClass4Survey`. Does not import `worlds/`.
 - `cmd/world-builder/` — CLI entry; three lines of pipeline plus format dispatch.
 
 ## Entry point: cmd/world-builder/main.go
@@ -74,7 +74,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 
 	switch *format {
 	case "markdown":
-		_, err := fmt.Fprint(stdout, iiss.MarkdownSystem(u.Detail.SystemForms))
+		_, err := fmt.Fprint(stdout, iiss.MarkdownClass4Survey(u.Detail.SystemForms))
 		return err
 	case "json":
 		// Emit the full SystemForms aggregate (Class0I + Class23 + Class4P
@@ -478,7 +478,7 @@ func buildClass0I(u *Universe) iiss.Class0IForm {
 
 ## Class IV-P: a fully-owned iiss form
 
-The Class IV-P "Planetary Detail" form is the per-body deep dive for the auto-picked mainworld. Its body structs (`Class4PPartP` for planet/moon, `Class4PPartPB` for belt) and their Markdown renderers live in `iiss/class4p.go`; `Class4PForm` holds one of them as a concrete pointer per `Variant`. `worlds` builds the struct from the `Universe` (`buildClass4PPlanet` / `buildClass4PBelt` in `worlds/iiss_class4p.go`); `iiss` renders it. No closure, no `any` — the same struct serves both the Markdown and JSON paths.
+The Class IV-P "Planetary Detail" form is the per-body deep dive — now emitted for every notable body (as `SystemForms.Class4PForms`), with the auto-picked mainworld's part flagged. Its body structs (`Class4PPartP` for planet/moon, `Class4PPartPB` for belt) and their Markdown renderers live in `iiss/class4p.go`; `Class4PForm` holds one of them as a concrete pointer per `Variant`. `worlds` builds the struct from the `Universe` (`buildClass4PPlanet` / `buildClass4PBelt` in `worlds/iiss_class4p.go`); `iiss` renders it. No closure, no `any` — the same struct serves both the Markdown and JSON paths.
 
 ```bash
 sed -n '64,87p' iiss/forms.go
@@ -593,19 +593,18 @@ func NotableFeatures(u *Universe) string {
 
 ```
 
-## The renderer: iiss.MarkdownSystem
+## The renderer: iiss.MarkdownClass4Survey
 
-The final step. Pure function over `iiss.SystemForms`; concatenates the four sections (notable features, Class 0/I, Class II/III, Class IV-P) under H1/H2 headings in book order. `iiss/` does not import `worlds/` — every form, including the Class IV-P body, is a concrete `iiss` struct that `worlds.BuildIISSForms` populated.
+The final step. Pure function over `iiss.SystemForms`: an H1 title, the Notable Features summary, `markdownClass4Part1` (the system census — reusing the `Class0I` star rows and `Class23` object roster the old short forms carried), then one per-body part for each `Class4PForms` entry. `iiss/` does not import `worlds/` — every part is a concrete `iiss` struct that `worlds.BuildIISSForms` populated.
 
 ```bash
-sed -n '95,120p' iiss/render.go
+sed -n '13,35p' iiss/render.go
 ```
 
 ```output
-// book order. Class IV-P renders only for the auto-picked mainworld.
-func MarkdownSystem(sf SystemForms) string {
+func MarkdownClass4Survey(sf SystemForms) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# %s — System Survey\n\n", sf.Class0I.IISSDesig)
+	fmt.Fprintf(&b, "# %s — IISS Class IV Survey\n\n", sf.Class0I.IISSDesig)
 	if sf.MainworldDesignation != "" {
 		fmt.Fprintf(&b, "**Mainworld:** %s\n\n", sf.MainworldDesignation)
 	}
@@ -619,13 +618,10 @@ func MarkdownSystem(sf SystemForms) string {
 		b.WriteString(sf.NotableFeatures)
 		b.WriteString("\n")
 	}
-	b.WriteString(MarkdownClass0I(sf.Class0I))
-	b.WriteString("\n")
-	b.WriteString(MarkdownClass23(sf.Class23))
-	b.WriteString("\n")
-	if sf.MainworldDesignation != "" {
-		b.WriteString(MarkdownClass4P(sf.Class4P))
+	b.WriteString(markdownClass4Part1(sf))
+	for _, f := range sf.Class4PForms {
 		b.WriteString("\n")
+		b.WriteString(markdownClass4Part(f))
 	}
 	return b.String()
 ```

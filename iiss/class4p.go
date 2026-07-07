@@ -136,7 +136,7 @@ type Class4PPartPB struct {
 }
 
 // RenderBody emits the planet/moon mainworld Markdown body for the
-// Class IV-P form. Called by MarkdownClass4P.
+// Class IV-P form. Called by markdownClass4Part.
 func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 	fmt.Fprintf(b, "**WORLD:** %s\n", p.Designation)
 	fmt.Fprintf(b, "**SECTOR | LOCATION:** %s | %s\n", h.Sector, h.Location)
@@ -255,7 +255,7 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 }
 
 // RenderBody emits the belt-mainworld Markdown body for the Class IV-P
-// form. Called by MarkdownClass4P.
+// form. Called by markdownClass4Part.
 func (pb *Class4PPartPB) RenderBody(b *strings.Builder, h FormHeader) {
 	fmt.Fprintf(b, "**WORLD:** %s   **SAH/UWP:** 000\n", pb.Designation)
 	fmt.Fprintf(b, "**SECTOR | LOCATION:** %s | %s\n", h.Sector, h.Location)

@@ -17,7 +17,13 @@ func BuildIISSForms(u *Universe) {
 	c0 := buildClass0I(u)
 	u.Detail.Class0I = c0
 	u.Detail.Class23 = buildClass23(u, c0)
-	u.Detail.Class4P = buildClass4P(u, c0.FormHeader)
+	u.Detail.Class4PForms = buildClass4PForms(u, c0.FormHeader)
+	u.Detail.Census = iiss.SystemCensus{
+		BaselineNumber: u.Placement.BaselineN,
+		BaselineOrbit:  u.Placement.BaselineOrbit,
+		Spread:         u.Placement.SystemSpread,
+		EmptyOrbits:    u.Placement.EmptyOrbits,
+	}
 	u.Detail.NotableFeatures = NotableFeatures(u)
 }
 
@@ -245,22 +251,31 @@ func formatPeriod(p Period) string {
 	return fmt.Sprintf("%.3fy", p.Years)
 }
 
-func buildClass4P(u *Universe, header iiss.FormHeader) iiss.Class4PForm {
-	form := iiss.Class4PForm{FormHeader: header}
-	mainworld := u.Detail.Mainworld
-	if mainworld == nil {
-		return form
+// buildClass4PForms builds one Class IV-P part per non-empty body, in
+// AllBodies() order (ascending orbit, moons after their parent) — the
+// per-world detail for the whole system. Belts get PART P.B; terrestrials,
+// moons, and gas giants get PART P. The auto-picked mainworld is marked
+// via IsMainworld on its own part.
+func buildClass4PForms(u *Universe, header iiss.FormHeader) []iiss.Class4PForm {
+	var forms []iiss.Class4PForm
+	for body := range u.AllBodies() {
+		if body.Kind == BodyEmpty {
+			continue
+		}
+		isMW := body == u.Detail.Mainworld
+		form := iiss.Class4PForm{FormHeader: header, Designation: body.Designation}
+		switch body.Kind {
+		case BodyPlanetoidBelt:
+			form.Variant = iiss.Class4PBelt
+			form.PartPB = buildClass4PBelt(u, body, isMW)
+		case BodyMoon:
+			form.Variant = iiss.Class4PMoon
+			form.PartP = buildClass4PPlanet(u, body, isMW)
+		default: // BodyTerrestrial, BodyGasGiant
+			form.Variant = iiss.Class4PPlanet
+			form.PartP = buildClass4PPlanet(u, body, isMW)
+		}
+		forms = append(forms, form)
 	}
-	switch mainworld.Kind {
-	case BodyPlanetoidBelt:
-		form.Variant = iiss.Class4PBelt
-		form.PartPB = buildClass4PBelt(u, mainworld)
-	case BodyMoon:
-		form.Variant = iiss.Class4PMoon
-		form.PartP = buildClass4PPlanet(u, mainworld)
-	default:
-		form.Variant = iiss.Class4PPlanet
-		form.PartP = buildClass4PPlanet(u, mainworld)
-	}
-	return form
+	return forms
 }

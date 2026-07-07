@@ -249,9 +249,9 @@ func TestMisuse_RollCompatibility_BiocomplexityZero(t *testing.T) {
 	_ = worlds.RollCompatibility(r, body, 0, 4.6)
 }
 
-// TestMisuse_Renderers_ZeroValue — Markdown/JSON/PlainText renderers
-// must handle zero-value form structs without panic. Per harness.md
-// § Misuse-path tests for MarkdownClass0I etc.
+// TestMisuse_Renderers_ZeroValue — the Markdown renderer must handle a
+// zero-value SystemForms (empty system, no bodies, nil part slice)
+// without panic. Per harness.md § Misuse-path tests.
 func TestMisuse_Renderers_ZeroValue(t *testing.T) {
 	t.Parallel()
 	defer func() {
@@ -259,8 +259,7 @@ func TestMisuse_Renderers_ZeroValue(t *testing.T) {
 			t.Errorf("zero-value renderer panicked: %v", rec)
 		}
 	}()
-	_ = iiss.MarkdownClass0I(iiss.Class0IForm{})
-	_ = iiss.MarkdownClass23(iiss.Class23Form{})
-	_ = iiss.MarkdownClass4P(iiss.Class4PForm{})
-	_ = iiss.MarkdownSystem(iiss.SystemForms{})
+	_ = iiss.MarkdownClass4Survey(iiss.SystemForms{})
+	// A part with a nil PartP/PartPB (defensive — builders never do this).
+	_ = iiss.MarkdownClass4Survey(iiss.SystemForms{Class4PForms: []iiss.Class4PForm{{}}})
 }

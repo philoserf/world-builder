@@ -63,7 +63,7 @@ Stage 6    ApplyTaintTypology + ApplySurfaceDistribution
 Stage 7    ApplyGeology                                  pp. 125–127
 Stage 8    ApplyBiology                                  pp. 127–131
 Stage 9    ApplyHabitability                             pp. 132–138
-Stage 10   AggregateSystem + BuildIISSForms              per-allocation BaselineN, profiles, mainworld pick, all three IISS forms
+Stage 10   AggregateSystem + BuildIISSForms              per-allocation BaselineN, profiles, mainworld pick, the IISS Class IV Survey
 ```
 
 Orchestrators live in role-named files: cross-cutting passes get their own (`detail_frontend.go`, `physical_detail.go`, `rotation_tilt.go`, `climate.go`, `taint_surface.go`, `aggregate.go`), and the single-feature passes live with their procedures (`geology.go`, `biology.go`, `habitability.go` each hold both the `Apply*` orchestrator and the feature's `Roll*`/`Compute*` procedures). Other per-feature files (`atmosphere.go`, `tidal_lock.go`, …) hold procedures only.
@@ -110,15 +110,15 @@ When the book is inconsistent, the test asserts the implementation's chosen inte
 The project is **done** when:
 
 1. The book's physical star-system rules (WBH pp. 14–146) are encoded faithfully in code, and
-2. `cmd/world-builder` emits a complete description of the generated system as Markdown — all three IISS forms (Class 0/I, Class II/III, Class IV-P) covering whatever world type the mainworld turns out to be (planet, moon, or belt).
+2. `cmd/world-builder` emits a complete description of the generated system as Markdown — a single IISS Class IV Survey document (PART 1 system census + a per-body PART P / PART P.B for every notable world).
 
 WBH pp. 147–234 (World Social Characteristics, Special Circumstances) are **out of scope** for current and near-term purposes. Do not start work in those chapters; do not add code that anticipates them.
 
-The rules half is complete on `main`: Stars (pp. 14–35), System Worlds and Orbits (pp. 36–68), and the full World Physical chapter (pp. 69–146) — including 3B-final habitability, mainworld pick, and all three IISS forms with Class IV-P variants for planet, moon, and belt mainworlds. Evergreen design + reference docs live at `docs/` root (api-surface, anti-patterns, design-intent, dependency-graph, harness, next-steps, summary, wbh-inconsistencies). Historical artifacts — pass-1 specs/plans/retrospective and pass-2 plans/retrospective — live under `docs/history/`.
+The rules half is complete on `main`: Stars (pp. 14–35), System Worlds and Orbits (pp. 36–68), and the full World Physical chapter (pp. 69–146) — including 3B-final habitability, mainworld pick, and the IISS Class IV Survey (PART 1 census + per-body PART P/P.B). Evergreen design + reference docs live at `docs/` root (api-surface, anti-patterns, design-intent, dependency-graph, harness, next-steps, summary, wbh-inconsistencies). Historical artifacts — pass-1 specs/plans/retrospective and pass-2 plans/retrospective — live under `docs/history/`.
 
 ### Output
 
-`cmd/world-builder -format markdown` is the default. Output is the full system as Markdown to stdout — concatenated IISS Class 0/I, Class II/III, and Class IV-P forms under H1/H2 section headings, in book order. Class IV-P renders **only for the auto-picked mainworld** (per book — not for every notable body), using whichever variant matches the mainworld's type.
+`cmd/world-builder -format markdown` is the default. Output is a single **IISS Class IV Survey** document to stdout: an H1 title, the Notable Features summary, then **PART 1 — System Census** (system scalars, stellar roster with full orbital data, and the body roster — this folds in what the Class 0/I and Class II/III "short forms" used to show), followed by a **PART P** (planet/moon/gas-giant) or **PART P.B** (belt) per non-empty body in orbit order. The auto-picked mainworld's part is suffixed "— mainworld". Class 0/I and Class II/III are no longer emitted as standalone forms (they were earlier survey stages); the `Class0IForm`/`Class23Form` structs survive only as PART 1's data carriers.
 
 `-format json` and `-format short` remain available for tooling and at-a-glance use; a future webservice may expose JSON over HTTP. The library is the source of truth — the CLI is a thin renderer.
 

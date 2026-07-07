@@ -58,7 +58,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 
 	switch *format {
 	case "markdown":
-		_, err := fmt.Fprint(stdout, iiss.MarkdownSystem(u.Detail.SystemForms))
+		_, err := fmt.Fprint(stdout, iiss.MarkdownClass4Survey(u.Detail.SystemForms))
 		return err
 	case "json":
 		// Emit the full SystemForms aggregate (Class0I + Class23 + Class4P

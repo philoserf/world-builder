@@ -74,16 +74,22 @@ const (
 	Class4PBelt
 )
 
-// Class4PForm is the IISS Class IV-P "Planetary Detail" Survey form,
-// rendered only for the auto-picked mainworld. Exactly one of PartP
-// (planet/moon) or PartPB (belt) is populated, per Variant; the other is
-// nil. Both are concrete iiss types, so the form is fully owned by iiss/
-// and marshals to JSON without a worlds-side payload.
+// Class4PForm is one per-body "Planetary Detail" part of the IISS Class IV
+// Survey — a PART P (planet/moon) or PART P.B (belt). SystemForms holds one
+// per non-empty body in Class4PForms; the auto-picked mainworld's part is
+// flagged via PartP/PartPB.IsMainworld. Exactly one of PartP (planet/moon)
+// or PartPB (belt) is populated, per Variant; the other is nil. Both are
+// concrete iiss types, so the form is fully owned by iiss/ and marshals to
+// JSON without a worlds-side payload.
 type Class4PForm struct {
 	FormHeader
-	Variant Class4PVariant
-	PartP   *Class4PPartP  `json:",omitempty"`
-	PartPB  *Class4PPartPB `json:",omitempty"`
+	// Designation is the surveyed body's designation (e.g. "Aab IV d"),
+	// used to title the per-body PART P / PART P.B heading. Distinct from
+	// the system-level FormHeader.IISSDesig.
+	Designation string
+	Variant     Class4PVariant
+	PartP       *Class4PPartP  `json:",omitempty"`
+	PartPB      *Class4PPartPB `json:",omitempty"`
 }
 
 // SystemForms aggregates the three IISS forms for a generated system,
@@ -92,11 +98,28 @@ type Class4PForm struct {
 // Renderer functions take SystemForms (or one of its fields) so iiss/
 // does not import worlds/.
 type SystemForms struct {
-	Class0I              Class0IForm
-	Class23              Class23Form
-	Class4P              Class4PForm
+	// Class0I and Class23 are retained as the data carriers for the
+	// Class IV Survey's PART 1 (system census) — the stars roster lives on
+	// Class0I.Stars, the body roster on Class23.Objects. They are no longer
+	// rendered as standalone forms.
+	Class0I Class0IForm
+	Class23 Class23Form
+	// Class4PForms holds one PART P / PART P.B per non-empty body, in
+	// AllBodies() order (ascending orbit, moons after their parent).
+	Class4PForms         []Class4PForm
+	Census               SystemCensus
 	MainworldDesignation string
 	ShortProfile         string
 	LongProfile          string
-	NotableFeatures      string // pre-rendered Markdown block; rendered above Class 0/I
+	NotableFeatures      string // pre-rendered Markdown block; rendered above PART 1
+}
+
+// SystemCensus carries the system-level placement scalars shown in PART 1
+// that are not otherwise on a form struct (previously surfaced only inside
+// the G-P-T-N-S short profile string).
+type SystemCensus struct {
+	BaselineNumber int
+	BaselineOrbit  float64
+	Spread         float64
+	EmptyOrbits    int
 }

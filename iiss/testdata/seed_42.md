@@ -1,4 +1,4 @@
-# A VII — System Survey
+# A VII — IISS Class IV Survey
 
 **Mainworld:** A VII
 
@@ -36,36 +36,25 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - A VII — Rating 6/12 (Regionally habitable): Tainted thin or dense atmospheres; Little useable land surface area; Gravity somewhat high
 
 
-## Class 0/I — A VII
+## PART 1 — System Census
 
 - System: A
 - Sector / Location: — / —
 - Survey: initial , last updated 
 - System age: 5.600 Gyr
 - Stellar count: 2
+- Worlds: 2 gas giants, 1 belts, 9 terrestrials (total 12)
+- Baseline: number 8, Orbit# 5.69; spread 0.70; empty orbits 0
 
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ---- |
-| A | A3 V | 1.780 | 1.914 | 8800 | 19.7846 | 5.69 |
-| B | A9 V | 1.380 | 1.830 | 7600 | 10.0703 | 5.16 |
-| AB | — | 3.160 | 0.000 | 0 | 29.8549 | 0.00 |
+### Stars
 
-## Class II/III — A VII
+| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO |
+| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- |
+| A | A3 V | 1.780 | 1.914 | 8800 | 19.7846 |  |  |  |  | 0.05 | 5.69 |
+| B | A9 V | 1.380 | 1.830 | 7600 | 10.0703 | 12.00 | 308.00 | 0.01 | 3040.76 | 0.04 | 5.16 |
+| AB | — | 3.160 | 0.000 | 0 | 29.8549 | 12.00 | 308.00 | 0.01 | 3040.76 | 0.00 | 0.00 |
 
-- Gas giants: 2
-- Belts: 1
-- Terrestrials: 9
-- Total: 12
-
-### Stars (with MAO)
-
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | HZCO | MAO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ---- | --- |
-| A | A3 V | 1.780 | 1.914 | 8800 | 19.7846 | 5.69 | 0.05 |
-| B | A9 V | 1.380 | 1.830 | 7600 | 10.0703 | 5.16 | 0.04 |
-| AB | — | 3.160 | 0.000 | 0 | 29.8549 | 0.00 | 0.00 |
-
-### Objects
+### Bodies
 
 | Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
@@ -102,7 +91,848 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 | A | A I | 8.40 | 28.00 | 0.35 | 111.052y | 4?? | 0 |  |
 | B | B I | 7.40 | 14.00 | 0.00 | 44.592y | 5?? | 0 |  |
 
-## Class IV-P PART P — A VII
+## PART P — A I
+
+**WORLD:** A I
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.25, Eccentricity: 0.08, Period (h): 806.10
+
+### SIZE
+- Diameter (km): 6400, Density: 0.65, Gravity: 0.33, Mass (Earth): 0.082
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 806.10, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 26.24
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 6, Residual: 0, Tidal Stress: 2, Tidal Heating: 4, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Very little useable land surface area; Very low gravity
+
+
+## PART P — A II
+
+**WORLD:** A II
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.58, Eccentricity: 0.02, Period (h): 2908.96
+
+### SIZE
+- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 15.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 57.97, Solar (h): 59.15, Solar days/year: 49.18
+- Axial Tilt: 107.32°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+
+### SUBORDINATES
+| Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
+| ----------- | ---- | ------------- | ---------- | --- | ---------- |
+| A II a | S | 600 | 152904 | 0.000 | 42.97 |
+| A II b | S | 600 | 165646 | 0.000 | 48.45 |
+
+
+## PART P — A II a (Moon)
+
+**WORLD:** A II a
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.58 (via A II), Eccentricity: 0.00, Period (h): 42.97
+- Moon orbit (km): 152904 around A II
+
+### SIZE
+- Diameter (km): 600, Density: 1.12, Gravity: 0.05, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 42.97, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.20°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A II b (Moon)
+
+**WORLD:** A II b
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.58 (via A II), Eccentricity: 0.00, Period (h): 48.45
+- Moon orbit (km): 165646 around A II
+
+### SIZE
+- Diameter (km): 600, Density: 1.09, Gravity: 0.05, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 48.45, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.40°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A III
+
+**WORLD:** A III
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.75, Eccentricity: 0.01, Period (h): 4266.53
+
+### SIZE
+- Diameter (km): 4800, Density: 0.56, Gravity: 0.21, Mass (Earth): 0.030
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 39.36, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.10°
+- Tidal lock: 1:1, Tides (m): 0.70
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Very low gravity
+
+### SUBORDINATES
+| Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
+| ----------- | ---- | ------------- | ---------- | --- | ---------- |
+| A III a | 2 | 3200 | 18240 | 0.000 | 39.36 |
+| A III b | S | 600 | 29040 | 0.000 | 79.07 |
+| A III c | S | 600 | 142320 | 0.000 | 857.85 |
+
+
+## PART P — A III a (Moon)
+
+**WORLD:** A III a
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.75 (via A III), Eccentricity: 0.00, Period (h): 39.36
+- Moon orbit (km): 18240 around A III
+
+### SIZE
+- Diameter (km): 3200, Density: 0.65, Gravity: 0.16, Mass (Earth): 0.010
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 39.36, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.02°
+- Tidal lock: 1:1, Tides (m): 0.47
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A III b (Moon)
+
+**WORLD:** A III b
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.75 (via A III), Eccentricity: 0.00, Period (h): 79.07
+- Moon orbit (km): 29040 around A III
+
+### SIZE
+- Diameter (km): 600, Density: 0.88, Gravity: 0.04, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 79.07, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.20°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A III c (Moon)
+
+**WORLD:** A III c
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.75 (via A III), Eccentricity: 0.00, Period (h): 857.85
+- Moon orbit (km): 142320 around A III
+
+### SIZE
+- Diameter (km): 600, Density: 1.00, Gravity: 0.05, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 1440.00, Solar (h): -2122.00, Solar days/year: -0.40
+- Axial Tilt: 165.00°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A IV
+
+**WORLD:** A IV
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.96, Eccentricity: 0.00, Period (h): 6190.76
+
+### SIZE
+- Diameter (km): 16000, Density: 1.30, Gravity: 1.63, Mass (Earth): 2.574
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 960.00, Solar (h): 1136.19, Solar days/year: 5.45
+- Axial Tilt: 174.00°
+- Tidal lock: no, Tides (m): 1.11
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 36, Residual: 36, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Additional surface area; Non-breathable atmosphere; Lack of accessible liquid water; Gravity uncomfortably high
+
+### COMMENTS
+- Has a planetary ring (WBH p.55/p.76).
+
+
+## PART P — A V
+
+**WORLD:** A V
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26, Eccentricity: 0.20, Period (h): 9289.87
+
+### SIZE
+- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 600.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 14.36, Solar (h): 14.38, Solar days/year: 646.10
+- Axial Tilt: 10.00°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+
+### SUBORDINATES
+| Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
+| ----------- | ---- | ------------- | ---------- | --- | ---------- |
+| A V a | 2 | 3200 | 4403635 | 0.000 | 1050.06 |
+| A V b | S | 600 | 229356 | 0.000 | 12.48 |
+| A V c | R | 0 | 558099 | 0.000 | 47.38 |
+| A V d | 1 | 1600 | 393727 | 0.000 | 28.07 |
+| A V e | S | 600 | 640285 | 0.000 | 58.22 |
+| A V f | S | 600 | 969029 | 0.000 | 108.39 |
+| A V g | 2 | 3200 | 969029 | 0.000 | 108.39 |
+| A V h | 2 | 3200 | 1165893 | 0.000 | 143.05 |
+| A V i | S | 600 | 640285 | 0.000 | 58.22 |
+| A V j | S | 600 | 804657 | 0.000 | 82.02 |
+
+
+## PART P — A V a (Moon)
+
+**WORLD:** A V a
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 1050.06
+- Moon orbit (km): 4403635 around A V
+
+### SIZE
+- Diameter (km): 3200, Density: 1.00, Gravity: 0.25, Mass (Earth): 0.016
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 1050.06, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 3.00°
+- Tidal lock: 1:1, Tides (m): 0.10
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Very low gravity
+
+
+## PART P — A V b (Moon)
+
+**WORLD:** A V b
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 12.48
+- Moon orbit (km): 229356 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 1.06, Gravity: 0.05, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 12.48, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.70°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A V c (Moon)
+
+**WORLD:** A V c
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 47.38
+- Moon orbit (km): 558100 around A V
+
+### SIZE
+- Diameter (km): 0, Density: 0.00, Gravity: 0.00, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 47.38, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.30°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water
+
+
+## PART P — A V d (Moon)
+
+**WORLD:** A V d
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 28.07
+- Moon orbit (km): 393728 around A V
+
+### SIZE
+- Diameter (km): 1600, Density: 0.80, Gravity: 0.10, Mass (Earth): 0.002
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 28.07, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 1.00°
+- Tidal lock: 1:1, Tides (m): 0.05
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A V e (Moon)
+
+**WORLD:** A V e
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 58.22
+- Moon orbit (km): 640286 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 0.91, Gravity: 0.04, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 58.22, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 1.00°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A V f (Moon)
+
+**WORLD:** A V f
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 108.39
+- Moon orbit (km): 969029 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 108.39, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.10°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A V g (Moon)
+
+**WORLD:** A V g
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 108.39
+- Moon orbit (km): 969029 around A V
+
+### SIZE
+- Diameter (km): 3200, Density: 0.91, Gravity: 0.23, Mass (Earth): 0.014
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 108.39, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.60°
+- Tidal lock: 1:1, Tides (m): 0.10
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Very low gravity
+
+
+## PART P — A V h (Moon)
+
+**WORLD:** A V h
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 143.05
+- Moon orbit (km): 1165893 around A V
+
+### SIZE
+- Diameter (km): 3200, Density: 0.56, Gravity: 0.14, Mass (Earth): 0.009
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 143.05, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 0.10
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A V i (Moon)
+
+**WORLD:** A V i
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 58.22
+- Moon orbit (km): 640286 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 1.12, Gravity: 0.05, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 58.22, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.30°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A V j (Moon)
+
+**WORLD:** A V j
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.26 (via A V), Eccentricity: 0.00, Period (h): 82.02
+- Moon orbit (km): 804657 around A V
+
+### SIZE
+- Diameter (km): 600, Density: 0.53, Gravity: 0.02, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 82.02, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — A VI
+
+**WORLD:** A VI
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 1.85, Eccentricity: 0.06, Period (h): 16528.97
+
+### SIZE
+- Diameter (km): 6400, Density: 0.88, Gravity: 0.44, Mass (Earth): 0.112
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 30.55, Solar (h): 30.60, Solar days/year: 540.11
+- Axial Tilt: 30.00°
+- Tidal lock: no, Tides (m): 0.06
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Low gravity
+
+
+## PART P — A VII — mainworld
 
 **WORLD:** A VII
 **SECTOR | LOCATION:** — | —
@@ -147,4 +977,380 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 ### COMMENTS
 - This is the system mainworld.
 
+
+## PART P — B I
+
+**WORLD:** B I
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.30, Eccentricity: 0.01, Period (h): 1216.56
+
+### SIZE
+- Diameter (km): 17600, Density: 0.97, Gravity: 1.34, Mass (Earth): 2.556
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 1216.56, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 40.87
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 29, Residual: 25, Tidal Stress: 4, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Additional surface area; Non-breathable atmosphere; Lack of accessible liquid water; Very little useable land surface area; Gravity somewhat high
+
+
+## PART P — B II
+
+**WORLD:** B II
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.54, Eccentricity: 0.50, Period (h): 2920.47
+
+### SIZE
+- Diameter (km): 19200, Density: 0.88, Gravity: 1.33, Mass (Earth): 3.011
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 29.83, Solar (h): 30.14, Solar days/year: 96.90
+- Axial Tilt: 0.60°
+- Tidal lock: no, Tides (m): 7.74
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 87, Residual: 81, Tidal Stress: 0, Tidal Heating: 6, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Additional surface area; Non-breathable atmosphere; Lack of accessible liquid water; Gravity somewhat high
+
+### SUBORDINATES
+| Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
+| ----------- | ---- | ------------- | ---------- | --- | ---------- |
+| B II a | 6 | 9600 | 256320 | 0.000 | 206.75 |
+| B II b | 2 | 3200 | 277440 | 0.000 | 232.83 |
+| B II c | 1 | 1600 | 235200 | 0.000 | 181.73 |
+| B II d | S | 600 | 45440 | 0.000 | 15.43 |
+| B II e | S | 600 | 113920 | 0.000 | 61.26 |
+
+
+## PART P — B II a (Moon)
+
+**WORLD:** B II a
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.54 (via B II), Eccentricity: 0.00, Period (h): 206.75
+- Moon orbit (km): 256320 around B II
+
+### SIZE
+- Diameter (km): 9600, Density: 0.88, Gravity: 0.66, Mass (Earth): 0.376
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 206.75, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.50°
+- Tidal lock: 1:1, Tides (m): 3.87
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 1, Residual: 1, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Non-breathable atmosphere; Lack of accessible liquid water; Low gravity
+
+
+## PART P — B II b (Moon)
+
+**WORLD:** B II b
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.54 (via B II), Eccentricity: 0.00, Period (h): 232.83
+- Moon orbit (km): 277440 around B II
+
+### SIZE
+- Diameter (km): 3200, Density: 0.50, Gravity: 0.13, Mass (Earth): 0.008
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 232.83, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.02°
+- Tidal lock: 1:1, Tides (m): 1.29
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — B II c (Moon)
+
+**WORLD:** B II c
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.54 (via B II), Eccentricity: 0.00, Period (h): 181.73
+- Moon orbit (km): 235200 around B II
+
+### SIZE
+- Diameter (km): 1600, Density: 0.91, Gravity: 0.11, Mass (Earth): 0.002
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 181.73, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.20°
+- Tidal lock: 1:1, Tides (m): 0.64
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — B II d (Moon)
+
+**WORLD:** B II d
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.54 (via B II), Eccentricity: 0.00, Period (h): 15.43
+- Moon orbit (km): 45440 around B II
+
+### SIZE
+- Diameter (km): 600, Density: 0.62, Gravity: 0.03, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 15.43, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 1.00°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P — B II e (Moon)
+
+**WORLD:** B II e
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 0.54 (via B II), Eccentricity: 0.00, Period (h): 61.26
+- Moon orbit (km): 113920 around B II
+
+### SIZE
+- Diameter (km): 600, Density: 0.71, Gravity: 0.03, Mass (Earth): 0.000
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 61.26, Solar (h): 0.00, Solar days/year: 0.00
+- Axial Tilt: 0.20°
+- Tidal lock: 1:1, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Unhealthy low gravity levels
+
+
+## PART P.B — B PI (Belt)
+
+**WORLD:** B PI   **SAH/UWP:** 000
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**PRIMARY OBJECT(S):** B   **SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- O#: 2.30, AU: 0.79, Span: 0.774 Orbit#s, Period (h): 5224.93
+
+### COMPOSITION
+- m-type%: 15, s-type%: 65, c-type%: 17, other%: 3
+- Bulk: 13
+
+### RESOURCES
+- Rating: 12
+
+### MAJOR BODIES
+- Size 1: 9, Size S: 12
+
+
+## PART P — A I
+
+**WORLD:** A I
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 28.00, Eccentricity: 0.35, Period (h): 973483.31
+
+### SIZE
+- Diameter (km): 6400, Density: 0.65, Gravity: 0.33, Mass (Earth): 0.082
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 54.93, Solar (h): 54.93, Solar days/year: 17722.42
+- Axial Tilt: 15.00°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Limited surface area; Non-breathable atmosphere; Lack of accessible liquid water; Very low gravity
+
+
+## PART P — B I
+
+**WORLD:** B I
+**SECTOR | LOCATION:** — | —
+**INITIAL SURVEY:**    **LAST UPDATED:** 
+**SYSTEM AGE (Gyr):** 5.600
+
+### ORBIT
+- AU: 14.00, Eccentricity: 0.00, Period (h): 390889.47
+
+### SIZE
+- Diameter (km): 8000, Density: 0.65, Gravity: 0.41, Mass (Earth): 0.161
+
+### ATMOSPHERE
+- (none — vacuum)
+
+### HYDROGRAPHICS
+- (none)
+
+### ROTATION
+- Sidereal (h): 26.28, Solar (h): 26.28, Solar days/year: 14872.87
+- Axial Tilt: 20.00°
+- Tidal lock: no, Tides (m): 0.00
+
+### TEMPERATURE
+- (not computed)
+
+### SEISMIC
+- TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0
+
+### LIFE
+- (not computed)
+
+### HABITABILITY
+- Rating: 0
+- Notes: Non-breathable atmosphere; Lack of accessible liquid water; Low gravity
 
