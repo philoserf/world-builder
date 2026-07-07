@@ -163,7 +163,12 @@ func reEvalBody(r roller.Roller, u *Universe, body, parent *Body, force bool) er
 	} else {
 		yearHours = body.Period.Hours
 	}
-	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, yearHours)
+	// C1: the cascade re-roll draws from the body's own *-reeval
+	// substreams (distinct from the first-pass "rotation-tilt"/"climate"
+	// families), so it consumes fresh, isolated dice and perturbs no
+	// other body — retiring the shared-stream "~2× dice" trade-off in
+	// docs/wbh-inconsistencies.md § 7.
+	tl, err := GenerateTidalLock(bodySub(r, body, parent, "rotation-tilt-reeval"), body, moonRef, sys, parent, yearHours)
 	if err != nil {
 		return fmt.Errorf("worlds: tidal-lock re-eval %s%s: %w", moonTag(parent), body.Designation, err)
 	}
@@ -184,7 +189,7 @@ func reEvalBody(r roller.Roller, u *Universe, body, parent *Body, force bool) er
 	// from body.Atmosphere. Then re-run climate from scratch with the
 	// new tidal-lock outputs.
 	ClearStage5Output(body)
-	if err := ApplyClimatePasses(r, body, sys); err != nil {
+	if err := ApplyClimatePasses(bodySub(r, body, parent, "climate-reeval"), body, sys); err != nil {
 		return fmt.Errorf("worlds: tidal-lock re-eval climate %s%s: %w", moonTag(parent), body.Designation, err)
 	}
 	return nil

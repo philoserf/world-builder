@@ -17,14 +17,17 @@ import (
 // re-derives atm/hydro consistently. Tectonic plates and GG residual
 // heat are forward-only post-climate (Stage 7).
 //
-// Every body is walked uniformly via Universe.AllBodies(); eligibility
-// (HZ-orbit terrestrials and HZ-planet moons) is enforced inside
-// ApplyClimatePasses's initialAtmosphere check — ineligible bodies
-// short-circuit at zero cost. Per anti-pattern A.1, every HZ-planet
-// moon is walked alongside its parent.
+// Every body is walked uniformly via Universe.AllBodiesWithParent();
+// eligibility (HZ-orbit terrestrials and HZ-planet moons) is enforced
+// inside ApplyClimatePasses's initialAtmosphere check. A per-body climate
+// sub-roller (C1) is constructed for every body, but ineligible bodies
+// draw no dice from it — the check stays centralized in initialAtmosphere
+// rather than being duplicated here as a pre-fork guard. Per anti-pattern
+// A.1, every HZ-planet moon is walked alongside its parent.
 func ApplyClimate(r roller.Roller, u *Universe) error {
-	for body := range u.AllBodies() {
-		if err := ApplyClimatePasses(r, body, u.System); err != nil {
+	for body, parent := range u.AllBodiesWithParent() {
+		sub := bodySub(r, body, parent, "climate")
+		if err := ApplyClimatePasses(sub, body, u.System); err != nil {
 			return fmt.Errorf("worlds: stage5 climate %s: %w", body.Designation, err)
 		}
 	}

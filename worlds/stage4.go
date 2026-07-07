@@ -25,6 +25,22 @@ import (
 func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 	sys := u.System
 
+	// SPIKE C1 (docs/rebuild-spec.md § C1): every body draws its rotation/
+	// tilt/tide dice from its own substream keyed by stable identity, not
+	// from the shared stream r. Forking never consumes from r, so this
+	// stage takes zero draws from the shared stream; each body's outputs
+	// depend only on its own (seed, identity) and are invariant to stage
+	// reordering or another body being re-rolled (the tidal-lock cascade).
+	// With a Scripted r, Fork is transparent and the flat dice list is
+	// consumed in call order exactly as before.
+	sub := make(map[*Body]roller.Roller)
+	for body, parent := range u.AllBodiesWithParent() {
+		if body.Kind == BodyEmpty {
+			continue
+		}
+		sub[body] = bodySub(r, body, parent, "rotation-tilt")
+	}
+
 	// Sub-stage 1: day length. Moons inherit the parent's stellar period
 	// before the per-body call (their year around the star equals the
 	// parent's).
@@ -35,7 +51,7 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		if parent != nil {
 			body.Period.Hours = parent.Period.Hours
 		}
-		dl, err := GenerateDayLength(r, body, sys)
+		dl, err := GenerateDayLength(sub[body], body, sys)
 		if err != nil {
 			return fmt.Errorf("worlds: stage4 day length %s%s: %w", moonTag(parent), body.Designation, err)
 		}
@@ -49,7 +65,7 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty {
 			continue
 		}
-		at, err := GenerateAxialTilt(r, body)
+		at, err := GenerateAxialTilt(sub[body], body)
 		if err != nil {
 			return fmt.Errorf("worlds: stage4 axial tilt %s%s: %w", moonTag(parent), body.Designation, err)
 		}
@@ -66,7 +82,7 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty || parent == nil {
 			continue
 		}
-		tl, err := GenerateTidalLock(r, body, body, sys, parent, body.PeriodHours)
+		tl, err := GenerateTidalLock(sub[body], body, body, sys, parent, body.PeriodHours)
 		if err != nil {
 			return fmt.Errorf("worlds: stage4 tidal lock %s%s: %w", moonTag(parent), body.Designation, err)
 		}
@@ -78,7 +94,7 @@ func ApplyRotationTilt(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty || parent != nil {
 			continue
 		}
-		tl, err := GenerateTidalLock(r, body, nil, sys, nil, body.Period.Hours)
+		tl, err := GenerateTidalLock(sub[body], body, nil, sys, nil, body.Period.Hours)
 		if err != nil {
 			return fmt.Errorf("worlds: stage4 tidal lock %s%s: %w", moonTag(parent), body.Designation, err)
 		}
