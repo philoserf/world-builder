@@ -22,8 +22,7 @@ const (
 // rolls for a system whose primary has the given properties.
 func PresenceDM(primary Star) int {
 	// Special-object primaries: BD, D, and post-stellar all -1.
-	switch primary.Kind {
-	case KindBrownDwarf, KindWhiteDwarf, KindPulsar, KindNeutronStar, KindBlackHole:
+	if IsPostStellar(primary.Kind) {
 		return -1
 	}
 	// Class Ia/Ib/II/III/IV: +1.

@@ -34,7 +34,7 @@ func baselineDMs(sys stars.System, counts Counts) int {
 	case stars.VI:
 		dm--
 	}
-	if isPostStellar(sys.Primary.Kind) {
+	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm -= 2
 	}
 	switch {

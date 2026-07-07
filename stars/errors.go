@@ -12,9 +12,12 @@ import (
 // errors.Is(err, ErrSpecialCircumstances) check.
 var ErrSpecialCircumstances = errors.New("stars: special circumstances chapter required")
 
-// ErrCompanionOfGiantMAO indicates a companion of a giant primary
-// (class Ia/Ib/II/III) requires a Plan 3+ MAO computation that is not
-// yet implemented.
+// ErrCompanionOfGiantMAO is returned by RollStellarOrbit when asked for
+// a companion orbit under a giant primary (class Ia/Ib/II/III): that
+// case needs 1D × MAO(primary) (WBH p.27), but RollStellarOrbit has only
+// the luminosity class, not the full Star that MAO requires. Callers
+// compute MAO(primary) and use RollCompanionOrbitOfGiant instead —
+// GenerateSystem does exactly this.
 var ErrCompanionOfGiantMAO = fmt.Errorf(
 	"stars: companion of giant primary requires MAO (Plan 3+): %w",
 	ErrSpecialCircumstances,

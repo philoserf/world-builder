@@ -17,7 +17,7 @@ func TestGenerateSystemPlacement_WrappedErrorMessage(t *testing.T) {
 	t.Parallel()
 
 	primary := stars.Compose(stars.ComposeOpts{
-		Kind: stars.KindBrownDwarf, // post-stellar primary triggers ErrPostStellarPrimaryUnsupported
+		Kind: stars.KindBrownDwarf, // post-stellar primary triggers stars.ErrPostStellarPrimaryUnsupported
 	})
 	sys := stars.System{Primary: primary}
 
@@ -26,8 +26,8 @@ func TestGenerateSystemPlacement_WrappedErrorMessage(t *testing.T) {
 	if err == nil {
 		t.Fatal("GenerateSystemPlacement returned nil error; expected post-stellar failure")
 	}
-	if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
-		t.Errorf("err is not ErrPostStellarPrimaryUnsupported via Is(): %v", err)
+	if !errors.Is(err, stars.ErrPostStellarPrimaryUnsupported) {
+		t.Errorf("err is not stars.ErrPostStellarPrimaryUnsupported via Is(): %v", err)
 	}
 	if !strings.Contains(err.Error(), "worlds: available-orbits:") {
 		t.Errorf("err.Error() = %q, want step prefix 'worlds: available-orbits:'", err.Error())

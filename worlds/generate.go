@@ -49,7 +49,6 @@ func GenerateWithRollerOpts(r roller.Roller, opts GenerateOpts) (Universe, error
 	sys, err := stars.GenerateSystem(r, stars.GenerateSystemOpts{
 		WithVariance:   true,
 		Accuracy:       2,
-		MAO:            MAO,
 		PeculiarColumn: opts.PeculiarColumn,
 	})
 	if err != nil {
