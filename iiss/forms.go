@@ -1,7 +1,5 @@
 package iiss
 
-import "strings"
-
 // Class0IForm is the IISS Class 0/I Survey form (WBH p.35 layout).
 // Renders the stellar census.
 type Class0IForm struct {
@@ -77,16 +75,15 @@ const (
 )
 
 // Class4PForm is the IISS Class IV-P "Planetary Detail" Survey form,
-// rendered only for the auto-picked mainworld. PartP/PartPB carry the
-// JSON payload (concretely *worlds.Class4PPartP / *worlds.Class4PPartPB,
-// typed any to avoid an iiss→worlds import cycle); RenderBody is the
-// Markdown renderer.
+// rendered only for the auto-picked mainworld. Exactly one of PartP
+// (planet/moon) or PartPB (belt) is populated, per Variant; the other is
+// nil. Both are concrete iiss types, so the form is fully owned by iiss/
+// and marshals to JSON without a worlds-side payload.
 type Class4PForm struct {
 	FormHeader
-	Variant    Class4PVariant
-	PartP      any                                `json:",omitempty"`
-	PartPB     any                                `json:",omitempty"`
-	RenderBody func(*strings.Builder, FormHeader) `json:"-"`
+	Variant Class4PVariant
+	PartP   *Class4PPartP  `json:",omitempty"`
+	PartPB  *Class4PPartPB `json:",omitempty"`
 }
 
 // SystemForms aggregates the three IISS forms for a generated system,
