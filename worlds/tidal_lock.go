@@ -48,7 +48,9 @@ const (
 // All-cases-common DMs stack additively on top of each case's base DM and
 // case-specific DMs. Cases that don't apply are absent from the returned map:
 //   - moon→planet requires parentPlanet and moonRef to both be non-nil
-//   - planet→moon requires the body to have at least one significant (Size 1+) moon
+//   - planet→moon requires all three of: the body is terrestrial
+//     (isTerrestrial), it has at least one significant (Size 1+) moon,
+//     and at least one of its moons is already locked (hasLockedMoon)
 //
 // Per WBH p.106: "In 'edge' conditions where a value corresponds to more than
 // one DM or falls between two DMs, use the DM closer to 0."
@@ -166,11 +168,11 @@ func planetToStarDMs(body *Body, sys stars.System) int {
 		dm -= 2
 	case starMass <= 1.0:
 		dm--
+	// 1.0 < starMass < 2: no DM (falls between table rows; use DM closer to 0 = 0)
 	case starMass >= 2 && starMass <= 5:
 		dm++
 	case starMass > 5:
 		dm += 2
-		// 1.0 < starMass < 2: no DM (falls between table rows; use DM closer to 0 = 0)
 	}
 
 	// Planet orbits more than one star: DM-total number of stars orbited.
@@ -581,7 +583,10 @@ func rerolledDayLength(r roller.Roller, result int, body *Body, yearHours float6
 		return float64(r.Roll("1D") * 50 * 24)
 	case 11:
 		return yearHours * 2 / 3
-	case 12, 13, 14, 15, 16:
+	// The book's table covers 12-16, but the sole caller passes an
+	// un-DM'd 2D reroll (RollTidalLockStatus(r, 0), max 12), so only 12
+	// is reachable.
+	case 12:
 		return yearHours
 	default:
 		return current

@@ -14,10 +14,7 @@ func TestRollBaselineNumber_NoMods(t *testing.T) {
 		Kind: stars.KindMainSequence, LuminosityClass: stars.V,
 	})}
 	counts := Counts{Total: 17}
-	got, err := RollBaselineNumber(roller.NewScripted(7), sys, counts)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := RollBaselineNumber(roller.NewScripted(7), sys, counts)
 	if got != 7 {
 		t.Errorf("baseline = %d, want 7", got)
 	}
@@ -115,10 +112,7 @@ func TestRollBaselineNumber_DMTable(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := RollBaselineNumber(roller.NewScripted(c.roll), c.sys, Counts{Total: c.tot})
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
+			got := RollBaselineNumber(roller.NewScripted(c.roll), c.sys, Counts{Total: c.tot})
 			if got != c.want {
 				t.Errorf("baseline = %d, want %d", got, c.want)
 			}
@@ -135,10 +129,7 @@ func TestBaselineOrbit_3a_HZCOGTE1(t *testing.T) {
 		Intervals:   []Interval{{Min: 0.03, Max: 20.0}},
 	}
 	// 2D = 5 → (5-7)/10 = -0.2. HZCO 3.0 + (-0.2) = 2.8.
-	got, err := BaselineOrbit(roller.NewScripted(5), primary, primary.HZCO(), 5, 17)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := BaselineOrbit(roller.NewScripted(5), primary, primary.HZCO(), 5, 17)
 	if math.Abs(got-2.8) > 0.01 {
 		t.Errorf("BaselineOrbit = %v, want 2.8", got)
 	}
@@ -154,10 +145,7 @@ func TestBaselineOrbit_3a_HZCOLT1(t *testing.T) {
 	}
 	hzco := primary.HZCO()
 	// 2D = 9 → (9-7)/100 = 0.02 → hzco + 0.02
-	got, err := BaselineOrbit(roller.NewScripted(9), primary, hzco, 5, 17)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := BaselineOrbit(roller.NewScripted(9), primary, hzco, 5, 17)
 	if math.Abs(got-(hzco+0.02)) > 0.005 {
 		t.Errorf("BaselineOrbit = %v, want %v", got, hzco+0.02)
 	}
@@ -172,10 +160,7 @@ func TestBaselineOrbit_3b_ColdSystem_MinGTE1(t *testing.T) {
 		Intervals: []Interval{{Min: 1.5, Max: 20.0}},
 	}
 	// BaselineOrbit = 3.0 - (-2) + 5 + (2D-2)/10 = 10.0 + (7-2)/10 = 10.5
-	got, err := BaselineOrbit(roller.NewScripted(7), primary, primary.HZCO(), -2, 5)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := BaselineOrbit(roller.NewScripted(7), primary, primary.HZCO(), -2, 5)
 	if math.Abs(got-10.5) > 0.01 {
 		t.Errorf("BaselineOrbit = %v, want 10.5", got)
 	}
@@ -191,10 +176,7 @@ func TestBaselineOrbit_3c_HotSystem(t *testing.T) {
 		MAO:       0.03,
 		Intervals: []Interval{{Min: 0.03, Max: 20.0}},
 	}
-	got, err := BaselineOrbit(roller.NewScripted(10), primary, primary.HZCO(), 8, 5)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := BaselineOrbit(roller.NewScripted(10), primary, primary.HZCO(), 8, 5)
 	if math.Abs(got-1.64) > 0.05 {
 		t.Errorf("BaselineOrbit = %v, want ~1.64", got)
 	}
@@ -212,10 +194,7 @@ func TestBaselineOrbit_SnapToAvailable(t *testing.T) {
 	// Snap: nearest endpoint is 2.5 (snapped DOWN from 3.0), so snap direction
 	// moves further DOWN into the lower interval. Snap roll: 2D=5 → magnitude
 	// |5-7|/10 = 0.2 → 2.5 + (-1)*0.2 = 2.3.
-	got, err := BaselineOrbit(roller.NewScripted(7, 5), primary, primary.HZCO(), 3, 17)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := BaselineOrbit(roller.NewScripted(7, 5), primary, primary.HZCO(), 3, 17)
 	if math.Abs(got-2.3) > 0.05 {
 		t.Errorf("BaselineOrbit = %v, want ~2.3 (snap to 2.5, variance 0.2 into lower interval)", got)
 	}
@@ -233,10 +212,7 @@ func TestBaselineOrbit_SnapToAvailable_HighRollStaysInZone(t *testing.T) {
 		MAO:       0.03,
 		Intervals: []Interval{{Min: 0.03, Max: 2.5}, {Min: 3.5, Max: 20.0}},
 	}
-	got, err := BaselineOrbit(roller.NewScripted(7, 10), primary, primary.HZCO(), 3, 17)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := BaselineOrbit(roller.NewScripted(7, 10), primary, primary.HZCO(), 3, 17)
 	if math.Abs(got-2.2) > 0.05 {
 		t.Errorf("BaselineOrbit = %v, want ~2.2 (high snap roll must still move into zone)", got)
 	}

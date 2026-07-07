@@ -31,6 +31,10 @@ type BodyPhysicalDMs struct {
 func compositionDM(d BodyPhysicalDMs) int {
 	dm := 0
 	switch d.SizeCode {
+	// "0" and "R" encode the full WBH p.71 table row but are unreachable
+	// through the Stage-3 orchestrator, which early-returns for those
+	// codes before building BodyPhysicalDMs; they are exercised only by
+	// direct unit tests.
 	case "0", "R", "S", "1", "2", "3", "4":
 		dm--
 	case "6", "7", "8", "9":

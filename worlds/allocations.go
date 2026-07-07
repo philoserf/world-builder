@@ -7,7 +7,7 @@ type StarAllocation struct {
 	Group           Group
 	TotalStarOrbits int // floor(group.Total() + (1 if no companion and prior allowable > 0))
 	AllocatedWorlds int
-	BaselineN       int // per-star baseline number (1-based slot index of system baseline orbit within this group; 0 if out of range). Backfilled by DetailSystem (T14).
+	BaselineN       int // per-star baseline number (1-based slot index of system baseline orbit within this group; 0 if out of range). Backfilled by computeBaselineN via AggregateSystem (stage10.go).
 }
 
 // AllocateOrbitsByStar implements WBH pp. 43–44 Step 1.

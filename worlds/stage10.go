@@ -32,7 +32,9 @@ func AggregateSystem(u *Universe) {
 
 // computeBaselineN returns the per-star baseline number for a group
 // per WBH p.58: the 1-based index of the slot closest to the group's
-// own HZCO, except:
+// own HZCO. This Stage-10 profile concept is unrelated to Stage 1's
+// Baseline Number/Baseline Orbit placement machinery (baseline.go).
+// Exceptions:
 //   - if the group has no Members or no non-empty bodies: 0
 //   - if no body falls in HZ (HZCO ± 1.0): 0
 //   - if every body is in HZ: total slot count

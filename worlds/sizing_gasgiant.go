@@ -32,6 +32,9 @@ type GasGiantSize struct {
 // its eHex code per WBH p.55: 2-9 → "2"-"9", 10-15 → "A"-"F",
 // 16 → "G", 17 → "H", 18 → "J" (skips "I" per Traveller eHex convention).
 func gasGiantDiameterCode(n int) string {
+	// Safety-net clamps: unreachable given the current dice formulas
+	// (D3+D3, 1D+6, 2D+6 all have min ≥ 2 and max ≤ 18), kept only as
+	// defense against future formula edits.
 	if n < 2 {
 		n = 2
 	}

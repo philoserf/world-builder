@@ -10,8 +10,12 @@ import (
 // RollBaselineNumber implements WBH Step 2 (pp. 44-45). The baseline
 // number determines whether the system is hot, temperate, or cold, and
 // drives Step 3.
-func RollBaselineNumber(r roller.Roller, sys stars.System, counts Counts) (int, error) {
-	return r.Roll("2D") + baselineDMs(sys, counts), nil
+//
+// "Baseline" here is the Stage-1 orbit-placement concept (Baseline
+// Number/Baseline Orbit, pp. 44-46) — unrelated to Stage 10's
+// per-allocation profile field StarAllocation.BaselineN (stage10.go).
+func RollBaselineNumber(r roller.Roller, sys stars.System, counts Counts) int {
+	return r.Roll("2D") + baselineDMs(sys, counts)
 }
 
 // baselineDMs computes the WBH p. 45 DM stack for Step 2.
@@ -87,12 +91,15 @@ func secondaryStarCount(sys stars.System) int {
 //
 // hzco is the primary group's HZCO (use primary.HZCO()).
 // Continuation Method (sub-case 3d) is out of scope.
+//
+// Like RollBaselineNumber, this is the Stage-1 placement concept —
+// unrelated to Stage 10's StarAllocation.BaselineN (stage10.go).
 func BaselineOrbit(
 	r roller.Roller,
 	primary Group,
 	hzco float64,
 	baselineN, totalWorlds int,
-) (float64, error) {
+) float64 {
 	var orbit float64
 	switch {
 	case baselineN >= 1 && baselineN <= totalWorlds:
@@ -136,7 +143,7 @@ func BaselineOrbit(
 	if !primary.Contains(orbit) {
 		orbit = snapToAvailable(r, primary, orbit)
 	}
-	return orbit, nil
+	return orbit
 }
 
 // snapToAvailable returns the nearest in-interval orbit to want, with

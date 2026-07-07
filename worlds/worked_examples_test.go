@@ -223,10 +223,7 @@ func TestZed_RollBaselineNumber(t *testing.T) {
 	// Zed: companion (Ab) → DM-2; secondaries B + Ca → DM-2; total 17 → no
 	// band DM (16-17 unlisted in book → 0). Primary G7 V → no class DM.
 	// Net DM = -4. Book rolls 9. Result: 9 - 4 = 5.
-	got, err := worlds.RollBaselineNumber(roller.NewScripted(9), sys, worlds.Counts{Total: 17})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := worlds.RollBaselineNumber(roller.NewScripted(9), sys, worlds.Counts{Total: 17})
 	if got != 5 {
 		t.Errorf("baseline = %d, want 5", got)
 	}
@@ -242,10 +239,7 @@ func TestZed_BaselineOrbit(t *testing.T) {
 	primary := avail.Groups[0]
 	// Book: baselineN=5, totalWorlds=17, HZCO Aab = 3.3, roll 5 → variance (5-7)/10 = -0.2.
 	// BaselineOrbit = 3.3 + (-0.2) = 3.1.
-	got, err := worlds.BaselineOrbit(roller.NewScripted(5), primary, primary.HZCO(), 5, 17)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	got := worlds.BaselineOrbit(roller.NewScripted(5), primary, primary.HZCO(), 5, 17)
 	if math.Abs(got-3.1) > 0.05 {
 		t.Errorf("BaselineOrbit = %v, want 3.1", got)
 	}

@@ -1,9 +1,6 @@
 package stars
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/philoserf/world-builder/roller"
 )
 
@@ -49,11 +46,6 @@ type GenerateOpts struct {
 	Accuracy int
 }
 
-// ErrNonClassVPrimary is returned by GenerateMainSequenceStar when the
-// primary roll yields a non-Class-V star. Plan 1 only handles Class V;
-// Plan 2 introduces full class dispatch.
-var ErrNonClassVPrimary = errors.New("stars: non-Class-V primary; arrives in Plan 2")
-
 // GenerateMainSequenceStar generates a Class V main-sequence primary
 // star from rolls.
 //
@@ -66,12 +58,12 @@ var ErrNonClassVPrimary = errors.New("stars: non-Class-V primary; arrives in Pla
 //  6. D3 for age
 //  7. (if Accuracy == 2) d10 for age
 func GenerateMainSequenceStar(r roller.Roller, opts GenerateOpts) (Star, error) {
+	// RollPrimaryTypeAndClass either errors (ErrSpecialPrimary / table
+	// lookup) or returns Class V — non-V classes are dispatched through
+	// generatePrimaryAtClass (peculiar.go) and never reach here.
 	letter, lc, err := RollPrimaryTypeAndClass(r)
 	if err != nil {
 		return Star{}, err
-	}
-	if lc != V {
-		return Star{}, fmt.Errorf("%w: got %s", ErrNonClassVPrimary, lc)
 	}
 	subtype, err := RollSubtype(r, letter, lc)
 	if err != nil {

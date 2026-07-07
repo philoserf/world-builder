@@ -91,6 +91,8 @@ func sizeCodeForN(n int) SizeCode {
 // Returns the resulting SizeCode and its book diameter in km.
 func RollTerrestrialSize(r roller.Roller) (TerrestrialSize, error) {
 	selector := r.Roll("1D")
+	// Unreachable for a conforming Roller ("1D" is always 1-6); guards
+	// against a malformed custom Roller implementation, not a WBH edge case.
 	if selector < 1 || selector > 6 {
 		return TerrestrialSize{}, fmt.Errorf("worlds: terrestrial size selector out of range: %d", selector)
 	}
@@ -104,6 +106,9 @@ func RollTerrestrialSize(r roller.Roller) (TerrestrialSize, error) {
 	default: // 5-6
 		n = r.Roll("2D") + 3
 	}
+	// Safety-net clamps: unreachable given the dice formulas above
+	// (1D min 1, 2D min 2, 2D+3 min 5 / max 15 via 2D+3), kept only as
+	// defense against future formula edits.
 	if n > 15 {
 		n = 15
 	}
