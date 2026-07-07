@@ -206,6 +206,13 @@ point"; the cascade no longer consumes a global snapshot.
 
 ### C3 — All three IISS forms as fully-owned structs
 
+> **Resolved (C3).** The Class IV-P body structs (`Class4PPartP`, `Class4PPartPB`, and
+> their sub-blocks) and their `RenderBody` methods moved into `iiss/class4p.go`;
+> `Class4PForm` now holds concrete `*Class4PPartP` / `*Class4PPartPB` — the closure and
+> the `any` fields are gone. `worlds` builds the structs (`buildClass4PPlanet` /
+> `buildClass4PBelt`), `iiss` renders them. Output byte-identical (Markdown + JSON). The
+> rest of this section is the original spec rationale.
+
 **Problem.** `iiss.Class4PForm` carries a `RenderBody func(*strings.Builder, FormHeader)`
 closure and `any`-typed `PartP`/`PartPB` fields, because the Class IV-P body was too
 domain-specific to move into `iiss/` without importing `worlds/`

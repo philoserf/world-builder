@@ -73,8 +73,8 @@ func MarkdownClass23(f Class23Form) string {
 
 // MarkdownClass4P renders the WBH p.138 IISS Class IV Survey Form
 // (FORM 0407F-IV PART P) for planet/moon mainworlds; for belts,
-// FORM 0407K-IV PART P.B. The body content is rendered by the
-// worlds-side closure stored on the form — see issue #48.
+// FORM 0407K-IV PART P.B. The body is rendered from the concrete
+// PartP / PartPB struct on the form.
 func MarkdownClass4P(f Class4PForm) string {
 	var b strings.Builder
 	switch f.Variant {
@@ -85,8 +85,11 @@ func MarkdownClass4P(f Class4PForm) string {
 	default:
 		fmt.Fprintf(&b, "## Class IV-P PART P — %s\n\n", f.IISSDesig)
 	}
-	if f.RenderBody != nil {
-		f.RenderBody(&b, f.FormHeader)
+	switch {
+	case f.PartPB != nil:
+		f.PartPB.RenderBody(&b, f.FormHeader)
+	case f.PartP != nil:
+		f.PartP.RenderBody(&b, f.FormHeader)
 	}
 	return b.String()
 }

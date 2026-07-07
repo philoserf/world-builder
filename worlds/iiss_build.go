@@ -254,19 +254,13 @@ func buildClass4P(u *Universe, header iiss.FormHeader) iiss.Class4PForm {
 	switch mainworld.Kind {
 	case BodyPlanetoidBelt:
 		form.Variant = iiss.Class4PBelt
-		pb := buildClass4PBelt(u, mainworld)
-		form.PartPB = pb
-		form.RenderBody = pb.RenderBody
+		form.PartPB = buildClass4PBelt(u, mainworld)
 	case BodyMoon:
 		form.Variant = iiss.Class4PMoon
-		p := buildClass4PPlanet(u, mainworld)
-		form.PartP = p
-		form.RenderBody = p.RenderBody
+		form.PartP = buildClass4PPlanet(u, mainworld)
 	default:
 		form.Variant = iiss.Class4PPlanet
-		p := buildClass4PPlanet(u, mainworld)
-		form.PartP = p
-		form.RenderBody = p.RenderBody
+		form.PartP = buildClass4PPlanet(u, mainworld)
 	}
 	return form
 }
