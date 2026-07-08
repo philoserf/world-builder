@@ -1,0 +1,15 @@
+#!/bin/sh
+# Pre-push gate: run the test suite (race + gold masters) before any push.
+# This repo has no CI — local hooks are the only automated gate. #114 merged
+# with a stale Zed gold master because `task test` was not run first.
+#
+# Bypass for an emergency push with:  git push --no-verify
+set -e
+
+if ! command -v task >/dev/null 2>&1; then
+	echo "pre-push: 'task' not found on PATH; install go-task (https://taskfile.dev) or push with --no-verify" >&2
+	exit 1
+fi
+
+echo "pre-push: running 'task test'..."
+task test

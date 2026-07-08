@@ -72,3 +72,9 @@ tasks:
     desc: Run go mod tidy
     cmds:
       - go mod tidy
+
+  hooks:
+    desc: Install git hooks (point core.hooksPath at the tracked .githooks/)
+    cmds:
+      - git config core.hooksPath .githooks
+      - echo "git hooks installed — pre-push runs 'task test'"
