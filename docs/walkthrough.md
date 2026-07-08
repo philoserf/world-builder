@@ -1,15 +1,15 @@
 # World Builder Walkthrough
 
-_2026-05-12T17:23:13Z by Showboat 0.6.1_
-<!-- showboat-id: e1831189-dd6b-47d5-a0e2-70e2118aa7fd -->
+*2026-07-08T01:37:42Z by Showboat 0.6.1*
+<!-- showboat-id: 68d6c26e-ddfa-4687-83d7-a4bbd1277509 -->
 
 ## Overview
 
-This project generates complete Mongoose Traveller _World Builder's Handbook_ star systems end-to-end. A seed plus deterministic dice produces a real, fully-formed system — primary star, companions, planets, moons, belts, atmospheres, life, habitability — rendered as Markdown IISS Class 0/I + II/III + IV-P forms.
+This project generates complete Mongoose Traveller _World Builder's Handbook_ (WBH) star systems end-to-end. A seed plus deterministic dice produces a real, fully-formed system — primary star, companions, planets, moons, belts, atmospheres, life, habitability — rendered as a single **IISS Class IV Survey** document: a system-level **PART 1 — System Census** followed by a per-body **PART P** (planet/moon/gas-giant) or **PART P.B** (belt) for every notable world.
 
 WBH pp.14–146 (Stars + System Worlds and Orbits + World Physical Characteristics) are implemented to book fidelity. WBH pp.147+ (World Social Characteristics, Special Circumstances) are out of scope.
 
-This walkthrough follows the code top-down: from the CLI entry, through the deterministic roller, into stars/worlds/iiss pipelines, ending with the rendered Markdown.
+This walkthrough follows the code top-down: from the CLI entry, through the deterministic roller, into the stars/worlds/iiss pipelines, ending with the rendered Markdown.
 
 ```bash
 find . -maxdepth 2 -type d \( -name "cmd" -o -name "stars" -o -name "worlds" -o -name "iiss" -o -name "dice" -o -name "roller" -o -name "docs" -o -path "*/cmd/world-builder" \) | sort
@@ -37,37 +37,44 @@ Six Go packages plus the CLI. Dependencies point inward: `cmd/world-builder` imp
 - `iiss/` — Pure renderer package. Holds the IISS form types and `MarkdownClass4Survey`. Does not import `worlds/`.
 - `cmd/world-builder/` — CLI entry; three lines of pipeline plus format dispatch.
 
-## Entry point: cmd/world-builder/main.go
+## Entry point: cmd/world-builder/run
 
-The CLI takes `-seed`, `-format`, and dispatches. Three branches: `markdown` (default), `json`, `short`.
+`run` parses `-seed` / `-format` (plus a `-peculiar` column selector), generates the universe, and dispatches on format: `markdown` (default), `json`, `short`.
 
 ```bash
-sed -n '18,65p' cmd/world-builder/main.go
+sed -n '26,80p' cmd/world-builder/main.go
 ```
 
 ```output
-func main() {
-	if err := run(os.Args[1:], os.Stdout, os.Stderr); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
 func run(args []string, stdout, stderr io.Writer) error {
 	fs := flag.NewFlagSet("world-builder", flag.ContinueOnError)
 	fs.SetOutput(stderr)
-	seed := fs.Int64("seed", 0, "random seed (0 = time-based)")
+	seed := fs.Int64("seed", 0, "random seed (omit for time-based)")
 	format := fs.String("format", "markdown", "output format: markdown | json | short")
+	peculiar := fs.String("peculiar", "special", "column for Special (2D=2) primary rolls: special | unusual | peculiar")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 
+	column, err := stars.ParsePeculiarPath(*peculiar)
+	if err != nil {
+		return err
+	}
+
+	// Distinguish "flag omitted" from "-seed 0": an explicit 0 is a
+	// legitimate reproducible seed, not a request for time-based.
+	seedSet := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "seed" {
+			seedSet = true
+		}
+	})
 	s := *seed
-	if s == 0 {
+	if !seedSet {
 		s = time.Now().UnixNano()
 	}
 
-	u, err := worlds.Generate(s)
+	u, err := worlds.GenerateWithOpts(s, worlds.GenerateOpts{PeculiarColumn: column})
 	if err != nil {
 		return fmt.Errorf("generate: %w", err)
 	}
@@ -115,6 +122,7 @@ package roller
 
 import (
 	"fmt"
+	"hash/fnv"
 	"math/rand"
 
 	"github.com/philoserf/world-builder/dice"
@@ -125,57 +133,48 @@ type Roller interface {
 	// Roll executes the given dice notation (e.g. "2D", "2D-7", "d10")
 	// and returns the result, including any modifier in the notation.
 	Roll(notation string) int
+
+	// Fork returns a child Roller whose stream is deterministically
+	// derived from this Roller's identity and key. Forking never
+	// consumes a draw from the parent, so a parent and its forks are
+	// independent: rolls taken from one do not perturb the other.
+	//
+	// SPIKE C1 (docs/rebuild-spec.md § C1). The pipeline uses Fork to
+	// give every (body, procedure-family) its own substream keyed by
+	// stable body identity, so reordering a stage or re-rolling one body
+	// (the tidal-lock cascade) leaves every other body's values byte-
+	// identical. Seeded branches; Scripted and Fixed are transparent
+	// (return a view over the same sequence / value) so per-procedure
+	// worked-example fixtures that feed a flat dice list are unaffected.
+	Fork(key string) Roller
 }
 
 // Seeded is a production roller backed by a seeded *math/rand.Rand.
 type Seeded struct {
-	rng *rand.Rand
+	seed int64 // immutable construction seed; Fork derives children from it
+	rng  *rand.Rand
 }
-
-// NewSeeded constructs a Seeded roller with the given seed.
-func NewSeeded(seed int64) *Seeded {
-	//nolint:gosec // math/rand is intentional; we are not generating crypto material.
-	return &Seeded{rng: rand.New(rand.NewSource(seed))}
-}
-
-// Roll implements the Roller interface.
-func (s *Seeded) Roll(notation string) int {
-	spec, err := dice.Parse(notation)
-	if err != nil {
-		panic(fmt.Errorf("roller.Seeded: %w", err))
-	}
-	total := spec.Modifier
-	for range spec.Count {
-		total += s.rng.Intn(spec.Sides) + 1
 ```
 
 ## worlds.Generate — the top-level pipeline
 
-`worlds.Generate(seed)` wraps `GenerateWithRoller(r)`, which runs every stage in dependency-graph order. The function body is the pipeline at a glance.
+`worlds.Generate(seed)` wraps `GenerateWithRollerOpts`, which runs every stage in dependency-graph order. The stage slice is the pipeline at a glance: placement, then eleven `Apply*` passes, then aggregation and IISS-form construction. Note stage `ApplyTidalLockReEval` (WBH p.106) sits right after `ApplyClimate` — the tidal-lock cascade re-evaluates once the atmosphere is known.
 
 ```bash
-sed -n '13,60p' worlds/generate.go
+sed -n '43,84p' worlds/generate.go
 ```
 
 ```output
-func Generate(seed int64) (Universe, error) {
-	return GenerateWithRoller(roller.NewSeeded(seed))
+func GenerateWithRoller(r roller.Roller) (Universe, error) {
+	return GenerateWithRollerOpts(r, GenerateOpts{})
 }
 
-// GenerateWithRoller runs the entire pass-2 pipeline against any
-// Roller. Tests use it with a Scripted roller for narrow per-procedure
-// fixtures and with a Seeded roller for façade end-to-end fixtures
-// (per docs/harness.md § Façade end-to-end). cmd/world-builder and
-// Generate use it via the seed convenience.
-//
-// All other entry points (GenerateSystem, GenerateSystemPlacement,
-// individual Apply* stages) remain available for callers that need
-// finer control.
-func GenerateWithRoller(r roller.Roller) (Universe, error) {
+// GenerateWithRollerOpts is GenerateWithRoller with options.
+func GenerateWithRollerOpts(r roller.Roller, opts GenerateOpts) (Universe, error) {
 	sys, err := stars.GenerateSystem(r, stars.GenerateSystemOpts{
-		WithVariance: true,
-		Accuracy:     2,
-		MAO:          MAO,
+		WithVariance:   true,
+		Accuracy:       2,
+		PeculiarColumn: opts.PeculiarColumn,
 	})
 	if err != nil {
 		return Universe{}, fmt.Errorf("worlds: stars: %w", err)
@@ -192,6 +191,7 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 		ApplyMoonRefinement,
 		ApplyRotationTilt,
 		ApplyClimate,
+		ApplyTidalLockReEval,
 		ApplyTaintTypology,
 		ApplySurfaceDistribution,
 		ApplyGeology,
@@ -210,21 +210,21 @@ func GenerateWithRoller(r roller.Roller) (Universe, error) {
 
 ## Stage 0: stars.GenerateSystem
 
-The first stage rolls the primary star and all companions. Roll order:
-
-1. Primary type (`RollPrimaryTypeAndClass`)
-2. Subtype
-3. Mass / Diameter / Temperature (table lookup, optional variance)
-4. Six presence rolls for Close, Near, Far, and companions
-5. Companion star generation in book order
-
-The `Special` (2D=2) roll dispatches through the WBH p.15 Special column (the cleaner Referee setting) which yields Class VI / IV / III / Giants only — no BD/D/Peculiar primaries by default. This is what makes every seed produce a real system. Users can opt into the Unusual column via `GenerateSystemOpts.PeculiarColumn = PeculiarPathUnusual`.
+The first stage rolls the primary star and all companions in a fixed roll-consumption order (documented in the function's own doc-comment). A `Special` (2D=2) primary dispatches through the WBH p.15 column selected by `PeculiarColumn` — the default `Special` column yields Class VI / IV / III / Giants only, which is what makes every default seed produce a real, habitable-capable system.
 
 ```bash
-sed -n '32,55p' stars/system.go
+sed -n '20,58p' stars/system.go
 ```
 
 ```output
+// computes it directly.
+type GenerateSystemOpts struct {
+	WithVariance   bool
+	Accuracy       int          // 1 or 2
+	PeculiarColumn PeculiarPath // zero value = PeculiarPathSpecial
+}
+
+// GenerateSystem rolls a complete multi-star system from a Roller.
 //
 // Roll consumption order (P2-10):
 //  1. Primary star via GenerateMainSequenceStar.
@@ -249,29 +249,25 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	}
 
 	// Presence rolls: Close, Near, Far, primary companion first; then
+	// companions of present orbit-class stars in Close/Near/Far order.
+	closePresent := RollPresence(r, primary, OrbitClose)
+	nearPresent := RollPresence(r, primary, OrbitNear)
+	farPresent := RollPresence(r, primary, OrbitFar)
+	primaryHasCompanion := RollPresence(r, primary, OrbitCompanion)
+
+	var closeCompanionPresent, nearCompanionPresent, farCompanionPresent bool
 ```
 
 ## Stage 1: worlds.GenerateSystemPlacement
 
-Allocates orbit slots to stars, fixes the baseline orbit, and places bodies into slots without yet sizing them. WBH pp.36–52: counts → available orbits → allocations → baseline → spread → slots → anomalous → place → eccentricities.
+Allocates orbit slots to stars, fixes the baseline orbit, and places bodies into slots without yet sizing them. WBH pp.36–52: counts → available orbits → allocations → baseline number → baseline orbit → empty orbits → spread → slots.
 
 ```bash
-grep -n '^func GenerateSystemPlacement' worlds/system_placement.go
-```
-
-```output
-43:func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement, error) {
-```
-
-```bash
-sed -n '43,75p' worlds/system_placement.go
+sed -n '35,68p' worlds/system_placement.go
 ```
 
 ```output
 func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement, error) {
-	// TODO(continuation-method): when stars.System gains a pre-existing
-	// mainworld field, return ErrContinuationMethodUnsupported here before
-	// running the clean-slate pipeline.
 	counts, err := GenerateCounts(r, sys, CountsOpts{})
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: counts: %w", err)
@@ -295,14 +291,24 @@ func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement
 	spread := Spread(primary, allocs[0].AllocatedWorlds, baselineOrbit, baselineN, totalStars)
 	slots, err := PlaceOrbitSlots(r, allocs, baselineN, baselineOrbit, spread, emptyOrbits)
 	if err != nil {
+		return SystemPlacement{}, fmt.Errorf("worlds: orbit-slots: %w", err)
+	}
+	anomSlots, newCounts, err := AddAnomalous(r, slots, allocs, counts)
+	if err != nil {
+		return SystemPlacement{}, fmt.Errorf("worlds: anomalous: %w", err)
+	}
+	placements, err := PlaceWorlds(r, anomSlots, newCounts)
+	if err != nil {
+		return SystemPlacement{}, fmt.Errorf("worlds: place-worlds: %w", err)
+	}
 ```
 
 ## The unified Body type
 
-Every placed object — planet, moon, belt member — is a single `Body` value. Moons are `Body{Kind: BodyMoon, Parent: <planet>}`. A unified iterator (`Universe.AllBodies()`) yields every body, so the "moon path silent-zero" anti-pattern (procedure runs for planets, forgets moons) is prevented at the type level.
+Every placed object — planet, moon, belt member — is a single `Body` value. Moons are `Body{Kind: BodyMoon, Parent: <planet>}`. A unified iterator (`Universe.AllBodies()`) yields every body, so the "moon-path silent-zero" anti-pattern (a procedure that runs for planets but forgets moons) is prevented at the type level. The pointer fields are populated stage-by-stage; a nil pointer means "not applicable to this body", read through `Has*()` predicates.
 
 ```bash
-sed -n '31,85p' worlds/body.go
+sed -n '31,99p' worlds/body.go
 ```
 
 ```output
@@ -333,6 +339,15 @@ type Body struct {
 	PeriodHours float64
 	Retrograde  bool // moon orbits its parent retrograde (anomalous slot)
 
+	// Ring is set on a parent when WBH calls for a planetary ring in
+	// place of significant moons: a moon-quantity roll of exactly 0
+	// (p.55) or Hill-sphere moon removal (p.76). RingCentrePD / RingSpanPD
+	// carry the ring's centre location and span in planet-diameters
+	// (WBH p.77), rolled in ApplyMoonRefinement when Ring is set.
+	Ring         bool
+	RingCentrePD float64
+	RingSpanPD   float64
+
 	// Stage 3
 	Physical *BodyPhysical
 	Belt     *BeltDetails
@@ -342,6 +357,13 @@ type Body struct {
 	AxialTilt    *AxialTilt
 	TidalLock    *TidalLock
 	TidalEffects *SurfaceTidalEffects
+
+	// preTidalLockSnapshot is set during Stage 4 just before
+	// ApplyTidalLockEffect; consumed by ApplyTidalLockReEval after
+	// Stage 5 to restore pre-tidal-lock state when the atmosphere DM
+	// (WBH p.106) re-evaluates the lock. Package-private; not part of
+	// the rendered output (IISS forms ignore it).
+	preTidalLockSnapshot *PreTidalLockSnapshot
 
 	// Stage 5 — populated post-ApplyClimatePasses
 	Atmosphere    *Atmosphere
@@ -359,8 +381,6 @@ type Body struct {
 	// Sub-bodies (moons). Iterator descends into Children after the parent.
 	Children []*Body
 }
-
-// HasPhysical reports whether body physical (composition / density /
 ```
 
 ## The climate solver: ApplyClimatePasses
@@ -368,12 +388,10 @@ type Body struct {
 Stage 5 is the only cyclic cluster: atmosphere ↔ temperature ↔ hydrographics depend on each other. `ApplyClimatePasses` runs **two passes** and trusts the second. It is not a fixed-point solver — `RederiveAtmosphereHydrographics` consumes fresh dice each pass, so each pass is a stochastic sample, not a convergence step. There is no fixed point to reach; the function is named for what it does.
 
 ```bash
-sed -n '109,162p' worlds/climate.go
+sed -n '119,170p' worlds/climate.go
 ```
 
 ```output
-// ApplyClimatePasses is the per-body climate solver. Folds partial
-// geology (Residual + TSF + THF) into each pass so Temperature
 // includes the WBH p.125 inherent-temperature addition.
 //
 // Each pass:
@@ -428,119 +446,112 @@ func ApplyClimatePasses(r roller.Roller, body *Body, sys stars.System) error {
 }
 ```
 
-## Mainworld pick and aggregation
+## Mainworld pick and IISS-form construction
 
-After all per-body stages, `AggregateSystem` picks the mainworld and computes system-wide profiles. The pick priority is HZ-terrestrial → HZ-moon → habitable rocky → any rocky/moon/belt. `BuildIISSForms` then translates `Universe` state into the three IISS form structs.
+After all per-body stages, `AggregateSystem` picks the mainworld (priority: HZ-terrestrial → HZ-moon → habitable rocky → any rocky/moon/belt) and computes the profile strings. `BuildIISSForms` then translates `Universe` state into the `SystemForms` boundary struct: the retained `Class0I` / `Class23` carriers (PART 1 census data), a `Class4PForms` slice with one PART P / PART P.B per non-empty body, the `Census` scalars, and the Notable Features block. It is a pure function — no rolls.
 
 ```bash
-grep -n '^func pickMainworld\|^func AggregateSystem\|^func BuildIISSForms' worlds/*.go
+sed -n '16,28p' worlds/iiss_build.go
 ```
 
 ```output
-worlds/iiss_build.go:16:func BuildIISSForms(u *Universe) {
-worlds/aggregate.go:14:func AggregateSystem(u *Universe) {
-worlds/aggregate.go:153:func pickMainworld(u *Universe) (string, *Body) {
-```
-
-```bash
-sed -n '14,40p' worlds/iiss_build.go
-```
-
-```output
-// pp.141-142. Pure function — no rolls. Called by GenerateWithRoller
-// after AggregateSystem.
 func BuildIISSForms(u *Universe) {
 	c0 := buildClass0I(u)
 	u.Detail.Class0I = c0
 	u.Detail.Class23 = buildClass23(u, c0)
-	u.Detail.Class4P = buildClass4P(u, c0.FormHeader)
+	u.Detail.Class4PForms = buildClass4PForms(u, c0.FormHeader)
+	u.Detail.Census = iiss.SystemCensus{
+		BaselineNumber: u.Placement.BaselineN,
+		BaselineOrbit:  u.Placement.BaselineOrbit,
+		Spread:         u.Placement.SystemSpread,
+		EmptyOrbits:    u.Placement.EmptyOrbits,
+	}
 	u.Detail.NotableFeatures = NotableFeatures(u)
 }
-
-func buildClass0I(u *Universe) iiss.Class0IForm {
-	// Delegate to pass-1's stars.BuildSurveyForm for full companion +
-	// composite-barycentre fidelity, then translate to the iiss/
-	// boundary type.
-	meta := stars.SurveyMetadata{
-		Sector:      "—",
-		Location:    "—",
-		Designation: u.Detail.MainworldDesignation,
-	}
-	sf := stars.BuildSurveyForm(u.System, meta)
-	form := iiss.Class0IForm{
-		FormHeader: iiss.FormHeader{
-			SystemName:    u.System.PrimaryDesignation,
-			Sector:        sf.Sector,
-			Location:      sf.Location,
-			IISSDesig:     sf.IISSDesig,
-			InitialSurvey: sf.InitialSurvey,
 ```
 
-## Class IV-P: a fully-owned iiss form
+## The Class IV Survey schema
 
-The Class IV-P "Planetary Detail" form is the per-body deep dive — now emitted for every notable body (as `SystemForms.Class4PForms`), with the auto-picked mainworld's part flagged. Its body structs (`Class4PPartP` for planet/moon, `Class4PPartPB` for belt) and their Markdown renderers live in `iiss/class4p.go`; `Class4PForm` holds one of them as a concrete pointer per `Variant`. `worlds` builds the struct from the `Universe` (`buildClass4PPlanet` / `buildClass4PBelt` in `worlds/iiss_class4p.go`); `iiss` renders it. No closure, no `any` — the same struct serves both the Markdown and JSON paths.
+`SystemForms` is the `iiss`↔`worlds` boundary type. `Class0I` and `Class23` are retained purely as PART 1 data carriers (the stars roster and body roster the old "short forms" used to render standalone). `Class4PForms` is one `Class4PForm` per non-empty body, in `AllBodies()` order. Each `Class4PForm` holds a concrete `*Class4PPartP` (planet/moon/gas-giant) or `*Class4PPartPB` (belt) — no `any`, no closures, so the same struct serves both the Markdown and JSON paths.
 
 ```bash
-sed -n '64,87p' iiss/forms.go
+sed -n '84,111p' iiss/forms.go
 ```
 
 ```output
-// Class4PVariant identifies which Class IV-P variant applies to the
-// auto-picked mainworld.
-type Class4PVariant int
-
-const (
-	// Class4PPlanet — mainworld is a planet.
-	Class4PPlanet Class4PVariant = iota
-	// Class4PMoon — mainworld is a moon.
-	Class4PMoon
-	// Class4PBelt — mainworld is a belt.
-	Class4PBelt
-)
-
-// Class4PForm is the IISS Class IV-P "Planetary Detail" Survey form,
-// rendered only for the auto-picked mainworld. Exactly one of PartP
-// (planet/moon) or PartPB (belt) is populated, per Variant; the other is
-// nil. Both are concrete iiss types, so the form is fully owned by iiss/
-// and marshals to JSON without a worlds-side payload.
 type Class4PForm struct {
 	FormHeader
-	Variant Class4PVariant
-	PartP   *Class4PPartP  `json:",omitempty"`
-	PartPB  *Class4PPartPB `json:",omitempty"`
+	// Designation is the surveyed body's designation (e.g. "Aab IV d"),
+	// used to title the per-body PART P / PART P.B heading. Distinct from
+	// the system-level FormHeader.IISSDesig.
+	Designation string
+	Variant     Class4PVariant
+	PartP       *Class4PPartP  `json:",omitempty"`
+	PartPB      *Class4PPartPB `json:",omitempty"`
+}
+
+// SystemForms aggregates the three IISS forms for a generated system,
+// plus the system-wide profile strings, the auto-picked mainworld
+// designation, and a Markdown referee-facing Notable Features summary.
+// Renderer functions take SystemForms (or one of its fields) so iiss/
+// does not import worlds/.
+type SystemForms struct {
+	// Class0I and Class23 are retained as the data carriers for the
+	// Class IV Survey's PART 1 (system census) — the stars roster lives on
+	// Class0I.Stars, the body roster on Class23.Objects. They are no longer
+	// rendered as standalone forms.
+	Class0I Class0IForm
+	Class23 Class23Form
+	// Class4PForms holds one PART P / PART P.B per non-empty body, in
+	// AllBodies() order (ascending orbit, moons after their parent).
+	Class4PForms         []Class4PForm
+	Census               SystemCensus
+	MainworldDesignation string
+```
+
+## Per-body builders: buildClass4PForms
+
+`buildClass4PForms` walks `AllBodies()`, skips empty slots, and builds one PART per body — `buildClass4PBelt` for belts, `buildClass4PPlanet` for terrestrials, moons, and gas giants. The auto-picked mainworld's part is flagged (`isMW`). Gas giants take the planet builder but render a GG-appropriate PART P (class + residual heat, no terrestrial atmosphere/hydro sections).
+
+```bash
+sed -n '259,300p' worlds/iiss_build.go
+```
+
+```output
+func buildClass4PForms(u *Universe, header iiss.FormHeader) []iiss.Class4PForm {
+	var forms []iiss.Class4PForm
+	for body := range u.AllBodies() {
+		if body.Kind == BodyEmpty {
+			continue
+		}
+		isMW := body == u.Detail.Mainworld
+		form := iiss.Class4PForm{FormHeader: header, Designation: body.Designation}
+		switch body.Kind {
+		case BodyPlanetoidBelt:
+			form.Variant = iiss.Class4PBelt
+			form.PartPB = buildClass4PBelt(u, body, isMW)
+		case BodyMoon:
+			form.Variant = iiss.Class4PMoon
+			form.PartP = buildClass4PPlanet(u, body, isMW)
+		default: // BodyTerrestrial, BodyGasGiant
+			form.Variant = iiss.Class4PPlanet
+			form.PartP = buildClass4PPlanet(u, body, isMW)
+		}
+		forms = append(forms, form)
+	}
+	return forms
 }
 ```
 
 ## Notable Features — the referee summary
 
-Above the IISS forms, a referee-facing summary block flags conditions a Game Master wants at a glance: tidal locks, cold snaps, crush worlds (high G + high atm), taint chains, and the mainworld habitability rationale. Five sections, each rendered only when non-empty. Data is in `Universe.Detail.Bodies`; this is a scanner + renderer.
+Above PART 1, a referee-facing summary block flags conditions a Game Master wants at a glance: tidal locks, cold snaps, crush worlds (high G + high atmosphere), taint chains, and the mainworld habitability rationale. Five sections, each rendered only when non-empty. It is a scanner over `Universe.Detail.Bodies` — every fact it surfaces already exists in the survey, just dispersed across the per-body parts.
 
 ```bash
-sed -n '1,15p;22,77p' worlds/notable_features.go | head -80
+sed -n '28,60p' worlds/notable_features.go
 ```
 
 ```output
-package worlds
-
-import (
-	"fmt"
-	"strings"
-)
-
-// Notable-feature thresholds. Tuned for "what would a Referee want at a
-// glance" — borrowed from habitability.go's DM bands where applicable
-// so the flags align with the book's hazard rhetoric.
-const (
-	notableGravityHigh    = 1.4 // > p.132 "uncomfortably high" boundary
-	notablePressureHigh   = 2.5 // bar; structures need reinforcement, breathing problematic
-	notableWorstLowK      = 233 // ~ -40°C; severe frostbite, sustained cold lethal to unprotected humans
-	notableMeanLivableK   = 250 // ~ -23°C; below this the mean is already too cold for a "snap" to be the story
-// mainworld's habitability rationale. Returns "" if nothing notable.
-//
-// Inserted by BuildIISSForms above the IISS forms in cmd/world-builder's
-// Markdown output. The block is informational only — every fact
-// surfaced is already present in the IISS forms, just dispersed
-// across them.
 func NotableFeatures(u *Universe) string {
 	if u == nil {
 		return ""
@@ -574,28 +585,11 @@ func NotableFeatures(u *Universe) string {
 	}
 	if len(crushes) > 0 {
 		b.WriteString("### Crush worlds\n")
-		for _, line := range crushes {
-			fmt.Fprintf(&b, "- %s\n", line)
-		}
-		b.WriteString("\n")
-	}
-	if len(taints) > 0 {
-		b.WriteString("### Taint chains\n")
-		for _, line := range taints {
-			fmt.Fprintf(&b, "- %s\n", line)
-		}
-		b.WriteString("\n")
-	}
-	if mainworldNote != "" {
-		b.WriteString("### Mainworld habitability\n")
-		fmt.Fprintf(&b, "- %s\n\n", mainworldNote)
-	}
-
 ```
 
 ## The renderer: iiss.MarkdownClass4Survey
 
-The final step. Pure function over `iiss.SystemForms`: an H1 title, the Notable Features summary, `markdownClass4Part1` (the system census — reusing the `Class0I` star rows and `Class23` object roster the old short forms carried), then one per-body part for each `Class4PForms` entry. `iiss/` does not import `worlds/` — every part is a concrete `iiss` struct that `worlds.BuildIISSForms` populated.
+The final step. A pure function over `iiss.SystemForms`: an H1 title, optional profile lines, the Notable Features block, `markdownClass4Part1` (the system census), then one per-body part per `Class4PForms` entry. `iiss/` imports nothing from `worlds/` — every part is a concrete `iiss` struct that `BuildIISSForms` populated.
 
 ```bash
 sed -n '13,35p' iiss/render.go
@@ -624,31 +618,64 @@ func MarkdownClass4Survey(sf SystemForms) string {
 		b.WriteString(markdownClass4Part(f))
 	}
 	return b.String()
+}
+```
+
+## PART 1 — System Census
+
+`markdownClass4Part1` folds the old short-form content into one census: system scalars (age, counts, baseline number/orbit, spread, empty orbits), a stellar roster with full orbital data, and the body roster. The stars table carries the companion Orbit#/AU/ecc/period/MAO/HZCO columns plus an **HZ Orbit#** breadth column (HZCO ± 1.0, WBH p.43) computed by `hzRange`.
+
+```bash
+sed -n '41,68p' iiss/render.go
+```
+
+```output
+func markdownClass4Part1(sf SystemForms) string {
+	var b strings.Builder
+	c0 := sf.Class0I
+	b.WriteString("## PART 1 — System Census\n\n")
+
+	fmt.Fprintf(&b, "- System: %s\n", c0.SystemName)
+	fmt.Fprintf(&b, "- Sector / Location: %s / %s\n", c0.Sector, c0.Location)
+	fmt.Fprintf(&b, "- Survey: initial %s, last updated %s\n", c0.InitialSurvey, c0.LastUpdated)
+	fmt.Fprintf(&b, "- System age: %.3f Gyr\n", c0.SystemAgeGyr)
+	fmt.Fprintf(&b, "- Stellar count: %d\n", c0.StellarCount)
+	fmt.Fprintf(&b, "- Worlds: %d gas giants, %d belts, %d terrestrials (total %d)\n",
+		sf.Class23.Counts.GasGiants, sf.Class23.Counts.PlanetoidBelts,
+		sf.Class23.Counts.Terrestrials, sf.Class23.Counts.Total)
+	fmt.Fprintf(&b, "- Baseline: number %d, Orbit# %.2f; spread %.2f; empty orbits %d\n\n",
+		sf.Census.BaselineNumber, sf.Census.BaselineOrbit, sf.Census.Spread, sf.Census.EmptyOrbits)
+
+	if len(c0.Stars) > 0 {
+		b.WriteString("### Stars\n\n")
+		b.WriteString("| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO | HZ Orbit# |\n")
+		b.WriteString("| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- | --------- |\n")
+		for _, s := range c0.Stars {
+			fmt.Fprintf(&b, "| %s | %s | %.3f | %.3f | %.0f | %.4f | %s | %s | %s | %s | %.2f | %.2f | %s |\n",
+				s.Component, s.Class, s.Mass, s.Diameter, s.Temperature, s.Luminosity,
+				blankFloat(s.Orbit), blankFloat(s.AU), blankFloat(s.Eccentricity),
+				blankFloat(s.PeriodYears), s.MAO, s.HZCO, hzRange(s.HZCO))
+		}
+		b.WriteString("\nHabitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).\n\n")
+	}
 ```
 
 ## Test layers
 
-Coverage is four-layered (per `docs/harness.md`):
-
-1. **Per-procedure tests** — every `Roll*` / `Generate*` / `Compute*` function has at least one test that drives book-narrated dice and asserts the expected output to the digit. Bulk of coverage.
-2. **Named worked-example fixtures** — Sol, Corella, Zed, Zed Prime carry book dice scripts through multi-procedure chains.
-3. **Property tests** — 8 invariants × 1000 seeds each (`worlds/property_test.go`). Smoke tests for systemic correctness; fire when a procedure silently does nothing for a class of bodies.
-4. **Markdown regression baseline** — 5 seeds × full Markdown output at `iiss/testdata/seed_*.md`. Refreshable with `go test ./iiss/... -update.regression -run TestRegression`.
-
-Plus a 10 000-seed bulk-sweep verification (one-off `cmd/world-builder-bulk/` runner) confirms zero errors in default operation. See `docs/history/generator-error-catalog.md` for the journey.
+Coverage is four-layered (per `docs/harness.md`): per-procedure worked-example tests (book-narrated dice, asserted to the digit — the proof of fidelity), named worked-example fixtures (Sol, Corella, Zed, Zed Prime), property tests (invariants × 1000 seeds), and a Markdown regression baseline (`iiss/testdata/seed_*.md`) plus the Zed gold-master (`worlds/testdata/zed_gold.md`).
 
 ```bash
 find . -name "*_test.go" -not -path "./docs/*" | wc -l | xargs printf "Test files: %s\n"; grep -rhc "^func Test" --include="*_test.go" . | awk "{ s+=\$1 } END { printf \"Test functions: %d\\n\", s }"
 ```
 
 ```output
-Test files: 60
-Test functions: 692
+Test files: 66
+Test functions: 763
 ```
 
 ## Sample run
 
-End-to-end: generate seed 42 in short-profile form, then show the first 30 lines of the Markdown output to see the shape.
+End-to-end: seed 42 as a short profile, then the first 34 lines of the Markdown survey — the H1 title, mainworld, profile strings, and the start of the Notable Features referee summary (the per-body PART P / PART P.B sections follow further down).
 
 ```bash
 go run ./cmd/world-builder -seed 42 -format short
@@ -659,11 +686,11 @@ go run ./cmd/world-builder -seed 42 -format short
 ```
 
 ```bash
-go run ./cmd/world-builder -seed 42 -format markdown | head -30
+go run ./cmd/world-builder -seed 42 -format markdown | head -34
 ```
 
 ```output
-# A VII — System Survey
+# A VII — IISS Class IV Survey
 
 **Mainworld:** A VII
 
@@ -675,10 +702,11 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 
 ### Tidal locks
 - A I: planet → star, 1:1, twilight zone
+- A II a: moon → planet, 1:1
 - A II b: moon → planet, 1:1
-- A III a: planet → star, 3:2
-- A III b: planet → star, 1:1, twilight zone
-- A III c: planet → star, 1:1, twilight zone
+- A III: planet → moon, 1:1
+- A III a: moon → planet, 1:1
+- A III b: moon → planet, 1:1
 - A V a: moon → planet, 1:1
 - A V b: moon → planet, 1:1
 - A V c: moon → planet, 1:1
@@ -690,9 +718,12 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - A V i: moon → planet, 1:1
 - A V j: moon → planet, 1:1
 - B I: planet → star, 1:1, twilight zone
-- B II: planet → moon, 1:1
-- B II a: planet → star, 1:1, twilight zone
-- B II b: planet → star, 1:1, twilight zone
+- B II a: moon → planet, 1:1
+- B II b: moon → planet, 1:1
+- B II c: moon → planet, 1:1
+- B II d: moon → planet, 1:1
+- B II e: moon → planet, 1:1
+
 ```
 
 ## Where to read next
@@ -702,5 +733,5 @@ Long profile: `A-7-T-G-T-T-G-T-T-T-0.7:B-0-T-T-P-T-0.7`
 - [`docs/dependency-graph.md`](dependency-graph.md) — every value, its inputs, the one cyclic (climate) cluster.
 - [`docs/anti-patterns.md`](anti-patterns.md) — failure modes the code guards against.
 - [`docs/harness.md`](harness.md) — fixture catalog + the four-layer test strategy.
-- [`docs/wbh-inconsistencies.md`](wbh-inconsistencies.md) — six book-internal divergences with chosen interpretations.
-- [`docs/next-steps.md`](next-steps.md) — open post-v1.0 items.
+- [`docs/wbh-inconsistencies.md`](wbh-inconsistencies.md) — book-internal divergences with chosen interpretations.
+
