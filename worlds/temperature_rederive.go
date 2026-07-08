@@ -194,15 +194,17 @@ func rerollAtmSubtypeAndPressure(
 	}
 	code := body.Atmosphere.Code
 
-	// Code A (10): clear pressure and leave the subtype alone. This path is
+	// Code A (10): clear pressure; perform no subtype roll. This path is
 	// deliberately NOT switched over to the new WBH p.85 exotic subtype roll
 	// (issue #69, wired into initialAtmosphere): an atmosphere mutated to A by
 	// a runaway-greenhouse fire must not inherit a stale high pressure, or
 	// pass-2 GenerateTemperature produces GreenhouseFactor ≥ 5 (see this
 	// function's doc-comment). Rolling an exotic subtype here would carry its
-	// 2.50–10.0 bar range back into that feedback loop, so post-runaway exotic
-	// atmospheres keep Subtype "" / Pressure 0 pending review. The common,
-	// directly-generated exotic atmospheres do get a p.85 subtype + pressure.
+	// 2.50–10.0 bar range back into that feedback loop. So this path writes no
+	// Subtype (it retains whatever the pre-mutation code left — "" for the
+	// 2-9/D/E source codes) and clears Pressure to 0, pending review. The
+	// common, directly-generated exotic atmospheres do get a p.85 subtype +
+	// pressure via initialAtmosphere.
 	if code == 10 {
 		body.Atmosphere.Pressure = 0
 		return nil

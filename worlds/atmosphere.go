@@ -364,10 +364,10 @@ func RollCorrosiveInsidiousSubtype(
 //   - Runaway greenhouse result → DM+4 (only when the atmosphere became
 //     exotic because of a runaway-greenhouse check)
 //
-// Returns the subtype letter. The p.85 table maps 2D+DM to codes 2-9 then
-// A/B/C, and wraps 13→A and 14+→B (the "Very Dense" rows repeat), so the
-// returned set is "2"-"9", "A", "B", "C" — there is no exotic D/E, unlike
-// the corrosive/insidious p.89 table.
+// Returns the subtype code — a digit or letter. The p.85 table maps 2D+DM
+// to codes 2-9 then A/B/C, and wraps 13→A and 14+→B (the "Very Dense" rows
+// repeat), so the returned set is "2"-"9", "A", "B", "C" — there is no
+// exotic D/E, unlike the corrosive/insidious p.89 table.
 func RollExoticSubtype(
 	r roller.Roller,
 	sizeCode SizeCode,
