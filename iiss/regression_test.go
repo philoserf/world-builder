@@ -34,7 +34,9 @@ var updateRegression = flag.Bool("update.regression", false,
 // pass-2-vs-pass-2 drift.
 func TestRegression_MarkdownSeeds(t *testing.T) {
 	t.Parallel()
-	for _, seed := range []int64{1, 7, 42, 100, 500} {
+	// seed 15 carries an Unusual (F/15) atmosphere, covering the WBH p.93
+	// subtype-rendering path (issue #69); the others are general baselines.
+	for _, seed := range []int64{1, 7, 15, 42, 100, 500} {
 		t.Run("seed_"+strconv.FormatInt(seed, 10), func(t *testing.T) {
 			t.Parallel()
 			u, err := worlds.Generate(seed)

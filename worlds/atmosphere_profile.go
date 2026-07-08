@@ -508,12 +508,13 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 	}
 	base := fmt.Sprintf("%s-St%s", codeChar, subtypeWithHazard)
 	if subtypeWithHazard == "" {
-		// Any code reaching this branch with no subtype emits the bare
-		// code char rather than a dangling "-St". This covers Exotic (A)
-		// and Unusual (F) — whose WBH p.85 / p.90 subtype tables are not
-		// yet encoded (issue #69) — and also None (0) / Trace (1), which
-		// legitimately have no subtype at all. Only B/C (Corrosive /
-		// Insidious) populate Subtype, so only they keep the "-St" form.
+		// Any code reaching this branch with no subtype emits the bare code
+		// char rather than a dangling "-St". Exotic (A, WBH p.85), Corrosive
+		// (B) / Insidious (C, p.89), and most Unusual (F, p.93) rolls now
+		// populate Subtype and keep the "-St" form. The empty-subtype case
+		// remains for None (0) / Trace (1), which have no subtype at all, and
+		// for the Unusual "Other" row (p.93 D26=26), which is intentionally
+		// recorded as an empty subtype so it renders as the bare code "F".
 		base = codeChar
 	}
 	if atmo.Pressure > 0 {

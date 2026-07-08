@@ -39,7 +39,7 @@ func RollHydroDigit(r roller.Roller, atmoCode int, atmoSubtype string, sizeCode 
 		dm -= 4
 	}
 
-	skipTempDM := atmoCode == 13 || (atmoCode == 15 && atmoSubtype == "7")
+	skipTempDM := atmoCode == 13 || (atmoCode == 15 && unusualSubtypeHas(atmoSubtype, "7"))
 	if !skipTempDM {
 		switch tempRange {
 		case TempHot:
