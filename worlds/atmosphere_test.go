@@ -375,3 +375,97 @@ func TestAtmosphereCodes_TableConsistency(t *testing.T) {
 		t.Errorf("atmosphereCodes has %d entries, want %d", len(atmosphereCodes), len(wantChars))
 	}
 }
+
+// TestRollExoticSubtype covers the WBH p.85 Exotic Atmosphere Subtype
+// table: the 2D→code mapping (including the 13→A / 14+→B wrap), the four
+// DMs, and the low-end clamp. Scripted rolls feed the 2D result directly.
+func TestRollExoticSubtype(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		roll    int
+		size    SizeCode
+		orbit   float64
+		hzco    float64
+		runaway bool
+		want    string
+	}{
+		// No DMs (size 5, orbit == hzco): total == roll.
+		{"7 → 7", 7, "5", 3.0, 3.0, false, "7"},
+		{"9 → 9", 9, "5", 3.0, 3.0, false, "9"},
+		{"10 → A", 10, "5", 3.0, 3.0, false, "A"},
+		{"11 → B", 11, "5", 3.0, 3.0, false, "B"},
+		{"12 → C", 12, "5", 3.0, 3.0, false, "C"},
+		// Size 2-4 → DM-2: 2D=12, size 3 → 10 → A.
+		{"size3 DM-2: 12→10→A", 12, "3", 3.0, 3.0, false, "A"},
+		// Orbit < HZCO-1 → DM-2: orbit 1.0, hzco 3.0 → 10-2 → 8.
+		{"cold DM-2: 10→8", 10, "5", 1.0, 3.0, false, "8"},
+		// Orbit > HZCO+2 → DM+2: orbit 6.0, hzco 3.0 → 8+2 → 10 → A.
+		{"far DM+2: 8→10→A", 8, "5", 6.0, 3.0, false, "A"},
+		// Runaway → DM+4: 2D=8 → 12 → C.
+		{"runaway DM+4: 8→12→C", 8, "5", 3.0, 3.0, true, "C"},
+		// Low clamp: size 3 (DM-2) + cold (DM-2), 2D=2 → -2 → "2".
+		{"low clamp → 2", 2, "3", 1.0, 3.0, false, "2"},
+		// High wrap: 2D=12, far (+2), runaway (+4) → 18 → 14+ → B.
+		{"high wrap → B", 12, "5", 6.0, 3.0, true, "B"},
+		// Exactly 13 wraps to A: 2D=11, far (+2) → 13 → A.
+		{"13 wrap → A", 11, "5", 6.0, 3.0, false, "A"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := roller.NewScripted(c.roll)
+			got, err := RollExoticSubtype(r, c.size, c.orbit, c.hzco, c.runaway)
+			if err != nil {
+				t.Fatalf("err: %v", err)
+			}
+			if got != c.want {
+				t.Errorf("got %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
+// TestRollTotalPressure_AtmAWithSubtype covers exotic (code 10 / A) pressure
+// derived from the WBH p.85 subtype-keyed range, mirroring the atm B/C path.
+func TestRollTotalPressure_AtmAWithSubtype(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		subtype string
+		a, b    int
+		want    float64
+	}{
+		// Subtype 6 (Standard): min=0.70, span=0.79. (1,1)→0.70; (6,6)→1.49.
+		{"A subtype 6 min", "6", 1, 1, 0.70},
+		{"A subtype 6 max", "6", 6, 6, 1.49},
+		// Subtype C (Very Dense): min=2.50, span=7.50. (1,1)→2.50; (6,6)→10.0.
+		{"A subtype C min", "C", 1, 1, 2.50},
+		{"A subtype C max", "C", 6, 6, 10.0},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := roller.NewScripted(c.a, c.b)
+			got, err := RollTotalPressure(r, 10, c.subtype)
+			if err != nil {
+				t.Fatalf("err: %v", err)
+			}
+			if math.Abs(got-c.want) > 1e-9 {
+				t.Errorf("got %g, want %g", got, c.want)
+			}
+		})
+	}
+}
+
+// TestRollTotalPressure_AtmAEmptySubtype asserts an exotic code with no
+// subtype still falls back to (0, 0): no rolls consumed, returns 0.
+func TestRollTotalPressure_AtmAEmptySubtype(t *testing.T) {
+	t.Parallel()
+	r := roller.NewScripted() // panics if any roll is consumed
+	got, err := RollTotalPressure(r, 10, "")
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got != 0 {
+		t.Errorf("got %g, want 0", got)
+	}
+}

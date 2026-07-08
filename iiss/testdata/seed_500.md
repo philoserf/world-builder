@@ -40,6 +40,7 @@ Long profile: `A-7-T-T-G-T-G-T-T-0.1`
 - A V e: WorstLow 34 K (mean 251 K)
 - A V g: WorstLow 191 K (mean 253 K)
 - A V k: WorstLow 31 K (mean 251 K)
+- A VI: WorstLow 208 K (mean 251 K)
 
 ### Mainworld habitability
 - A V g — Rating 5/12 (Marginally survivable): Too cold all of the time; Too cold most of the time; Low gravity
@@ -87,7 +88,7 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 | A | A V i |  |  |  |  | S?? |  |  |
 | A | A V j |  |  |  |  | S?? |  |  |
 | A | A V k |  |  |  |  | 2?? |  |  |
-| A | A VI | 0.33 | 0.13 | 0.03 | 0.103y | 8A2 | 0 | HZ |
+| A | A VI | 0.33 | 0.13 | 0.03 | 0.103y | 8A5 | 0 | HZ |
 | A | A VII | 0.37 | 0.15 | 0.00 | 0.123y | 238 | 0 | HZ |
 
 ## PART P — A I
@@ -1041,12 +1042,13 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Size profile: `8-12800-0.74-0.74-0.75`
 
 ### ATMOSPHERE
-- Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 8.47
-- Profile: A:N2-85:C2H6-10:Other-04 G.4.6
+- Code: 10, Pressure (bar): 1.995, O₂ (bar): 0.000, Scale Height: 9.98
+- Subtype: 8
+- Profile: A-St8:2.00:C2H6-68:N2-16:Ne-07:CO2-07 G.4.6
 - Taint: G (severity 4, persistence 6)
 
 ### HYDROGRAPHICS
-- Code: 2, Coverage (%): 17, Profile: H2:NH3-100
+- Code: 5, Coverage (%): 53, Profile: H5:SO2-100
 - Surface distribution: Slightly Skewed (Land)
 
 ### ROTATION
@@ -1055,21 +1057,21 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Tidal lock: 1:1, Tides (m): 23.69
 
 ### TEMPERATURE
-- High (K): 257.5, Mean (K): 213.3, Low (K): —
-- Luminosity: 0.009, Albedo: 0.30, Greenhouse: 0.00
+- High (K): 274.2, Mean (K): 251.2, Low (K): 223.7
+- Luminosity: 0.009, Albedo: 0.21, Greenhouse: 0.71
 
 ### SEISMIC
-- TSS: 2, Residual: 0, Tidal Stress: 2, Tidal Heating: 0, Plates: 3
+- TSS: 2, Residual: 0, Tidal Stress: 2, Tidal Heating: 0, Plates: 6
 
 ### LIFE
-- Biomass: 0, Biocomplexity: 0, Sophonts: no, Biodiversity: 0, Compatibility: 0
+- Biomass: 8, Biocomplexity: 3, Sophonts: no, Biodiversity: 8, Compatibility: 0
 
 ### RESOURCES
-- Rating: 5
+- Rating: 12
 
 ### HABITABILITY
 - Rating: 0
-- Notes: Non-breathable atmosphere; Desert conditions prevalent; Very little useable land surface area; Too cold all of the time; Too cold most of the time; Gravity very comfortable
+- Notes: Non-breathable atmosphere; Very little useable land surface area; Too cold all of the time; Too cold most of the time; Gravity very comfortable
 
 
 ## PART P — A VII

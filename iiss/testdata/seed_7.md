@@ -477,8 +477,9 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Size profile: `C-19200-0.85-1.28-2.91`
 
 ### ATMOSPHERE
-- Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 4.57
-- Profile: A:CH4-70:CO2-24:N2-04:Other-00 G.4.7
+- Code: 10, Pressure (bar): 0.556, O₂ (bar): 0.000, Scale Height: 5.44
+- Subtype: 4
+- Profile: A-St4:0.56:CH4-70:CO2-24:N2-04:Other-00 G.4.7
 - Taint: G (severity 4, persistence 7)
 
 ### HYDROGRAPHICS
@@ -491,8 +492,8 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Tidal lock: 3:2, Tides (m): 4.96
 
 ### TEMPERATURE
-- High (K): 237.3, Mean (K): 198.5, Low (K): —
-- Luminosity: 0.065, Albedo: 0.61, Greenhouse: 0.00
+- High (K): 268.6, Mean (K): 236.1, Low (K): 181.6
+- Luminosity: 0.065, Albedo: 0.61, Greenhouse: 1.49
 
 ### SEISMIC
 - TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 9
@@ -505,7 +506,7 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 
 ### HABITABILITY
 - Rating: 0
-- Notes: Additional surface area; Non-breathable atmosphere; Too cold all of the time; Too cold most of the time; Gravity somewhat high
+- Notes: Additional surface area; Non-breathable atmosphere; Too cold all of the time; Too cold most of the time; Much too cold some of the time; Gravity somewhat high
 
 ### SUBORDINATES
 | Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |
@@ -950,8 +951,9 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Size profile: `5-8000-1.03-0.65-0.25`
 
 ### ATMOSPHERE
-- Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 6.57
-- Profile: A:CO-90:CH4-05:Other-04 P.4.6
+- Code: 10, Pressure (bar): 0.664, O₂ (bar): 0.000, Scale Height: 7.73
+- Subtype: 5
+- Profile: A-St5:0.66:CO-90:CH4-05:Other-04 P.4.6
 - Taint: P (severity 4, persistence 6)
 
 ### HYDROGRAPHICS
@@ -964,8 +966,8 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Tidal lock: 1:1, Tides (m): 0.62
 
 ### TEMPERATURE
-- High (K): 155.7, Mean (K): 143.9, Low (K): 128.7
-- Luminosity: 0.065, Albedo: 0.76, Greenhouse: 0.00
+- High (K): 173.6, Mean (K): 169.3, Low (K): 164.8
+- Luminosity: 0.065, Albedo: 0.77, Greenhouse: 2.04
 
 ### SEISMIC
 - TSS: 0, Residual: 0, Tidal Stress: 0, Tidal Heating: 0, Plates: 0

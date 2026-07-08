@@ -44,7 +44,7 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 | ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |
 | A | A PI | 0.18 | 0.07 |  | 10.716d | 000 | ? | HZ, 0.12-90.10.00.00-6-C-5-2 |
 | A | A I | 0.44 | 0.17 | 0.01 | 0.110y | 4B1 | 0 | HZ |
-| A | A II | 0.56 | 0.22 | 0.00 | 0.158y | 6A6 | 0 | HZ |
+| A | A II | 0.56 | 0.22 | 0.00 | 0.158y | 6AA | 0 | HZ |
 | A | A III | 0.69 | 0.28 | 0.03 | 0.219y | 6A6 | 0 | HZ |
 | A | A IV | 0.81 | 0.32 | 0.09 | 0.279y | 689 | 0 | HZ |
 | A | A PII | 0.96 | 0.38 |  | 0.358y | 000 | ? | HZ, 0.09-06.20.60.14-10-8-3-6 |
@@ -138,12 +138,13 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Size profile: `6-9600-0.68-0.51-0.29`
 
 ### ATMOSPHERE
-- Code: 10, Pressure (bar): 0.000, O₂ (bar): 0.000, Scale Height: 16.01
-- Profile: A:C2H6-60:N2-36:Other-03 B.6.5
+- Code: 10, Pressure (bar): 6.000, O₂ (bar): 0.000, Scale Height: 18.08
+- Subtype: A
+- Profile: A-StA:6.00:Ne-81:SO2-14:Other-03 B.6.5
 - Taint: B (severity 6, persistence 5)
 
 ### HYDROGRAPHICS
-- Code: 6, Coverage (%): 58, Profile: H6:H2O-100
+- Code: 10, Coverage (%): 100, Profile: HA:H2O-100
 - Surface distribution: Concentrated (Ocean)
 
 ### ROTATION
@@ -152,21 +153,21 @@ Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 - Tidal lock: no, Tides (m): 7.49
 
 ### TEMPERATURE
-- High (K): 331.1, Mean (K): 278.0, Low (K): —
-- Luminosity: 0.076, Albedo: 0.36, Greenhouse: 0.00
+- High (K): 325.0, Mean (K): 313.8, Low (K): 301.5
+- Luminosity: 0.076, Albedo: 0.48, Greenhouse: 6.12
 
 ### SEISMIC
-- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 9
+- TSS: 4, Residual: 4, Tidal Stress: 0, Tidal Heating: 0, Plates: 13
 
 ### LIFE
-- Biomass: 10, Biocomplexity: 3, Sophonts: no, Biodiversity: 8, Compatibility: 1
+- Biomass: 11, Biocomplexity: 3, Sophonts: no, Biodiversity: 8, Compatibility: 1
 
 ### RESOURCES
 - Rating: 11
 
 ### HABITABILITY
 - Rating: 0
-- Notes: Non-breathable atmosphere; Too hot at times; Low gravity
+- Notes: Non-breathable atmosphere; Very little useable land surface area; Too hot at times; Too hot most of the time; Low gravity
 
 
 ## PART P — A III
