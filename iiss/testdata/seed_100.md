@@ -32,9 +32,11 @@ Long profile: `A-8-P-T-T-T-T-P-T-T-0.1`
 
 ### Stars
 
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- |
-| A | M0 V | 0.440 | 0.672 | 3700 | 0.0763 |  |  |  |  | 0.02 | 0.69 |
+| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO | HZ Orbit# |
+| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- | --------- |
+| A | M0 V | 0.440 | 0.672 | 3700 | 0.0763 |  |  |  |  | 0.02 | 0.69 | 0.00–1.69 |
+
+Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 
 ### Bodies
 
