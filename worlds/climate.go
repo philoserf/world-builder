@@ -63,12 +63,23 @@ func initialAtmosphere(r roller.Roller, body *Body, ageGyr float64) (Atmosphere,
 		return Atmosphere{}, false, fmt.Errorf("atmo code: %w", err)
 	}
 	atmo := Atmosphere{Code: atmoCode}
-	// Subtype is rolled only for B (11) / C (12) from the WBH p.89
-	// Corrosive and Insidious Atmosphere Subtype table. Exotic (A/10)
-	// and Unusual (F/15) have their own subtype tables (p.85 / p.90)
-	// that are not yet encoded — their Subtype stays "" and the profile
-	// shorthand renders the bare code char. Tracked in issue #69.
-	if atmoCode == 11 || atmoCode == 12 {
+	// Subtype is rolled for A (10) from the WBH p.85 Exotic Atmosphere
+	// Subtype table and for B (11) / C (12) from the WBH p.89 Corrosive
+	// and Insidious Atmosphere Subtype table. Unusual (F/15) has its own
+	// subtype table (WBH p.93 — the issue #69 backlog line cites p.90, but
+	// the table sits on p.93) that is not yet encoded: its "D26" roll
+	// notation is undefined on the page and three of its subtypes carry
+	// prerequisite rerolls, so it awaits a design decision. Until then an
+	// F atmosphere's Subtype stays "" and the profile renders the bare
+	// code char.
+	switch atmoCode {
+	case 10: // A — Exotic
+		st, serr := RollExoticSubtype(r, body.SizeCode, host.Orbit, hzco, false)
+		if serr != nil {
+			return Atmosphere{}, false, fmt.Errorf("atmo subtype: %w", serr)
+		}
+		atmo.Subtype = st
+	case 11, 12: // B — Corrosive / C — Insidious
 		st, serr := RollCorrosiveInsidiousSubtype(r, body.SizeCode, host.Orbit, hzco, atmoCode == 12, false)
 		if serr != nil {
 			return Atmosphere{}, false, fmt.Errorf("atmo subtype: %w", serr)

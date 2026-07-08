@@ -193,21 +193,55 @@ func corrosiveInsidiousPressureRange(subtype string) (minBar, spanBar float64) {
 	return 0, 0
 }
 
+// exoticPressureRange returns (minBar, spanBar) for atm code A (10) keyed
+// off the WBH p.85 Exotic Atmosphere Subtype letter. The p.85 table carries
+// its pressure ranges inline (unlike p.79's "Varies" for code A), so exotic
+// pressure is derived from the rolled subtype the same way atm B/C pressure
+// is derived from the p.89 subtype. Exotic subtypes span "2"-"9" and "A"-"C"
+// (no D/E), so the top tier caps at the "Very Dense" 2.50–10.0 bar row.
+//
+//	2, 3          → 0.10–0.42  (min=0.10, span=0.32)
+//	4, 5          → 0.43–0.70  (min=0.43, span=0.27)
+//	6, 7          → 0.70–1.49  (min=0.70, span=0.79)
+//	8, 9          → 1.50–2.49  (min=1.50, span=0.99)
+//	A, B, C       → 2.50–10.0  (min=2.50, span=7.50)
+//
+// Empty/unknown subtype returns (0, 0).
+func exoticPressureRange(subtype string) (minBar, spanBar float64) {
+	switch subtype {
+	case "2", "3":
+		return 0.1, 0.32
+	case "4", "5":
+		return 0.43, 0.27
+	case "6", "7":
+		return 0.70, 0.79
+	case "8", "9":
+		return 1.50, 0.99
+	case "A", "B", "C":
+		return 2.50, 7.50
+	}
+	return 0, 0
+}
+
 // RollTotalPressure computes total atmospheric pressure per WBH p.80,
-// or per the WBH p.89 subtype-keyed range for atm B/C:
+// or per the subtype-keyed range for atm A (WBH p.85) and atm B/C (p.89):
 //
 //	bar = MinPressureRange + Span × ((1D-1)×5 + (1D-1)) / 30
 //
-// For atm codes 11 (B) and 12 (C), subtype must be set (one of
-// "1"-"9", "A"-"E"); otherwise pressure falls back to 0 (legacy
-// "Varies" behavior). For all other codes, subtype is ignored.
+// For atm code 10 (A) the subtype is one of "2"-"9"/"A"-"C"; for codes 11 (B)
+// and 12 (C) it is one of "1"-"9"/"A"-"E". Subtype must be set for those
+// codes; otherwise pressure falls back to 0 (legacy "Varies" behavior). For
+// all other codes, subtype is ignored.
 //
 // Returns minBar with no rolls consumed when span = 0.
 func RollTotalPressure(r roller.Roller, atmoCode int, subtype string) (float64, error) {
 	var minBar, span float64
-	if (atmoCode == 11 || atmoCode == 12) && subtype != "" {
+	switch {
+	case atmoCode == 10 && subtype != "":
+		minBar, span = exoticPressureRange(subtype)
+	case (atmoCode == 11 || atmoCode == 12) && subtype != "":
 		minBar, span = corrosiveInsidiousPressureRange(subtype)
-	} else {
+	default:
 		minBar, span = AtmospherePressureRange(atmoCode)
 	}
 	if span == 0 {
@@ -318,6 +352,59 @@ func RollCorrosiveInsidiousSubtype(
 		return "D", nil
 	default:
 		return "E", nil
+	}
+}
+
+// RollExoticSubtype rolls on the WBH p.85 Exotic Atmosphere Subtype table.
+//
+// DMs (WBH p.85):
+//   - Size 2-4 → DM-2
+//   - Orbit less than HZCO-1 → DM-2
+//   - Orbit greater than HZCO+2 → DM+2
+//   - Runaway greenhouse result → DM+4 (only when the atmosphere became
+//     exotic because of a runaway-greenhouse check)
+//
+// Returns the subtype code — a digit or letter. The p.85 table maps 2D+DM
+// to codes 2-9 then A/B/C, and wraps 13→A and 14+→B (the "Very Dense" rows
+// repeat), so the returned set is "2"-"9", "A", "B", "C" — there is no
+// exotic D/E, unlike the corrosive/insidious p.89 table.
+func RollExoticSubtype(
+	r roller.Roller,
+	sizeCode SizeCode,
+	orbit, hzco float64,
+	runawayResult bool,
+) (string, error) {
+	roll := r.Roll("2D")
+	dm := 0
+	si := SizeAsInt(sizeCode)
+	if si >= 2 && si <= 4 {
+		dm -= 2
+	}
+	if orbit < hzco-1 {
+		dm -= 2
+	}
+	if orbit > hzco+2 {
+		dm += 2
+	}
+	if runawayResult {
+		dm += 4
+	}
+	total := roll + dm
+	switch {
+	case total <= 2:
+		return "2", nil
+	case total <= 9:
+		return fmt.Sprintf("%d", total), nil
+	case total == 10:
+		return "A", nil
+	case total == 11:
+		return "B", nil
+	case total == 12:
+		return "C", nil
+	case total == 13:
+		return "A", nil
+	default: // 14+
+		return "B", nil
 	}
 }
 
