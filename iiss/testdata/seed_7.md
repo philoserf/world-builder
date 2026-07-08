@@ -55,9 +55,11 @@ Long profile: `A-4-T-T-P-T-T-T-G-P-G-T-T-T-0.1`
 
 ### Stars
 
-| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO |
-| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- |
-| A | M1 V | 0.415 | 0.672 | 3560 | 0.0653 |  |  |  |  | 0.02 | 0.64 |
+| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO | HZ Orbit# |
+| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- | --------- |
+| A | M1 V | 0.415 | 0.672 | 3560 | 0.0653 |  |  |  |  | 0.02 | 0.64 | -0.36–1.64 |
+
+Habitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).
 
 ### Bodies
 
