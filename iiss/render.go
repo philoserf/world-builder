@@ -123,10 +123,12 @@ func blankFloat(v float64) string {
 }
 
 // hzRange renders the habitable-zone Orbit# breadth (HZCO ± 1.0, WBH p.43)
-// for a star row that carries an HZCO; blank otherwise.
+// for a star row that carries an HZCO; blank otherwise. Bounds are clamped
+// to the valid Orbit# range [0, 20] — for a dim star HZCO can be below 1.0,
+// which would otherwise yield a negative inner Orbit#.
 func hzRange(hzco float64) string {
 	if hzco <= 0 {
 		return ""
 	}
-	return fmt.Sprintf("%.2f–%.2f", hzco-1, hzco+1)
+	return fmt.Sprintf("%.2f–%.2f", max(0.0, hzco-1), min(20.0, hzco+1))
 }
