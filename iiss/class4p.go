@@ -36,6 +36,14 @@ type Class4PPartP struct {
 	EscapeVelocity float64 `json:",omitempty"` // m/s
 	SizeProfile    string  `json:",omitempty"` // Size-Diameter-Density-Gravity-Mass (WBH p.71)
 
+	// Gas-giant view. When IsGasGiant is true the terrestrial atmosphere/
+	// hydrographics/temperature/seismic/life/habitability sections are N/A
+	// and these carry the GG-specific detail instead.
+	IsGasGiant    bool    `json:",omitempty"`
+	GasGiantClass string  `json:",omitempty"` // "Small" | "Medium" | "Large"
+	DiameterEarth float64 `json:",omitempty"` // Terra diameters
+	ResidualTempK float64 `json:",omitempty"` // WBH p.125 gas-giant residual heat
+
 	Atmosphere    *Class4PAtmosphere    `json:",omitempty"`
 	Hydrographics *Class4PHydrographics `json:",omitempty"`
 
@@ -174,51 +182,59 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 	}
 
 	b.WriteString("### SIZE\n")
-	if p.Composition != "" {
-		fmt.Fprintf(b, "- Composition: %s\n", p.Composition)
-	}
-	fmt.Fprintf(b, "- Diameter (km): %.0f, Density: %.2f, Gravity: %.2f, Mass (Earth): %.3f\n",
-		p.DiameterKm, p.Density, p.Gravity, p.MassEarth)
-	if p.EscapeVelocity > 0 {
-		fmt.Fprintf(b, "- Escape velocity (m/s): %.0f\n", p.EscapeVelocity)
-	}
-	if p.SizeProfile != "" {
-		fmt.Fprintf(b, "- Size profile: `%s`\n", p.SizeProfile)
+	if p.IsGasGiant {
+		fmt.Fprintf(b, "- Class: %s gas giant\n", p.GasGiantClass)
+		fmt.Fprintf(b, "- Diameter (km): %.0f (%.2f × Terra), Mass (Earth): %.3f\n",
+			p.DiameterKm, p.DiameterEarth, p.MassEarth)
+	} else {
+		if p.Composition != "" {
+			fmt.Fprintf(b, "- Composition: %s\n", p.Composition)
+		}
+		fmt.Fprintf(b, "- Diameter (km): %.0f, Density: %.2f, Gravity: %.2f, Mass (Earth): %.3f\n",
+			p.DiameterKm, p.Density, p.Gravity, p.MassEarth)
+		if p.EscapeVelocity > 0 {
+			fmt.Fprintf(b, "- Escape velocity (m/s): %.0f\n", p.EscapeVelocity)
+		}
+		if p.SizeProfile != "" {
+			fmt.Fprintf(b, "- Size profile: `%s`\n", p.SizeProfile)
+		}
 	}
 	b.WriteString("\n")
 
-	b.WriteString("### ATMOSPHERE\n")
-	if p.Atmosphere == nil {
-		b.WriteString("- (none — vacuum)\n\n")
-	} else {
-		atm := p.Atmosphere
-		fmt.Fprintf(b, "- Code: %d, Pressure (bar): %.3f, O₂ (bar): %.3f, Scale Height: %.2f\n",
-			atm.Code, atm.Pressure, atm.OxygenPartialPressure, atm.ScaleHeight)
-		if atm.Subtype != "" {
-			fmt.Fprintf(b, "- Subtype: %s\n", atm.Subtype)
+	if !p.IsGasGiant {
+		b.WriteString("### ATMOSPHERE\n")
+		if p.Atmosphere == nil {
+			b.WriteString("- (none — vacuum)\n\n")
+		} else {
+			atm := p.Atmosphere
+			fmt.Fprintf(b, "- Code: %d, Pressure (bar): %.3f, O₂ (bar): %.3f, Scale Height: %.2f\n",
+				atm.Code, atm.Pressure, atm.OxygenPartialPressure, atm.ScaleHeight)
+			if atm.Subtype != "" {
+				fmt.Fprintf(b, "- Subtype: %s\n", atm.Subtype)
+			}
+			if atm.ProfileShorthand != "" {
+				fmt.Fprintf(b, "- Profile: %s\n", atm.ProfileShorthand)
+			}
+			for _, t := range atm.Taints {
+				fmt.Fprintf(b, "- Taint: %s (severity %d, persistence %d)\n", t.Code, t.Severity, t.Persistence)
+			}
+			if len(atm.Hazards) > 0 {
+				fmt.Fprintf(b, "- Insidious hazards: %s\n", strings.Join(atm.Hazards, ", "))
+			}
+			b.WriteString("\n")
 		}
-		if atm.ProfileShorthand != "" {
-			fmt.Fprintf(b, "- Profile: %s\n", atm.ProfileShorthand)
-		}
-		for _, t := range atm.Taints {
-			fmt.Fprintf(b, "- Taint: %s (severity %d, persistence %d)\n", t.Code, t.Severity, t.Persistence)
-		}
-		if len(atm.Hazards) > 0 {
-			fmt.Fprintf(b, "- Insidious hazards: %s\n", strings.Join(atm.Hazards, ", "))
-		}
-		b.WriteString("\n")
-	}
 
-	b.WriteString("### HYDROGRAPHICS\n")
-	if p.Hydrographics == nil {
-		b.WriteString("- (none)\n\n")
-	} else {
-		h := p.Hydrographics
-		fmt.Fprintf(b, "- Code: %d, Coverage (%%): %d, Profile: %s\n", h.Code, h.Percent, h.Profile)
-		if h.Distribution != "" {
-			fmt.Fprintf(b, "- Surface distribution: %s (%s)\n", h.Distribution, h.Geography)
+		b.WriteString("### HYDROGRAPHICS\n")
+		if p.Hydrographics == nil {
+			b.WriteString("- (none)\n\n")
+		} else {
+			h := p.Hydrographics
+			fmt.Fprintf(b, "- Code: %d, Coverage (%%): %d, Profile: %s\n", h.Code, h.Percent, h.Profile)
+			if h.Distribution != "" {
+				fmt.Fprintf(b, "- Surface distribution: %s (%s)\n", h.Distribution, h.Geography)
+			}
+			b.WriteString("\n")
 		}
-		b.WriteString("\n")
 	}
 
 	b.WriteString("### ROTATION\n")
@@ -227,52 +243,62 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 	fmt.Fprintf(b, "- Axial Tilt: %.2f°\n", p.AxialTiltDeg)
 	fmt.Fprintf(b, "- Tidal lock: %s, Tides (m): %.2f\n\n", p.TidalLockRatio, p.TidesMeters)
 
-	b.WriteString("### TEMPERATURE\n")
-	if p.Temperature == nil {
-		b.WriteString("- (not computed)\n\n")
-	} else {
-		t := p.Temperature
-		low := fmt.Sprintf("%.1f", t.LowK)
-		if t.LowK < 0 {
-			low = "—"
+	if p.IsGasGiant {
+		b.WriteString("### GAS GIANT\n")
+		if p.ResidualTempK > 0 {
+			fmt.Fprintf(b, "- Residual temperature (K): %.1f (WBH p.125)\n", p.ResidualTempK)
+		} else {
+			b.WriteString("- Residual temperature (K): — (below 1 K, WBH p.125)\n")
 		}
-		fmt.Fprintf(b, "- High (K): %.1f, Mean (K): %.1f, Low (K): %s\n",
-			t.HighK, t.MeanK, low)
-		fmt.Fprintf(b, "- Luminosity: %.3f, Albedo: %.2f, Greenhouse: %.2f\n\n",
-			t.Luminosity, t.Albedo, t.GreenhouseFactor)
-	}
-
-	b.WriteString("### SEISMIC\n")
-	if p.Seismic == nil {
-		b.WriteString("- (not computed)\n\n")
+		b.WriteString("- No discrete surface: atmosphere, hydrographics, life, and habitability do not apply.\n\n")
 	} else {
-		s := p.Seismic
-		fmt.Fprintf(b, "- TSS: %d, Residual: %d, Tidal Stress: %d, Tidal Heating: %d, Plates: %d\n\n",
-			s.TotalSeismicStress, s.ResidualSeismicStress, s.TidalStressFactor, s.TidalHeatingFactor, s.TectonicPlates)
-	}
-
-	b.WriteString("### LIFE\n")
-	if p.Life == nil {
-		b.WriteString("- (not computed)\n\n")
-	} else {
-		l := p.Life
-		soph := "no"
-		if l.HasSophont {
-			soph = "yes"
-		} else if l.HadExtinct {
-			soph = "extinct"
+		b.WriteString("### TEMPERATURE\n")
+		if p.Temperature == nil {
+			b.WriteString("- (not computed)\n\n")
+		} else {
+			t := p.Temperature
+			low := fmt.Sprintf("%.1f", t.LowK)
+			if t.LowK < 0 {
+				low = "—"
+			}
+			fmt.Fprintf(b, "- High (K): %.1f, Mean (K): %.1f, Low (K): %s\n",
+				t.HighK, t.MeanK, low)
+			fmt.Fprintf(b, "- Luminosity: %.3f, Albedo: %.2f, Greenhouse: %.2f\n\n",
+				t.Luminosity, t.Albedo, t.GreenhouseFactor)
 		}
-		fmt.Fprintf(b, "- Biomass: %d, Biocomplexity: %d, Sophonts: %s, Biodiversity: %d, Compatibility: %d\n\n",
-			l.Biomass, l.Biocomplexity, soph, l.Biodiversity, l.Compatibility)
-		fmt.Fprintf(b, "### RESOURCES\n- Rating: %d\n\n", l.ResourceRating)
-	}
 
-	b.WriteString("### HABITABILITY\n")
-	fmt.Fprintf(b, "- Rating: %d\n", p.HabitabilityRating)
-	if p.HabitabilityNotes != "" {
-		fmt.Fprintf(b, "- Notes: %s\n", p.HabitabilityNotes)
+		b.WriteString("### SEISMIC\n")
+		if p.Seismic == nil {
+			b.WriteString("- (not computed)\n\n")
+		} else {
+			s := p.Seismic
+			fmt.Fprintf(b, "- TSS: %d, Residual: %d, Tidal Stress: %d, Tidal Heating: %d, Plates: %d\n\n",
+				s.TotalSeismicStress, s.ResidualSeismicStress, s.TidalStressFactor, s.TidalHeatingFactor, s.TectonicPlates)
+		}
+
+		b.WriteString("### LIFE\n")
+		if p.Life == nil {
+			b.WriteString("- (not computed)\n\n")
+		} else {
+			l := p.Life
+			soph := "no"
+			if l.HasSophont {
+				soph = "yes"
+			} else if l.HadExtinct {
+				soph = "extinct"
+			}
+			fmt.Fprintf(b, "- Biomass: %d, Biocomplexity: %d, Sophonts: %s, Biodiversity: %d, Compatibility: %d\n\n",
+				l.Biomass, l.Biocomplexity, soph, l.Biodiversity, l.Compatibility)
+			fmt.Fprintf(b, "### RESOURCES\n- Rating: %d\n\n", l.ResourceRating)
+		}
+
+		b.WriteString("### HABITABILITY\n")
+		fmt.Fprintf(b, "- Rating: %d\n", p.HabitabilityRating)
+		if p.HabitabilityNotes != "" {
+			fmt.Fprintf(b, "- Notes: %s\n", p.HabitabilityNotes)
+		}
+		b.WriteString("\n")
 	}
-	b.WriteString("\n")
 
 	if len(p.Subordinates) > 0 {
 		b.WriteString("### SUBORDINATES\n")
