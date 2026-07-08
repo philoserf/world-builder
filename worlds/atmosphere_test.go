@@ -495,8 +495,8 @@ func TestRollUnusualSubtype(t *testing.T) {
 		{"Layered low-gravity reroll → 3", 1.0, []int{1, 6, 1, 3}, "3"},
 		// Combination (25): two simple subtypes joined "a.b" → 11→"1", 23→"9".
 		{"25 Combination → 1.9", highG, []int{2, 5, 1, 1, 2, 3}, "1.9"},
-		// Other (26): bare "F", no further rolls.
-		{"26 Other → F", highG, []int{2, 6}, "F"},
+		// Other (26): empty subtype (renders bare "F"), no further rolls.
+		{"26 Other → empty", highG, []int{2, 6}, ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -529,6 +529,31 @@ func TestUnusualSubtypeCode_TableConsistency(t *testing.T) {
 	for _, v := range []int{25, 26, 10, 17, 20, 27, 66} {
 		if got := unusualSubtypeCode(v); got != "" {
 			t.Errorf("unusualSubtypeCode(%d) = %q, want \"\"", v, got)
+		}
+	}
+}
+
+// TestUnusualSubtypeHas covers per-component membership for Unusual (F/15)
+// subtypes, so a Combination like "7.3" still counts as containing "7"
+// (the downstream Panthalassic hydro-DM-skip check relies on this).
+func TestUnusualSubtypeHas(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		subtype, code string
+		want          bool
+	}{
+		{"7", "7", true},
+		{"7", "3", false},
+		{"7.3", "7", true},  // Panthalassic first
+		{"3.7", "7", true},  // Panthalassic second
+		{"7.3", "3", true},  // other component
+		{"7.3", "8", false}, // absent
+		{"", "7", false},    // Other / no subtype
+		{"A.7", "A", true},  // letter component
+	}
+	for _, c := range cases {
+		if got := unusualSubtypeHas(c.subtype, c.code); got != c.want {
+			t.Errorf("unusualSubtypeHas(%q, %q) = %v, want %v", c.subtype, c.code, got, c.want)
 		}
 	}
 }

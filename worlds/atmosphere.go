@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/philoserf/world-builder/roller"
 )
@@ -437,6 +438,21 @@ func unusualSubtypeCode(v int) string {
 	return ""
 }
 
+// unusualSubtypeHas reports whether an Unusual (F/15) subtype string includes
+// the given single-subtype code. A Combination subtype is stored as "a.b" (WBH
+// p.93 "F-St#.#"), so membership is checked per dotted component rather than by
+// whole-string equality — a "7.3" combination still counts as containing
+// Panthalassic ("7"). This is the single point where downstream rules inspect
+// an Unusual subtype's meaning.
+func unusualSubtypeHas(subtype, code string) bool {
+	for part := range strings.SplitSeq(subtype, ".") {
+		if part == code {
+			return true
+		}
+	}
+	return false
+}
+
 // rollD26 rolls the WBH p.93 "D26": a two-digit number read as tens-D6 then
 // ones-D6 (not a 2D sum), rerolling any result above 26 so the tens digit is
 // 1 or 2. The Unusual Atmosphere Subtypes table defines only rows 11-26, so
@@ -474,7 +490,14 @@ func rollUnusualSimple(r roller.Roller, gravityG float64) string {
 //
 // Meta rows: 25 (Combination) rolls two non-meta subtypes and joins them as
 // "a.b" per the p.93 "F-St#.#" profile; 26 (Other, "something else entirely")
-// has no defined mechanic and is recorded as the bare code "F".
+// has no defined mechanic and is recorded as an empty subtype, so the profile
+// renders the bare code char "F" (FormatAtmoProfileShorthand collapses an
+// empty subtype to the bare code).
+//
+// The returned code is a descriptive tag: no downstream rule keys on an
+// Unusual subtype by whole-string equality — the one rule that inspects it
+// (the Panthalassic hydro DM skip, worlds/hydrographics.go) uses
+// unusualSubtypeHas so a Combination like "7.3" is still recognised.
 //
 // Prerequisites: only Layered (gravity > 1.2) is enforced here, because that
 // property is settled before climate runs. Panthalassic (Hydrographics A) and
@@ -484,14 +507,14 @@ func rollUnusualSimple(r roller.Roller, gravityG float64) string {
 // hydro prerequisite reroll is deferred (issue #69).
 //
 // Returns the subtype code — "1"-"9"/"A" for a single row, "a.b" for a
-// Combination, or "F" for Other.
+// Combination, or "" for Other.
 func RollUnusualSubtype(r roller.Roller, gravityG float64) (string, error) {
 	v := rollD26(r)
 	switch v {
 	case 25: // Combination — two subtypes with compatible conditions
 		return rollUnusualSimple(r, gravityG) + "." + rollUnusualSimple(r, gravityG), nil
-	case 26: // Other — something else entirely
-		return "F", nil
+	case 26: // Other — no defined subtype; renders as the bare code "F"
+		return "", nil
 	}
 	code := unusualSubtypeCode(v)
 	if code == "6" && gravityG <= 1.2 { // Layered prerequisite unmet → reroll
