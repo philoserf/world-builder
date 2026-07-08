@@ -469,3 +469,66 @@ func TestRollTotalPressure_AtmAEmptySubtype(t *testing.T) {
 		t.Errorf("got %g, want 0", got)
 	}
 }
+
+// TestRollUnusualSubtype covers the WBH p.93 Unusual Atmosphere Subtypes
+// table: the "D26" tens-D6/ones-D6 digit read, the >26 reroll, the meta
+// rows (25 Combination, 26 Other), and the Layered (gravity > 1.2)
+// prerequisite reroll. Scripted rolls feed 1D values in tens, ones order.
+func TestRollUnusualSubtype(t *testing.T) {
+	t.Parallel()
+	const highG = 2.0 // satisfies the Layered prereq
+	cases := []struct {
+		name  string
+		grav  float64
+		rolls []int
+		want  string
+	}{
+		// Direct rows: value = tens*10 + ones.
+		{"11 → 1", highG, []int{1, 1}, "1"},
+		{"16 → 6 (Layered, gravity ok)", highG, []int{1, 6}, "6"},
+		{"21 → 7 (Panthalassic)", highG, []int{2, 1}, "7"},
+		{"24 → A (Variable Composition)", highG, []int{2, 4}, "A"},
+		// >26 rerolls: tens 3 (→33) discarded, then 12 → 2.
+		{"reroll >26 then 12 → 2", highG, []int{3, 3, 1, 2}, "2"},
+		// Layered with gravity ≤ 1.2 rerolls to the next simple row: 16 (Layered)
+		// discarded, then 13 → 3.
+		{"Layered low-gravity reroll → 3", 1.0, []int{1, 6, 1, 3}, "3"},
+		// Combination (25): two simple subtypes joined "a.b" → 11→"1", 23→"9".
+		{"25 Combination → 1.9", highG, []int{2, 5, 1, 1, 2, 3}, "1.9"},
+		// Other (26): bare "F", no further rolls.
+		{"26 Other → F", highG, []int{2, 6}, "F"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := roller.NewScripted(c.rolls...)
+			got, err := RollUnusualSubtype(r, c.grav)
+			if err != nil {
+				t.Fatalf("err: %v", err)
+			}
+			if got != c.want {
+				t.Errorf("got %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
+// TestUnusualSubtypeCode_TableConsistency asserts every defined D26 row
+// (11-24) maps to a code and the meta/undefined values map to "".
+func TestUnusualSubtypeCode_TableConsistency(t *testing.T) {
+	t.Parallel()
+	want := map[int]string{
+		11: "1", 12: "2", 13: "3", 14: "4", 15: "5", 16: "6",
+		21: "7", 22: "8", 23: "9", 24: "A",
+	}
+	for v, code := range want {
+		if got := unusualSubtypeCode(v); got != code {
+			t.Errorf("unusualSubtypeCode(%d) = %q, want %q", v, got, code)
+		}
+	}
+	// Meta rows and out-of-range values have no simple code.
+	for _, v := range []int{25, 26, 10, 17, 20, 27, 66} {
+		if got := unusualSubtypeCode(v); got != "" {
+			t.Errorf("unusualSubtypeCode(%d) = %q, want \"\"", v, got)
+		}
+	}
+}

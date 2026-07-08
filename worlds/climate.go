@@ -64,14 +64,12 @@ func initialAtmosphere(r roller.Roller, body *Body, ageGyr float64) (Atmosphere,
 	}
 	atmo := Atmosphere{Code: atmoCode}
 	// Subtype is rolled for A (10) from the WBH p.85 Exotic Atmosphere
-	// Subtype table and for B (11) / C (12) from the WBH p.89 Corrosive
-	// and Insidious Atmosphere Subtype table. Unusual (F/15) has its own
-	// subtype table (WBH p.93 — the issue #69 backlog line cites p.90, but
-	// the table sits on p.93) that is not yet encoded: its "D26" roll
-	// notation is undefined on the page and three of its subtypes carry
-	// prerequisite rerolls, so it awaits a design decision. Until then an
-	// F atmosphere's Subtype stays "" and the profile renders the bare
-	// code char.
+	// Subtype table, for B (11) / C (12) from the WBH p.89 Corrosive and
+	// Insidious Atmosphere Subtype table, and for F (15) from the WBH p.93
+	// Unusual Atmosphere Subtypes table. The other codes have no subtype and
+	// render the bare code char. F pressure is left at 0: the p.93 subtypes
+	// describe density/pressure only narratively (e.g. "10-100 bar"), with no
+	// rollable range, so none is invented here.
 	switch atmoCode {
 	case 10: // A — Exotic
 		st, serr := RollExoticSubtype(r, body.SizeCode, host.Orbit, hzco, false)
@@ -81,6 +79,16 @@ func initialAtmosphere(r roller.Roller, body *Body, ageGyr float64) (Atmosphere,
 		atmo.Subtype = st
 	case 11, 12: // B — Corrosive / C — Insidious
 		st, serr := RollCorrosiveInsidiousSubtype(r, body.SizeCode, host.Orbit, hzco, atmoCode == 12, false)
+		if serr != nil {
+			return Atmosphere{}, false, fmt.Errorf("atmo subtype: %w", serr)
+		}
+		atmo.Subtype = st
+	case 15: // F — Unusual
+		grav := 0.0
+		if body.Physical != nil {
+			grav = body.Physical.Gravity
+		}
+		st, serr := RollUnusualSubtype(r, grav)
 		if serr != nil {
 			return Atmosphere{}, false, fmt.Errorf("atmo subtype: %w", serr)
 		}

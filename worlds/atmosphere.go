@@ -408,6 +408,98 @@ func RollExoticSubtype(
 	}
 }
 
+// unusualSubtypeCode maps a WBH p.93 "D26" value (11-24) to its Unusual
+// Atmosphere subtype code. Values 25 (Combination) and 26 (Other) are meta
+// rows handled by RollUnusualSubtype, not here; unknown values return "".
+func unusualSubtypeCode(v int) string {
+	switch v {
+	case 11:
+		return "1" // Dense, Extreme
+	case 12:
+		return "2" // Dense, Very Extreme
+	case 13:
+		return "3" // Dense, Crushing
+	case 14:
+		return "4" // Ellipsoid
+	case 15:
+		return "5" // High Radiation
+	case 16:
+		return "6" // Layered (prereq: gravity > 1.2)
+	case 21:
+		return "7" // Panthalassic (prereq: Hydrographics A)
+	case 22:
+		return "8" // Steam (prereq: Hydrographics 5+, pressure 2.5+)
+	case 23:
+		return "9" // Variable Pressure
+	case 24:
+		return "A" // Variable Composition
+	}
+	return ""
+}
+
+// rollD26 rolls the WBH p.93 "D26": a two-digit number read as tens-D6 then
+// ones-D6 (not a 2D sum), rerolling any result above 26 so the tens digit is
+// 1 or 2. The Unusual Atmosphere Subtypes table defines only rows 11-26, so
+// the reroll yields a uniform pick over its twelve rows.
+func rollD26(r roller.Roller) int {
+	for {
+		v := r.Roll("1D")*10 + r.Roll("1D")
+		if v <= 26 {
+			return v
+		}
+	}
+}
+
+// rollUnusualSimple returns one non-meta Unusual subtype code (rows 11-24). It
+// rerolls the meta rows 25/26 so a simple pick never nests, and rerolls
+// Layered (6) when gravity ≤ 1.2 — the only p.93 prerequisite knowable when
+// the subtype is rolled (see RollUnusualSubtype).
+func rollUnusualSimple(r roller.Roller, gravityG float64) string {
+	for {
+		v := rollD26(r)
+		if v == 25 || v == 26 {
+			continue
+		}
+		code := unusualSubtypeCode(v)
+		if code == "6" && gravityG <= 1.2 { // Layered prerequisite unmet
+			continue
+		}
+		return code
+	}
+}
+
+// RollUnusualSubtype rolls on the WBH p.93 Unusual Atmosphere Subtypes table
+// (atm code F/15). The book labels the roll "D26" — a non-standard tens-D6 /
+// ones-D6 two-digit read whose table stops at 26; rollD26 handles the reroll.
+//
+// Meta rows: 25 (Combination) rolls two non-meta subtypes and joins them as
+// "a.b" per the p.93 "F-St#.#" profile; 26 (Other, "something else entirely")
+// has no defined mechanic and is recorded as the bare code "F".
+//
+// Prerequisites: only Layered (gravity > 1.2) is enforced here, because that
+// property is settled before climate runs. Panthalassic (Hydrographics A) and
+// Steam (Hydrographics 5+) are NOT enforced: hydrographics is generated after
+// the atmosphere and re-sampled each climate pass (worlds/climate.go), so it
+// is not available at subtype-roll time. Those two are rolled as-is; their
+// hydro prerequisite reroll is deferred (issue #69).
+//
+// Returns the subtype code — "1"-"9"/"A" for a single row, "a.b" for a
+// Combination, or "F" for Other.
+func RollUnusualSubtype(r roller.Roller, gravityG float64) (string, error) {
+	v := rollD26(r)
+	switch v {
+	case 25: // Combination — two subtypes with compatible conditions
+		return rollUnusualSimple(r, gravityG) + "." + rollUnusualSimple(r, gravityG), nil
+	case 26: // Other — something else entirely
+		return "F", nil
+	}
+	code := unusualSubtypeCode(v)
+	if code == "6" && gravityG <= 1.2 { // Layered prerequisite unmet → reroll
+		code = rollUnusualSimple(r, gravityG)
+	}
+	return code, nil
+}
+
 // HZRegionAtmosphereDM returns the WBH p.47 Habitable Zones Regions
 // atmosphere DM for the given atmosphere code. Used by both the atmosphere
 // generation (3A1) and the basic temperature roll (3A2b-temp p.109).
