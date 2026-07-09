@@ -73,6 +73,11 @@ tasks:
     cmds:
       - go mod tidy
 
+  deps:
+    desc: Install the development toolchain from the Brewfile
+    cmds:
+      - brew bundle --file=Brewfile
+
   hooks:
     desc: Install git hooks (point core.hooksPath at the tracked .githooks/)
     cmds:

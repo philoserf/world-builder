@@ -128,12 +128,19 @@ Known limitations (out of pass-2 scope):
 
 ## Development
 
+Install the toolchain (Go, go-task, gofumpt, golangci-lint) via Homebrew:
+
+```bash
+task deps                   # brew bundle --file=Brewfile
+```
+
 ```bash
 task                        # default: check + test
 task check                  # modernize + gofumpt + go vet + golangci-lint
 task test                   # go test -race ./...
 task fmt                    # gofumpt -l -w -extra .
 task tidy                   # go mod tidy
+task deps                   # install toolchain from Brewfile
 
 # Single test:
 go test ./worlds/ -run TestZed_ApplyStage5
