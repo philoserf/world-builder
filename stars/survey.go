@@ -124,7 +124,8 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 		runningLum += sys.Companions[primaryCompanionIdx].Star.Luminosity
 	}
 	// runningDesig is the current outermost composite label ("A", "AB", "ABC").
-	runningDesig := outerLetter(primaryDesig)
+	var runningDesig strings.Builder
+	runningDesig.WriteString(outerLetter(primaryDesig))
 
 	// Walk Close, Near, Far in order. For each present orbit class, emit
 	// the star row, then (if it has a companion) the companion row and
@@ -196,12 +197,12 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 
 		runningMass += addedMass
 		runningLum += addedLum
-		// runningDesig is read every iteration below; bounded by WBH's small companion counts.
-		runningDesig += outerLetter(main.Designation) //nolint:modernize // see comment above
+
+		runningDesig.WriteString(outerLetter(main.Designation))
 
 		// Outer composite for the running aggregate (e.g. AB, ABC).
 		outer := SurveyComponent{
-			Component:    runningDesig,
+			Component:    runningDesig.String(),
 			Class:        "—",
 			Mass:         runningMass,
 			Luminosity:   runningLum,
