@@ -16,6 +16,7 @@ func TestKindFromUnusualCell(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s error: %v", cell, err)
 		}
+
 		if got != want {
 			t.Fatalf("%s = %v want %v", cell, got, want)
 		}
@@ -37,6 +38,7 @@ func TestKindFromPeculiarCell(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s error: %v", cell, err)
 		}
+
 		if got != want {
 			t.Fatalf("%s = %v want %v", cell, got, want)
 		}
@@ -46,19 +48,23 @@ func TestKindFromPeculiarCell(t *testing.T) {
 func TestRollSpecialPrimary_Simple(t *testing.T) {
 	// 1D=3 -> Neutron Star, 1D=6 -> Black Hole.
 	r := roller.NewScripted(3)
+
 	got, err := RollSpecialPrimarySimple(r)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if got != KindNeutronStar {
 		t.Fatalf("got %v want neutron star", got)
 	}
 
 	r2 := roller.NewScripted(6)
+
 	got2, err := RollSpecialPrimarySimple(r2)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if got2 != KindBlackHole {
 		t.Fatalf("got %v want black hole", got2)
 	}
@@ -67,10 +73,12 @@ func TestRollSpecialPrimary_Simple(t *testing.T) {
 func TestRollSpecialPrimary_Unusual_BD(t *testing.T) {
 	// Unusual column at row 5 = "BD".
 	r := roller.NewScripted(5)
+
 	kind, _, err := RollSpecialPrimary(r, PeculiarPathUnusual)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if kind != KindBrownDwarf {
 		t.Fatalf("got %v want BrownDwarf", kind)
 	}
@@ -79,10 +87,12 @@ func TestRollSpecialPrimary_Unusual_BD(t *testing.T) {
 func TestRollSpecialPrimary_Unusual_D(t *testing.T) {
 	// Unusual column at row 8 = "D".
 	r := roller.NewScripted(8)
+
 	kind, _, err := RollSpecialPrimary(r, PeculiarPathUnusual)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if kind != KindWhiteDwarf {
 		t.Fatalf("got %v want WhiteDwarf", kind)
 	}
@@ -91,10 +101,12 @@ func TestRollSpecialPrimary_Unusual_D(t *testing.T) {
 func TestRollSpecialPrimary_Peculiar_BlackHole(t *testing.T) {
 	// Peculiar column at row 2 = "Black Hole".
 	r := roller.NewScripted(2)
+
 	kind, _, err := RollSpecialPrimary(r, PeculiarPathPeculiar)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if kind != KindBlackHole {
 		t.Fatalf("got %v want BlackHole", kind)
 	}
@@ -103,10 +115,12 @@ func TestRollSpecialPrimary_Peculiar_BlackHole(t *testing.T) {
 func TestRollSpecialPrimary_Peculiar_Anomaly(t *testing.T) {
 	// Peculiar column at row 11 = "Anomaly".
 	r := roller.NewScripted(11)
+
 	kind, _, err := RollSpecialPrimary(r, PeculiarPathPeculiar)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if kind != KindAnomaly {
 		t.Fatalf("got %v want Anomaly", kind)
 	}
@@ -115,13 +129,16 @@ func TestRollSpecialPrimary_Peculiar_Anomaly(t *testing.T) {
 func TestRollSpecialPrimary_Unusual_ClassRedirect(t *testing.T) {
 	// Unusual column at row 4 = "Class IV".
 	r := roller.NewScripted(4)
+
 	kind, lc, err := RollSpecialPrimary(r, PeculiarPathUnusual)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if kind != "" {
 		t.Fatalf("got kind %v, want empty (class redirect)", kind)
 	}
+
 	if lc != IV {
 		t.Fatalf("got class %v, want IV", lc)
 	}
@@ -152,13 +169,16 @@ func TestRollSpecialPrimary_Special_ClassRedirects(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.roll)
+
 			kind, lc, err := RollSpecialPrimary(r, PeculiarPathSpecial)
 			if err != nil {
 				t.Fatalf("error: %v", err)
 			}
+
 			if kind != "" {
 				t.Errorf("got kind %v, want empty (class redirect)", kind)
 			}
+
 			if lc != c.wantLC {
 				t.Errorf("got class %v, want %v", lc, c.wantLC)
 			}
@@ -170,10 +190,12 @@ func TestRollSpecialPrimary_PeculiarRecursion(t *testing.T) {
 	// Unusual column at row 2 = "Peculiar" -> recurse on Peculiar column.
 	// Recursive 2D=11 -> Peculiar column = "Anomaly".
 	r := roller.NewScripted(2, 11)
+
 	kind, _, err := RollSpecialPrimary(r, PeculiarPathUnusual)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if kind != KindAnomaly {
 		t.Fatalf("got %v want Anomaly", kind)
 	}
@@ -192,19 +214,24 @@ func TestGeneratePrimaryAtClass_IV_M_to_K(t *testing.T) {
 	//  2. 2D=7 → StarSubtypeNumeric[7] = 9; K-IV-subtype>4 shift → 4 → K4
 	//  3. 1D=1, D3=2 → SmallStarAge accuracy=1 → age 3 Gyr
 	r := roller.NewScripted(3, 7, 1, 2)
+
 	got, err := generatePrimaryAtClass(r, IV, GenerateOpts{Accuracy: 1})
 	if err != nil {
 		t.Fatalf("generatePrimaryAtClass: %v", err)
 	}
+
 	if got.LuminosityClass != IV {
 		t.Errorf("LuminosityClass = %s, want IV", got.LuminosityClass)
 	}
+
 	if got.SpectralType.Letter != 'K' {
 		t.Errorf("Letter = %c, want K (M→K constraint)", got.SpectralType.Letter)
 	}
+
 	if got.SpectralType.Subtype != 4 {
 		t.Errorf("Subtype = %d, want 4 (9 - 5 K-IV-subtype>4 shift)", got.SpectralType.Subtype)
 	}
+
 	if got.Mass <= 0 {
 		t.Errorf("Mass = %v, want > 0", got.Mass)
 	}
@@ -221,19 +248,24 @@ func TestGeneratePrimaryAtClass_VI_F_to_G(t *testing.T) {
 	//  2. 2D=7 → StarSubtypeNumeric[7] = 9 → G9 (no class-IV shift for VI)
 	//  3. 1D=1, D3=2 → age 3 Gyr
 	r := roller.NewScripted(10, 7, 1, 2)
+
 	got, err := generatePrimaryAtClass(r, VI, GenerateOpts{Accuracy: 1})
 	if err != nil {
 		t.Fatalf("generatePrimaryAtClass: %v", err)
 	}
+
 	if got.LuminosityClass != VI {
 		t.Errorf("LuminosityClass = %s, want VI", got.LuminosityClass)
 	}
+
 	if got.SpectralType.Letter != 'G' {
 		t.Errorf("Letter = %c, want G (F→G constraint)", got.SpectralType.Letter)
 	}
+
 	if got.SpectralType.Subtype != 9 {
 		t.Errorf("Subtype = %d, want 9", got.SpectralType.Subtype)
 	}
+
 	if got.Mass <= 0 {
 		t.Errorf("Mass = %v, want > 0", got.Mass)
 	}
@@ -249,31 +281,40 @@ func TestGeneratePrimaryAtClass_III(t *testing.T) {
 	//  4. D3=2 → SmallStarAge accuracy=1 (d3) → age = 1×2 + 2 − 1 = 3 Gyr
 	rolls := []int{6, 7, 1, 2}
 	r := roller.NewScripted(rolls...)
+
 	got, err := generatePrimaryAtClass(r, III, GenerateOpts{Accuracy: 1})
 	if err != nil {
 		t.Fatalf("generatePrimaryAtClass: %v", err)
 	}
+
 	if got.LuminosityClass != III {
 		t.Errorf("LuminosityClass = %s, want III", got.LuminosityClass)
 	}
+
 	if got.SpectralType.Letter != 'K' {
 		t.Errorf("Letter = %c, want K", got.SpectralType.Letter)
 	}
+
 	if got.SpectralType.Subtype != 9 {
 		t.Errorf("Subtype = %d, want 9 (StarSubtypeNumeric[7] = 9, no IV clamp at Class III)", got.SpectralType.Subtype)
 	}
+
 	if got.Kind != KindGiant {
 		t.Errorf("Kind = %s, want %s", got.Kind, KindGiant)
 	}
+
 	if got.Mass <= 0 {
 		t.Errorf("Mass = %v, want > 0", got.Mass)
 	}
+
 	if got.Diameter <= 0 {
 		t.Errorf("Diameter = %v, want > 0", got.Diameter)
 	}
+
 	if got.Temperature <= 0 {
 		t.Errorf("Temperature = %v, want > 0", got.Temperature)
 	}
+
 	if got.Luminosity <= 0 {
 		t.Errorf("Luminosity = %v, want > 0", got.Luminosity)
 	}
@@ -281,6 +322,7 @@ func TestGeneratePrimaryAtClass_III(t *testing.T) {
 
 func TestParsePeculiarPath(t *testing.T) {
 	t.Parallel()
+
 	ok := map[string]PeculiarPath{
 		"special":  PeculiarPathSpecial,
 		"unusual":  PeculiarPathUnusual,
@@ -291,10 +333,12 @@ func TestParsePeculiarPath(t *testing.T) {
 		if err != nil {
 			t.Errorf("ParsePeculiarPath(%q) errored: %v", in, err)
 		}
+
 		if got != want {
 			t.Errorf("ParsePeculiarPath(%q) = %q, want %q", in, got, want)
 		}
 	}
+
 	for _, bad := range []string{"", "Special", "giant", "bogus"} {
 		if _, err := ParsePeculiarPath(bad); err == nil {
 			t.Errorf("ParsePeculiarPath(%q) = nil error, want error", bad)

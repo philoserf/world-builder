@@ -26,6 +26,7 @@ func TestParse_Valid(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Parse(%q) error: %v", tc.notation, err)
 			}
+
 			if got != tc.want {
 				t.Fatalf("Parse(%q) = %+v, want %+v", tc.notation, got, tc.want)
 			}

@@ -27,12 +27,16 @@ func SmallStarAge(r roller.Roller, accuracy int) (float64, error) {
 	if accuracy != 1 && accuracy != 2 {
 		return 0, fmt.Errorf("stars: accuracy must be 1 or 2, got %d", accuracy)
 	}
+
 	oneD := r.Roll("1D")
+
 	d3 := r.Roll("D3")
 	if accuracy == 1 {
 		return float64(oneD*2 + d3 - 1), nil
 	}
+
 	d10 := r.Roll("d10")
+
 	return float64(oneD*2+d3-2) + float64(d10)/10.0, nil
 }
 
@@ -58,6 +62,7 @@ func GiantLifespan(mainSequenceLifespanGyr, mass float64) float64 {
 // progenitorMass is the original star's mass (NOT dead-star mass).
 func FinalAgeProgenitor(progenitorMass float64) float64 {
 	msl := MainSequenceLifespan(progenitorMass)
+
 	return msl * (1.0 +
 		1.0/(4.0+progenitorMass) +
 		1.0/(10.0*progenitorMass*progenitorMass*progenitorMass))
@@ -84,29 +89,35 @@ func AgeSpecialObject(r roller.Roller, kind StarKind, deadStarMass float64) (flo
 	}
 
 	var base float64
+
 	switch row.BaseFormula {
 	case "small_star":
 		v, err := SmallStarAge(r, 1)
 		if err != nil {
 			return 0, err
 		}
+
 		base = v
 	case "100m_per_2d10":
 		// 100 million years / 2d10. 2d10 = sum of two d10 rolls.
 		d1 := r.Roll("d10")
 		d2 := r.Roll("d10")
+
 		sum := d1 + d2
 		if sum == 0 {
 			sum = 1
 		}
+
 		base = 0.1 / float64(sum) // 100 Myr = 0.1 Gyr
 	case "10m_per_2d10":
 		d1 := r.Roll("d10")
 		d2 := r.Roll("d10")
+
 		sum := d1 + d2
 		if sum == 0 {
 			sum = 1
 		}
+
 		base = 0.01 / float64(sum) // 10 Myr = 0.01 Gyr
 	default:
 		return 0, fmt.Errorf("stars: unknown base formula %q", row.BaseFormula)
@@ -119,5 +130,6 @@ func AgeSpecialObject(r roller.Roller, kind StarKind, deadStarMass float64) (flo
 	d3 := r.Roll("D3")
 	progenitorMass := float64(2+d3) * deadStarMass
 	progenitorAge := FinalAgeProgenitor(progenitorMass)
+
 	return base + progenitorAge, nil
 }

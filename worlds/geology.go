@@ -53,18 +53,24 @@ func ComputeResidualSeismicStress(body *Body, ageGyr float64, isMoon bool) int {
 	if body == nil {
 		return 0
 	}
+
 	size := SizeAsInt(body.SizeCode)
+
 	dm := 0
 	if isMoon {
 		dm++
 	}
+
 	moonDM := 0
+
 	for _, m := range body.Children {
 		if SizeAsInt(m.SizeCode) >= 1 {
 			moonDM++
 		}
 	}
+
 	dm += min(moonDM, 12)
+
 	if body.Physical != nil {
 		switch {
 		case body.Physical.Density > 1.0:
@@ -73,10 +79,12 @@ func ComputeResidualSeismicStress(body *Body, ageGyr float64, isMoon bool) int {
 			dm--
 		}
 	}
+
 	inner := math.Floor(float64(size) - ageGyr + float64(dm))
 	if inner < 1 {
 		return 0
 	}
+
 	return int(inner) * int(inner)
 }
 
@@ -87,6 +95,7 @@ func ComputeTidalStressFactor(body *Body) int {
 	if body == nil || body.TidalEffects == nil {
 		return 0
 	}
+
 	return int(math.Floor(body.TidalEffects.Total / 10.0))
 }
 
@@ -122,14 +131,17 @@ func ComputeTidalHeatingFactor(in TidalHeatingInputs) int {
 	if in.DistanceMkm == 0 || in.PeriodDays == 0 || in.WorldMassEarth == 0 {
 		return 0
 	}
+
 	num := in.PrimaryMassEarth * in.PrimaryMassEarth *
 		math.Pow(float64(in.SizeN), 5) *
 		in.Eccentricity * in.Eccentricity
 	den := 3000.0 * math.Pow(in.DistanceMkm, 5) * in.PeriodDays * in.WorldMassEarth
+
 	v := num / den
 	if v < 1 {
 		return 0
 	}
+
 	return int(math.Floor(v))
 }
 
@@ -153,11 +165,13 @@ func ApplyInherentTempAddition(temp *Temperature, addedK float64) {
 	if temp == nil || addedK == 0 {
 		return
 	}
+
 	addPow4 := math.Pow(addedK, 4)
 	add := func(v *float64) {
 		if *v == 0 {
 			return
 		}
+
 		*v = math.Pow(math.Pow(*v, 4)+addPow4, 0.25)
 	}
 	add(&temp.MeanK)
@@ -166,6 +180,7 @@ func ApplyInherentTempAddition(temp *Temperature, addedK float64) {
 	add(&temp.BasicK)
 	add(&temp.WorstHighK)
 	add(&temp.WorstLowK)
+
 	if temp.IsTwilight {
 		add(&temp.TwilightK)
 		add(&temp.BrightSideK)
@@ -186,10 +201,12 @@ func ComputeGGResidualHeat(massEarth, ageGyr float64) float64 {
 	if massEarth <= 0 || ageGyr <= 0 {
 		return 0
 	}
+
 	v := 80.0 * math.Pow(massEarth, 0.25) / math.Sqrt(ageGyr)
 	if v < 1 {
 		return 0
 	}
+
 	return v
 }
 
@@ -209,21 +226,27 @@ func RollTectonicPlates(r roller.Roller, body *Body, tss int) int {
 	if body == nil || body.Hydrographics == nil {
 		return 0
 	}
+
 	if tss <= 0 || body.Hydrographics.Code < 1 {
 		return 0
 	}
+
 	dm := 0
+
 	switch {
 	case tss > 100:
 		dm = 2
 	case tss >= 10:
 		dm = 1
 	}
+
 	roll := r.Roll("2D")
+
 	result := SizeAsInt(body.SizeCode) + body.Hydrographics.Code - roll + dm
 	if result <= 1 {
 		return 0
 	}
+
 	return result
 }
 
@@ -286,8 +309,10 @@ func ApplyGeology(r roller.Roller, u *Universe) error {
 		if body.Kind == BodyEmpty || body.Kind == BodyPlanetoidBelt {
 			continue
 		}
+
 		applyBodyGeology(bodySub(r, body, parent, "geology"), body, sys, parent != nil)
 	}
+
 	return nil
 }
 
@@ -299,11 +324,14 @@ func applyBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bool
 		body.Geology = &Geology{
 			InherentTemperatureK: ComputeGGResidualHeat(body.MassEarth, sys.Primary.AgeGyr),
 		}
+
 		return
 	}
+
 	if body.Geology != nil {
 		// Climate solver already populated TSS factors — only plates remain.
 		body.Geology.TectonicPlates = RollTectonicPlates(r, body, body.Geology.TotalSeismicStress)
+
 		return
 	}
 	// Non-HZ body — climate skipped it; compute the full geology now.
@@ -320,22 +348,28 @@ func applyBodyGeology(r roller.Roller, body *Body, sys stars.System, isMoon bool
 func computePartialGeology(body *Body, sys stars.System, isMoon bool) *Geology {
 	g := &Geology{}
 	g.ResidualSeismicStress = ComputeResidualSeismicStress(body, sys.Primary.AgeGyr, isMoon)
+
 	g.TidalStressFactor = ComputeTidalStressFactor(body)
 	if isMoon && body.Parent != nil {
 		g.TidalHeatingFactor = ComputeTidalHeatingFactor(moonTidalHeatingInputs(body, body.Parent))
 	} else {
 		g.TidalHeatingFactor = ComputeTidalHeatingFactor(planetTidalHeatingInputs(body, sys))
 	}
+
 	g.TotalSeismicStress = g.ResidualSeismicStress + g.TidalStressFactor + g.TidalHeatingFactor
 	g.InherentTemperatureK = float64(g.TotalSeismicStress)
+
 	return g
 }
 
 // planetTidalHeatingInputs derives TidalHeatingInputs for a planet
 // around its primary star.
 func planetTidalHeatingInputs(body *Body, sys stars.System) TidalHeatingInputs {
-	const auMkm = 149.6
-	const solarMassEarth = 332946.0
+	const (
+		auMkm          = 149.6
+		solarMassEarth = 332946.0
+	)
+
 	return TidalHeatingInputs{
 		PrimaryMassEarth: sys.Primary.Mass * solarMassEarth,
 		SizeN:            SizeAsInt(body.SizeCode),

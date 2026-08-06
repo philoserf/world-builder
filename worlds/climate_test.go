@@ -21,22 +21,28 @@ func TestZed_ApplyStage5(t *testing.T) {
 		if err != nil {
 			t.Fatalf("seed %d: GenerateSystemPlacement: %v", seed, err)
 		}
+
 		u := &worlds.Universe{System: sys, Placement: sp}
 		if err := worlds.ApplyDetailFrontEnd(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyDetailFrontEnd: %v", seed, err)
 		}
+
 		if err := worlds.ApplyBodyPhysical(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyBodyPhysical: %v", seed, err)
 		}
+
 		if err := worlds.ApplyBeltDetails(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyBeltDetails: %v", seed, err)
 		}
+
 		if err := worlds.ApplyMoonRefinement(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyMoonRefinement: %v", seed, err)
 		}
+
 		if err := worlds.ApplyRotationTilt(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyRotationTilt: %v", seed, err)
 		}
+
 		if err := worlds.ApplyClimate(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyClimate: %v", seed, err)
 		}
@@ -47,20 +53,25 @@ func TestZed_ApplyStage5(t *testing.T) {
 			if body.Kind != worlds.BodyTerrestrial {
 				continue
 			}
+
 			if !body.HZ {
 				continue
 			}
+
 			if body.SizeCode == "" || body.SizeCode == "0" || body.SizeCode == "R" {
 				continue
 			}
+
 			if !body.HasAtmosphere() {
 				t.Errorf("seed %d: HZ terrestrial bodies[%d] (%s) missing Atmosphere",
 					seed, i, body.Designation)
 			}
+
 			if !body.HasHydrographics() {
 				t.Errorf("seed %d: HZ terrestrial bodies[%d] (%s) missing Hydrographics",
 					seed, i, body.Designation)
 			}
+
 			if !body.HasTemperature() {
 				t.Errorf("seed %d: HZ terrestrial bodies[%d] (%s) missing Temperature",
 					seed, i, body.Designation)

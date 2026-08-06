@@ -1,6 +1,7 @@
 package stars
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/philoserf/world-builder/roller"
@@ -31,26 +32,31 @@ func generatePrimaryAtClass(r roller.Roller, targetClass LuminosityClass, opts G
 	if err != nil {
 		return Star{}, err
 	}
+
 	switch targetClass {
 	case IV:
 		letter = ApplyClassIVLetterConstraint(letter)
 	case VI:
 		letter = ApplyClassVILetterConstraint(letter)
 	}
+
 	subtype, err := RollSubtype(r, letter, targetClass)
 	if err != nil {
 		return Star{}, err
 	}
+
 	st := SpectralType{Letter: letter, Subtype: subtype}
 
 	mass, err := ComputeMass(st, targetClass)
 	if err != nil {
 		return Star{}, err
 	}
+
 	diameter, err := ComputeDiameter(st, targetClass)
 	if err != nil {
 		return Star{}, err
 	}
+
 	temperature, err := ComputeTemperature(st)
 	if err != nil {
 		return Star{}, err
@@ -123,6 +129,7 @@ func kindFromCell(cell string) (kind StarKind, ok bool) {
 	case "Anomaly":
 		return KindAnomaly, true
 	}
+
 	return "", false
 }
 
@@ -132,8 +139,10 @@ func kindFromCell(cell string) (kind StarKind, ok bool) {
 func KindFromUnusualCell(cell string) (StarKind, error) {
 	if cell == "BD" || cell == "D" {
 		k, _ := kindFromCell(cell)
+
 		return k, nil
 	}
+
 	return "", fmt.Errorf("stars: unknown Unusual cell: %q", cell)
 }
 
@@ -146,6 +155,7 @@ func KindFromPeculiarCell(cell string) (StarKind, error) {
 			return k, nil
 		}
 	}
+
 	return "", fmt.Errorf("stars: unknown Peculiar cell: %q", cell)
 }
 
@@ -162,6 +172,7 @@ func RollSpecialPrimarySimple(r roller.Roller) (StarKind, error) {
 	if roll == 6 {
 		return KindBlackHole, nil
 	}
+
 	return KindNeutronStar, nil
 }
 
@@ -226,14 +237,18 @@ func RollSpecialPrimary(r roller.Roller, path PeculiarPath) (StarKind, Luminosit
 
 func rollSpecialPrimaryImpl(r roller.Roller, path PeculiarPath, depth int) (StarKind, LuminosityClass, error) {
 	if depth > 5 {
-		return "", "", fmt.Errorf("stars: special-primary dispatch recursion depth exceeded")
+		return "", "", errors.New("stars: special-primary dispatch recursion depth exceeded")
 	}
+
 	roll := r.Roll("2D")
+
 	row, ok := StarTypeDetermination[roll]
 	if !ok {
 		return "", "", fmt.Errorf("stars: 2D out of range: %d", roll)
 	}
+
 	var cell string
+
 	switch path {
 	case PeculiarPathSpecial:
 		cell = row.Special
@@ -248,6 +263,7 @@ func rollSpecialPrimaryImpl(r roller.Roller, path PeculiarPath, depth int) (Star
 	if kind, ok := kindFromCell(cell); ok {
 		return kind, "", nil
 	}
+
 	switch cell {
 	case "Class III":
 		return "", III, nil

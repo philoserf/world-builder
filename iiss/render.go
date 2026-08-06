@@ -13,24 +13,31 @@ import (
 func MarkdownClass4Survey(sf SystemForms) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# %s — IISS Class IV Survey\n\n", sf.Class0I.IISSDesig)
+
 	if sf.MainworldDesignation != "" {
 		fmt.Fprintf(&b, "**Mainworld:** %s\n\n", sf.MainworldDesignation)
 	}
+
 	if sf.ShortProfile != "" {
 		fmt.Fprintf(&b, "Short profile: `%s`\n\n", sf.ShortProfile)
 	}
+
 	if sf.LongProfile != "" {
 		fmt.Fprintf(&b, "Long profile: `%s`\n\n", sf.LongProfile)
 	}
+
 	if sf.NotableFeatures != "" {
 		b.WriteString(sf.NotableFeatures)
 		b.WriteString("\n")
 	}
+
 	b.WriteString(markdownClass4Part1(sf))
+
 	for _, f := range sf.Class4PForms {
 		b.WriteString("\n")
 		b.WriteString(markdownClass4Part(f))
 	}
+
 	return b.String()
 }
 
@@ -40,7 +47,9 @@ func MarkdownClass4Survey(sf SystemForms) string {
 // Class23 object rows (the content the old short forms carried).
 func markdownClass4Part1(sf SystemForms) string {
 	var b strings.Builder
+
 	c0 := sf.Class0I
+
 	b.WriteString("## PART 1 — System Census\n\n")
 
 	fmt.Fprintf(&b, "- System: %s\n", c0.SystemName)
@@ -58,12 +67,14 @@ func markdownClass4Part1(sf SystemForms) string {
 		b.WriteString("### Stars\n\n")
 		b.WriteString("| Component | Class | Mass | Diameter | Temp (K) | Luminosity | Orbit | AU | Ecc | Period (y) | MAO | HZCO | HZ Orbit# |\n")
 		b.WriteString("| --------- | ----- | ---- | -------- | -------- | ---------- | ----- | --- | --- | ---------- | --- | ---- | --------- |\n")
+
 		for _, s := range c0.Stars {
 			fmt.Fprintf(&b, "| %s | %s | %.3f | %.3f | %.0f | %.4f | %s | %s | %s | %s | %.2f | %.2f | %s |\n",
 				s.Component, s.Class, s.Mass, s.Diameter, s.Temperature, s.Luminosity,
 				blankFloat(s.Orbit), blankFloat(s.AU), blankFloat(s.Eccentricity),
 				blankFloat(s.PeriodYears), s.MAO, s.HZCO, hzRange(s.HZCO))
 		}
+
 		b.WriteString("\nHabitable zone breadth: ±1.0 Orbit# from HZCO (WBH p.43).\n\n")
 	}
 
@@ -71,12 +82,14 @@ func markdownClass4Part1(sf SystemForms) string {
 		b.WriteString("### Bodies\n\n")
 		b.WriteString("| Primary | Designation | Orbit | AU | Ecc | Period | SAH | Sub | Notes |\n")
 		b.WriteString("| ------- | ----------- | ----- | --- | --- | ------ | --- | --- | ----- |\n")
+
 		for _, o := range sf.Class23.Objects {
 			fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
 				o.Primary, o.Designation, blankFloat(o.Orbit), blankFloat(o.AU),
 				blankFloat(o.Ecc), o.PeriodStr, o.SAH, o.Sub, o.Notes)
 		}
 	}
+
 	return b.String()
 }
 
@@ -85,23 +98,28 @@ func markdownClass4Part1(sf SystemForms) string {
 // PartP / PartPB RenderBody methods.
 func markdownClass4Part(f Class4PForm) string {
 	var b strings.Builder
+
 	switch f.Variant {
 	case Class4PBelt:
 		fmt.Fprintf(&b, "## PART P.B — %s (Belt)%s\n\n", f.Designation, mainworldSuffix(f))
+
 		if f.PartPB != nil {
 			f.PartPB.RenderBody(&b, f.FormHeader)
 		}
 	case Class4PMoon:
 		fmt.Fprintf(&b, "## PART P — %s (Moon)%s\n\n", f.Designation, mainworldSuffix(f))
+
 		if f.PartP != nil {
 			f.PartP.RenderBody(&b, f.FormHeader)
 		}
 	default:
 		fmt.Fprintf(&b, "## PART P — %s%s\n\n", f.Designation, mainworldSuffix(f))
+
 		if f.PartP != nil {
 			f.PartP.RenderBody(&b, f.FormHeader)
 		}
 	}
+
 	return b.String()
 }
 
@@ -111,6 +129,7 @@ func mainworldSuffix(f Class4PForm) string {
 	if (f.PartP != nil && f.PartP.IsMainworld) || (f.PartPB != nil && f.PartPB.IsMainworld) {
 		return " — mainworld"
 	}
+
 	return ""
 }
 
@@ -119,6 +138,7 @@ func blankFloat(v float64) string {
 	if v == 0 {
 		return ""
 	}
+
 	return fmt.Sprintf("%.2f", v)
 }
 
@@ -130,5 +150,6 @@ func hzRange(hzco float64) string {
 	if hzco <= 0 {
 		return ""
 	}
+
 	return fmt.Sprintf("%.2f–%.2f", max(0.0, hzco-1), min(20.0, hzco+1))
 }

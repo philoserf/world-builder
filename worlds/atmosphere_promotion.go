@@ -15,9 +15,11 @@ func PromoteOxygenTaint(atmCode int, ppO2 float64) (int, *Taint) {
 	if atmCode != 5 && atmCode != 6 && atmCode != 8 {
 		return atmCode, nil
 	}
+
 	if ppO2 >= 0.10 && ppO2 <= 0.50 {
 		return atmCode, nil
 	}
+
 	taintCode := "L"
 	if ppO2 > 0.50 {
 		taintCode = "H"
@@ -25,5 +27,6 @@ func PromoteOxygenTaint(atmCode int, ppO2 float64) (int, *Taint) {
 	// Promotion map: 5→4, 6→7, 8→9.
 	promotions := map[int]int{5: 4, 6: 7, 8: 9}
 	newCode := promotions[atmCode]
+
 	return newCode, &Taint{Code: taintCode}
 }

@@ -33,6 +33,7 @@ func systemAgeDM(ageGyr float64) int {
 	if ageGyr <= 0 {
 		return 0
 	}
+
 	return int(math.Floor(ageGyr / 2.0))
 }
 
@@ -40,6 +41,7 @@ func systemAgeDM(ageGyr float64) int {
 func rollOneBasic(r roller.Roller, dm int) float64 {
 	twoD := r.Roll("2D")
 	oneD := r.Roll("1D")
+
 	return float64((twoD-2)*4 + 2 + oneD + dm)
 }
 
@@ -53,17 +55,21 @@ func rollOneBasic(r roller.Roller, dm int) float64 {
 // (post-cascade) hours by 2.
 func RollBasicSiderealHours(r roller.Roller, dms DayLengthDMs) (float64, error) {
 	dm := systemAgeDM(dms.SystemAgeGyr)
+
 	hours := rollOneBasic(r, dm)
 	for i := 0; i < maxCascadeIterations && hours >= 40; i++ {
 		check := r.Roll("1D")
 		if check < 5 {
 			break
 		}
+
 		hours += rollOneBasic(r, dm)
 	}
+
 	if dms.IsGGOrSizeS {
 		hours *= 2
 	}
+
 	return hours, nil
 }
 
@@ -78,6 +84,7 @@ func ComputeYearDays(yearHours, siderealHours float64) float64 {
 	if siderealHours == 0 {
 		return 0
 	}
+
 	return yearHours/siderealHours - 1
 }
 
@@ -86,6 +93,7 @@ func ComputeSolarHours(yearHours, yearDays float64) float64 {
 	if yearDays == 0 {
 		return 0
 	}
+
 	return yearHours / yearDays
 }
 
@@ -97,6 +105,7 @@ func ComputeSolarHours(yearHours, yearDays float64) float64 {
 func addMinuteSecondPrecision(r roller.Roller) float64 {
 	mins := min(tensOnesValue(r), 59)
 	secs := min(tensOnesValue(r), 59)
+
 	return float64(mins)/60.0 + float64(secs)/3600.0
 }
 
@@ -104,10 +113,12 @@ func addMinuteSecondPrecision(r roller.Roller) float64 {
 // d10 is treated as 0-9 (any 10 returned by the roller is clamped to 9).
 func tensOnesValue(r roller.Roller) int {
 	tens := max(r.Roll("1D")-1, 0)
+
 	ones := r.Roll("d10")
 	if ones >= 10 {
 		ones = 9
 	}
+
 	return tens*10 + ones
 }
 
@@ -122,18 +133,22 @@ func GenerateDayLength(r roller.Roller, dp *Body, sys stars.System) (*DayLength,
 	if dp.Kind == BodyEmpty {
 		return nil, nil
 	}
+
 	dms := DayLengthDMs{
 		SystemAgeGyr: sys.Primary.AgeGyr,
 		IsGGOrSizeS:  dp.GGClass != NotGasGiant || dp.SizeCode == "0" || dp.SizeCode == "S" || dp.SizeCode == "R",
 	}
+
 	hours, err := RollBasicSiderealHours(r, dms)
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateDayLength: %w", err)
 	}
+
 	hours += addMinuteSecondPrecision(r)
 
 	yearDays := ComputeYearDays(dp.Period.Hours, hours)
 	solar := ComputeSolarHours(dp.Period.Hours, yearDays)
+
 	return &DayLength{
 		SiderealHours:         hours,
 		SolarHours:            solar,

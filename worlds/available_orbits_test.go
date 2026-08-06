@@ -17,6 +17,7 @@ func TestGroup_Total_SingleInterval(t *testing.T) {
 		Intervals:   []Interval{{Min: 0.03, Max: 20.0}},
 	}
 	got := g.Total()
+
 	want := 19.97
 	if math.Abs(got-want) > 1e-9 {
 		t.Errorf("Total = %v, want %v", got, want)
@@ -37,6 +38,7 @@ func TestGroup_Total_MultiInterval(t *testing.T) {
 		},
 	}
 	got := g.Total()
+
 	want := 13.39
 	if math.Abs(got-want) > 1e-9 {
 		t.Errorf("Total = %v, want %v", got, want)
@@ -80,6 +82,7 @@ func TestGroup_Contains(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			if got := g.Contains(tc.orbit); got != tc.want {
 				t.Errorf("Contains(%v) = %v, want %v", tc.orbit, got, tc.want)
 			}
@@ -99,13 +102,16 @@ func TestIdentifyGroups_SinglePrimary(t *testing.T) {
 		}),
 		Companions: nil,
 	}
+
 	groups := identifyGroups(sys)
 	if len(groups) != 1 {
 		t.Fatalf("groups = %d, want 1", len(groups))
 	}
+
 	if groups[0].Designation != "A" {
 		t.Errorf("Designation = %q, want \"A\"", groups[0].Designation)
 	}
+
 	if len(groups[0].Members) != 1 {
 		t.Errorf("Members = %d, want 1", len(groups[0].Members))
 	}
@@ -132,13 +138,16 @@ func TestIdentifyGroups_PrimaryWithCompanion(t *testing.T) {
 			{Star: ab, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.09, Eccentricity: 0.11, ParentIndex: -1},
 		},
 	}
+
 	groups := identifyGroups(sys)
 	if len(groups) != 1 {
 		t.Fatalf("groups = %d, want 1 (companion folds into primary)", len(groups))
 	}
+
 	if groups[0].Designation != "Aab" {
 		t.Errorf("Designation = %q, want \"Aab\"", groups[0].Designation)
 	}
+
 	if len(groups[0].Members) != 2 {
 		t.Errorf("Members = %d, want 2", len(groups[0].Members))
 	}
@@ -156,27 +165,34 @@ func TestAvailableOrbits_SoleMainSequence(t *testing.T) {
 		Mass:            1.0, Diameter: 1.0, Temperature: 5772,
 	})
 	sys := stars.System{Primary: sol}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	if len(got.Groups) != 1 {
 		t.Fatalf("groups = %d, want 1", len(got.Groups))
 	}
+
 	g := got.Groups[0]
 	if g.Designation != "A" {
 		t.Errorf("Designation = %q, want \"A\"", g.Designation)
 	}
+
 	if math.Abs(g.MAO-0.03) > 0.005 {
 		t.Errorf("MAO = %v, want ~0.03", g.MAO)
 	}
+
 	if len(g.Intervals) != 1 {
 		t.Fatalf("intervals = %d, want 1", len(g.Intervals))
 	}
+
 	iv := g.Intervals[0]
 	if math.Abs(iv.Min-g.MAO) > 1e-9 {
 		t.Errorf("Min = %v, want MAO %v", iv.Min, g.MAO)
 	}
+
 	if math.Abs(iv.Max-20.0) > 1e-9 {
 		t.Errorf("Max = %v, want 20.0", iv.Max)
 	}
@@ -188,6 +204,7 @@ func TestAvailableOrbits_PostStellarPrimary(t *testing.T) {
 	sys := stars.System{
 		Primary: stars.Star{Kind: stars.KindWhiteDwarf, Mass: 0.5},
 	}
+
 	_, err := AvailableOrbits(sys)
 	if !errors.Is(err, stars.ErrPostStellarPrimaryUnsupported) {
 		t.Errorf("err = %v, want stars.ErrPostStellarPrimaryUnsupported", err)
@@ -217,14 +234,17 @@ func TestAvailableOrbits_Rule2_CompanionEccentricity(t *testing.T) {
 			{Star: ab, OrbitClass: stars.OrbitCompanion, OrbitNumber: 0.09, Eccentricity: 0.11, ParentIndex: -1},
 		},
 	}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	g := got.Groups[0]
 	if math.Abs(g.MAO-0.61) > 1e-9 {
 		t.Errorf("Aab MAO = %v, want 0.61", g.MAO)
 	}
+
 	if math.Abs(g.Intervals[0].Min-0.61) > 1e-9 {
 		t.Errorf("Aab interval Min = %v, want 0.61", g.Intervals[0].Min)
 	}
@@ -253,20 +273,25 @@ func TestAvailableOrbits_Rule5_SecondaryExclusion(t *testing.T) {
 			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.10, Eccentricity: 0.0, ParentIndex: -1},
 		},
 	}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	primary := got.Groups[0]
 	if len(primary.Intervals) != 2 {
 		t.Fatalf("primary intervals = %d, want 2: %+v", len(primary.Intervals), primary.Intervals)
 	}
+
 	if math.Abs(primary.Intervals[0].Max-5.10) > 1e-9 {
 		t.Errorf("first interval Max = %v, want 5.10", primary.Intervals[0].Max)
 	}
+
 	if math.Abs(primary.Intervals[1].Min-7.10) > 1e-9 {
 		t.Errorf("second interval Min = %v, want 7.10", primary.Intervals[1].Min)
 	}
+
 	if math.Abs(primary.Intervals[1].Max-20.0) > 1e-9 {
 		t.Errorf("second interval Max = %v, want 20.0", primary.Intervals[1].Max)
 	}
@@ -298,17 +323,21 @@ func TestAvailableOrbits_Rule6_EccentricSecondary(t *testing.T) {
 			{Star: ca, OrbitClass: stars.OrbitFar, OrbitNumber: 12.10, Eccentricity: 0.47, ParentIndex: -1},
 		},
 	}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	primary := got.Groups[0]
 	if len(primary.Intervals) != 2 {
 		t.Fatalf("primary intervals = %d, want 2: %+v", len(primary.Intervals), primary.Intervals)
 	}
+
 	if math.Abs(primary.Intervals[0].Max-10.10) > 1e-9 {
 		t.Errorf("first interval Max = %v, want 10.10", primary.Intervals[0].Max)
 	}
+
 	if math.Abs(primary.Intervals[1].Min-14.10) > 1e-9 {
 		t.Errorf("second interval Min = %v, want 14.10", primary.Intervals[1].Min)
 	}
@@ -338,14 +367,17 @@ func TestAvailableOrbits_Rule7_NearEccentricityGT05(t *testing.T) {
 			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.0, Eccentricity: 0.6, ParentIndex: -1},
 		},
 	}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	primary := got.Groups[0]
 	if math.Abs(primary.Intervals[0].Max-3.0) > 1e-9 {
 		t.Errorf("first Max = %v, want 3.0", primary.Intervals[0].Max)
 	}
+
 	if math.Abs(primary.Intervals[1].Min-9.0) > 1e-9 {
 		t.Errorf("second Min = %v, want 9.0", primary.Intervals[1].Min)
 	}
@@ -374,15 +406,18 @@ func TestAvailableOrbits_Rule7_FarDoesNotTrigger(t *testing.T) {
 			{Star: far, OrbitClass: stars.OrbitFar, OrbitNumber: 12.0, Eccentricity: 0.6, ParentIndex: -1},
 		},
 	}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	primary := got.Groups[0]
 	// Exclusion (10, 14): primary intervals [[MAO, 10.0], [14.0, 20.0]].
 	if math.Abs(primary.Intervals[0].Max-10.0) > 1e-9 {
 		t.Errorf("first Max = %v, want 10.0", primary.Intervals[0].Max)
 	}
+
 	if math.Abs(primary.Intervals[1].Min-14.0) > 1e-9 {
 		t.Errorf("second Min = %v, want 14.0", primary.Intervals[1].Min)
 	}
@@ -410,23 +445,29 @@ func TestAvailableOrbits_Rule8_SecondaryOwnRange(t *testing.T) {
 			{Star: b, OrbitClass: stars.OrbitNear, OrbitNumber: 6.10, Eccentricity: 0.08, ParentIndex: -1},
 		},
 	}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	if len(got.Groups) != 2 {
 		t.Fatalf("groups = %d, want 2", len(got.Groups))
 	}
+
 	bg := got.Groups[1]
 	if bg.Designation != "B" {
 		t.Errorf("Designation = %q, want \"B\"", bg.Designation)
 	}
+
 	if len(bg.Intervals) != 1 {
 		t.Fatalf("intervals = %d, want 1", len(bg.Intervals))
 	}
+
 	if math.Abs(bg.Intervals[0].Min-bg.MAO) > 1e-9 {
 		t.Errorf("Min = %v, want MAO %v", bg.Intervals[0].Min, bg.MAO)
 	}
+
 	if math.Abs(bg.Intervals[0].Max-3.10) > 1e-9 {
 		t.Errorf("Max = %v, want 3.10", bg.Intervals[0].Max)
 	}
@@ -466,13 +507,16 @@ func TestAvailableOrbits_Rules9to11_ZedB(t *testing.T) {
 			{Star: ca, OrbitClass: stars.OrbitFar, OrbitNumber: 12.10, Eccentricity: 0.47, ParentIndex: -1},
 		},
 	}
+
 	got, err := AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	if len(got.Groups) != 3 {
 		t.Fatalf("groups = %d, want 3", len(got.Groups))
 	}
+
 	bg := got.Groups[1]
 	if math.Abs(bg.Intervals[0].Max-1.10) > 1e-9 {
 		t.Errorf("B Max = %v, want 1.10", bg.Intervals[0].Max)
@@ -553,10 +597,12 @@ func TestSubtract(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			got := subtract(tc.input, tc.exMin, tc.exMax)
 			if len(got) != len(tc.want) {
 				t.Fatalf("got %d intervals %+v, want %d %+v", len(got), got, len(tc.want), tc.want)
 			}
+
 			for i := range got {
 				if math.Abs(got[i].Min-tc.want[i].Min) > 1e-9 || math.Abs(got[i].Max-tc.want[i].Max) > 1e-9 {
 					t.Errorf("interval[%d] = %+v, want %+v", i, got[i], tc.want[i])
@@ -593,15 +639,19 @@ func TestIdentifyGroups_SourceCompanion(t *testing.T) {
 	if len(groups) != 2 {
 		t.Fatalf("groups = %d, want 2", len(groups))
 	}
+
 	if groups[0].sourceCompanion != nil {
 		t.Errorf("primary group sourceCompanion = %+v, want nil", groups[0].sourceCompanion)
 	}
+
 	if groups[1].sourceCompanion == nil {
 		t.Fatalf("secondary group sourceCompanion = nil, want non-nil")
 	}
+
 	if groups[1].sourceCompanion.OrbitClass != stars.OrbitNear {
 		t.Errorf("secondary sourceCompanion.OrbitClass = %v, want OrbitNear", groups[1].sourceCompanion.OrbitClass)
 	}
+
 	if math.Abs(groups[1].sourceCompanion.OrbitNumber-6.10) > 1e-9 {
 		t.Errorf("secondary sourceCompanion.OrbitNumber = %v, want 6.10", groups[1].sourceCompanion.OrbitNumber)
 	}
@@ -660,6 +710,7 @@ func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	if len(groups) != 3 {
 		t.Fatalf("groups = %d, want 3", len(groups))
 	}
+
 	wantDesig := []string{"Aab", "B", "Cab"}
 	for i, g := range groups {
 		if g.Designation != wantDesig[i] {
@@ -670,6 +721,7 @@ func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	if math.Abs(groups[0].companionEcc-0.11) > 1e-9 {
 		t.Errorf("Aab companionEcc = %v, want 0.11", groups[0].companionEcc)
 	}
+
 	if math.Abs(groups[2].companionEcc-0.24) > 1e-9 {
 		t.Errorf("Cab companionEcc = %v, want 0.24", groups[2].companionEcc)
 	}
@@ -687,9 +739,11 @@ func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	if groups[1].sourceCompanion == nil {
 		t.Fatalf("B sourceCompanion = nil, want non-nil")
 	}
+
 	if groups[1].sourceCompanion.OrbitClass != stars.OrbitNear {
 		t.Errorf("B sourceCompanion.OrbitClass = %v, want OrbitNear", groups[1].sourceCompanion.OrbitClass)
 	}
+
 	if math.Abs(groups[1].sourceCompanion.OrbitNumber-6.10) > 1e-9 {
 		t.Errorf("B sourceCompanion.OrbitNumber = %v, want 6.10", groups[1].sourceCompanion.OrbitNumber)
 	}
@@ -697,9 +751,11 @@ func TestIdentifyGroups_ZedQuintuple(t *testing.T) {
 	if groups[2].sourceCompanion == nil {
 		t.Fatalf("Cab sourceCompanion = nil, want non-nil")
 	}
+
 	if groups[2].sourceCompanion.OrbitClass != stars.OrbitFar {
 		t.Errorf("Cab sourceCompanion.OrbitClass = %v, want OrbitFar", groups[2].sourceCompanion.OrbitClass)
 	}
+
 	if math.Abs(groups[2].sourceCompanion.OrbitNumber-12.10) > 1e-9 {
 		t.Errorf("Cab sourceCompanion.OrbitNumber = %v, want 12.10", groups[2].sourceCompanion.OrbitNumber)
 	}

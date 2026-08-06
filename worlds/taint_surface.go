@@ -28,8 +28,10 @@ func ApplyTaintTypology(r roller.Roller, u *Universe) error {
 		if !body.HasAtmosphere() {
 			continue
 		}
+
 		applyBodyTaints(bodySub(r, body, parent, "taint"), body)
 	}
+
 	return nil
 }
 
@@ -39,6 +41,7 @@ func applyBodyTaints(r roller.Roller, body *Body) {
 	if body == nil || body.Atmosphere == nil {
 		return
 	}
+
 	atm := body.Atmosphere
 	atm.Taints = nil
 	atm.InsidiousHazards = nil
@@ -66,11 +69,14 @@ func ApplySurfaceDistribution(r roller.Roller, u *Universe) error {
 		if !body.HasHydrographics() {
 			continue
 		}
+
 		sd, err := GenerateSurfaceDistribution(bodySub(r, body, parent, "surface"), body.Hydrographics)
 		if err != nil {
 			return fmt.Errorf("worlds: stage6 surface distribution %s: %w", body.Designation, err)
 		}
+
 		body.SurfaceDistribution = sd
 	}
+
 	return nil
 }

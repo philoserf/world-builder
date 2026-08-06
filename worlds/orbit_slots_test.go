@@ -10,6 +10,7 @@ import (
 
 func TestPlaceOrbitSlots_SinglePrimary_NoExclusions(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{
 		Designation: "A",
 		Members:     []stars.Star{{}},
@@ -29,10 +30,12 @@ func TestPlaceOrbitSlots_SinglePrimary_NoExclusions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	want := []float64{1.5, 1.5, 2.5, 3.5, 4.5}
 	if len(got) != len(want) {
 		t.Fatalf("len(got) = %d, want %d", len(got), len(want))
 	}
+
 	for i, w := range want {
 		if math.Abs(got[i].Orbit-w) > 0.05 {
 			t.Errorf("slot %d Orbit = %v, want %v", i, got[i].Orbit, w)
@@ -42,6 +45,7 @@ func TestPlaceOrbitSlots_SinglePrimary_NoExclusions(t *testing.T) {
 
 func TestPlaceOrbitSlots_BaselineFixedSlotIsAtBaselineOrbit(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{
 		Members:   []stars.Star{{}},
 		MAO:       0.5,
@@ -59,10 +63,12 @@ func TestPlaceOrbitSlots_BaselineFixedSlotIsAtBaselineOrbit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	want := []float64{1.5, 2.5, 3.5, 4.5, 5.0}
 	if len(got) != len(want) {
 		t.Fatalf("len = %d, want %d", len(got), len(want))
 	}
+
 	for i, w := range want {
 		if math.Abs(got[i].Orbit-w) > 0.05 {
 			t.Errorf("slot %d Orbit = %v, want %v", i, got[i].Orbit, w)
@@ -72,6 +78,7 @@ func TestPlaceOrbitSlots_BaselineFixedSlotIsAtBaselineOrbit(t *testing.T) {
 
 func TestPlaceOrbitSlots_ExclusionZoneWidens(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{
 		Members:   []stars.Star{{}},
 		MAO:       0.5,
@@ -89,10 +96,12 @@ func TestPlaceOrbitSlots_ExclusionZoneWidens(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	want := []float64{2.5, 2.5, 4.5, 9.5}
 	if len(got) != len(want) {
 		t.Fatalf("len(got) = %d, want %d", len(got), len(want))
 	}
+
 	for i, w := range want {
 		if math.Abs(got[i].Orbit-w) > 0.05 {
 			t.Errorf("slot %d Orbit = %v, want %v", i, got[i].Orbit, w)
@@ -118,6 +127,7 @@ func TestPlaceOrbitSlots_FirstSlotInExclusionZoneIsWidened(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if math.Abs(got[0].Orbit-6.5) > 0.05 {
 		t.Errorf("first slot Orbit = %v, want 6.5 (widened past 3.0-6.0 gap)", got[0].Orbit)
 	}
@@ -125,6 +135,7 @@ func TestPlaceOrbitSlots_FirstSlotInExclusionZoneIsWidened(t *testing.T) {
 
 func TestPlaceOrbitSlots_EmptyDistribution(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{Designation: "A", Members: []stars.Star{{}}, MAO: 0.5, Intervals: []Interval{{Min: 0.5, Max: 20.0}}}
 	nearCompanion := stars.CompanionStar{OrbitClass: stars.OrbitNear, OrbitNumber: 6.0, ParentIndex: -1}
 	nearSec := Group{
@@ -147,7 +158,9 @@ func TestPlaceOrbitSlots_EmptyDistribution(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	primaryCount, secCount := 0, 0
+
 	for _, s := range got {
 		switch s.Group.Designation {
 		case "A":
@@ -156,19 +169,23 @@ func TestPlaceOrbitSlots_EmptyDistribution(t *testing.T) {
 			secCount++
 		}
 	}
+
 	if primaryCount != 3 {
 		t.Errorf("primary slots = %d, want 3", primaryCount)
 	}
+
 	if secCount != 2 {
 		t.Errorf("B slots = %d, want 2 (1 alloc + 1 empty bump)", secCount)
 	}
 	// The bumped B slot has the "+" suffix.
 	foundPlus := false
+
 	for _, s := range got {
 		if s.Group.Designation == "B" && len(s.StarSlot) > 0 && s.StarSlot[len(s.StarSlot)-1] == '+' {
 			foundPlus = true
 		}
 	}
+
 	if !foundPlus {
 		t.Errorf("expected a B+ slot, got %v", got)
 	}
@@ -176,6 +193,7 @@ func TestPlaceOrbitSlots_EmptyDistribution(t *testing.T) {
 
 func TestPlaceOrbitSlots_SecondaryCapApplied(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{Designation: "A", Members: []stars.Star{{}}, MAO: 0.5, Intervals: []Interval{{Min: 0.5, Max: 20.0}}}
 	nearCompanion := stars.CompanionStar{OrbitClass: stars.OrbitNear, OrbitNumber: 6.0, ParentIndex: -1}
 	// Secondary with a tiny allowable interval [0.1, 1.5] and 4 allocated worlds.
@@ -223,6 +241,7 @@ func TestPlaceOrbitSlots_SecondaryCapApplied(t *testing.T) {
 // instead continues the outward walk by one variance-free spread step.
 func TestPlaceOrbitSlots_BaselineOvershootStaysMonotonic(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{
 		Members:   []stars.Star{{}},
 		MAO:       0.5,
@@ -240,15 +259,18 @@ func TestPlaceOrbitSlots_BaselineOvershootStaysMonotonic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if len(got) != 5 {
 		t.Fatalf("len = %d, want 5", len(got))
 	}
+
 	for i := 1; i < len(got); i++ {
 		if got[i].Orbit < got[i-1].Orbit {
 			t.Errorf("orbit sequence regressed at slot %d: %v then %v",
 				i, got[i-1].Orbit, got[i].Orbit)
 		}
 	}
+
 	if math.Abs(got[4].Orbit-7.5) > 0.05 {
 		t.Errorf("overshot baseline slot Orbit = %v, want 7.5 (cur + spread)", got[4].Orbit)
 	}

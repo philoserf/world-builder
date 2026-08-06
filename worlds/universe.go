@@ -23,6 +23,8 @@ type Universe struct {
 // iiss/ can render the system without importing worlds/. cmd/world-builder
 // extracts u.Detail.SystemForms and passes it to iiss.MarkdownClass4Survey.
 type SystemDetail struct {
+	iiss.SystemForms
+
 	Bodies      []Body
 	Allocations []StarAllocation
 
@@ -31,8 +33,6 @@ type SystemDetail struct {
 	// terrestrial / moon / belt bodies (the body kinds pickMainworld
 	// admits as candidates).
 	Mainworld *Body
-
-	iiss.SystemForms
 }
 
 // AllBodies yields every Body in the universe (planets, moons, belts) in
@@ -46,6 +46,7 @@ func (u *Universe) AllBodies() iter.Seq[*Body] {
 			if !yield(body) {
 				return
 			}
+
 			for _, child := range body.Children {
 				if !yield(child) {
 					return
@@ -68,6 +69,7 @@ func (u *Universe) AllBodiesWithParent() iter.Seq2[*Body, *Body] {
 			if !yield(body, nil) {
 				return
 			}
+
 			for _, child := range body.Children {
 				if !yield(child, body) {
 					return
@@ -87,6 +89,7 @@ func (u *Universe) Bodies(filter func(*Body) bool) iter.Seq[*Body] {
 			if !filter(body) {
 				continue
 			}
+
 			if !yield(body) {
 				return
 			}

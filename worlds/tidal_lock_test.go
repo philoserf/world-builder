@@ -37,10 +37,12 @@ func TestEvaluateTidalLockDMs_PlanetToStar_Mercury(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
 
 	dms := EvaluateTidalLockDMs(body, sys, nil, nil)
+
 	got, ok := dms[TidalLockCasePlanetToStar]
 	if !ok {
 		t.Fatal("planet→star case missing from DM map")
 	}
+
 	want := 1 // +2 - 2 + 2 - 4 + 4 - 1 = +1
 	if got != want {
 		t.Errorf("planet→star DM total: got %d, want %d", got, want)
@@ -84,10 +86,12 @@ func TestEvaluateTidalLockDMs_MoonToPlanet_ZedPrime(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 0.918, AgeGyr: 6.3}}
 
 	dms := EvaluateTidalLockDMs(body, sys, parent, moonRef)
+
 	got, ok := dms[TidalLockCaseMoonToPlanet]
 	if !ok {
 		t.Fatal("moon→planet case missing from DM map")
 	}
+
 	want := 7
 	if got != want {
 		t.Errorf("moon→planet DM total for Zed Prime: got %d, want %d", got, want)
@@ -256,6 +260,7 @@ func TestHasLockedMoon(t *testing.T) {
 	threeTwo := &Body{TidalLock: &TidalLock{LockRatio: "3:2"}}
 	unlocked := &Body{TidalLock: &TidalLock{LockRatio: ""}}
 	noLockField := &Body{}
+
 	cases := []struct {
 		name string
 		body Body
@@ -280,6 +285,7 @@ func TestHasLockedMoon(t *testing.T) {
 func TestRollTidalLockStatus_Plain2DPlusDM(t *testing.T) {
 	// 2D=8, DM+3 → 11.
 	r := roller.NewScripted(8)
+
 	got := RollTidalLockStatus(r, 3)
 	if got != 11 {
 		t.Errorf("got %d, want 11 (2D=8 + DM+3)", got)
@@ -289,6 +295,7 @@ func TestRollTidalLockStatus_Plain2DPlusDM(t *testing.T) {
 func TestRollTidalLockStatus_NegativeDMs(t *testing.T) {
 	// 2D=4, DM-3 → 1.
 	r := roller.NewScripted(4)
+
 	got := RollTidalLockStatus(r, -3)
 	if got != 1 {
 		t.Errorf("got %d, want 1 (2D=4 + DM-3)", got)
@@ -302,13 +309,16 @@ func TestApplyTidalLockEffect_NoEffectResult2(t *testing.T) {
 	body.Eccentricity = 0.05
 
 	r := roller.NewScripted()
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 2, 8766.0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio: got %q, want empty", tl.LockRatio)
 	}
+
 	if body.DayLength.SiderealHours != 24 {
 		t.Errorf("SiderealHours mutated: %v", body.DayLength.SiderealHours)
 	}
@@ -318,13 +328,16 @@ func TestApplyTidalLockEffect_DayMultiplier_Result4(t *testing.T) {
 	body := &Body{}
 	body.DayLength = &DayLength{SiderealHours: 42.37, BaselineSiderealHours: 42.37}
 	r := roller.NewScripted() // result 4 doesn't roll any further dice
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCaseMoonToPlanet, 4, 7056.63)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if tl.DayLengthMultiplier != 2.0 {
 		t.Errorf("DayLengthMultiplier: got %v, want 2.0", tl.DayLengthMultiplier)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-84.74) > 0.01 {
 		t.Errorf("SiderealHours: got %v, want 84.74", body.DayLength.SiderealHours)
 	}
@@ -340,19 +353,24 @@ func TestApplyTidalLockEffect_OneToOneLock_StarCase_TwilightZone(t *testing.T) {
 	// 1:1 lock, no axial-tilt reroll (tilt < 3°), no ecc reroll (ecc < 0.1).
 	// Verification roll: 2D=10 (NOT natural 12) → no reroll, lock stands.
 	r := roller.NewScripted(10)
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 12, 4383.0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio: got %q, want 1:1", tl.LockRatio)
 	}
+
 	if !tl.IsTwilightZone {
 		t.Error("expected IsTwilightZone for star→planet 1:1 lock")
 	}
+
 	if body.DayLength.SiderealHours != 4383 {
 		t.Errorf("SiderealHours: got %v, want 4383 (= year hours)", body.DayLength.SiderealHours)
 	}
+
 	if body.DayLength.SolarHours != 0 {
 		t.Errorf("SolarHours: got %v, want 0 (twilight zone)", body.DayLength.SolarHours)
 	}
@@ -368,25 +386,32 @@ func TestApplyTidalLockEffect_NaturalTwelve_BreaksLock_ZedPath(t *testing.T) {
 
 	// Verification rolls 12 (natural), then reroll status with no DMs rolls 4.
 	r := roller.NewScripted(12, 4)
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCaseMoonToPlanet, 13, 7056.63)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !tl.VerificationFired {
 		t.Error("expected VerificationFired=true")
 	}
+
 	if tl.InitialResult != 13 {
 		t.Errorf("InitialResult: got %d, want 13", tl.InitialResult)
 	}
+
 	if tl.FinalResult != 4 {
 		t.Errorf("FinalResult: got %d, want 4", tl.FinalResult)
 	}
+
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio: got %q, want empty (lock broken by verification)", tl.LockRatio)
 	}
+
 	if math.Abs(tl.DayLengthMultiplier-2.0) > 0.001 {
 		t.Errorf("DayLengthMultiplier: got %v, want 2.0", tl.DayLengthMultiplier)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-84.74) > 0.01 {
 		t.Errorf("SiderealHours: got %v, want 84.74", body.DayLength.SiderealHours)
 	}
@@ -394,9 +419,11 @@ func TestApplyTidalLockEffect_NaturalTwelve_BreaksLock_ZedPath(t *testing.T) {
 	if math.Abs(body.AxialTilt.Degrees-73.65) > 0.05 {
 		t.Errorf("Degrees: got %v, want 73.65 (unchanged)", body.AxialTilt.Degrees)
 	}
+
 	if tl.AxialTiltMutated {
 		t.Error("expected AxialTiltMutated=false")
 	}
+
 	if tl.EccentricityMutated {
 		t.Error("expected EccentricityMutated=false")
 	}
@@ -413,19 +440,24 @@ func TestApplyTidalLockEffect_OneToOneLock_AxialTiltReroll(t *testing.T) {
 	// Verification: 2D=11 (not natural 12) → lock stands.
 	// Axial tilt reroll: 2D=8 → (8-2)/10 = 0.6°.
 	r := roller.NewScripted(11, 8)
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 12, 8766.0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio: got %q, want 1:1", tl.LockRatio)
 	}
+
 	if !tl.AxialTiltMutated {
 		t.Error("expected AxialTiltMutated=true")
 	}
+
 	if math.Abs(body.AxialTilt.Degrees-0.6) > 0.05 {
 		t.Errorf("Degrees: got %v, want 0.6", body.AxialTilt.Degrees)
 	}
+
 	if body.AxialTilt.BaselineDegrees != 25 {
 		t.Errorf("BaselineDegrees should preserve original 25, got %v", body.AxialTilt.BaselineDegrees)
 	}
@@ -447,13 +479,16 @@ func TestApplyTidalLockEffect_OneToOneLock_EccentricityReroll(t *testing.T) {
 		5,  // ecc table 2D=5 → row=max(5,3)=5
 		3,  // ecc row-5 SecondRoll "1D"=3 → v=0.002 < 0.25
 	)
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 12, 8766.0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio: got %q, want 1:1", tl.LockRatio)
 	}
+
 	if !tl.EccentricityMutated {
 		t.Error("expected EccentricityMutated=true")
 	}
@@ -475,25 +510,32 @@ func TestApplyTidalLockEffect_BecomesRetrograde_LowTiltFlips(t *testing.T) {
 
 	// 1D roll for NewSiderealHours: 3 → 3 × 10 × 24 = 720h.
 	r := roller.NewScripted(3)
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 9, 8766.0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !tl.BecomesRetrograde {
 		t.Error("BecomesRetrograde: got false, want true (FinalResult=9)")
 	}
+
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio: got %q, want empty (BecomesRetrograde branch)", tl.LockRatio)
 	}
+
 	if tl.NewSiderealHours != 720 {
 		t.Errorf("NewSiderealHours: got %v, want 720 (1D=3 × 10 × 24)", tl.NewSiderealHours)
 	}
+
 	if body.AxialTilt.Degrees != 150 {
 		t.Errorf("AxialTilt.Degrees: got %v, want 150 (flipped 180-30)", body.AxialTilt.Degrees)
 	}
+
 	if !body.AxialTilt.Retrograde {
 		t.Error("AxialTilt.Retrograde: got false, want true (degrees > 90 after flip)")
 	}
+
 	if body.DayLength.SiderealHours != 720 {
 		t.Errorf("body.DayLength.SiderealHours: got %v, want 720", body.DayLength.SiderealHours)
 	}
@@ -509,19 +551,24 @@ func TestApplyTidalLockEffect_BecomesRetrograde_HighTiltNoFlip(t *testing.T) {
 
 	// 1D roll for NewSiderealHours: 2 → 2 × 50 × 24 = 2400h (FinalResult=10 multiplier).
 	r := roller.NewScripted(2)
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 10, 8766.0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !tl.BecomesRetrograde {
 		t.Error("BecomesRetrograde: got false, want true (FinalResult=10)")
 	}
+
 	if tl.NewSiderealHours != 2400 {
 		t.Errorf("NewSiderealHours: got %v, want 2400 (1D=2 × 50 × 24)", tl.NewSiderealHours)
 	}
+
 	if body.AxialTilt.Degrees != 120 {
 		t.Errorf("AxialTilt.Degrees: got %v, want 120 (no flip, already > 90)", body.AxialTilt.Degrees)
 	}
+
 	if !body.AxialTilt.Retrograde {
 		t.Error("AxialTilt.Retrograde: got false, want true (degrees > 90)")
 	}
@@ -536,13 +583,16 @@ func TestApplyTidalLockEffect_BecomesRetrograde_NilAxialTilt(t *testing.T) {
 	// AxialTilt deliberately nil.
 
 	r := roller.NewScripted(4)
+
 	tl, err := ApplyTidalLockEffect(r, body, nil, TidalLockCasePlanetToStar, 9, 8766.0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !tl.BecomesRetrograde {
 		t.Error("BecomesRetrograde: got false, want true (FinalResult=9)")
 	}
+
 	if body.AxialTilt != nil {
 		t.Errorf("body.AxialTilt: got %+v, want nil (should not be created by tidal lock)", body.AxialTilt)
 	}
@@ -560,7 +610,6 @@ func TestGenerateTidalLock_ZedPrime_FullPath(t *testing.T) {
 	//   2D for status: 6
 	//   2D for verification: 12
 	//   2D for status reroll (no DMs): 4
-
 	moonRef := &Body{
 		Kind:         BodyMoon,
 		SizeCode:     "5",
@@ -584,28 +633,36 @@ func TestGenerateTidalLock_ZedPrime_FullPath(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 0.918, AgeGyr: 6.3}}
 
 	r := roller.NewScripted(6, 12, 4)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.Period.Hours)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case: got %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.InitialResult != 13 {
 		t.Errorf("InitialResult: got %d, want 13", tl.InitialResult)
 	}
+
 	if !tl.VerificationFired {
 		t.Error("expected VerificationFired=true")
 	}
+
 	if tl.FinalResult != 4 {
 		t.Errorf("FinalResult: got %d, want 4", tl.FinalResult)
 	}
+
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio: got %q, want empty (broken by verification)", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-84.74) > 0.01 {
 		t.Errorf("body day length: got %v, want 84.74", body.DayLength.SiderealHours)
 	}
@@ -630,13 +687,16 @@ func TestApplyTidalLockEffect_PlanetToMoon_OneToOne_UsesMoonPeriod(t *testing.T)
 	// verification 2D = 7 (not 12, so no natural-12 reroll)
 	r := roller.NewScripted(7)
 	moonPeriodHours := 720.0
+
 	tl, err := ApplyTidalLockEffect(r, planet, nil, TidalLockCasePlanetToMoon, 12, moonPeriodHours)
 	if err != nil {
 		t.Fatalf("ApplyTidalLockEffect: %v", err)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(planet.DayLength.SiderealHours-720.0) > 0.01 {
 		t.Errorf("planet SiderealHours = %v, want 720 (moon period), not 8766 (stellar year)",
 			planet.DayLength.SiderealHours)
@@ -676,19 +736,24 @@ func TestGenerateTidalLock_PlanetToMoon_UsesMoonPeriod(t *testing.T) {
 	}
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
 	r := roller.NewScripted(13) // 2D=13 → result=11 → 3:2 lock
+
 	tl, err := GenerateTidalLock(r, planet, nil, sys, nil, planet.Period.Hours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCasePlanetToMoon {
 		t.Errorf("Case: got %v, want PlanetToMoon", tl.Case)
 	}
+
 	if tl.LockRatio != "3:2" {
 		t.Errorf("LockRatio: got %q, want 3:2", tl.LockRatio)
 	}
+
 	if math.Abs(planet.DayLength.SiderealHours-480.0) > 0.01 {
 		t.Errorf("planet SiderealHours = %v, want 480 (720×2/3, moon period), not %v (stellar year×2/3)",
 			planet.DayLength.SiderealHours, planet.Period.Hours*2/3)
@@ -731,19 +796,24 @@ func TestGenerateTidalLock_PlutoCharon_PlanetLockedToMoon(t *testing.T) {
 	// DM math: planet→star = -63 (filtered ≤-10); planet→moon = +3 (common)
 	// + (-10 base + Size 1 + 4 [pd≤10]) = -2. Roll 7 + (-2) = 5 → DayLengthMultiplier=3.
 	r := roller.NewScripted(7)
+
 	tl, err := GenerateTidalLock(r, pluto, nil, sys, nil, pluto.Period.Hours)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock for planet→moon path (DM=-2, roll=7, result=5)")
 	}
+
 	if tl.Case != TidalLockCasePlanetToMoon {
 		t.Errorf("Case: got %v, want PlanetToMoon", tl.Case)
 	}
+
 	if tl.FinalResult != 5 {
 		t.Errorf("FinalResult: got %d, want 5", tl.FinalResult)
 	}
+
 	if math.Abs(pluto.DayLength.SiderealHours-72.0) > 0.01 {
 		t.Errorf("day length: got %v, want 72.0 (24 × 3)", pluto.DayLength.SiderealHours)
 	}
@@ -761,6 +831,7 @@ func TestClosestLockedSignificantMoon_PicksLockedNotClosest(t *testing.T) {
 	inner := &Body{SizeCode: "5", OrbitPD: 5, TidalLock: &TidalLock{LockRatio: ""}}
 	outer := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: "1:1"}}
 	planet := &Body{Children: []*Body{inner, outer}}
+
 	got := closestLockedSignificantMoon(planet)
 	if got != outer {
 		t.Errorf("got %v, want outer (the locked moon)", got)
@@ -772,6 +843,7 @@ func TestClosestLockedSignificantMoon_PicksLockedNotClosest(t *testing.T) {
 func TestClosestLockedSignificantMoon_NoLockedReturnsNil(t *testing.T) {
 	inner := &Body{SizeCode: "5", OrbitPD: 5} // nil TidalLock
 	outer := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: ""}}
+
 	planet := &Body{Children: []*Body{inner, outer}}
 	if got := closestLockedSignificantMoon(planet); got != nil {
 		t.Errorf("got %v, want nil", got)
@@ -784,6 +856,7 @@ func TestClosestLockedSignificantMoon_MultipleLockedPicksClosest(t *testing.T) {
 	far := &Body{SizeCode: "3", OrbitPD: 30, TidalLock: &TidalLock{LockRatio: "1:1"}}
 	near := &Body{SizeCode: "5", OrbitPD: 10, TidalLock: &TidalLock{LockRatio: "3:2"}}
 	planet := &Body{Children: []*Body{far, near}}
+
 	got := closestLockedSignificantMoon(planet)
 	if got != near {
 		t.Errorf("got %v (OrbitPD=%v), want near (OrbitPD=10)", got, got.OrbitPD)
@@ -807,16 +880,20 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_KeepsOneToOneLock(t *testing.T) {
 	//   reroll status 2D + DM=0: 8 (result 8, the 1D×20×24 branch)
 	//   rerolledDayLength 1D: 3 (the would-be day-length probe)
 	r := roller.NewScripted(12, 8, 3)
+
 	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if !tl.VerificationFired {
 		t.Error("VerificationFired = false, want true (natural-12 fired)")
 	}
+
 	if tl.FinalResult != 12 {
 		t.Errorf("FinalResult = %d, want 12 (lock held by moon-period guard)", tl.FinalResult)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
@@ -842,16 +919,20 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_FallsThroughWhenWouldFit(t *testin
 	//   reroll status 2D + 0 = 7
 	//   probe 1D = 2 (=> 240h, not exceeding 480h — guard doesn't fire; value reused as commit)
 	r := roller.NewScripted(12, 7, 2)
+
 	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if tl.FinalResult != 7 {
 		t.Errorf("FinalResult = %d, want 7 (rerolled value committed)", tl.FinalResult)
 	}
+
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio = %q, want empty (lock broken)", tl.LockRatio)
 	}
+
 	if math.Abs(moon.DayLength.SiderealHours-240) > 0.01 {
 		t.Errorf("DayLength.SiderealHours = %v, want 240 (probe value committed)", moon.DayLength.SiderealHours)
 	}
@@ -872,10 +953,12 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_NotAppliedToPlanetToStar(t *testin
 	// tl.NewSiderealHours=1440 is set from the probe; effect switch skips
 	// its own 1D roll. Three rolls total.
 	r := roller.NewScripted(12, 8, 3)
+
 	tl, err := ApplyTidalLockEffect(r, planet, nil, TidalLockCasePlanetToStar, 12, 8766)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if tl.FinalResult != 8 {
 		t.Errorf("FinalResult = %d, want 8 (no guard for PlanetToStar)", tl.FinalResult)
 	}
@@ -906,13 +989,16 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_ProbeAndCommitUseSameRoll(t *testi
 	}
 	// verification 2D=12, reroll status 2D+0=7, probe 1D=6 (=> 720h > 480h → guard fires)
 	r := roller.NewScripted(12, 7, 6)
+
 	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if tl.FinalResult != 12 {
 		t.Errorf("FinalResult = %d, want 12 (guard fired, lock held)", tl.FinalResult)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
@@ -937,16 +1023,20 @@ func TestApplyTidalLockEffect_MoonPeriodGuard_LowProbeCommitsProbeValue(t *testi
 	}
 	// verification 2D=12, reroll status 2D+0=7, probe 1D=1 (=> 120h ≤ 480h → guard doesn't fire)
 	r := roller.NewScripted(12, 7, 1)
+
 	tl, err := ApplyTidalLockEffect(r, moon, moon, TidalLockCaseMoonToPlanet, 12, 480)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if tl.FinalResult != 7 {
 		t.Errorf("FinalResult = %d, want 7 (guard didn't fire)", tl.FinalResult)
 	}
+
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio = %q, want empty (lock broken)", tl.LockRatio)
 	}
+
 	if math.Abs(moon.DayLength.SiderealHours-120) > 0.01 {
 		t.Errorf("DayLength.SiderealHours = %v, want 120 (probe 1D=1 × 5 × 24, committed)", moon.DayLength.SiderealHours)
 	}
@@ -959,10 +1049,12 @@ func TestSelectHighestDMCases_OrderedTiedCases(t *testing.T) {
 		TidalLockCasePlanetToStar: 5,
 		TidalLockCasePlanetToMoon: 5,
 	}
+
 	cases, dm := SelectHighestDMCases(dms)
 	if dm != 5 {
 		t.Errorf("dm = %d, want 5", dm)
 	}
+
 	want := []TidalLockCase{TidalLockCasePlanetToMoon, TidalLockCasePlanetToStar}
 	if !slices.Equal(cases, want) {
 		t.Errorf("cases = %v, want %v", cases, want)
@@ -971,10 +1063,12 @@ func TestSelectHighestDMCases_OrderedTiedCases(t *testing.T) {
 
 func TestSelectHighestDMCases_SingleCase(t *testing.T) {
 	dms := map[TidalLockCase]int{TidalLockCaseMoonToPlanet: 8}
+
 	cases, dm := SelectHighestDMCases(dms)
 	if dm != 8 {
 		t.Errorf("dm = %d, want 8", dm)
 	}
+
 	if len(cases) != 1 || cases[0] != TidalLockCaseMoonToPlanet {
 		t.Errorf("cases = %v, want [MoonToPlanet]", cases)
 	}
@@ -982,6 +1076,7 @@ func TestSelectHighestDMCases_SingleCase(t *testing.T) {
 
 func TestSelectHighestDMCases_AllFiltered(t *testing.T) {
 	dms := map[TidalLockCase]int{TidalLockCasePlanetToStar: -11}
+
 	cases, _ := SelectHighestDMCases(dms)
 	if len(cases) != 0 {
 		t.Errorf("expected no cases, got %v", cases)
@@ -995,10 +1090,12 @@ func TestSelectHighestDMCases_AllThreeTied(t *testing.T) {
 		TidalLockCaseMoonToPlanet: 7,
 		TidalLockCasePlanetToMoon: 7,
 	}
+
 	cases, dm := SelectHighestDMCases(dms)
 	if dm != 7 {
 		t.Errorf("dm = %d, want 7", dm)
 	}
+
 	want := []TidalLockCase{TidalLockCaseMoonToPlanet, TidalLockCasePlanetToMoon, TidalLockCasePlanetToStar}
 	if !slices.Equal(cases, want) {
 		t.Errorf("cases = %v, want %v", cases, want)
@@ -1012,10 +1109,12 @@ func TestSelectHighestDMCases_BestOnlyNotTied(t *testing.T) {
 		TidalLockCasePlanetToMoon: 7,
 		TidalLockCaseMoonToPlanet: 5,
 	}
+
 	cases, dm := SelectHighestDMCases(dms)
 	if dm != 7 {
 		t.Errorf("dm = %d, want 7", dm)
 	}
+
 	if len(cases) != 1 || cases[0] != TidalLockCasePlanetToMoon {
 		t.Errorf("cases = %v, want [PlanetToMoon]", cases)
 	}
@@ -1069,13 +1168,16 @@ func TestGenerateTidalLock_TiedCases_RollsAllTakesHighest(t *testing.T) {
 	// Verify fixture: both cases must tie at DM=-2.
 	dms := EvaluateTidalLockDMs(planet, sys, nil, nil)
 	ptmDM, ptmOK := dms[TidalLockCasePlanetToMoon]
+
 	ptsDM, ptsOK := dms[TidalLockCasePlanetToStar]
 	if !ptmOK || !ptsOK {
 		t.Fatalf("fixture missing a case: PlanetToMoon=%v(%d) PlanetToStar=%v(%d)", ptmOK, ptmDM, ptsOK, ptsDM)
 	}
+
 	if ptmDM != ptsDM {
 		t.Fatalf("fixture DMs must tie: PlanetToMoon=%d PlanetToStar=%d", ptmDM, ptsDM)
 	}
+
 	if ptmDM != -2 {
 		t.Fatalf("expected tied DM=-2, got %d", ptmDM)
 	}
@@ -1085,19 +1187,24 @@ func TestGenerateTidalLock_TiedCases_RollsAllTakesHighest(t *testing.T) {
 	//   2D for PlanetToStar (second):                    10 → adjusted=8 (wins)
 	//   1D for result-8 day length:                       3 → 1440h
 	r := roller.NewScripted(6, 10, 3)
+
 	tl, err := GenerateTidalLock(r, planet, nil, sys, nil, planet.Period.Hours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCasePlanetToStar {
 		t.Errorf("Case = %v, want PlanetToStar (higher adjusted result)", tl.Case)
 	}
+
 	if tl.FinalResult != 8 {
 		t.Errorf("FinalResult = %d, want 8 (10 + DM -2)", tl.FinalResult)
 	}
+
 	if tl.NewSiderealHours != 1440 {
 		t.Errorf("NewSiderealHours = %v, want 1440 (1D=3 × 20 × 24)", tl.NewSiderealHours)
 	}
@@ -1139,25 +1246,32 @@ func TestGenerateTidalLock_TiedCases_FirstRollWins(t *testing.T) {
 	//   2D PlanetToStar:   6 → adjusted=4
 	//   1D day (result 8): 2 → 960h
 	r := roller.NewScripted(10, 6, 2)
+
 	tl, err := GenerateTidalLock(r, planet, nil, sys, nil, planet.Period.Hours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCasePlanetToMoon {
 		t.Errorf("Case = %v, want PlanetToMoon (first tied case wins when adjusted result higher)", tl.Case)
 	}
+
 	if tl.FinalResult != 8 {
 		t.Errorf("FinalResult = %d, want 8 (10 + DM -2)", tl.FinalResult)
 	}
+
 	if tl.NewSiderealHours != 960 {
 		t.Errorf("NewSiderealHours = %v, want 960 (1D=2 × 20 × 24)", tl.NewSiderealHours)
 	}
+
 	if planet.DayLength.YearDays < 0 {
 		t.Errorf("YearDays = %v, want non-negative (PeriodHours fixture missing?)", planet.DayLength.YearDays)
 	}
+
 	if planet.DayLength.SolarHours < 0 {
 		t.Errorf("SolarHours = %v, want non-negative", planet.DayLength.SolarHours)
 	}
@@ -1165,6 +1279,7 @@ func TestGenerateTidalLock_TiedCases_FirstRollWins(t *testing.T) {
 
 func TestRerolledDayLength(t *testing.T) {
 	body := &Body{DayLength: &DayLength{SiderealHours: 24}}
+
 	cases := []struct {
 		name      string
 		result    int
@@ -1191,6 +1306,7 @@ func TestRerolledDayLength(t *testing.T) {
 			} else {
 				r = roller.NewScripted() // no rolls expected for 3-6, 11, 12
 			}
+
 			got := rerolledDayLength(r, c.result, body, c.yearHours)
 			if got != c.want {
 				t.Errorf("rerolledDayLength(%d, dieValue=%d, year=%g) = %g, want %g",

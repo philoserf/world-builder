@@ -29,6 +29,7 @@ const (
 // Step 7 and feed Step 9 eccentricity DMs.
 type AnomalousSlot struct {
 	Slot
+
 	Anomaly        AnomalyType
 	InclinationDeg float64 // for AnomalyInclined
 	TrojanOf       string  // StarSlot id of parent, for AnomalyTrojan
@@ -73,12 +74,17 @@ func AddAnomalous(
 		if len(allocs) > 1 {
 			parentIdx = (r.Roll("D3") - 1) % len(allocs)
 		}
+
 		parent := allocs[parentIdx].Group
 
 		ecdm := eccentricityDMFor(atype)
-		var orbit float64
-		var trojanOf string
-		var inclination float64
+
+		var (
+			orbit       float64
+			trojanOf    string
+			inclination float64
+		)
+
 		switch atype {
 		case AnomalyTrojan:
 			target := pickTrojanTarget(slots, parent.Designation)
@@ -106,6 +112,7 @@ func AddAnomalous(
 		counts.Terrestrials++
 		counts.Total++
 	}
+
 	return out, counts, nil
 }
 
@@ -149,6 +156,7 @@ func eccentricityDMFor(t AnomalyType) int {
 	case AnomalyRandom, AnomalyInclined, AnomalyRetrograde:
 		return 2
 	}
+
 	return 0
 }
 
@@ -158,11 +166,13 @@ func rollAnomalousOrbit(r roller.Roller, mao float64) float64 {
 	for range 5 {
 		whole := r.Roll("2D") - 2
 		frac := r.Roll("d10")
+
 		v := float64(whole) + float64(frac)/10.0
 		if v >= mao && v <= 20.0 {
 			return v
 		}
 	}
+
 	return mao
 }
 
@@ -176,6 +186,7 @@ func rollAnomalousOrbit(r roller.Roller, mao float64) float64 {
 // with some slot.
 func pickTrojanTarget(slots []Slot, parentDesignation string) Slot {
 	var best Slot
+
 	bestOrbit := -1.0
 	for _, s := range slots {
 		if s.Group.Designation == parentDesignation && s.Orbit > bestOrbit {
@@ -183,5 +194,6 @@ func pickTrojanTarget(slots []Slot, parentDesignation string) Slot {
 			bestOrbit = s.Orbit
 		}
 	}
+
 	return best
 }

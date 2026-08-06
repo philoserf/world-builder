@@ -41,6 +41,7 @@ func (t *Temperature) MeanByLatitude(latDeg float64) float64 {
 	if t.IsTwilight {
 		return t.TwilightK
 	}
+
 	zoneTiltFactor := t.zoneTiltAdjustment(latDeg)
 	lumMod := zoneTiltFactor / t.AtmosphericFactor
 	// Clamp to [-1, 1]: zoneTiltAdjustment can return negative for arctic
@@ -48,13 +49,16 @@ func (t *Temperature) MeanByLatitude(latDeg float64) float64 {
 	if lumMod > 1 {
 		lumMod = 1
 	}
+
 	if lumMod < -1 {
 		lumMod = -1
 	}
+
 	latLum := t.Luminosity * (1 + lumMod)
 	if latLum < 0 {
 		latLum = 0
 	}
+
 	return MeanTemperatureK(latLum, t.Albedo, t.GreenhouseFactor, t.AU)
 }
 
@@ -76,12 +80,15 @@ func (t *Temperature) tropicalLatitudeBoundary() float64 {
 	if math.IsNaN(tiltDeg) {
 		return 90
 	}
+
 	if tiltDeg < 0 {
 		tiltDeg = -tiltDeg
 	}
+
 	if tiltDeg >= 45 {
 		return 90 - tiltDeg
 	}
+
 	return tiltDeg
 }
 
@@ -110,12 +117,15 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 	if math.IsNaN(rawTilt) {
 		rawTilt = 90
 	}
+
 	if rawTilt < 0 {
 		rawTilt = -rawTilt
 	}
+
 	if latDeg < 0 {
 		latDeg = -latDeg
 	}
+
 	if latDeg > 90 {
 		latDeg = 90
 	}
@@ -125,6 +135,7 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 		if latDeg <= 90.0-rawTilt {
 			return math.Sin((rawTilt - 45.0) * math.Pi / 180.0)
 		}
+
 		return math.Sin((45.0 - latDeg) * math.Pi / 180.0)
 	}
 
@@ -132,6 +143,7 @@ func (t *Temperature) zoneTiltAdjustment(latDeg float64) float64 {
 	if latDeg <= rawTilt {
 		return math.Sin((45.0 - rawTilt) * math.Pi / 180.0)
 	}
+
 	return math.Sin((45.0 - latDeg) * math.Pi / 180.0)
 }
 
@@ -172,6 +184,7 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 	if t.IsTwilight {
 		return t.TwilightK
 	}
+
 	if localYearDays <= 0 {
 		return t.MeanByLatitude(latDeg)
 	}
@@ -184,10 +197,12 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 	// in-band latitude gets the same temperature regardless of where it
 	// sits inside the band. That uniformity is intentional, not a bug.
 	zoneAdj := t.zoneTiltAdjustment(latDeg)
+
 	absLat := latDeg
 	if absLat < 0 {
 		absLat = -absLat
 	}
+
 	if absLat > 90 {
 		absLat = 90
 	}
@@ -198,6 +213,7 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 	isTropical := absLat <= t.tropicalLatitudeBoundary()
 
 	variance := zoneAdj
+
 	if !isTropical {
 		// Adjusted Fractional Year per WBH p.115.
 		stdYearDays := hoursPerYear / 24.0 // 365.25
@@ -214,13 +230,16 @@ func (t *Temperature) MeanBySeason(latDeg, daysSinceSolstice, localYearDays floa
 	if lumMod > 1 {
 		lumMod = 1
 	}
+
 	if lumMod < -1 {
 		lumMod = -1
 	}
+
 	latLum := t.Luminosity * (1 + lumMod)
 	if latLum < 0 {
 		latLum = 0
 	}
+
 	return MeanTemperatureK(latLum, t.Albedo, t.GreenhouseFactor, t.AU)
 }
 
@@ -245,6 +264,7 @@ func (t *Temperature) AtMoment(latDeg, daysSinceSolstice, localYearDays, hoursSi
 	if t.IsTwilight {
 		return t.TwilightK
 	}
+
 	if solarDayHours <= 0 {
 		return t.MeanBySeason(latDeg, daysSinceSolstice, localYearDays)
 	}
@@ -261,10 +281,12 @@ func (t *Temperature) AtMoment(latDeg, daysSinceSolstice, localYearDays, hoursSi
 
 	// Apply hourly rotation as a luminosity-modifier delta scaled into K via fourth-root.
 	delta := hourlyRot / t.AtmosphericFactor
+
 	scale := math.Pow(1+delta, 0.25)
 	if scale <= 0 {
 		scale = 0.01
 	}
+
 	return seasonalK * scale
 }
 
@@ -293,9 +315,11 @@ func (t *Temperature) AdjustedForAltitude(baseTempK, altitudeKm float64) float64
 	// Recompute mean equation with modified G, using stored A/L/AU. Then scale
 	// baseTempK by the ratio to preserve caller-applied scenario adjustments.
 	newRefK := MeanTemperatureK(t.Luminosity, t.Albedo, gAtAlt, t.AU)
+
 	storedRefK := MeanTemperatureK(t.Luminosity, t.Albedo, t.GreenhouseFactor, t.AU)
 	if storedRefK == 0 {
 		return baseTempK
 	}
+
 	return baseTempK * (newRefK / storedRefK)
 }

@@ -41,6 +41,7 @@ var surfaceDescriptions = [11]string{
 func RollSurfaceDistribution(r roller.Roller) (int, error) {
 	twoD := r.Roll("2D")
 	code := min(max(twoD-2, 0), 10)
+
 	return code, nil
 }
 
@@ -50,9 +51,11 @@ func DescribeSurfaceDistribution(code int) string {
 	if code < 0 {
 		code = 0
 	}
+
 	if code > 10 {
 		code = 10
 	}
+
 	return surfaceDescriptions[code]
 }
 
@@ -72,6 +75,7 @@ func DetermineFundamentalGeography(r roller.Roller, hydroCode int) (FundamentalG
 		if oneD <= 3 {
 			return GeographyOcean, nil
 		}
+
 		return GeographyLand, nil
 	}
 	// Unreachable: the switch above is exhaustive over all integers
@@ -88,14 +92,17 @@ func GenerateSurfaceDistribution(r roller.Roller, hydro *Hydrographics) (*Surfac
 	if hydro == nil {
 		return nil, nil
 	}
+
 	code, err := RollSurfaceDistribution(r)
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateSurfaceDistribution: %w", err)
 	}
+
 	geography, err := DetermineFundamentalGeography(r, hydro.Code)
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateSurfaceDistribution: %w", err)
 	}
+
 	return &SurfaceDistribution{
 		Code:        code,
 		Description: DescribeSurfaceDistribution(code),

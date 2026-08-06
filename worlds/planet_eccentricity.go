@@ -30,9 +30,11 @@ func RollPlanetEccentricities(r roller.Roller, ps []Placement, ageGyr float64) (
 		if out[i].Body == BodyEmpty || out[i].Body == BodyPlanetoidBelt {
 			continue
 		}
+
 		if out[i].Anomaly == AnomalyTrojan {
 			continue // handled in pass 2
 		}
+
 		ecc, err := stars.RollEccentricity(r, stars.EccentricityOpts{
 			ExtraDM:      out[i].EccentricityDM,
 			NestingDepth: nestingDepthFor(out[i]),
@@ -40,8 +42,9 @@ func RollPlanetEccentricities(r roller.Roller, ps []Placement, ageGyr float64) (
 			SystemAgeGyr: ageGyr,
 		})
 		if err != nil {
-			return nil, err
+			return nil, err //nolint:wrapcheck // sibling package in this module; pure passthrough, no extra context to add
 		}
+
 		out[i].Eccentricity = ecc
 	}
 	// Second pass: Trojans inherit from their TrojanOf parent.
@@ -49,13 +52,16 @@ func RollPlanetEccentricities(r roller.Roller, ps []Placement, ageGyr float64) (
 		if out[i].Anomaly != AnomalyTrojan {
 			continue
 		}
+
 		for j := range out {
 			if out[j].StarSlot == out[i].TrojanOf {
 				out[i].Eccentricity = out[j].Eccentricity
+
 				break
 			}
 		}
 	}
+
 	return out, nil
 }
 
@@ -67,5 +73,6 @@ func nestingDepthFor(p Placement) int {
 	if p.Group.sourceCompanion == nil {
 		return 0 // primary group
 	}
+
 	return 1 // secondary group
 }

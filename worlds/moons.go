@@ -57,6 +57,7 @@ func CountMoons(r roller.Roller, parent ParentInfo, dms int) (count int, ring bo
 	rawSum := r.Roll(notation)
 	// dms is per-die: each of the dieCount dice gets dms applied.
 	adjusted := rawSum + dms*dieCount
+
 	result := adjusted + base
 	switch {
 	case result < 0:
@@ -64,6 +65,7 @@ func CountMoons(r roller.Roller, parent ParentInfo, dms int) (count int, ring bo
 	case result == 0:
 		return 0, true, nil
 	}
+
 	return result, false, nil
 }
 
@@ -92,14 +94,17 @@ func SizeMoon(r roller.Roller, parent ParentInfo) (Body, error) {
 		if !parent.IsGasGiant && nForSizeCode(parent.SizeCode) == 1 && n < 1 {
 			return moonBody("S"), nil
 		}
+
 		if n <= 0 {
 			return moonBody("R"), nil
 		}
+
 		return moonBody(sizeCodeForN(n)), nil
 	default: // 6
 		if parent.IsGasGiant {
 			return gasGiantSpecialMoon(r)
 		}
+
 		return terrestrialMoonFirst6(r, parent)
 	}
 }
@@ -125,6 +130,7 @@ func terrestrialMoonFirst6(r roller.Roller, parent ParentInfo) (Body, error) {
 		// via legitimate CountMoons callers since they short-circuit).
 		return moonBody("S"), nil
 	}
+
 	d := r.Roll("1D")
 	resultN := parentN - 1 - d
 
@@ -148,6 +154,7 @@ func terrestrialMoonFirst6(r roller.Roller, parent ParentInfo) (Body, error) {
 	if resultN <= 0 {
 		return moonBody("R"), nil
 	}
+
 	return moonBody(sizeCodeForN(resultN)), nil
 }
 
@@ -170,6 +177,7 @@ func gasGiantSpecialMoon(r roller.Roller) (Body, error) {
 		if n <= 0 {
 			return moonBody("R"), nil
 		}
+
 		return moonBody(sizeCodeForN(n)), nil
 	default: // 6
 		n := r.Roll("2D") + 4
@@ -189,6 +197,7 @@ func gasGiantSpecialMoon(r roller.Roller) (Body, error) {
 			ggCode = gasGiantDiameterCode(ggDiameter)
 			ggMass = float64(20 * (r.Roll("3D") - 1))
 		}
+
 		return Body{
 			Kind:           BodyMoon,
 			SizeCode:       "G", // GG cascade — moon is itself a gas giant (Size 16)
@@ -214,6 +223,7 @@ func moonQuantityFormula(p ParentInfo) (notation string, base, dieCount int, err
 			return "", 0, 0, fmt.Errorf("worlds: CountMoons: unknown GGClass %v", p.GGClass)
 		}
 	}
+
 	n := nForSizeCode(p.SizeCode)
 	switch {
 	case n >= 1 && n <= 2:

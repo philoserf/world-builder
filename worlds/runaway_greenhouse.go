@@ -38,9 +38,11 @@ func CheckRunawayGreenhouse(r roller.Roller, body *Body, sys stars.System) bool 
 	if body.Atmosphere == nil || body.Temperature == nil {
 		return false
 	}
+
 	if body.Temperature.MeanK <= 303 {
 		return false
 	}
+
 	code := body.Atmosphere.Code
 	// Atm 0 (None) and 1 (Trace) are not in the WBH p.79 runaway table.
 	if code < 2 {
@@ -49,13 +51,16 @@ func CheckRunawayGreenhouse(r roller.Roller, body *Body, sys stars.System) bool 
 
 	// Trigger roll: 2D + DMs.
 	dm := 0
+
 	dm += int(math.Ceil(sys.Primary.AgeGyr))
 	if body.Temperature.MeanK >= 388 {
 		dm += 4
 	}
+
 	if code == 2 || code == 4 || code == 7 || code == 9 {
 		dm++
 	}
+
 	si := SizeAsInt(body.SizeCode)
 	if si >= 2 && si <= 5 {
 		dm -= 2
@@ -83,5 +88,6 @@ func CheckRunawayGreenhouse(r roller.Roller, body *Body, sys stars.System) bool 
 	default:
 		body.Atmosphere.Code = 12 // C
 	}
+
 	return true
 }

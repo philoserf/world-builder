@@ -28,24 +28,27 @@ func run(args []string, stdout, stderr io.Writer) error {
 	fs.SetOutput(stderr)
 	seed := fs.Int64("seed", 0, "random seed (omit for time-based)")
 	format := fs.String("format", "markdown", "output format: markdown | json | short")
+
 	peculiar := fs.String("peculiar", "special", "column for Special (2D=2) primary rolls: special | unusual | peculiar")
 	if err := fs.Parse(args); err != nil {
-		return err
+		return err //nolint:wrapcheck // flag's own error text is already self-describing
 	}
 
 	column, err := stars.ParsePeculiarPath(*peculiar)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck // ParsePeculiarPath's error is already self-describing
 	}
 
 	// Distinguish "flag omitted" from "-seed 0": an explicit 0 is a
 	// legitimate reproducible seed, not a request for time-based.
 	seedSet := false
+
 	fs.Visit(func(f *flag.Flag) {
 		if f.Name == "seed" {
 			seedSet = true
 		}
 	})
+
 	s := *seed
 	if !seedSet {
 		s = time.Now().UnixNano()
@@ -59,7 +62,8 @@ func run(args []string, stdout, stderr io.Writer) error {
 	switch *format {
 	case "markdown":
 		_, err := fmt.Fprint(stdout, iiss.MarkdownClass4Survey(u.Detail.SystemForms))
-		return err
+
+		return err //nolint:wrapcheck // stdout write failure; wrapping adds no information
 	case "json":
 		// Emit the full SystemForms aggregate (Class0I + Class23 + Class4P
 		// plus profile strings and mainworld designation) so downstream
@@ -67,13 +71,16 @@ func run(args []string, stdout, stderr io.Writer) error {
 		// § B3.
 		enc := json.NewEncoder(stdout)
 		enc.SetIndent("", "  ")
+
 		if err := enc.Encode(u.Detail.SystemForms); err != nil {
 			return fmt.Errorf("json: %w", err)
 		}
+
 		return nil
 	case "short":
 		_, err := fmt.Fprintln(stdout, u.Detail.ShortProfile)
-		return err
+
+		return err //nolint:wrapcheck // stdout write failure; wrapping adds no information
 	default:
 		return fmt.Errorf("unknown format: %q (want markdown, json, or short)", *format)
 	}

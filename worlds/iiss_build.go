@@ -37,6 +37,7 @@ func buildClass0I(u *Universe) iiss.Class0IForm {
 		Designation: u.Detail.MainworldDesignation,
 	}
 	sf := stars.BuildSurveyForm(u.System, meta)
+
 	form := iiss.Class0IForm{
 		FormHeader: iiss.FormHeader{
 			SystemName:    u.System.PrimaryDesignation,
@@ -65,6 +66,7 @@ func buildClass0I(u *Universe) iiss.Class0IForm {
 			MAO:          c.MAO,
 		})
 	}
+
 	return form
 }
 
@@ -92,6 +94,7 @@ func buildClass23(u *Universe, c0 iiss.Class0IForm) iiss.Class23Form {
 	for _, alloc := range u.Placement.Allocations {
 		groups = append(groups, alloc.Group)
 	}
+
 	fillStarsMAO(form.Stars, groups, u.System)
 
 	for i := range u.Detail.Bodies {
@@ -99,6 +102,7 @@ func buildClass23(u *Universe, c0 iiss.Class0IForm) iiss.Class23Form {
 		if body.Kind == BodyEmpty {
 			continue
 		}
+
 		form.Objects = append(form.Objects, iiss.Class23Object{
 			Primary:     body.Group.Designation,
 			Designation: body.Designation,
@@ -119,6 +123,7 @@ func buildClass23(u *Universe, c0 iiss.Class0IForm) iiss.Class23Form {
 			})
 		}
 	}
+
 	return form
 }
 
@@ -130,7 +135,9 @@ func fillStarsMAO(rows []iiss.Class0IStarRow, groups []Group, sys stars.System) 
 	for _, g := range groups {
 		maoByGroup[g.Designation] = g.MAO
 	}
+
 	composeMAO := map[string]float64{}
+
 	for _, c := range sys.Companions {
 		switch c.OrbitClass {
 		case stars.OrbitClose, stars.OrbitNear:
@@ -141,15 +148,19 @@ func fillStarsMAO(rows []iiss.Class0IStarRow, groups []Group, sys stars.System) 
 			composeMAO["ABC"] = c.AU
 		}
 	}
+
 	for i, row := range rows {
 		key := row.Component
 		if idx := strings.Index(key, " ("); idx >= 0 {
 			key = key[:idx]
 		}
+
 		if mao, ok := maoByGroup[key]; ok {
 			rows[i].MAO = mao
+
 			continue
 		}
+
 		if mao, ok := composeMAO[key]; ok {
 			rows[i].MAO = mao
 		}
@@ -169,6 +180,7 @@ func ggPrefix(c GasGiantClass) string {
 	case GasGiantLarge:
 		return "GL"
 	}
+
 	return "G"
 }
 
@@ -181,6 +193,7 @@ func renderObjectSAH(body *Body) string {
 	case BodyPlanetoidBelt:
 		return "000"
 	}
+
 	return ""
 }
 
@@ -188,9 +201,11 @@ func renderMoonSAH(m *Body, parentInHZ bool) string {
 	if m.GGClass != NotGasGiant {
 		return ggPrefix(m.GGClass) + m.GGDiameterCode
 	}
+
 	if parentInHZ {
 		return string(m.SizeCode) + "??"
 	}
+
 	return string(m.SizeCode)
 }
 
@@ -198,46 +213,57 @@ func renderSub(body *Body) string {
 	if body.Kind == BodyPlanetoidBelt {
 		return "?"
 	}
+
 	if len(body.Children) == 0 {
 		return "0"
 	}
+
 	return strconv.Itoa(len(body.Children))
 }
 
 func renderObjectNotes(body *Body) string {
 	parts := []string{}
 	if body.Kind == BodyGasGiant {
-		parts = append(parts, fmt.Sprintf("%s⊕", formatMass(body.MassEarth)))
+		parts = append(parts, formatMass(body.MassEarth)+"⊕")
 	}
+
 	if body.HZ {
 		parts = append(parts, "HZ")
 	}
+
 	if len(body.Children) > 0 {
 		moonSAH := make([]string, 0, len(body.Children))
 		for _, child := range body.Children {
 			moonSAH = append(moonSAH, renderMoonSAH(child, body.HZ))
 		}
+
 		parts = append(parts, strings.Join(moonSAH, ", "))
 	}
+
 	if body.Ring {
 		parts = append(parts, "ring")
 	}
+
 	if body.HasBelt() && body.Belt.Profile != "" {
 		parts = append(parts, body.Belt.Profile)
 	}
+
 	return strings.Join(parts, ", ")
 }
 
 func formatMass(m float64) string {
 	n := int(m + 0.5)
+
 	s := strconv.Itoa(n)
 	if n < 1000 {
 		return s
 	}
+
 	out := []byte(s)
 	for i := len(out) - 3; i > 0; i -= 3 {
 		out = append(out[:i], append([]byte{','}, out[i:]...)...)
 	}
+
 	return string(out)
 }
 
@@ -245,9 +271,11 @@ func formatPeriod(p Period) string {
 	if p.Years > 0 && p.Years < 0.05 {
 		return fmt.Sprintf("%.3fd", p.Days)
 	}
+
 	if p.Years >= 1000 {
 		return formatMass(p.Years) + "y"
 	}
+
 	return fmt.Sprintf("%.3fy", p.Years)
 }
 
@@ -258,11 +286,14 @@ func formatPeriod(p Period) string {
 // via IsMainworld on its own part.
 func buildClass4PForms(u *Universe, header iiss.FormHeader) []iiss.Class4PForm {
 	var forms []iiss.Class4PForm
+
 	for body := range u.AllBodies() {
 		if body.Kind == BodyEmpty {
 			continue
 		}
+
 		isMW := body == u.Detail.Mainworld
+
 		form := iiss.Class4PForm{FormHeader: header, Designation: body.Designation}
 		switch body.Kind {
 		case BodyPlanetoidBelt:
@@ -275,7 +306,9 @@ func buildClass4PForms(u *Universe, header iiss.FormHeader) []iiss.Class4PForm {
 			form.Variant = iiss.Class4PPlanet
 			form.PartP = buildClass4PPlanet(u, body, isMW)
 		}
+
 		forms = append(forms, form)
 	}
+
 	return forms
 }

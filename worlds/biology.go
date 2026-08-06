@@ -69,15 +69,19 @@ func RollBiomass(r roller.Roller, body *Body, ageGyr float64) int {
 	if body == nil || body.Atmosphere == nil {
 		return 0
 	}
+
 	atmDM := biomassAtmDM(body.Atmosphere.Code)
+
 	hydroCode := 0
 	if body.Hydrographics != nil {
 		hydroCode = body.Hydrographics.Code
 	}
+
 	dm := atmDM + biomassHydroDM(hydroCode) + biomassAgeDM(ageGyr)
 	if body.Temperature != nil {
 		dm += biomassTempDM(body.Temperature.MeanK, body.Temperature.HighK)
 	}
+
 	dm = min(max(dm, -12), 4)
 
 	roll := r.Roll("2D")
@@ -97,6 +101,7 @@ func RollBiomass(r roller.Roller, body *Body, ageGyr float64) int {
 	if rolledPositive && exoticBiomassBonusApplies(body.Atmosphere.Code) {
 		biomass += exoticBiomassBonus(body.Atmosphere.Code)
 	}
+
 	return biomass
 }
 
@@ -122,6 +127,7 @@ func biomassAtmDM(atmCode int) int {
 	case 15: // F+
 		return -5
 	}
+
 	return 0 // atm 6, 7, or unmapped
 }
 
@@ -137,6 +143,7 @@ func biomassHydroDM(hydroCode int) int {
 	case hydroCode >= 9:
 		return +2
 	}
+
 	return 0 // 4-5
 }
 
@@ -150,6 +157,7 @@ func biomassAgeDM(ageGyr float64) int {
 	case ageGyr > 4:
 		return +1
 	}
+
 	return 0
 }
 
@@ -162,14 +170,17 @@ func biomassTempDM(meanK, highK float64) int {
 	} else if highK > 0 && highK < 273 {
 		dm += -4
 	}
+
 	if meanK > 353 {
 		dm += -4
 	} else if meanK > 0 && meanK < 273 {
 		dm += -2
 	}
+
 	if meanK >= 279 && meanK <= 303 {
 		dm += +2
 	}
+
 	return dm
 }
 
@@ -200,6 +211,7 @@ func exoticBiomassBonus(atmCode int) int {
 	case 15:
 		return 4
 	}
+
 	return 0
 }
 
@@ -226,6 +238,7 @@ func RollBiocomplexity(r roller.Roller, body *Body, biomass int, ageGyr float64)
 	if biomass <= 0 {
 		return 0
 	}
+
 	dm := biocomplexityAgeDM(ageGyr)
 	if !atmIs4to9(body) {
 		dm += -2
@@ -234,12 +247,15 @@ func RollBiocomplexity(r roller.Roller, body *Body, biomass int, ageGyr float64)
 	if body != nil && body.Atmosphere != nil && HasTaintCode(body.Atmosphere.Taints, "L") {
 		dm += -2
 	}
+
 	roll := r.Roll("2D")
 	bx := min(biomass, 9)
+
 	result := roll - 7 + bx + dm
 	if result < 1 {
 		return 1
 	}
+
 	return result
 }
 
@@ -255,6 +271,7 @@ func biocomplexityAgeDM(ageGyr float64) int {
 	case ageGyr <= 4:
 		return -2
 	}
+
 	return 0
 }
 
@@ -266,8 +283,10 @@ func RollNativeSophont(r roller.Roller, biocomplexity int) bool {
 	if biocomplexity < 8 {
 		return false
 	}
+
 	bx := min(biocomplexity, 9)
 	roll := r.Roll("2D")
+
 	return roll+bx-7 >= 13
 }
 
@@ -283,12 +302,15 @@ func RollExtinctSophont(r roller.Roller, biocomplexity int, ageGyr float64) bool
 	if biocomplexity < 8 {
 		return false
 	}
+
 	dm := 0
 	if ageGyr > 5 {
 		dm = 1
 	}
+
 	bx := min(biocomplexity, 9)
 	roll := r.Roll("2D")
+
 	return roll+bx-7+dm >= 13
 }
 
@@ -304,12 +326,15 @@ func RollBiodiversity(r roller.Roller, biomass, biocomplexity int) int {
 	if biomass <= 0 {
 		return 0
 	}
+
 	roll := r.Roll("2D")
 	v := float64(roll) - 7 + float64(biomass+biocomplexity)/2.0
+
 	result := int(math.Ceil(v))
 	if result < 1 {
 		return 1
 	}
+
 	return result
 }
 
@@ -350,15 +375,19 @@ func RollCompatibility(r roller.Roller, body *Body, biocomplexity int, ageGyr fl
 			dm += -2
 		}
 	}
+
 	if ageGyr > 8 {
 		dm += -2
 	}
+
 	roll := r.Roll("2D")
 	v := float64(roll) - float64(biocomplexity)/2.0 + float64(dm)
+
 	result := int(math.Floor(v))
 	if result < 0 {
 		return 0
 	}
+
 	return result
 }
 
@@ -367,6 +396,7 @@ func compatibilityAtmDM(body *Body) int {
 	if body == nil || body.Atmosphere == nil {
 		return 0
 	}
+
 	switch body.Atmosphere.Code {
 	case 0, 1, 11: // 0, 1, B (G and H don't exist in our system)
 		return -8
@@ -383,6 +413,7 @@ func compatibilityAtmDM(body *Body) int {
 	case 13, 14: // D, E
 		return -1
 	}
+
 	return 0
 }
 
@@ -392,7 +423,9 @@ func atmIs4to9(body *Body) bool {
 	if body == nil || body.Atmosphere == nil {
 		return false
 	}
+
 	c := body.Atmosphere.Code
+
 	return c >= 4 && c <= 9
 }
 
@@ -405,6 +438,7 @@ func (b *Biology) Profile() string {
 	if b == nil || b.Biomass == 0 {
 		return ""
 	}
+
 	return string([]byte{
 		eHexDigit(b.Biomass),
 		eHexDigit(b.Biocomplexity),
@@ -419,12 +453,15 @@ func eHexDigit(n int) byte {
 	if n < 0 {
 		return '0'
 	}
+
 	if n > 15 {
 		return 'F'
 	}
+
 	if n < 10 {
 		return byte('0' + n)
 	}
+
 	return byte('A' + (n - 10))
 }
 
@@ -447,6 +484,7 @@ func eHexDigit(n int) byte {
 // bio may be a zero Biology{} for bodies without life.
 func RollTerrestrialResourceRating(r roller.Roller, body *Body, bio *Biology) int {
 	dm := 0
+
 	if body != nil && body.Physical != nil {
 		switch {
 		case body.Physical.Density > 1.12:
@@ -455,29 +493,37 @@ func RollTerrestrialResourceRating(r roller.Roller, body *Body, bio *Biology) in
 			dm += -2
 		}
 	}
+
 	if bio != nil {
 		if bio.Biomass >= 3 {
 			dm += 2
 		}
+
 		switch {
 		case bio.Biodiversity >= 11:
 			dm += 2
 		case bio.Biodiversity >= 8:
 			dm++
 		}
+
 		if bio.Compatibility >= 0 && bio.Compatibility <= 3 && bio.Biomass >= 1 {
 			dm += -1
 		}
+
 		if bio.Compatibility >= 8 {
 			dm += 2
 		}
 	}
+
 	roll := r.Roll("2D")
+
 	size := 0
 	if body != nil {
 		size = SizeAsInt(body.SizeCode)
 	}
+
 	result := roll - 7 + size + dm
+
 	return min(max(result, 2), 12)
 }
 
@@ -591,8 +637,10 @@ func ApplyBiology(r roller.Roller, u *Universe) error {
 		if !biologyApplies(body) {
 			continue
 		}
+
 		body.Biology = computeBiology(bodySub(r, body, parent, "biology"), body, ageGyr)
 	}
+
 	return nil
 }
 
@@ -603,12 +651,15 @@ func biologyApplies(body *Body) bool {
 	if body == nil || body.Kind == BodyEmpty {
 		return false
 	}
+
 	if body.Kind == BodyGasGiant || body.Kind == BodyPlanetoidBelt {
 		return false
 	}
+
 	if body.SizeCode == "0" {
 		return false
 	}
+
 	return body.Atmosphere != nil
 }
 
@@ -616,6 +667,7 @@ func biologyApplies(body *Body) bool {
 // already verified biologyApplies(body).
 func computeBiology(r roller.Roller, body *Body, ageGyr float64) *Biology {
 	bio := &Biology{}
+
 	bio.Biomass = RollBiomass(r, body, ageGyr)
 	if bio.Biomass > 0 {
 		bio.Biocomplexity = RollBiocomplexity(r, body, bio.Biomass, ageGyr)
@@ -623,9 +675,12 @@ func computeBiology(r roller.Roller, body *Body, ageGyr float64) *Biology {
 			bio.HasNativeSophont = RollNativeSophont(r, bio.Biocomplexity)
 			bio.HadExtinctSophont = RollExtinctSophont(r, bio.Biocomplexity, ageGyr)
 		}
+
 		bio.Biodiversity = RollBiodiversity(r, bio.Biomass, bio.Biocomplexity)
 		bio.Compatibility = RollCompatibility(r, body, bio.Biocomplexity, ageGyr)
 	}
+
 	bio.ResourceRating = RollTerrestrialResourceRating(r, body, bio)
+
 	return bio
 }

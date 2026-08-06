@@ -1,7 +1,7 @@
 package worlds
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/philoserf/world-builder/roller"
 )
@@ -38,12 +38,14 @@ func gasGiantDiameterCode(n int) string {
 	if n < 2 {
 		n = 2
 	}
+
 	if n > 18 {
 		n = 18
 	}
+
 	switch {
 	case n < 10:
-		return fmt.Sprintf("%d", n)
+		return strconv.Itoa(n)
 	case n <= 15:
 		return string(rune('A' + n - 10))
 	case n == 16:
@@ -75,6 +77,7 @@ func RollGasGiantSize(r roller.Roller, dms int) (GasGiantSize, error) {
 	selector := selectorRaw + dms
 
 	var class GasGiantClass
+
 	switch {
 	case selector <= 2:
 		class = GasGiantSmall
@@ -85,6 +88,7 @@ func RollGasGiantSize(r roller.Roller, dms int) (GasGiantSize, error) {
 	}
 
 	var diameter int
+
 	switch class {
 	case GasGiantSmall:
 		// D3+D3 is two distinct rolls; each scripted separately.
@@ -96,6 +100,7 @@ func RollGasGiantSize(r roller.Roller, dms int) (GasGiantSize, error) {
 	}
 
 	var mass float64
+
 	switch class {
 	case GasGiantSmall:
 		mass = float64(5 * (r.Roll("1D") + 1)) // 10-35
@@ -104,7 +109,8 @@ func RollGasGiantSize(r roller.Roller, dms int) (GasGiantSize, error) {
 		mass = float64(20 * (threeD - 1)) // 40-340
 	case GasGiantLarge:
 		d3 := r.Roll("D3")
-		threeD := r.Roll("3D")                 // 3-18
+		threeD := r.Roll("3D") // 3-18
+
 		mass = float64(d3 * 50 * (threeD + 4)) // 350-4000+
 		if mass >= 3000 {
 			// WBH p.55 footnote: initial mass ≥3,000⊕ → roll 2D-2,

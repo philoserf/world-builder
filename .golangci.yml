@@ -9,13 +9,74 @@ run:
   timeout: 5m
 
 linters:
-  enable:
-    - errcheck
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-    - revive
-    - misspell
-    - unconvert
-    - unparam
+  default: all
+  disable:
+    - exhaustruct # WBH tables and partial struct inits in tests are intentional
+    - mnd # the codebase transcribes WBH tables (magic numbers by nature)
+    - goconst # domain vocabulary (stage/body-type names) repeated across files, not consts
+    - varnamelen # terse math-notation vars mirror the book's own formula notation
+    - gochecknoglobals # WBH table data (stars/tables.go, worlds/*) are intentional package-level vars
+    - noinlineerr # `if err := f(); err != nil` is standard Go
+    - paralleltest # ~0 benefit on fast deterministic tests; huge manual churn
+    - tparallel # same rationale as paralleltest
+    - err113 # false-positive-prone; pointless sentinels for one-off CLI/internal errors
+    - wsl # deprecated; superseded by wsl_v5
+    - nonamedreturns # named returns document multi-value returns deliberately (e.g. tuple-shaped rolls)
+    - ireturn # roller.Roller is a deliberate DI seam — Fork() and friends return the interface by design
+    - tagliatelle # JSON key casing is a wire-format decision for cmd/world-builder -format json, not a lint fix — revisit deliberately
+    - musttag # same JSON-output decision as tagliatelle
+    - dupl # WBH tables are transcribed data — repetitive struct literals are inherent, not duplication to refactor away
+    - nilnil # `nil, nil` is this codebase's documented "not applicable to this body" convention (see e.g. GenerateAxialTilt)
+    - godoclint # every file opens with a `// Package X — <topic>` banner comment by convention; only one can be the literal godoc, so the rest are flagged as false "duplicates"
+    - exhaustive # switches intentionally cover only in-scope enum members; special/sentinel values (D/BD, Nebula/Protostar/StarCluster/Anomaly, NotGasGiant, BodyEmpty, OrbitCompanion, ...) are filtered or dispatched before reaching them — see stars/mao.go's ErrPostStellarPrimaryUnsupported and the WBH Special Circumstances out-of-scope boundary in CLAUDE.md
+    - lll # WBH table literals and markdown-template strings are routinely long as single unwrapped lines
+    - cyclop # pipeline orchestrators (Apply*/Generate*) coordinate many WBH sub-rules by architecture; complexity here is domain branching, not disorganization — see CLAUDE.md § Architecture
+    - nestif # same rationale as cyclop
+    - gocognit # same rationale as cyclop; some orchestrators (e.g. GenerateSystem) run well past any threshold that would still mean something
+    - gocyclo # same complexity metric as cyclop under a different tool; same rationale
+    - funlen # orchestrator functions are long because they walk a fixed WBH stage sequence; same rationale as cyclop
+    - maintidx # composite of cyclomatic complexity + length + Halstead volume; same rationale as cyclop
+    - prealloc # minor perf advisories on small, dynamically-sized slices; not worth the churn here
+  settings:
+    depguard:
+      rules:
+        main:
+          list-mode: strict
+          allow:
+            - $gostd
+            - github.com/philoserf/world-builder
+    lll:
+      line-length: 120
+    cyclop:
+      max-complexity: 15
+    funlen:
+      lines: 80
+      statements: 60
+    gocognit:
+      min-complexity: 25
+    nestif:
+      min-complexity: 6
+    exhaustive:
+      default-signifies-exhaustive: true
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment # micro-optimization; noisy on the record structs
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - std-error-handling
+    rules:
+      - path: (^|/)cmd/
+        linters:
+          - forbidigo
+      - path: _test\.go
+        linters:
+          - gosec
+          - noctx
+          - testpackage

@@ -30,11 +30,14 @@ func TestRollComposition_TableValues(t *testing.T) {
 	for _, c := range cases {
 		t.Run(fmt.Sprintf("roll=%d", c.roll), func(t *testing.T) {
 			t.Parallel()
+
 			r := roller.NewScripted(c.roll)
+
 			got, err := RollComposition(r, BodyPhysicalDMs{})
 			if err != nil {
 				t.Fatalf("roll=%d: unexpected error: %v", c.roll, err)
 			}
+
 			if got != c.want {
 				t.Errorf("roll=%d: got %q, want %q", c.roll, got, c.want)
 			}
@@ -47,10 +50,12 @@ func TestRollComposition_AppliesSizeDM(t *testing.T) {
 
 	// Size A-F → DM+3 ⇒ scripted 2D=4 + 3 = 7 → "Rock and Metal"
 	r := roller.NewScripted(4)
+
 	got, err := RollComposition(r, BodyPhysicalDMs{SizeCode: SizeCode("A")})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != "Rock and Metal" {
 		t.Errorf("Size A with 2D=4 (DM+3): got %q, want %q", got, "Rock and Metal")
 	}
@@ -61,10 +66,12 @@ func TestRollComposition_AppliesAtHZCODM(t *testing.T) {
 
 	// AtHZCOOrCloser → DM+1. Scripted 2D=6, no other DMs → 6+1 = 7 → "Rock and Metal".
 	r := roller.NewScripted(6)
+
 	got, err := RollComposition(r, BodyPhysicalDMs{AtHZCOOrCloser: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != "Rock and Metal" {
 		t.Errorf("AtHZCOOrCloser DM+1 with 2D=6: got %q, want %q", got, "Rock and Metal")
 	}
@@ -75,10 +82,12 @@ func TestRollComposition_AppliesBeyondHZCODM(t *testing.T) {
 
 	// BeyondHZCO 2 → DM-2. Scripted 2D=8, no other DMs → 8-2 = 6 → "Mostly Rock".
 	r := roller.NewScripted(8)
+
 	got, err := RollComposition(r, BodyPhysicalDMs{BeyondHZCO: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != "Mostly Rock" {
 		t.Errorf("BeyondHZCO=2 with 2D=8: got %q, want %q", got, "Mostly Rock")
 	}
@@ -90,19 +99,23 @@ func TestRollComposition_AppliesSystemAgeDM(t *testing.T) {
 	// Threshold check: SystemAgeGyr=10 should NOT trigger DM-1; 11 should.
 	// Use 2D=7: without DM → 7 → "Rock and Metal"; with DM-1 → 6 → "Mostly Rock".
 	r1 := roller.NewScripted(7)
+
 	got1, err := RollComposition(r1, BodyPhysicalDMs{SystemAgeGyr: 10.0})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got1 != "Rock and Metal" {
 		t.Errorf("SystemAgeGyr=10.0 (no DM): got %q, want %q", got1, "Rock and Metal")
 	}
 
 	r2 := roller.NewScripted(7)
+
 	got2, err := RollComposition(r2, BodyPhysicalDMs{SystemAgeGyr: 11.0})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got2 != "Mostly Rock" {
 		t.Errorf("SystemAgeGyr=11.0 DM-1 with 2D=7: got %q, want %q", got2, "Mostly Rock")
 	}
@@ -124,11 +137,14 @@ func TestRollDensity_RockAndMetalColumn(t *testing.T) {
 	for _, c := range cases {
 		t.Run(fmt.Sprintf("roll=%d", c.roll), func(t *testing.T) {
 			t.Parallel()
+
 			r := roller.NewScripted(c.roll)
+
 			got, err := RollDensity(r, "Rock and Metal")
 			if err != nil {
 				t.Fatalf("roll=%d: %v", c.roll, err)
 			}
+
 			if got != c.want {
 				t.Errorf("roll=%d: got %v, want %v", c.roll, got, c.want)
 			}
@@ -151,6 +167,7 @@ func TestDeriveGravity(t *testing.T) {
 
 func TestDeriveMass(t *testing.T) {
 	t.Parallel()
+
 	if got := DeriveMass(1.0, 12742); math.Abs(got-1.0) > 1e-6 {
 		t.Errorf("Terra mass: got %v, want 1.0", got)
 	}
@@ -182,8 +199,10 @@ func TestDeriveOrbitalVelocity(t *testing.T) {
 
 func TestFormatSizeProfile_Zed(t *testing.T) {
 	t.Parallel()
+
 	p := BodyPhysical{Density: 1.03, Gravity: 0.66}
 	p.SizeProfile = FormatSizeProfile(p, 0.27, SizeCode("5"), 8163)
+
 	want := "5-8163-1.03-0.66-0.27"
 	if p.SizeProfile != want {
 		t.Errorf("got %q, want %q", p.SizeProfile, want)
@@ -198,21 +217,26 @@ func TestSol_TerraPhysicalProfile(t *testing.T) {
 	// Density 2D=9 → index 7 → 1.03 in Rock-and-Metal column (table: 2D2=0.82 … 2D9=1.03).
 	// Scripted values are pre-DM raw rolls: D3=2, 1D=4, d100=63, 2D-comp=10, 2D-density=9.
 	r := roller.NewScripted(2, 4, 63, 10, 9) // D3, 1D, d100, 2D-comp, 2D-density
+
 	got, err := GenerateBodyPhysical(r, SizeCode("5"), 8163, BodyPhysicalDMs{
 		AtHZCOOrCloser: true,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got.Composition != "Rock and Metal" {
 		t.Errorf("composition: got %q, want %q", got.Composition, "Rock and Metal")
 	}
+
 	if math.Abs(got.Density-1.03) > 0.001 {
 		t.Errorf("density: got %v, want 1.03", got.Density)
 	}
+
 	if math.Abs(got.Gravity-0.66) > 0.01 {
 		t.Errorf("gravity: got %v, want 0.66", got.Gravity)
 	}
+
 	if got.SizeProfile != "5-8163-1.03-0.66-0.27" {
 		t.Errorf("profile: got %q, want %q", got.SizeProfile, "5-8163-1.03-0.66-0.27")
 	}

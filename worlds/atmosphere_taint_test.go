@@ -49,6 +49,7 @@ func TestRollTaintSubtype_AtmosphereDMs(t *testing.T) {
 	}
 	for _, c := range cases {
 		r := roller.Fixed(8) // 2D=8 every call
+
 		got := RollTaintSubtype(r, c.atmCode, false)
 		if got != c.want {
 			t.Errorf("atm %d 2D=8: got %q, want %q", c.atmCode, got, c.want)
@@ -59,12 +60,14 @@ func TestRollTaintSubtype_AtmosphereDMs(t *testing.T) {
 func TestRollTaintSubtype_LHSuppressionOnNon4to9(t *testing.T) {
 	// 2D=2 → L; on atm 10 (outside 4-9) → G (suppressed).
 	r := roller.NewScripted(2)
+
 	got := RollTaintSubtype(r, 10, false)
 	if got != "G" {
 		t.Errorf("atm 10 2D=2: got %q, want \"G\" (L suppressed)", got)
 	}
 	// 2D=12 → H; on atm 11 (outside 4-9) → G (suppressed).
 	r = roller.NewScripted(12)
+
 	got = RollTaintSubtype(r, 11, false)
 	if got != "G" {
 		t.Errorf("atm 11 2D=12: got %q, want \"G\" (H suppressed)", got)
@@ -74,6 +77,7 @@ func TestRollTaintSubtype_LHSuppressionOnNon4to9(t *testing.T) {
 func TestRollTaintSubtype_LHSuppressionOnSecondOrLater(t *testing.T) {
 	// 2D=2 → L on atm 7; isSecondOrLater=true → G.
 	r := roller.NewScripted(2)
+
 	got := RollTaintSubtype(r, 7, true)
 	if got != "G" {
 		t.Errorf("atm 7 2D=2 second roll: got %q, want \"G\" (L suppressed)", got)
@@ -99,6 +103,7 @@ func TestRollTaintSeverity_BasicTable(t *testing.T) {
 	}
 	for _, c := range cases {
 		r := roller.NewScripted(c.twoD)
+
 		got := RollTaintSeverity(r, "B", 4, 0) // B taint, atm 4 (no DM), no ppO2 override
 		if got != c.want {
 			t.Errorf("2D=%d: got severity %d, want %d", c.twoD, got, c.want)
@@ -117,6 +122,7 @@ func TestRollTaintSeverity_LowOxygenPpO2Override(t *testing.T) {
 	}
 	for _, c := range cases {
 		r := roller.NewScripted(99) // unused since override fires
+
 		got := RollTaintSeverity(r, "L", 4, c.ppO2)
 		if got != c.want {
 			t.Errorf("L ppO2=%g: got %d, want %d", c.ppO2, got, c.want)
@@ -135,6 +141,7 @@ func TestRollTaintSeverity_HighOxygenPpO2Override(t *testing.T) {
 	}
 	for _, c := range cases {
 		r := roller.NewScripted(99)
+
 		got := RollTaintSeverity(r, "H", 4, c.ppO2)
 		if got != c.want {
 			t.Errorf("H ppO2=%g: got %d, want %d", c.ppO2, got, c.want)
@@ -145,6 +152,7 @@ func TestRollTaintSeverity_HighOxygenPpO2Override(t *testing.T) {
 func TestRollTaintSeverity_InsidiousDM(t *testing.T) {
 	// atm C (12) gets DM+6. 2D=4 + 6 = 10 → 7.
 	r := roller.NewScripted(4)
+
 	got := RollTaintSeverity(r, "B", 12, 0)
 	if got != 7 {
 		t.Errorf("atm C B taint 2D=4: got %d, want 7", got)
@@ -168,6 +176,7 @@ func TestRollTaintPersistence_BasicTable(t *testing.T) {
 	}
 	for _, c := range cases {
 		r := roller.NewScripted(c.twoD)
+
 		got := RollTaintPersistence(r, "B", 4, 5) // atm 4 no DM, severity 5 no DM trigger
 		if got != c.want {
 			t.Errorf("2D=%d: got persistence %d, want %d", c.twoD, got, c.want)
@@ -178,6 +187,7 @@ func TestRollTaintPersistence_BasicTable(t *testing.T) {
 func TestRollTaintPersistence_LHDM(t *testing.T) {
 	// L/H taint → DM+4. 2D=2 + 4 = 6 → 6.
 	r := roller.NewScripted(2)
+
 	got := RollTaintPersistence(r, "L", 4, 5)
 	if got != 6 {
 		t.Errorf("L taint 2D=2 DM+4: got %d, want 6", got)
@@ -187,6 +197,7 @@ func TestRollTaintPersistence_LHDM(t *testing.T) {
 func TestRollTaintPersistence_HighSeverityDM(t *testing.T) {
 	// Severity ≥ 8 → DM+6. 2D=2 + 6 = 8 → 8.
 	r := roller.NewScripted(2)
+
 	got := RollTaintPersistence(r, "B", 4, 8)
 	if got != 8 {
 		t.Errorf("B taint severity 8 2D=2 DM+6: got %d, want 8", got)
@@ -196,6 +207,7 @@ func TestRollTaintPersistence_HighSeverityDM(t *testing.T) {
 func TestRollTaintPersistence_InsidiousDM(t *testing.T) {
 	// Atm C → DM+6. 2D=2 + 6 = 8 → 8.
 	r := roller.NewScripted(2)
+
 	got := RollTaintPersistence(r, "B", 12, 5)
 	if got != 8 {
 		t.Errorf("atm C B taint 2D=2 DM+6: got %d, want 8", got)
@@ -220,6 +232,7 @@ func TestRollInsidiousHazard_AllResults(t *testing.T) {
 	}
 	for _, c := range cases {
 		r := roller.NewScripted(c.twoD)
+
 		got := RollInsidiousHazard(r, false)
 		if got != c.want {
 			t.Errorf("2D=%d: got %q, want %q", c.twoD, got, c.want)
@@ -230,6 +243,7 @@ func TestRollInsidiousHazard_AllResults(t *testing.T) {
 func TestRollInsidiousHazard_ExtremelyDenseDM(t *testing.T) {
 	// 2D=4 + DM+2 = 6 → G (without DM would be B).
 	r := roller.NewScripted(4)
+
 	got := RollInsidiousHazard(r, true)
 	if got != "G" {
 		t.Errorf("extremely dense 2D=4 DM+2: got %q, want \"G\"", got)
@@ -242,10 +256,12 @@ func TestRollAllTaints_NoPreseed_SingleTaint(t *testing.T) {
 	body := &Body{
 		Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
 	}
+
 	taints := RollAllTaints(r, body, nil)
 	if len(taints) != 1 {
 		t.Fatalf("got %d taints, want 1", len(taints))
 	}
+
 	if taints[0] != (Taint{Code: "B", Severity: 4, Persistence: 5}) {
 		t.Errorf("got %+v, want {B, 4, 5}", taints[0])
 	}
@@ -256,6 +272,7 @@ func TestRollAllTaints_UnsupportedAtmosphere_NoTaints(t *testing.T) {
 	body := &Body{
 		Atmosphere: &Atmosphere{Code: 6, Pressure: 1.0, OxygenPartialPressure: 0.21},
 	}
+
 	taints := RollAllTaints(r, body, nil)
 	if taints != nil {
 		t.Fatalf("got %+v, want nil", taints)
@@ -281,13 +298,16 @@ func TestRollAllTaints_PreseededL_FillsSevPers(t *testing.T) {
 	body := &Body{
 		Atmosphere: &Atmosphere{Code: 4, Pressure: 0.5, OxygenPartialPressure: 0.05},
 	}
+
 	taints := RollAllTaints(r, body, preseeded)
 	if len(taints) != 2 {
 		t.Fatalf("got %d taints, want 2", len(taints))
 	}
+
 	if taints[0] != (Taint{Code: "L", Severity: 8, Persistence: 9}) {
 		t.Errorf("preseeded got %+v, want {L, 8, 9}", taints[0])
 	}
+
 	if taints[1] != (Taint{Code: "P", Severity: 4, Persistence: 5}) {
 		t.Errorf("rolled got %+v, want {P, 4, 5}", taints[1])
 	}
@@ -304,10 +324,12 @@ func TestRollAllTaints_MaxThree(t *testing.T) {
 	body := &Body{
 		Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
 	}
+
 	taints := RollAllTaints(r, body, nil)
 	if len(taints) != 3 {
 		t.Fatalf("got %d taints, want 3 (max)", len(taints))
 	}
+
 	for i, tt := range taints {
 		if tt.Code != "P" {
 			t.Errorf("taint #%d: got %q, want P", i, tt.Code)
@@ -331,17 +353,21 @@ func TestRollAllTaints_LRollAdjustsPpO2(t *testing.T) {
 		Atmosphere: &Atmosphere{Code: 4, Pressure: 0.5, OxygenPartialPressure: 0.21},
 	}
 	originalPress := body.Atmosphere.Pressure
+
 	taints := RollAllTaints(r, body, nil)
 	if len(taints) != 1 {
 		t.Fatalf("got %d taints, want 1", len(taints))
 	}
+
 	if taints[0].Code != "L" || taints[0].Severity != 2 || taints[0].Persistence != 6 {
 		t.Errorf("got %+v, want {L, 2, 6}", taints[0])
 	}
+
 	wantPpO2 := 0.21 - 0.03
 	if math.Abs(body.Atmosphere.OxygenPartialPressure-wantPpO2) > 1e-9 {
 		t.Errorf("ppO2 got %g, want %g", body.Atmosphere.OxygenPartialPressure, wantPpO2)
 	}
+
 	if body.Atmosphere.Pressure != originalPress {
 		t.Errorf("total pressure changed to %g, want unchanged %g", body.Atmosphere.Pressure, originalPress)
 	}
@@ -368,13 +394,16 @@ func TestAabVd_TaintProfile_p85(t *testing.T) {
 			OxygenPartialPressure: 0.114,
 		},
 	}
+
 	taints := RollAllTaints(r, body, nil)
 	if len(taints) != 2 {
 		t.Fatalf("got %d taints, want 2", len(taints))
 	}
+
 	if taints[0] != (Taint{Code: "P", Severity: 6, Persistence: 3}) {
 		t.Errorf("taint #1: got %+v, want {P, 6, 3}", taints[0])
 	}
+
 	if taints[1] != (Taint{Code: "R", Severity: 5, Persistence: 4}) {
 		t.Errorf("taint #2: got %+v, want {R, 5, 4}", taints[1])
 	}
@@ -395,13 +424,16 @@ func TestAabVb_ExoticIrritant_p88(t *testing.T) {
 	body := &Body{
 		Atmosphere: &Atmosphere{Code: 10, Subtype: "9", Pressure: 2.09},
 	}
+
 	taints := RollAllTaints(r, body, nil)
 	if len(taints) != 1 {
 		t.Fatalf("got %d taints, want 1", len(taints))
 	}
+
 	if taints[0] != (Taint{Code: "R", Severity: 2, Persistence: 9}) {
 		t.Errorf("got %+v, want {R, 2, 9}", taints[0])
 	}
+
 	if body.Atmosphere.Code != 10 || body.Atmosphere.Subtype != "9" {
 		t.Errorf("atmosphere mutated unexpectedly: %+v", body.Atmosphere)
 	}
@@ -420,13 +452,16 @@ func TestAaBVI_CorrosiveProfile_p90(t *testing.T) {
 	body := &Body{
 		Atmosphere: &Atmosphere{Code: 11, Subtype: "6", Pressure: 1.21},
 	}
+
 	taints := RollAllTaints(r, body, nil)
 	if len(taints) != 1 {
 		t.Fatalf("got %d taints, want 1 (always-roll policy)", len(taints))
 	}
+
 	if body.Atmosphere.Code != 11 || body.Atmosphere.Subtype != "6" {
 		t.Errorf("atmosphere mutated unexpectedly: %+v", body.Atmosphere)
 	}
+
 	for _, tt := range taints {
 		if tt.Code == "L" || tt.Code == "H" {
 			t.Errorf("L/H not suppressed on atm B: got %+v", tt)
@@ -441,17 +476,21 @@ func TestRollAllTaints_Invariants(t *testing.T) {
 		body := &Body{
 			Atmosphere: &Atmosphere{Code: 7, Pressure: 1.0, OxygenPartialPressure: 0.21},
 		}
+
 		taints := RollAllTaints(r, body, nil)
 		if len(taints) > 3 {
 			t.Errorf("seed=%d: got %d taints, want ≤ 3", seed, len(taints))
 		}
+
 		for i, tt := range taints {
 			if tt.Severity < 1 || tt.Severity > 9 {
 				t.Errorf("seed=%d taint #%d: severity %d out of [1,9]", seed, i, tt.Severity)
 			}
+
 			if tt.Persistence < 2 || tt.Persistence > 9 {
 				t.Errorf("seed=%d taint #%d: persistence %d out of [2,9]", seed, i, tt.Persistence)
 			}
+
 			if i > 0 && (tt.Code == "L" || tt.Code == "H") {
 				t.Errorf("seed=%d taint #%d: L/H must be suppressed on 2nd/3rd rolls", seed, i)
 			}
@@ -481,10 +520,12 @@ func TestRollInsidiousHazards(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.twoD)
+
 			got := RollInsidiousHazards(r, c.subtype, c.isExtremelyDense)
 			if len(got) != len(c.want) {
 				t.Fatalf("len: got %d, want %d (got %+v)", len(got), len(c.want), got)
 			}
+
 			for i := range got {
 				if got[i] != c.want[i] {
 					t.Errorf("[%d]: got %+v, want %+v", i, got[i], c.want[i])

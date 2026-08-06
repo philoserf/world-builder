@@ -12,7 +12,7 @@ import (
 // Density, Gravity, Mass, DiameterKm are 3A1 outputs and are NOT
 // temperature-sensitive; they remain stable across the 5D rederive pass.
 type BodyPhysical struct {
-	Composition     string  // "Exotic Ice"|"Mostly Ice"|"Mostly Rock"|"Rock and Metal"|"Mostly Metal"|"Compressed Metal"
+	Composition     string  // "Exotic Ice"|"Mostly Rock"|"Rock and Metal"|"Mostly Metal"|"Compressed Metal"
 	Density         float64 // relative to Terra (1.0 = 5.514 g/cm³)
 	Gravity         float64 // relative to Terra (1.0 G)
 	EscapeVelocity  float64 // m/s
@@ -30,6 +30,7 @@ type BodyPhysicalDMs struct {
 
 func compositionDM(d BodyPhysicalDMs) int {
 	dm := 0
+
 	switch d.SizeCode {
 	// "0" and "R" encode the full WBH p.71 table row but are unreachable
 	// through the Stage-3 orchestrator, which early-returns for those
@@ -42,19 +43,23 @@ func compositionDM(d BodyPhysicalDMs) int {
 	case "A", "B", "C", "D", "E", "F":
 		dm += 3
 	}
+
 	if d.AtHZCOOrCloser {
 		dm++
 	}
+
 	dm -= d.BeyondHZCO
 	if d.SystemAgeGyr > 10 {
 		dm--
 	}
+
 	return dm
 }
 
 // RollComposition rolls 2D + DMs and returns the composition column from the Terrestrial Composition table (WBH p. 71).
 func RollComposition(r roller.Roller, dms BodyPhysicalDMs) (string, error) {
 	base := r.Roll("2D")
+
 	total := base + compositionDM(dms)
 	switch {
 	case total <= -4:
@@ -86,16 +91,20 @@ var densityTable = map[string][11]float64{
 // RollDensity rolls 2D and returns the density value from the Terrestrial Density table column for the given composition (WBH p. 71).
 func RollDensity(r roller.Roller, composition string) (float64, error) {
 	roll := r.Roll("2D")
+
 	row, ok := densityTable[composition]
 	if !ok {
 		return 0, fmt.Errorf("worlds: density: unknown composition %q", composition)
 	}
+
 	if roll < 2 {
 		roll = 2
 	}
+
 	if roll > 12 {
 		roll = 12
 	}
+
 	return row[roll-2], nil
 }
 
@@ -110,6 +119,7 @@ func DeriveGravity(densityRel, diameterKm float64) float64 {
 // DeriveMass returns mass in M⊕: Density × (Diameter / DiameterTerra)³.
 func DeriveMass(densityRel, diameterKm float64) float64 {
 	ratio := diameterKm / DiameterTerra
+
 	return densityRel * ratio * ratio * ratio
 }
 
@@ -118,10 +128,12 @@ func DeriveEscapeVelocity(massEarth, diameterKm float64) float64 {
 	if diameterKm <= 0 {
 		return 0
 	}
+
 	ratio := massEarth / (diameterKm / DiameterTerra)
 	if ratio < 0 {
 		return 0
 	}
+
 	return math.Sqrt(ratio) * 11186
 }
 
@@ -150,10 +162,12 @@ func GenerateBodyPhysical(r roller.Roller, sizeCode SizeCode, diameterKm int, dm
 	if err != nil {
 		return BodyPhysical{}, err
 	}
+
 	density, err := RollDensity(r, comp)
 	if err != nil {
 		return BodyPhysical{}, err
 	}
+
 	p := BodyPhysical{
 		Composition: comp,
 		Density:     density,
@@ -163,5 +177,6 @@ func GenerateBodyPhysical(r roller.Roller, sizeCode SizeCode, diameterKm int, dm
 	p.EscapeVelocity = DeriveEscapeVelocity(mass, float64(diameterKm))
 	p.OrbitalVelocity = DeriveOrbitalVelocity(p.EscapeVelocity)
 	p.SizeProfile = FormatSizeProfile(p, mass, sizeCode, diameterKm)
+
 	return p, nil
 }

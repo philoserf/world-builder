@@ -53,10 +53,12 @@ func TestPeriodFor(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			got := PeriodFor(tc.au, tc.sumMass, tc.mEarth)
 			if math.Abs(got.Years-tc.wantYears) > 0.005 {
 				t.Errorf("Years = %v, want %v (±0.005)", got.Years, tc.wantYears)
 			}
+
 			if math.Abs(got.Days-got.Years*365.25) > 1e-9 {
 				t.Errorf("Days = %v, want Years*365.25 = %v", got.Days, got.Years*365.25)
 			}

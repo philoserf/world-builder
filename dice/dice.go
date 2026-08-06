@@ -31,38 +31,51 @@ func Parse(notation string) (Spec, error) {
 	if m == nil {
 		return Spec{}, fmt.Errorf("dice: invalid notation: %q", notation)
 	}
+
 	count := 1
+
 	if m[1] != "" {
 		c, err := strconv.Atoi(m[1])
 		if err != nil {
 			return Spec{}, fmt.Errorf("dice: bad count in %q: %w", notation, err)
 		}
+
 		count = c
 	}
+
 	if count < 1 {
 		return Spec{}, fmt.Errorf("dice: invalid count (<1) in %q", notation)
 	}
+
 	sides := 6
+
 	if m[2] != "" {
 		s, err := strconv.Atoi(m[2])
 		if err != nil {
 			return Spec{}, fmt.Errorf("dice: bad sides in %q: %w", notation, err)
 		}
+
 		sides = s
 	}
+
 	if sides < 2 {
 		return Spec{}, fmt.Errorf("dice: invalid sides (<2) in %q", notation)
 	}
+
 	modifier := 0
+
 	if m[3] != "" {
 		v, err := strconv.Atoi(m[4])
 		if err != nil {
 			return Spec{}, fmt.Errorf("dice: bad modifier in %q: %w", notation, err)
 		}
+
 		if m[3] == "-" {
 			v = -v
 		}
+
 		modifier = v
 	}
+
 	return Spec{Count: count, Sides: sides, Modifier: modifier}, nil
 }

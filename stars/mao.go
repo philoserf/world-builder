@@ -15,6 +15,7 @@ func IsPostStellar(k StarKind) bool {
 	case KindBrownDwarf, KindWhiteDwarf, KindNeutronStar, KindBlackHole, KindPulsar:
 		return true
 	}
+
 	return false
 }
 
@@ -47,6 +48,7 @@ func LacksP39MAORow(k StarKind) bool {
 	if k == KindProtostar || IsAggregateObject(k) {
 		return true
 	}
+
 	return IsPostStellar(k)
 }
 
@@ -88,7 +90,9 @@ func maoCell(typeKey string, lc LuminosityClass) (float64, error) {
 	if !ok {
 		return 0, fmt.Errorf("stars: no MAO row for %q", typeKey)
 	}
+
 	var ptr *float64
+
 	switch lc {
 	case Ia:
 		ptr = row.Ia
@@ -107,9 +111,11 @@ func maoCell(typeKey string, lc LuminosityClass) (float64, error) {
 	default:
 		return 0, fmt.Errorf("stars: unknown luminosity class %q", lc)
 	}
+
 	if ptr == nil {
 		return 0, ErrNoMAOForStar
 	}
+
 	return *ptr, nil
 }
 
@@ -124,8 +130,10 @@ func MAO(s Star) (float64, error) {
 	if LacksP39MAORow(s.Kind) {
 		return 0, ErrPostStellarPrimaryUnsupported
 	}
+
 	lower, upper, frac := bracketSpectralType(s.SpectralType)
 	lo, errLo := maoCell(lower, s.LuminosityClass)
+
 	hi, errHi := maoCell(upper, s.LuminosityClass)
 	switch {
 	case errors.Is(errLo, ErrNoMAOForStar) && errors.Is(errHi, ErrNoMAOForStar):
@@ -139,6 +147,7 @@ func MAO(s Star) (float64, error) {
 	case errHi != nil:
 		return 0, errHi
 	}
+
 	return lo + (hi-lo)*frac, nil
 }
 
@@ -157,13 +166,16 @@ func bracketSpectralType(st SpectralType) (lower, upper string, frac float64) {
 		if st.Subtype <= 5 {
 			return "M5", "M5", 0
 		}
+
 		if st.Subtype >= 9 {
 			return "M9", "M9", 0
 		}
+
 		return "M5", "M9", float64(st.Subtype-5) / 4.0
 	case st.Subtype < 5:
 		lower = letter + "0"
 		upper = letter + "5"
+
 		return lower, upper, float64(st.Subtype) / 5.0
 	default:
 		// st.Subtype in [5, 9] but letter != M (handled above).
@@ -171,6 +183,7 @@ func bracketSpectralType(st SpectralType) (lower, upper string, frac float64) {
 		next := nextCoolerLetter(st.Letter)
 		lower = letter + "5"
 		upper = string(next) + "0"
+
 		return lower, upper, float64(st.Subtype-5) / 5.0
 	}
 }

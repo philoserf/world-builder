@@ -4,6 +4,7 @@ package iiss
 // Renders the stellar census.
 type Class0IForm struct {
 	FormHeader
+
 	SystemAgeGyr float64
 	StellarCount int
 	Stars        []Class0IStarRow
@@ -31,6 +32,7 @@ type Class0IStarRow struct {
 // pp.60-67). Extends Class 0/I with per-body counts and the Objects table.
 type Class23Form struct {
 	FormHeader
+
 	SystemAgeGyr float64
 	StellarCount int
 	Stars        []Class0IStarRow
@@ -58,7 +60,7 @@ type Class23Object struct {
 	PeriodStr   string // "1.841d" or "8.627y"
 	SAH         string // "B??" / "GLE" / "AA6" / "200" / "566*" / "000" / "S"
 	Sub         string // significant-moon count, "?" for belt, "" for moon row
-	Notes       string // "HZ, R02, S, 1, 1" / "1,200⊕, HZ, 200, S, S, 566*, S"
+	Notes       string // "HZ, R02, S, 1, 1" / "1,200⊕, HZ, 200, S, 566*, S"
 }
 
 // Class4PVariant identifies which Class IV-P variant applies to the
@@ -83,6 +85,7 @@ const (
 // JSON without a worlds-side payload.
 type Class4PForm struct {
 	FormHeader
+
 	// Designation is the surveyed body's designation (e.g. "Aab IV d"),
 	// used to title the per-body PART P / PART P.B heading. Distinct from
 	// the system-level FormHeader.IISSDesig.

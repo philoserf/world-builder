@@ -24,6 +24,7 @@ func baselineDMs(sys stars.System, counts Counts) int {
 	if primaryHasCompanion(sys) {
 		dm -= 2
 	}
+
 	switch sys.Primary.LuminosityClass {
 	case stars.Ia, stars.Ib, stars.II:
 		dm += 3
@@ -34,9 +35,11 @@ func baselineDMs(sys stars.System, counts Counts) int {
 	case stars.VI:
 		dm--
 	}
+
 	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm -= 2
 	}
+
 	switch {
 	case counts.Total < 6:
 		dm -= 4
@@ -53,7 +56,9 @@ func baselineDMs(sys stars.System, counts Counts) int {
 	default: // > 20
 		dm += 2
 	}
+
 	dm -= secondaryStarCount(sys)
+
 	return dm
 }
 
@@ -65,6 +70,7 @@ func primaryHasCompanion(sys stars.System) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -72,15 +78,18 @@ func primaryHasCompanion(sys stars.System) bool {
 // Near, or Far around the primary.
 func secondaryStarCount(sys stars.System) int {
 	n := 0
+
 	for _, c := range sys.Companions {
 		if c.ParentIndex != -1 {
 			continue
 		}
+
 		switch c.OrbitClass {
 		case stars.OrbitClose, stars.OrbitNear, stars.OrbitFar:
 			n++
 		}
 	}
+
 	return n
 }
 
@@ -101,6 +110,7 @@ func BaselineOrbit(
 	baselineN, totalWorlds int,
 ) float64 {
 	var orbit float64
+
 	switch {
 	case baselineN >= 1 && baselineN <= totalWorlds:
 		// Sub-case 3a.
@@ -116,6 +126,7 @@ func BaselineOrbit(
 		if hzco > minOrbit {
 			minOrbit = hzco
 		}
+
 		v := r.Roll("2D")
 		if minOrbit >= 1.0 {
 			orbit = hzco - float64(baselineN) + float64(totalWorlds) + float64(v-2)/10.0
@@ -125,6 +136,7 @@ func BaselineOrbit(
 	default:
 		// Sub-case 3c (baselineN > totalWorlds).
 		v := r.Roll("2D")
+
 		firstForm := hzco - float64(baselineN) + float64(totalWorlds)
 		if firstForm >= 1.0 {
 			orbit = firstForm + float64(v-7)/5.0
@@ -140,9 +152,11 @@ func BaselineOrbit(
 			}
 		}
 	}
+
 	if !primary.Contains(orbit) {
 		orbit = snapToAvailable(r, primary, orbit)
 	}
+
 	return orbit
 }
 
@@ -160,10 +174,14 @@ func snapToAvailable(r roller.Roller, primary Group, want float64) float64 {
 	if len(primary.Intervals) == 0 || primary.Contains(want) {
 		return want
 	}
+
 	bestDist := math.Inf(1)
+
 	var best, direction float64
+
 	for _, iv := range primary.Intervals {
 		var snap, dir float64
+
 		switch {
 		case want < iv.Min:
 			snap = iv.Min
@@ -175,13 +193,16 @@ func snapToAvailable(r roller.Roller, primary Group, want float64) float64 {
 			snap = want
 			dir = 0
 		}
+
 		if d := math.Abs(snap - want); d < bestDist {
 			bestDist = d
 			best = snap
 			direction = dir
 		}
 	}
+
 	v := r.Roll("2D")
 	magnitude := math.Abs(float64(v-7)) / 10.0
+
 	return best + direction*magnitude
 }

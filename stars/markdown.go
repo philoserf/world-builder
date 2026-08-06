@@ -14,12 +14,15 @@ func RenderClass0IMarkdown(form SurveyForm) string {
 	sb.WriteString("## IISS Class 0/I Survey — Form 0421B-0I\n\n")
 	writeClass0IHeader(&sb, form)
 	writeClass0IStars(&sb, form.Stars)
+
 	if form.Notes != "" {
 		fmt.Fprintf(&sb, "### Notes\n\n%s\n\n", form.Notes)
 	}
+
 	if form.Comments != "" {
 		fmt.Fprintf(&sb, "### Comments\n\n%s\n\n", form.Comments)
 	}
+
 	return sb.String()
 }
 
@@ -41,6 +44,7 @@ func writeClass0IStars(sb *strings.Builder, stars []SurveyComponent) {
 	sb.WriteString("### Stars\n\n")
 	sb.WriteString("| Component | Class | Mass | Temperature | Diameter | Luminosity | Orbit | AU | Eccentricity | Period (y) | HZCO |\n")
 	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|\n")
+
 	for _, c := range stars {
 		// Mass and Luminosity always render with a value (composites sum to non-zero);
 		// other numerics use formatFloatNonZero so 0 → em-dash for "not applicable".
@@ -59,6 +63,7 @@ func writeClass0IStars(sb *strings.Builder, stars []SurveyComponent) {
 			formatFloatNonZero(c.HZCO, 2),
 		)
 	}
+
 	sb.WriteString("\n")
 }
 
@@ -67,6 +72,7 @@ func emDashIfEmpty(s string) string {
 	if s == "" {
 		return "—"
 	}
+
 	return s
 }
 
@@ -82,5 +88,6 @@ func formatFloatNonZero(v float64, prec int) string {
 	if v == 0 {
 		return "—"
 	}
+
 	return fmt.Sprintf("%.*f", prec, v)
 }

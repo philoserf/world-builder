@@ -46,13 +46,16 @@ func SelectExoticLiquid(meanK float64, atmCode int) string {
 	if !isExoticAtmCode(atmCode) {
 		return ""
 	}
+
 	bestCode := ""
 	bestAbundance := -1
 	bestBoiling := math.Inf(1) // sentinel makes tie-break direction self-evident
+
 	for _, l := range PossibleExoticLiquids {
 		if meanK < l.MeltingK || meanK > l.BoilingK {
 			continue
 		}
+
 		if l.Abundance > bestAbundance ||
 			(l.Abundance == bestAbundance && l.BoilingK < bestBoiling) {
 			bestCode = l.Code
@@ -60,5 +63,6 @@ func SelectExoticLiquid(meanK float64, atmCode int) string {
 			bestBoiling = l.BoilingK
 		}
 	}
+
 	return bestCode
 }

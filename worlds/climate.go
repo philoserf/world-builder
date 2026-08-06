@@ -31,6 +31,7 @@ func ApplyClimate(r roller.Roller, u *Universe) error {
 			return fmt.Errorf("worlds: stage5 climate %s: %w", body.Designation, err)
 		}
 	}
+
 	return nil
 }
 
@@ -42,26 +43,33 @@ func initialAtmosphere(r roller.Roller, body *Body, ageGyr float64) (Atmosphere,
 	if body == nil || body.Kind == BodyEmpty {
 		return Atmosphere{}, false, nil
 	}
+
 	host := body
 	if body.Kind == BodyMoon && body.Parent != nil {
 		host = body.Parent
 	}
+
 	if !host.HZ {
 		return Atmosphere{}, false, nil
 	}
+
 	if body.GGClass != NotGasGiant {
 		return Atmosphere{}, false, nil
 	}
+
 	switch body.SizeCode {
 	case "", "0", "R":
 		return Atmosphere{}, false, nil
 	}
+
 	hzco := host.Group.HZCO()
 	offset := host.Orbit - hzco
+
 	atmoCode, err := RollAtmoCode(r, body.SizeCode, offset)
 	if err != nil {
 		return Atmosphere{}, false, fmt.Errorf("atmo code: %w", err)
 	}
+
 	atmo := Atmosphere{Code: atmoCode}
 	// Subtype is rolled for A (10) from the WBH p.85 Exotic Atmosphere
 	// Subtype table, for B (11) / C (12) from the WBH p.89 Corrosive and
@@ -76,40 +84,50 @@ func initialAtmosphere(r roller.Roller, body *Body, ageGyr float64) (Atmosphere,
 		if serr != nil {
 			return Atmosphere{}, false, fmt.Errorf("atmo subtype: %w", serr)
 		}
+
 		atmo.Subtype = st
 	case 11, 12: // B — Corrosive / C — Insidious
 		st, serr := RollCorrosiveInsidiousSubtype(r, body.SizeCode, host.Orbit, hzco, atmoCode == 12, false)
 		if serr != nil {
 			return Atmosphere{}, false, fmt.Errorf("atmo subtype: %w", serr)
 		}
+
 		atmo.Subtype = st
 	case 15: // F — Unusual
 		grav := 0.0
 		if body.Physical != nil {
 			grav = body.Physical.Gravity
 		}
+
 		st, serr := RollUnusualSubtype(r, grav)
 		if serr != nil {
 			return Atmosphere{}, false, fmt.Errorf("atmo subtype: %w", serr)
 		}
+
 		atmo.Subtype = st
 	}
+
 	press, perr := RollTotalPressure(r, atmoCode, atmo.Subtype)
 	if perr != nil {
 		return Atmosphere{}, false, fmt.Errorf("pressure: %w", perr)
 	}
+
 	atmo.Pressure = press
+
 	if atmoCode >= 2 && atmoCode <= 9 {
 		frac, ferr := RollOxygenFraction(r, ageGyr)
 		if ferr != nil {
 			return Atmosphere{}, false, fmt.Errorf("oxygen: %w", ferr)
 		}
+
 		atmo.OxygenPartialPressure = frac * press
 	}
+
 	if body.Physical != nil {
 		meanT := tempRangeMidpointK(HZCOOffsetToTempRange(host.Orbit, hzco))
 		atmo.ScaleHeight = DeriveScaleHeight(meanT, body.Physical.Gravity)
 	}
+
 	return atmo, true, nil
 }
 
@@ -130,6 +148,7 @@ func tempRangeMidpointK(t TempRange) float64 {
 	case TempFrozen:
 		return 100
 	}
+
 	return 288
 }
 
@@ -157,15 +176,18 @@ func ApplyClimatePasses(r roller.Roller, body *Body, sys stars.System) error {
 	if err != nil {
 		return err
 	}
+
 	if !eligible {
 		return nil
 	}
+
 	body.Atmosphere = &atmo
 
 	host := body
 	if body.Kind == BodyMoon && body.Parent != nil {
 		host = body.Parent
 	}
+
 	hzco := host.Group.HZCO()
 	tempRange := HZCOOffsetToTempRange(host.Orbit, hzco)
 
@@ -173,6 +195,7 @@ func ApplyClimatePasses(r roller.Roller, body *Body, sys stars.System) error {
 	if herr != nil {
 		return fmt.Errorf("hydro: %w", herr)
 	}
+
 	body.Hydrographics = &hydro
 
 	parent := body.Parent
@@ -185,6 +208,7 @@ func ApplyClimatePasses(r roller.Roller, body *Body, sys stars.System) error {
 	if err := climatePass(r, body, sys, parent, 2); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -195,11 +219,13 @@ func climatePass(r roller.Roller, body *Body, sys stars.System, parent *Body, pa
 	if err != nil {
 		return fmt.Errorf("temperature pass %d: %w", pass, err)
 	}
+
 	body.Temperature = temp
 
 	body.Geology = computePartialGeology(body, sys, body.Kind == BodyMoon)
 
 	ApplyInherentTempAddition(temp, body.Geology.InherentTemperatureK)
+
 	if body.Physical != nil {
 		body.Atmosphere.ScaleHeight = DeriveScaleHeight(temp.MeanK, body.Physical.Gravity)
 	}
@@ -207,5 +233,6 @@ func climatePass(r roller.Roller, body *Body, sys stars.System, parent *Body, pa
 	if err := RederiveAtmosphereHydrographics(r, body, sys); err != nil {
 		return fmt.Errorf("rederive pass %d: %w", pass, err)
 	}
+
 	return nil
 }

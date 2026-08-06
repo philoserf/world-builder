@@ -9,6 +9,7 @@ import (
 
 func TestAllocateOrbitsByStar_SingleStar(t *testing.T) {
 	t.Parallel()
+
 	g := Group{
 		Designation: "A",
 		Members:     []stars.Star{{LuminosityClass: stars.V}},
@@ -17,10 +18,12 @@ func TestAllocateOrbitsByStar_SingleStar(t *testing.T) {
 	}
 	avail := Result{Groups: []Group{g}}
 	counts := Counts{GasGiants: 4, PlanetoidBelts: 1, Terrestrials: 4, Total: 9}
+
 	got, err := AllocateOrbitsByStar(avail, counts)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if len(got) != 1 {
 		t.Fatalf("allocations = %d, want 1", len(got))
 	}
@@ -28,6 +31,7 @@ func TestAllocateOrbitsByStar_SingleStar(t *testing.T) {
 	if got[0].TotalStarOrbits != 20 {
 		t.Errorf("TotalStarOrbits = %d, want 20", got[0].TotalStarOrbits)
 	}
+
 	if got[0].AllocatedWorlds != 9 {
 		t.Errorf("AllocatedWorlds = %d, want 9", got[0].AllocatedWorlds)
 	}
@@ -45,13 +49,16 @@ func TestAllocateOrbitsByStar_NoPriorAllowable_NoPlusOne(t *testing.T) {
 	}
 	avail := Result{Groups: []Group{g}}
 	counts := Counts{Total: 5}
+
 	got, err := AllocateOrbitsByStar(avail, counts)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got[0].TotalStarOrbits != 0 {
 		t.Errorf("TotalStarOrbits = %d, want 0", got[0].TotalStarOrbits)
 	}
+
 	if got[0].AllocatedWorlds != 5 {
 		t.Errorf("AllocatedWorlds = %d, want 5 (last star gets remainder)", got[0].AllocatedWorlds)
 	}
@@ -69,16 +76,20 @@ func TestAllocateOrbitsByStar_PairGetsNoPlusOne(t *testing.T) {
 	avail := Result{Groups: []Group{g}}
 	// Total should floor (4.49 + 3.0 + 5.9 = 13.39) → 13.
 	counts := Counts{Total: 13}
+
 	got, err := AllocateOrbitsByStar(avail, counts)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got[0].TotalStarOrbits != 13 {
 		t.Errorf("TotalStarOrbits = %d, want 13 (pair gets no +1)", got[0].TotalStarOrbits)
 	}
+
 	if got[0].AllocatedWorlds != 13 {
 		t.Errorf("AllocatedWorlds = %d, want 13", got[0].AllocatedWorlds)
 	}
+
 	if math.Abs(g.Total()-13.39) > 0.01 {
 		t.Errorf("(sanity) g.Total() = %v, want 13.39", g.Total())
 	}

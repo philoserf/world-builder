@@ -40,20 +40,26 @@ func TestRollGasGiantSize_Classes(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			r := roller.NewScripted(tc.dice...)
+
 			got, err := RollGasGiantSize(r, tc.dms)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
+
 			if got.Class != tc.wantClass {
 				t.Errorf("Class = %v, want %v", got.Class, tc.wantClass)
 			}
+
 			if got.DiameterCode != tc.wantDiamCode {
 				t.Errorf("DiameterCode = %q, want %q", got.DiameterCode, tc.wantDiamCode)
 			}
+
 			if math.Abs(got.DiameterEarth-tc.wantDiamEarth) > 1e-9 {
 				t.Errorf("DiameterEarth = %v, want %v", got.DiameterEarth, tc.wantDiamEarth)
 			}
+
 			if math.Abs(got.MassEarth-tc.wantMassEarth) > 1e-9 {
 				t.Errorf("MassEarth = %v, want %v", got.MassEarth, tc.wantMassEarth)
 			}
@@ -67,20 +73,24 @@ func TestRollGasGiantSize_DMs(t *testing.T) {
 
 	// selector 1D=3, dms=-1 → 2 → Small; D3=1, D3=2 → diam=3; 1D=4 → mass=25
 	r := roller.NewScripted(3, 1, 2, 4)
+
 	got, err := RollGasGiantSize(r, -1)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+
 	if got.Class != GasGiantSmall {
 		t.Errorf("Class with dms=-1 = %v, want GasGiantSmall (selector 3-1=2 → Small)", got.Class)
 	}
 
 	// selector 1D=4, dms=-2 → 2 → Small; D3=1, D3=2 → diam=3; 1D=4 → mass=25
 	r = roller.NewScripted(4, 1, 2, 4)
+
 	got, err = RollGasGiantSize(r, -2)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+
 	if got.Class != GasGiantSmall {
 		t.Errorf("Class with dms=-2 = %v, want GasGiantSmall (selector 4-2=2 → Small)", got.Class)
 	}
@@ -95,16 +105,20 @@ func TestRollGasGiantSize_LargeMassClamp(t *testing.T) {
 	t.Parallel()
 
 	r := roller.NewScripted(5, 18, 3, 18, 7)
+
 	got, err := RollGasGiantSize(r, 0)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+
 	if got.Class != GasGiantLarge {
 		t.Errorf("Class = %v, want GasGiantLarge", got.Class)
 	}
+
 	if got.DiameterCode != "J" {
 		t.Errorf("DiameterCode = %q, want \"J\" (eHex 18)", got.DiameterCode)
 	}
+
 	if math.Abs(got.MassEarth-3000) > 1e-9 {
 		t.Errorf("MassEarth = %v, want 3000 (clamped from 3300 via 4000-200×5)", got.MassEarth)
 	}
@@ -120,6 +134,7 @@ func TestRollGasGiantSize_LargeMassClamp(t *testing.T) {
 // Zed dice come from p.56 Size Rolls column.
 func TestRollGasGiantSize_ZedExamples(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		name          string
 		dice          []int
@@ -158,20 +173,26 @@ func TestRollGasGiantSize_ZedExamples(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			r := roller.NewScripted(tc.dice...)
+
 			got, err := RollGasGiantSize(r, tc.dms)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
+
 			if got.Class != tc.wantClass {
 				t.Errorf("Class = %v, want %v", got.Class, tc.wantClass)
 			}
+
 			if got.DiameterCode != tc.wantDiamCode {
 				t.Errorf("DiameterCode = %q, want %q", got.DiameterCode, tc.wantDiamCode)
 			}
+
 			if math.Abs(got.DiameterEarth-tc.wantDiamEarth) > 1e-9 {
 				t.Errorf("DiameterEarth = %v, want %v", got.DiameterEarth, tc.wantDiamEarth)
 			}
+
 			if math.Abs(got.MassEarth-tc.wantMassEarth) > 1e-9 {
 				t.Errorf("MassEarth = %v, want %v", got.MassEarth, tc.wantMassEarth)
 			}

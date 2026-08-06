@@ -41,6 +41,7 @@ func PresenceDM(primary Star) int {
 			return -1
 		}
 	}
+
 	return 0
 }
 
@@ -56,7 +57,9 @@ func RollPresence(r roller.Roller, primary Star, oc OrbitClass) bool {
 			return false
 		}
 	}
+
 	natural := r.Roll("2D")
+
 	return natural+PresenceDM(primary) >= MultipleStarsPresenceThreshold
 }
 
@@ -80,8 +83,10 @@ func RollNonPrimaryDescriptor(r roller.Roller, parent Star, role NonPrimaryRole)
 	if parent.LuminosityClass == III || parent.LuminosityClass == IV {
 		natural--
 	}
+
 	natural = max(2, min(12, natural))
 	row := NonPrimaryStarDetermination[natural]
+
 	switch role {
 	case RoleSecondary:
 		return row.Secondary
@@ -92,6 +97,7 @@ func RollNonPrimaryDescriptor(r roller.Roller, parent Star, role NonPrimaryRole)
 	case RoleOther:
 		return row.Other
 	}
+
 	return ""
 }
 
@@ -139,7 +145,7 @@ func GenerateCompanionStar(r roller.Roller, parent Star, descriptor string) (Sta
 		// "Other" requires the caller to make a second roll on the Other
 		// column and re-dispatch. Surface the contract: return an error
 		// describing what the caller should do next.
-		return Star{}, fmt.Errorf("stars: GenerateCompanionStar(\"Other\"): caller must reroll on Other column")
+		return Star{}, errors.New("stars: GenerateCompanionStar(\"Other\"): caller must reroll on Other column")
 	case "D":
 		return generateWhiteDwarfStub(parent), nil
 	case "BD":
@@ -173,20 +179,24 @@ func nextCoolerLetter(letter SpectralLetter) SpectralLetter {
 			return letterCoolerOrder[i+1]
 		}
 	}
+
 	return 0
 }
 
 func generateSibling(r roller.Roller, parent Star) (Star, error) {
 	delta := r.Roll("1D")
 	letter := parent.SpectralType.Letter
+
 	subtype := parent.SpectralType.Subtype + delta
 	for subtype > 9 {
 		next := nextCoolerLetter(letter)
 		if next == 0 {
 			// Already at M9; clamp.
 			subtype = 9
+
 			break
 		}
+
 		letter = next
 		subtype -= 10
 	}
@@ -202,6 +212,7 @@ func generateSibling(r roller.Roller, parent Star) (Star, error) {
 	case VI:
 		letter = ApplyClassVILetterConstraint(letter)
 	}
+
 	st := SpectralType{Letter: letter, Subtype: subtype}
 	out := Star{
 		Kind:            parent.Kind,
@@ -219,16 +230,19 @@ func generateLesser(r roller.Roller, parent Star) (Star, error) {
 		// Parent is already M; lesser stays M with subtype rerolled.
 		letter = 'M'
 	}
+
 	switch parent.LuminosityClass {
 	case IV:
 		letter = ApplyClassIVLetterConstraint(letter)
 	case VI:
 		letter = ApplyClassVILetterConstraint(letter)
 	}
+
 	subtype, err := RollSubtype(r, letter, parent.LuminosityClass)
 	if err != nil {
 		return Star{}, err
 	}
+
 	return Star{
 		Kind:            parent.Kind,
 		SpectralType:    SpectralType{Letter: letter, Subtype: subtype},
@@ -249,6 +263,7 @@ func generateRandom(r roller.Roller, parent Star) (Star, error) {
 		// separate redirect to a non-V luminosity class.
 		return generateRandomSpecial(r, parent)
 	}
+
 	if err != nil {
 		return Star{}, err
 	}
@@ -256,16 +271,19 @@ func generateRandom(r roller.Roller, parent Star) (Star, error) {
 	if isHotterOrEqualLetter(letter, parent.SpectralType.Letter) {
 		return generateLesser(r, parent)
 	}
+
 	switch lc {
 	case IV:
 		letter = ApplyClassIVLetterConstraint(letter)
 	case VI:
 		letter = ApplyClassVILetterConstraint(letter)
 	}
+
 	subtype, err := RollSubtype(r, letter, lc)
 	if err != nil {
 		return Star{}, err
 	}
+
 	return Star{
 		Kind:            parent.Kind,
 		SpectralType:    SpectralType{Letter: letter, Subtype: subtype},
@@ -286,13 +304,16 @@ func generateRandomSpecial(r roller.Roller, parent Star) (Star, error) {
 	if err != nil {
 		return Star{}, err
 	}
+
 	if lc == "Giants" {
 		giantClass, gerr := RollGiantClass(r)
 		if gerr != nil {
 			return Star{}, gerr
 		}
+
 		lc = giantClass
 	}
+
 	if lc == "" {
 		// Special column never yields a final Kind (no BD/D/Peculiar
 		// cells); this branch is unreachable today but guards against
@@ -305,16 +326,19 @@ func generateRandomSpecial(r roller.Roller, parent Star) (Star, error) {
 	if err != nil {
 		return Star{}, err
 	}
+
 	switch lc {
 	case IV:
 		letter = ApplyClassIVLetterConstraint(letter)
 	case VI:
 		letter = ApplyClassVILetterConstraint(letter)
 	}
+
 	subtype, err := RollSubtype(r, letter, lc)
 	if err != nil {
 		return Star{}, err
 	}
+
 	return Star{
 		Kind:            kindForClass(lc),
 		SpectralType:    SpectralType{Letter: letter, Subtype: subtype},
@@ -325,17 +349,21 @@ func generateRandomSpecial(r roller.Roller, parent Star) (Star, error) {
 
 func isHotterOrEqualLetter(a, b SpectralLetter) bool {
 	idxA, idxB := -1, -1
+
 	for i, l := range letterCoolerOrder {
 		if l == a {
 			idxA = i
 		}
+
 		if l == b {
 			idxB = i
 		}
 	}
+
 	if idxA == -1 || idxB == -1 {
 		return false
 	}
+
 	return idxA <= idxB
 }
 
@@ -383,11 +411,13 @@ func AssignDesignations(sys *System) {
 	// Walk orbit classes in book order: Close, Near, Far.
 	letters := []string{"B", "C", "D"}
 	li := 0
+
 	for _, oc := range []OrbitClass{OrbitClose, OrbitNear, OrbitFar} {
 		idx := findCompanionByParent(sys, -1, oc)
 		if idx < 0 {
 			continue
 		}
+
 		letter := letters[li]
 		li++
 		// Does this star have its own OrbitCompanion child?
@@ -409,5 +439,6 @@ func findCompanionByParent(sys *System, parentIdx int, oc OrbitClass) int {
 			return i
 		}
 	}
+
 	return -1
 }

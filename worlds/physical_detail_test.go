@@ -24,16 +24,20 @@ func TestZed_ApplyStage3(t *testing.T) {
 		if err != nil {
 			t.Fatalf("seed %d: GenerateSystemPlacement: %v", seed, err)
 		}
+
 		u := &worlds.Universe{System: sys, Placement: sp}
 		if err := worlds.ApplyDetailFrontEnd(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyDetailFrontEnd: %v", seed, err)
 		}
+
 		if err := worlds.ApplyBodyPhysical(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyBodyPhysical: %v", seed, err)
 		}
+
 		if err := worlds.ApplyBeltDetails(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyBeltDetails: %v", seed, err)
 		}
+
 		if err := worlds.ApplyMoonRefinement(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyMoonRefinement: %v", seed, err)
 		}
@@ -47,10 +51,12 @@ func TestZed_ApplyStage3(t *testing.T) {
 					t.Errorf("seed %d: bodies[%d] (%s, size %s) missing Physical",
 						seed, i, body.Designation, body.SizeCode)
 				}
+
 				if body.MassEarth == 0 {
 					t.Errorf("seed %d: bodies[%d] (%s) MassEarth = 0", seed, i, body.Designation)
 				}
 			}
+
 			for j, child := range body.Children {
 				if child.GGClass == worlds.NotGasGiant && child.SizeCode != "" && child.SizeCode != "0" && child.SizeCode != "R" && child.SizeCode != "S" {
 					if child.Physical == nil {

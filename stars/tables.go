@@ -45,6 +45,7 @@ type ClassRow struct {
 // the cell is absent.
 func (r ClassRow) Get(lc LuminosityClass) (float64, bool) {
 	var p *float64
+
 	switch lc {
 	case Ia:
 		p = r.Ia
@@ -61,9 +62,11 @@ func (r ClassRow) Get(lc LuminosityClass) (float64, bool) {
 	case VI:
 		p = r.VI
 	}
+
 	if p == nil {
 		return 0, false
 	}
+
 	return *p, true
 }
 

@@ -60,13 +60,16 @@ func TestRollBasicAxialTilt_Rows2to9(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.scripts...)
+
 			got, isExtreme, err := RollBasicAxialTilt(r)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if isExtreme {
 				t.Fatal("did not expect extreme dispatch for 2D < 10")
 			}
+
 			if math.Abs(got-c.want) > c.delta {
 				t.Errorf("got %v, want %v", got, c.want)
 			}
@@ -77,13 +80,16 @@ func TestRollBasicAxialTilt_Rows2to9(t *testing.T) {
 func TestRollBasicAxialTilt_DispatchesToExtreme(t *testing.T) {
 	// 2D=10 → triggers Extreme dispatch.
 	r := roller.NewScripted(10)
+
 	tilt, isExtreme, err := RollBasicAxialTilt(r)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !isExtreme {
 		t.Errorf("expected extreme dispatch for 2D=10")
 	}
+
 	if tilt != 0 {
 		t.Errorf("expected sentinel 0 from RollBasicAxialTilt on extreme dispatch, got %v", tilt)
 	}
@@ -111,10 +117,12 @@ func TestRollExtremeAxialTilt_Rows(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.scripts...)
+
 			got, err := RollExtremeAxialTilt(r)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if math.Abs(got-c.want) > c.delta {
 				t.Errorf("got %v, want %v", got, c.want)
 			}
@@ -144,15 +152,19 @@ func TestGenerateAxialTilt_ZedPrime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if at == nil {
 		t.Fatal("expected non-nil AxialTilt")
 	}
+
 	if math.Abs(at.Degrees-73.65) > 0.05 {
 		t.Errorf("Degrees: got %v, want 73.65", at.Degrees)
 	}
+
 	if math.Abs(at.BaselineDegrees-73.65) > 0.05 {
 		t.Errorf("BaselineDegrees: got %v, want 73.65", at.BaselineDegrees)
 	}
+
 	if at.Retrograde {
 		t.Errorf("expected prograde (tilt < 90°), got Retrograde=true")
 	}
@@ -169,13 +181,16 @@ func TestGenerateAxialTilt_RetrogradeAbove90(t *testing.T) {
 	)
 	dp := &Body{SizeCode: "5"}
 	dp.Kind = BodyTerrestrial
+
 	at, err := GenerateAxialTilt(r, dp)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !at.Retrograde {
 		t.Errorf("expected retrograde for tilt 120°")
 	}
+
 	if math.Abs(at.Degrees-120) > 0.05 {
 		t.Errorf("Degrees: got %v, want 120", at.Degrees)
 	}
@@ -184,10 +199,12 @@ func TestGenerateAxialTilt_RetrogradeAbove90(t *testing.T) {
 func TestGenerateAxialTilt_NilForEmptyBody(t *testing.T) {
 	r := roller.NewScripted()
 	dp := &Body{}
+
 	at, err := GenerateAxialTilt(r, dp)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if at != nil {
 		t.Errorf("expected nil for empty body, got %+v", at)
 	}

@@ -54,10 +54,12 @@ func GenerateWithRollerOpts(r roller.Roller, opts GenerateOpts) (Universe, error
 	if err != nil {
 		return Universe{}, fmt.Errorf("worlds: stars: %w", err)
 	}
+
 	sp, err := GenerateSystemPlacement(r, sys)
 	if err != nil {
 		return Universe{}, fmt.Errorf("worlds: placement: %w", err)
 	}
+
 	u := Universe{System: sys, Placement: sp}
 	for _, step := range []func(roller.Roller, *Universe) error{
 		ApplyDetailFrontEnd,
@@ -76,8 +78,10 @@ func GenerateWithRollerOpts(r roller.Roller, opts GenerateOpts) (Universe, error
 			return u, err
 		}
 	}
+
 	ApplyHabitability(&u)
 	AggregateSystem(&u)
 	BuildIISSForms(&u)
+
 	return u, nil
 }

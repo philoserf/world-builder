@@ -41,7 +41,7 @@ func TestAssignPlanetDesignations_BeltSkip(t *testing.T) {
 }
 
 // TestAssignPlanetDesignations_PerGroupReset: WBH p.53 — "Each new set
-// of stars resets the planetary enumeration to 'I'."
+// of stars resets the planetary enumeration to 'I'.".
 func TestAssignPlanetDesignations_PerGroupReset(t *testing.T) {
 	t.Parallel()
 
@@ -108,6 +108,7 @@ func TestAssignMoonDesignations_AlphabeticOrder(t *testing.T) {
 				i, bodies[0].Children[i].Designation, w)
 		}
 	}
+
 	wantAabV := []string{"Aab V a", "Aab V b", "Aab V c", "Aab V d", "Aab V e", "Aab V f"}
 	for i, w := range wantAabV {
 		if bodies[1].Children[i].Designation != w {
@@ -121,6 +122,7 @@ func TestAssignMoonDesignations_AlphabeticOrder(t *testing.T) {
 // doesn't panic and leaves Designation empty.
 func TestAssignMoonDesignations_NoMoonsNoPanic(t *testing.T) {
 	t.Parallel()
+
 	bodies := []Body{
 		{Designation: "Aab III", Children: nil},
 		{Designation: "Aab VII", Children: []*Body{}},
@@ -156,9 +158,11 @@ func TestMarkHZ(t *testing.T) {
 	if !bodies[0].HZ {
 		t.Errorf("orbit 0 with HZCO 0 should be HZ-tagged")
 	}
+
 	if bodies[1].HZ {
 		t.Errorf("orbit 1.5 with HZCO 0 should not be HZ-tagged")
 	}
+
 	if bodies[2].HZ {
 		t.Errorf("BodyEmpty should never be HZ-tagged")
 	}

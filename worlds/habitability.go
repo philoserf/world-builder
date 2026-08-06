@@ -43,7 +43,9 @@ func ComputeHabitability(body *Body) Habitability {
 	if body == nil {
 		return Habitability{Rating: 0}
 	}
+
 	var notes []string
+
 	addNote := func(s string) {
 		if s != "" {
 			notes = append(notes, s)
@@ -52,21 +54,27 @@ func ComputeHabitability(body *Body) Habitability {
 
 	sizeDM, sizeNote := habitabilitySizeDM(SizeAsInt(body.SizeCode))
 	addNote(sizeNote)
+
 	atmDM, atmNote := habitabilityAtmDM(body)
 	addNote(atmNote)
+
 	hydroDM, hydroNote := habitabilityHydroDM(body)
 	addNote(hydroNote)
+
 	tidalDM, tidalNote := habitabilityTidalLockDM(body)
 	addNote(tidalNote)
+
 	tempDM, tempNotes := habitabilityTempDM(body)
 	for _, n := range tempNotes {
 		addNote(n)
 	}
+
 	gravDM, gravNote := habitabilityGravityDM(body)
 	addNote(gravNote)
 
 	dm := sizeDM + atmDM + hydroDM + tidalDM + tempDM + gravDM
 	rating := min(max(10+dm, 0), 12)
+
 	return Habitability{Rating: rating, Notes: strings.Join(notes, "; ")}
 }
 
@@ -80,6 +88,7 @@ func habitabilitySizeDM(size int) (int, string) {
 	case size >= 9:
 		return +1, "Additional surface area"
 	}
+
 	return 0, ""
 }
 
@@ -92,6 +101,7 @@ func habitabilityAtmDM(body *Body) (int, string) {
 	if body.Atmosphere != nil {
 		atmCode = body.Atmosphere.Code
 	}
+
 	switch atmCode {
 	case 0, 1, 10: // 0, 1, A
 		return -8, "Non-breathable atmosphere"
@@ -110,6 +120,7 @@ func habitabilityAtmDM(body *Body) (int, string) {
 	case 12, 15: // C, F+
 		return -12, "Very hostile Atmosphere"
 	}
+
 	return 0, ""
 }
 
@@ -122,6 +133,7 @@ func habitabilityHydroDM(body *Body) (int, string) {
 	if body.Hydrographics != nil {
 		hydroCode = body.Hydrographics.Code
 	}
+
 	switch {
 	case hydroCode == 0:
 		return -4, "Lack of accessible liquid water"
@@ -132,6 +144,7 @@ func habitabilityHydroDM(body *Body) (int, string) {
 	case hydroCode >= 10:
 		return -2, "Very little useable land surface area"
 	}
+
 	return 0, "" // 4-8
 }
 
@@ -143,9 +156,11 @@ func habitabilityTidalLockDM(body *Body) (int, string) {
 	if body.TidalLock == nil {
 		return 0, ""
 	}
+
 	if body.TidalLock.IsTwilightZone {
 		return -2, "Very little useable land surface area"
 	}
+
 	return 0, ""
 }
 
@@ -161,32 +176,46 @@ func habitabilityTempDM(body *Body) (int, []string) {
 	if body.Temperature == nil {
 		return 0, nil
 	}
+
 	dm := 0
+
 	var notes []string
+
 	t := body.Temperature
 	if t.HighK > 323 {
 		dm += -2
+
 		notes = append(notes, "Too hot at times")
 	}
+
 	if t.HighK > 0 && t.HighK < 279 {
 		dm += -2
+
 		notes = append(notes, "Too cold all of the time")
 	}
+
 	if t.MeanK > 323 {
 		dm += -4
+
 		notes = append(notes, "Too hot most of the time")
 	} else if t.MeanK >= 304 && t.MeanK <= 323 {
 		dm += -2
+
 		notes = append(notes, "Too hot most of the time")
 	}
+
 	if t.MeanK > 0 && t.MeanK < 273 {
 		dm += -2
+
 		notes = append(notes, "Too cold most of the time")
 	}
+
 	if t.LowK > 0 && t.LowK < 200 {
 		dm += -2
+
 		notes = append(notes, "Much too cold some of the time")
 	}
+
 	return dm, notes
 }
 
@@ -205,12 +234,15 @@ func habitabilityTempDM(body *Body) (int, []string) {
 func habitabilityGravityDM(body *Body) (int, string) {
 	if body.Physical == nil {
 		size := SizeAsInt(body.SizeCode)
+
 		diff := 6 - size
 		if diff < 0 {
 			diff = -diff
 		}
+
 		return 1 - diff, "" // no book description for the fallback formula
 	}
+
 	g := body.Physical.Gravity
 	switch {
 	case g < 0.2:
@@ -228,6 +260,7 @@ func habitabilityGravityDM(body *Body) (int, string) {
 	case g > 2.0:
 		return -6, "Gravity too high for acclimation"
 	}
+
 	return 0, "" // 0.9-1.1 (Earth-like baseline)
 }
 
@@ -285,6 +318,7 @@ func ApplyHabitability(u *Universe) {
 		if !habitabilityApplies(body) {
 			continue
 		}
+
 		h := ComputeHabitability(body)
 		body.Habitability = &h
 	}
@@ -298,11 +332,14 @@ func habitabilityApplies(body *Body) bool {
 	if body == nil || body.Kind == BodyEmpty {
 		return false
 	}
+
 	if body.Kind == BodyGasGiant || body.Kind == BodyPlanetoidBelt {
 		return false
 	}
+
 	if body.SizeCode == "0" {
 		return false
 	}
+
 	return true
 }

@@ -21,6 +21,7 @@ func AssignPlanetDesignations(bodies []Body) {
 	currentGroup := ""
 	planetN := 0
 	beltN := 0
+
 	for i := range bodies {
 		gd := bodies[i].Group.Designation
 		if gd != currentGroup {
@@ -28,6 +29,7 @@ func AssignPlanetDesignations(bodies []Body) {
 			planetN = 0
 			beltN = 0
 		}
+
 		switch bodies[i].Kind {
 		case BodyEmpty:
 			// No designation for empty slots.
@@ -65,15 +67,20 @@ func romanNumeral(n int) string {
 	if n < 1 {
 		return ""
 	}
+
 	values := []int{10, 9, 5, 4, 1}
 	symbols := []string{"X", "IX", "V", "IV", "I"}
+
 	var out strings.Builder
+
 	for i, v := range values {
 		for n >= v {
 			out.WriteString(symbols[i])
+
 			n -= v
 		}
 	}
+
 	return out.String()
 }
 
@@ -89,7 +96,9 @@ func MarkHZ(bodies []Body) {
 		if bodies[i].Kind == BodyEmpty {
 			continue
 		}
+
 		hzco := bodies[i].Group.HZCO()
+
 		o := bodies[i].Orbit
 		if o >= hzco-1.0 && o <= hzco+1.0 {
 			bodies[i].HZ = true

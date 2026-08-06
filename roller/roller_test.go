@@ -6,6 +6,7 @@ import (
 
 func TestSeeded_Deterministic(t *testing.T) {
 	a := NewSeeded(42)
+
 	b := NewSeeded(42)
 	for i := range 20 {
 		ra, rb := a.Roll("2D"), b.Roll("2D")
@@ -50,9 +51,11 @@ func TestScripted_Order(t *testing.T) {
 	if got := r.Roll("2D"); got != 7 {
 		t.Fatalf("first roll = %d, want 7", got)
 	}
+
 	if got := r.Roll("2D"); got != 9 {
 		t.Fatalf("second roll = %d, want 9", got)
 	}
+
 	if got := r.Roll("2D"); got != 11 {
 		t.Fatalf("third roll = %d, want 11", got)
 	}
@@ -61,11 +64,13 @@ func TestScripted_Order(t *testing.T) {
 func TestScripted_PanicsOnExhaustion(t *testing.T) {
 	r := NewScripted(5)
 	r.Roll("2D")
+
 	defer func() {
 		if recover() == nil {
 			t.Fatal("expected panic on exhausted Scripted")
 		}
 	}()
+
 	r.Roll("2D")
 }
 
@@ -74,18 +79,22 @@ func TestFixed_AlwaysSame(t *testing.T) {
 	if r.Roll("2D") != 8 {
 		t.Fatal("Fixed(8).Roll(\"2D\") != 8")
 	}
+
 	if r.Roll("1D") != 8 {
 		t.Fatal("Fixed(8).Roll(\"1D\") != 8")
 	}
+
 	if r.Roll("d100") != 8 {
 		t.Fatal("Fixed(8).Roll(\"d100\") != 8")
 	}
 }
 
 func TestRollerInterface(_ *testing.T) {
-	var _ Roller = NewSeeded(1)
-	var _ Roller = NewScripted(1)
-	var _ Roller = Fixed(1)
+	var (
+		_ Roller = NewSeeded(1)
+		_ Roller = NewScripted(1)
+		_ Roller = Fixed(1)
+	)
 }
 
 // draw pulls n 2D results from r into a slice.
@@ -94,6 +103,7 @@ func draw(r Roller, n int) []int {
 	for i := range out {
 		out[i] = r.Roll("2D")
 	}
+
 	return out
 }
 
@@ -101,11 +111,13 @@ func eq(a, b []int) bool {
 	if len(a) != len(b) {
 		return false
 	}
+
 	for i := range a {
 		if a[i] != b[i] {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -114,6 +126,7 @@ func eq(a, b []int) bool {
 // stable across runs.
 func TestSeededFork_Reproducible(t *testing.T) {
 	a := NewSeeded(42).Fork("A II").Fork("climate")
+
 	b := NewSeeded(42).Fork("A II").Fork("climate")
 	if !eq(draw(a, 30), draw(b, 30)) {
 		t.Fatal("same seed+key produced different child streams")
@@ -125,11 +138,13 @@ func TestSeededFork_Reproducible(t *testing.T) {
 // dice.
 func TestSeededFork_Disjoint(t *testing.T) {
 	root := NewSeeded(42)
+
 	byBody := eq(draw(root.Fork("A II").Fork("climate"), 30),
 		draw(root.Fork("B II").Fork("climate"), 30))
 	if byBody {
 		t.Fatal("different body keys produced identical streams")
 	}
+
 	byFamily := eq(draw(root.Fork("A II").Fork("climate"), 30),
 		draw(root.Fork("A II").Fork("rotation-tilt"), 30))
 	if byFamily {

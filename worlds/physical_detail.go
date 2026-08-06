@@ -25,6 +25,7 @@ func ApplyBodyPhysical(r roller.Roller, u *Universe) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -35,27 +36,34 @@ func generateBodyPhysicalIfTerrestrial(r roller.Roller, body, hostForHZ *Body, s
 	if body.GGClass != NotGasGiant {
 		return nil
 	}
+
 	switch body.SizeCode {
 	case "", "0", "R":
 		return nil
 	}
+
 	hzco := hostForHZ.Group.HZCO()
+
 	beyondHZCO := 0
 	if offset := hostForHZ.Orbit - hzco; offset > 0 {
 		beyondHZCO = int(offset)
 	}
+
 	dms := BodyPhysicalDMs{
 		SizeCode:       body.SizeCode,
 		AtHZCOOrCloser: hostForHZ.HZ,
 		BeyondHZCO:     beyondHZCO,
 		SystemAgeGyr:   sys.Primary.AgeGyr,
 	}
+
 	bp, err := GenerateBodyPhysical(r, body.SizeCode, int(body.DiameterKm), dms)
 	if err != nil {
 		return fmt.Errorf("worlds: stage3 body physical %s: %w", body.Designation, err)
 	}
+
 	body.Physical = &bp
 	body.MassEarth = DeriveMass(bp.Density, body.DiameterKm)
+
 	return nil
 }
 
@@ -72,15 +80,19 @@ func ApplyBeltDetails(r roller.Roller, u *Universe) error {
 		if body.Kind != BodyPlanetoidBelt {
 			continue
 		}
+
 		adjacentToGG, outermostSlot := beltSpanFlags(u.Detail.Bodies, i)
 		hzco := body.Group.HZCO()
 		sub := bodySub(r, body, nil, "belt")
+
 		bd, err := GenerateBeltDetails(sub, body.Orbit, u.Placement.SystemSpread, hzco, u.System.Primary.AgeGyr, adjacentToGG, outermostSlot)
 		if err != nil {
 			return fmt.Errorf("worlds: stage3 belt %s: %w", body.Designation, err)
 		}
+
 		body.Belt = &bd
 	}
+
 	return nil
 }
 
@@ -102,13 +114,17 @@ func ApplyBeltDetails(r roller.Roller, u *Universe) error {
 // does not depend on Detail.Bodies' storage layout.
 func beltSpanFlags(bodies []Body, i int) (adjacentToGG, outermostSlot bool) {
 	belt := &bodies[i]
+
 	var inner, outer *Body // nearest same-group slots by orbit
+
 	outermostSlot = true
+
 	for j := range bodies {
 		b := &bodies[j]
 		if j == i || b.Group.Designation != belt.Group.Designation {
 			continue
 		}
+
 		switch {
 		case b.Orbit < belt.Orbit:
 			if inner == nil || b.Orbit > inner.Orbit {
@@ -118,13 +134,16 @@ func beltSpanFlags(bodies []Body, i int) (adjacentToGG, outermostSlot bool) {
 			if outer == nil || b.Orbit < outer.Orbit {
 				outer = b
 			}
+
 			if b.Kind != BodyEmpty {
 				outermostSlot = false
 			}
 		}
 	}
+
 	adjacentToGG = (inner != nil && inner.Kind == BodyGasGiant) ||
 		(outer != nil && outer.Kind == BodyGasGiant)
+
 	return adjacentToGG, outermostSlot
 }
 
@@ -137,6 +156,7 @@ func ApplyMoonRefinement(r roller.Roller, u *Universe) error {
 		if len(parent.Children) == 0 {
 			continue
 		}
+
 		refineParentMoons(r, parent)
 	}
 	// Ring detail: roll centre/span (WBH p.77) for every ringed body —
@@ -149,6 +169,7 @@ func ApplyMoonRefinement(r roller.Roller, u *Universe) error {
 			body.RingCentrePD, body.RingSpanPD = RollRingProfile(bodySub(r, body, nil, "ring"))
 		}
 	}
+
 	return nil
 }
 
@@ -159,20 +180,25 @@ func refineParentMoons(r roller.Roller, parent *Body) {
 	if planetMass == 0 {
 		return
 	}
+
 	planetDiameter := parent.DiameterKm
 	if parent.GGClass != NotGasGiant && parent.DiameterEarth > 0 {
 		planetDiameter = parent.DiameterEarth * DiameterTerra
 	}
+
 	sumStellarMass := sumStellarMassInterior(parent)
 	au := stars.OrbitToAU(parent.Orbit)
 	_, pd := HillSphere(au, parent.Eccentricity, planetMass, sumStellarMass, planetDiameter)
+
 	limit := HillSphereMoonLimit(pd)
 	if MoonRemovalCheck(limit) {
 		// p.76: all significant moons removed, first promoted to a ring.
 		parent.Children = nil
 		parent.Ring = true
+
 		return
 	}
+
 	mor := MoonOrbitRange(limit, len(parent.Children))
 	// Effective parent size for moon period: terrestrials use Size code;
 	// gas giants use diameter ratio (DiameterEarth × 8 → Earth-units).
@@ -180,11 +206,13 @@ func refineParentMoons(r roller.Roller, parent *Body) {
 	if parent.GGClass != NotGasGiant && parent.DiameterEarth > 0 {
 		effSize = int(parent.DiameterEarth * 8)
 	}
+
 	for j := range parent.Children {
 		csub := bodySub(r, parent.Children[j], parent, "moon-refine")
 		orbit, mr := RollMoonOrbit(csub, mor)
 		parent.Children[j].OrbitPD = orbit
 		parent.Children[j].OrbitKm = orbit * planetDiameter
+
 		parent.Children[j].Retrograde = RollMoonRetrograde(csub, mr, orbit > float64(mor))
 		if effSize > 0 {
 			parent.Children[j].PeriodHours = MoonPeriodHours(orbit, effSize, planetMass)

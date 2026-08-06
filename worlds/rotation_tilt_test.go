@@ -22,19 +22,24 @@ func TestZed_ApplyStage4(t *testing.T) {
 		if err != nil {
 			t.Fatalf("seed %d: GenerateSystemPlacement: %v", seed, err)
 		}
+
 		u := &worlds.Universe{System: sys, Placement: sp}
 		if err := worlds.ApplyDetailFrontEnd(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyDetailFrontEnd: %v", seed, err)
 		}
+
 		if err := worlds.ApplyBodyPhysical(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyBodyPhysical: %v", seed, err)
 		}
+
 		if err := worlds.ApplyBeltDetails(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyBeltDetails: %v", seed, err)
 		}
+
 		if err := worlds.ApplyMoonRefinement(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyMoonRefinement: %v", seed, err)
 		}
+
 		if err := worlds.ApplyRotationTilt(r, u); err != nil {
 			t.Fatalf("seed %d: ApplyRotationTilt: %v", seed, err)
 		}
@@ -45,24 +50,30 @@ func TestZed_ApplyStage4(t *testing.T) {
 			if body.Kind == worlds.BodyEmpty {
 				continue
 			}
+
 			if !body.HasDayLength() {
 				t.Errorf("seed %d: bodies[%d] (%s) missing DayLength", seed, i, body.Designation)
 			}
+
 			if !body.HasAxialTilt() {
 				t.Errorf("seed %d: bodies[%d] (%s) missing AxialTilt", seed, i, body.Designation)
 			}
+
 			if !body.HasTidalEffects() {
 				t.Errorf("seed %d: bodies[%d] (%s) missing TidalEffects", seed, i, body.Designation)
 			}
+
 			for j, child := range body.Children {
 				if !child.HasDayLength() {
 					t.Errorf("seed %d: bodies[%d].Children[%d] (%s) missing DayLength (moon-path silent-zero?)",
 						seed, i, j, child.Designation)
 				}
+
 				if !child.HasAxialTilt() {
 					t.Errorf("seed %d: bodies[%d].Children[%d] (%s) missing AxialTilt",
 						seed, i, j, child.Designation)
 				}
+
 				if !child.HasTidalEffects() {
 					t.Errorf("seed %d: bodies[%d].Children[%d] (%s) missing TidalEffects",
 						seed, i, j, child.Designation)
@@ -156,6 +167,7 @@ func TestApplyRotationTilt_TwoPass(t *testing.T) {
 	if got.TidalLock == nil {
 		t.Fatal("planet.TidalLock is nil: Planet→Moon case did not fire (single-pass ordering bug?)")
 	}
+
 	if got.TidalLock.Case != worlds.TidalLockCasePlanetToMoon {
 		t.Errorf("planet.TidalLock.Case = %v, want TidalLockCasePlanetToMoon", got.TidalLock.Case)
 	}
@@ -164,6 +176,7 @@ func TestApplyRotationTilt_TwoPass(t *testing.T) {
 	if moon.TidalLock == nil {
 		t.Fatal("moon.TidalLock is nil: moon was not evaluated in pass 1")
 	}
+
 	if moon.TidalLock.LockRatio != "1:1" {
 		t.Errorf("moon.TidalLock.LockRatio = %q, want 1:1", moon.TidalLock.LockRatio)
 	}

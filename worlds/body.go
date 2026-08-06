@@ -145,9 +145,11 @@ func (b *Body) RenderSAH() string {
 	if size == "" {
 		size = "?"
 	}
+
 	if !b.HasAtmosphere() || !b.HasHydrographics() {
 		return size + "??"
 	}
+
 	return size + atmosphereCodeChar(b.Atmosphere.Code) + hydroCodeChar(b.Hydrographics.Code)
 }
 
@@ -161,6 +163,7 @@ func (b *Body) StellarOrbit() float64 {
 	if b.Kind == BodyMoon && b.Parent != nil {
 		return b.Parent.Orbit
 	}
+
 	return b.Orbit
 }
 
@@ -173,6 +176,7 @@ func (b *Body) Host() *Body {
 	if b.Kind == BodyMoon && b.Parent != nil {
 		return b.Parent
 	}
+
 	return b
 }
 
@@ -189,11 +193,14 @@ func (b *Body) MassOrDerived() float64 {
 	if b == nil {
 		return 0
 	}
+
 	if b.MassEarth != 0 {
 		return b.MassEarth
 	}
+
 	if b.Physical != nil {
 		return DeriveMass(b.Physical.Density, b.DiameterKm)
 	}
+
 	return 0
 }

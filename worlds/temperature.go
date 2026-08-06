@@ -19,17 +19,21 @@ func MeanTemperatureK(luminosity, albedo, greenhouse, au float64) float64 {
 	if au <= 0 {
 		return 0
 	}
+
 	gFactor := 1 + greenhouse
 	if gFactor < 0.001 {
 		gFactor = 0.001
 	}
+
 	if gFactor > 1.999 {
 		gFactor = 1.999
 	}
+
 	core := luminosity * (1 - albedo) * gFactor / (au * au)
 	if core <= 0 {
 		return 0
 	}
+
 	return 279.0 * math.Pow(core, 0.25)
 }
 
@@ -44,13 +48,16 @@ func CombineTemperatures(temps ...float64) float64 {
 	if len(temps) == 0 {
 		return 0
 	}
+
 	if len(temps) == 1 {
 		return temps[0]
 	}
+
 	sumOf4ths := 0.0
 	for _, t := range temps {
 		sumOf4ths += math.Pow(t, 4)
 	}
+
 	return math.Pow(sumOf4ths, 0.25)
 }
 
@@ -132,6 +139,7 @@ func GenerateTemperature(
 	} else {
 		t.AU = stars.OrbitToAU(body.Orbit)
 	}
+
 	if body.Atmosphere != nil {
 		t.ScaleHeight = body.Atmosphere.ScaleHeight
 	}
@@ -148,6 +156,7 @@ func GenerateTemperature(
 	t.AxialTiltFactor = computeAxialTiltFactor(body)
 	t.RotationFactor = computeRotationFactor(body)
 	t.GeographicFactor = computeGeographicFactor(body)
+
 	t.AtmosphericFactor = 1.0
 	if body.Atmosphere != nil {
 		t.AtmosphericFactor = 1 + body.Atmosphere.Pressure
@@ -157,9 +166,11 @@ func GenerateTemperature(
 	if variance < 0 {
 		variance = 0
 	}
+
 	if variance > 1 {
 		variance = 1
 	}
+
 	t.LuminosityModifier = variance / t.AtmosphericFactor
 	if t.LuminosityModifier > 1 {
 		t.LuminosityModifier = 1
@@ -170,6 +181,7 @@ func GenerateTemperature(
 	if parent != nil {
 		ecc = parent.Eccentricity
 	}
+
 	t.NearAU = t.AU * (1 - ecc)
 	t.FarAU = t.AU * (1 + ecc)
 
@@ -184,10 +196,12 @@ func GenerateTemperature(
 	if body.Atmosphere != nil {
 		bar = body.Atmosphere.Pressure
 	}
+
 	worstMod := 1.0 / (1.0 + bar/2.0)
 	if worstMod > 1 {
 		worstMod = 1
 	}
+
 	worstHighL := t.Luminosity * (1 + worstMod)
 	worstLowL := t.Luminosity * (1 - worstMod)
 	t.WorstHighK = MeanTemperatureK(worstHighL, t.Albedo, t.GreenhouseFactor, t.NearAU)
@@ -199,7 +213,6 @@ func GenerateTemperature(
 	if body.TidalLock != nil &&
 		body.TidalLock.LockRatio == "1:1" &&
 		body.TidalLock.Case == TidalLockCasePlanetToStar {
-
 		t.IsTwilight = true
 		t.TwilightK = t.MeanK // band centerline (rotation factor = 0)
 
@@ -208,6 +221,7 @@ func GenerateTemperature(
 		if brightLumMod > 1 {
 			brightLumMod = 1
 		}
+
 		brightL := t.Luminosity * (1 + brightLumMod)
 		t.BrightSideK = MeanTemperatureK(brightL, t.Albedo, t.GreenhouseFactor, t.NearAU)
 
@@ -216,6 +230,7 @@ func GenerateTemperature(
 		if darkLumMod < 0 {
 			darkLumMod = 0
 		}
+
 		darkL := t.Luminosity * (1 - darkLumMod)
 		t.DarkSideK = MeanTemperatureK(darkL, t.Albedo, t.GreenhouseFactor, t.FarAU)
 	}
@@ -250,6 +265,7 @@ func totalStellarLuminosity(sys stars.System) float64 {
 			total += c.Star.Luminosity
 		}
 	}
+
 	return total
 }
 
@@ -276,6 +292,7 @@ func BasicTemperatureRoll(r roller.Roller, body *Body, sys stars.System) (modifi
 	if len(body.Group.Members) > 0 {
 		hzco = body.Group.HZCO()
 	}
+
 	orbit := body.Orbit
 	if orbit < hzco-1 {
 		dm += 4 + int(math.Floor((hzco-1-orbit)/0.5))
@@ -298,6 +315,7 @@ func BasicTemperatureRoll(r roller.Roller, body *Body, sys stars.System) (modifi
 			// Recompute as 1D+5 per p.109 footnote.
 			kelvin = float64(r.Roll("1D") + 5)
 		}
+
 		if kelvin < 3 {
 			kelvin = 3
 		}
@@ -319,10 +337,12 @@ func computeAxialTiltFactor(body *Body) float64 {
 		if tilt < 0 {
 			tilt = -tilt
 		}
+
 		if tilt > 90 {
 			tilt = 180 - tilt
 		}
 	}
+
 	factor := math.Sin(tilt * math.Pi / 180.0)
 
 	// Local year for halving. For moons this is the moon's own orbit
@@ -339,19 +359,23 @@ func computeAxialTiltFactor(body *Body) float64 {
 			yrs = body.Period.Hours / hoursPerYear
 		}
 	}
+
 	if yrs > 0 && yrs < 0.1 {
 		factor /= 2
 	}
+
 	if yrs > 2 {
 		boost := 0.01 * yrs
 		if boost > 0.25 {
 			boost = 0.25
 		}
+
 		factor += boost
 		if factor > 1.0 {
 			factor = 1.0
 		}
 	}
+
 	return factor
 }
 
@@ -364,21 +388,26 @@ func computeRotationFactor(body *Body) float64 {
 	if body.DayLength == nil {
 		return 0
 	}
+
 	if body.TidalLock != nil &&
 		body.TidalLock.LockRatio == "1:1" &&
 		body.TidalLock.Case == TidalLockCasePlanetToStar {
 		return 1.0
 	}
+
 	solarH := body.DayLength.SolarHours
 	if solarH < 0 {
 		solarH = -solarH
 	}
+
 	if solarH > 2500 {
 		return 1.0
 	}
+
 	if solarH == 0 {
 		return 0
 	}
+
 	return math.Sqrt(solarH) / 50.0
 }
 
@@ -394,7 +423,9 @@ func computeGeographicFactor(body *Body) float64 {
 	if body.Hydrographics == nil {
 		return 0.5 // (10-0)/20 = 0.5 default for missing hydrographics
 	}
+
 	hyd := body.Hydrographics.Code
+
 	factor := float64(10-hyd) / 20.0
 	if body.SurfaceDistribution != nil && hyd >= 2 && hyd <= 8 {
 		switch body.SurfaceDistribution.Description {
@@ -404,5 +435,6 @@ func computeGeographicFactor(body *Body) float64 {
 			factor -= 0.1
 		}
 	}
+
 	return factor
 }

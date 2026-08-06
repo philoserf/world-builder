@@ -13,5 +13,6 @@ func (g Group) HZCO() float64 {
 	if len(g.Members) == 1 {
 		return g.Members[0].HZCO()
 	}
+
 	return stars.CompositeHZCO(g.Members...)
 }

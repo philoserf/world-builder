@@ -21,6 +21,7 @@ func composeSol() stars.System {
 		Temperature:     5772,
 		AgeGyr:          4.6,
 	})
+
 	return stars.System{
 		Primary:            sol,
 		PrimaryDesignation: "A",
@@ -50,6 +51,7 @@ func composeZed() stars.System {
 	cb := stars.Compose(stars.ComposeOpts{
 		Kind: stars.KindWhiteDwarf, Mass: 0.490, Diameter: 0.017, Temperature: 6700,
 	})
+
 	return stars.System{
 		Primary: aa,
 		Companions: []stars.CompanionStar{
@@ -75,6 +77,7 @@ func TestZed_AvailableOrbits(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	if len(got.Groups) != 3 {
 		t.Fatalf("groups = %d, want 3", len(got.Groups))
 	}
@@ -84,9 +87,11 @@ func TestZed_AvailableOrbits(t *testing.T) {
 	if aab.Designation != "Aab" {
 		t.Errorf("groups[0].Designation = %q, want \"Aab\"", aab.Designation)
 	}
+
 	if math.Abs(aab.MAO-0.61) > 0.01 {
 		t.Errorf("Aab MAO = %v, want 0.61", aab.MAO)
 	}
+
 	wantAab := []worlds.Interval{
 		{Min: 0.61, Max: 5.10},
 		{Min: 7.10, Max: 10.10},
@@ -95,6 +100,7 @@ func TestZed_AvailableOrbits(t *testing.T) {
 	if !intervalsEqual(aab.Intervals, wantAab, 0.01) {
 		t.Errorf("Aab intervals = %+v, want %+v", aab.Intervals, wantAab)
 	}
+
 	if math.Abs(aab.Total()-13.39) > 0.05 {
 		t.Errorf("Aab Total = %v, want 13.39", aab.Total())
 	}
@@ -104,13 +110,16 @@ func TestZed_AvailableOrbits(t *testing.T) {
 	if bg.Designation != "B" {
 		t.Errorf("groups[1].Designation = %q, want \"B\"", bg.Designation)
 	}
+
 	if math.Abs(bg.MAO-0.02) > 0.005 {
 		t.Errorf("B MAO = %v, want 0.02", bg.MAO)
 	}
+
 	wantB := []worlds.Interval{{Min: 0.02, Max: 1.10}}
 	if !intervalsEqual(bg.Intervals, wantB, 0.01) {
 		t.Errorf("B intervals = %+v, want %+v", bg.Intervals, wantB)
 	}
+
 	if math.Abs(bg.Total()-1.08) > 0.01 {
 		t.Errorf("B Total = %v, want 1.08", bg.Total())
 	}
@@ -120,13 +129,16 @@ func TestZed_AvailableOrbits(t *testing.T) {
 	if cab.Designation != "Cab" {
 		t.Errorf("groups[2].Designation = %q, want \"Cab\"", cab.Designation)
 	}
+
 	if math.Abs(cab.MAO-0.74) > 0.01 {
 		t.Errorf("Cab MAO = %v, want 0.74", cab.MAO)
 	}
+
 	wantCab := []worlds.Interval{{Min: 0.74, Max: 7.10}}
 	if !intervalsEqual(cab.Intervals, wantCab, 0.01) {
 		t.Errorf("Cab intervals = %+v, want %+v", cab.Intervals, wantCab)
 	}
+
 	if math.Abs(cab.Total()-6.36) > 0.01 {
 		t.Errorf("Cab Total = %v, want 6.36", cab.Total())
 	}
@@ -137,11 +149,13 @@ func intervalsEqual(a, b []worlds.Interval, tol float64) bool {
 	if len(a) != len(b) {
 		return false
 	}
+
 	for i := range a {
 		if math.Abs(a[i].Min-b[i].Min) > tol || math.Abs(a[i].Max-b[i].Max) > tol {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -155,23 +169,29 @@ func TestSol_AvailableOrbits(t *testing.T) {
 		Mass:            1.000, Diameter: 1.000, Temperature: 5772,
 	})
 	sys := stars.System{Primary: sol}
+
 	got, err := worlds.AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	if len(got.Groups) != 1 {
 		t.Fatalf("groups = %d, want 1", len(got.Groups))
 	}
+
 	g := got.Groups[0]
 	if g.Designation != "A" {
 		t.Errorf("Designation = %q, want \"A\"", g.Designation)
 	}
+
 	if math.Abs(g.MAO-0.03) > 0.005 {
 		t.Errorf("MAO = %v, want ~0.03", g.MAO)
 	}
+
 	if len(g.Intervals) != 1 {
 		t.Fatalf("intervals = %d, want 1", len(g.Intervals))
 	}
+
 	if math.Abs(g.Intervals[0].Max-20.0) > 1e-9 {
 		t.Errorf("Max = %v, want 20.0", g.Intervals[0].Max)
 	}
@@ -184,16 +204,21 @@ func TestSol_AvailableOrbits(t *testing.T) {
 
 func TestZed_AllocateOrbitsByStar(t *testing.T) {
 	t.Parallel()
+
 	sys := composeZed()
+
 	avail, err := worlds.AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("AvailableOrbits: %v", err)
 	}
+
 	counts := worlds.Counts{GasGiants: 4, PlanetoidBelts: 2, Terrestrials: 11, Total: 17}
+
 	got, err := worlds.AllocateOrbitsByStar(avail, counts)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if len(got) != 3 {
 		t.Fatalf("allocations = %d, want 3", len(got))
 	}
@@ -207,10 +232,12 @@ func TestZed_AllocateOrbitsByStar(t *testing.T) {
 	//   Cab worlds: 17 - 11 - 1 = 5 (remainder for last)
 	wantOrbits := []int{13, 2, 6}
 	wantWorlds := []int{11, 1, 5}
+
 	for i := range got {
 		if got[i].TotalStarOrbits != wantOrbits[i] {
 			t.Errorf("group %d (%s) TotalStarOrbits = %d, want %d", i, got[i].Group.Designation, got[i].TotalStarOrbits, wantOrbits[i])
 		}
+
 		if got[i].AllocatedWorlds != wantWorlds[i] {
 			t.Errorf("group %d (%s) AllocatedWorlds = %d, want %d", i, got[i].Group.Designation, got[i].AllocatedWorlds, wantWorlds[i])
 		}
@@ -219,6 +246,7 @@ func TestZed_AllocateOrbitsByStar(t *testing.T) {
 
 func TestZed_RollBaselineNumber(t *testing.T) {
 	t.Parallel()
+
 	sys := composeZed()
 	// Zed: companion (Ab) → DM-2; secondaries B + Ca → DM-2; total 17 → no
 	// band DM (16-17 unlisted in book → 0). Primary G7 V → no class DM.
@@ -231,11 +259,14 @@ func TestZed_RollBaselineNumber(t *testing.T) {
 
 func TestZed_BaselineOrbit(t *testing.T) {
 	t.Parallel()
+
 	sys := composeZed()
+
 	avail, err := worlds.AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	primary := avail.Groups[0]
 	// Book: baselineN=5, totalWorlds=17, HZCO Aab = 3.3, roll 5 → variance (5-7)/10 = -0.2.
 	// BaselineOrbit = 3.3 + (-0.2) = 3.1.
@@ -247,7 +278,9 @@ func TestZed_BaselineOrbit(t *testing.T) {
 
 func TestZed_Spread(t *testing.T) {
 	t.Parallel()
+
 	sys := composeZed()
+
 	avail, err := worlds.AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -262,7 +295,9 @@ func TestZed_Spread(t *testing.T) {
 
 func TestZed_PlaceOrbitSlots_Aab(t *testing.T) {
 	t.Parallel()
+
 	sys := composeZed()
+
 	avail, err := worlds.AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -288,6 +323,7 @@ func TestZed_PlaceOrbitSlots_Aab(t *testing.T) {
 	// Variance rolls per book narration (10 rolls; slot 5 is baseline, no roll):
 	//   slots 1-4 pre-baseline (4 rolls), slots 6-11 post-baseline (6 rolls).
 	rolls := []int{5, 9, 7, 9, 7, 7, 7, 7, 7, 7}
+
 	got, err := worlds.PlaceOrbitSlots(roller.NewScripted(rolls...), allocs, 5, 3.1, 0.5, 0)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -305,16 +341,19 @@ func TestZed_PlaceOrbitSlots_Aab(t *testing.T) {
 
 	// After the exclusion zone (5.10, 7.10) at least one slot must be >7.10.
 	foundWidened := false
+
 	for _, s := range got {
 		if s.Orbit > 7.10 {
 			foundWidened = true
 		}
 	}
+
 	if !foundWidened {
 		orbits := make([]float64, len(got))
 		for i, s := range got {
 			orbits[i] = s.Orbit
 		}
+
 		t.Errorf("expected at least one slot >7.10 (exclusion-zone widened), got %v", orbits)
 	}
 }
@@ -340,19 +379,24 @@ func TestZed_GenerateCounts(t *testing.T) {
 		7, 7, // belts existence + quantity
 		12, 3, // terrestrials 2D + D3
 	)
+
 	got, err := worlds.GenerateCounts(r, sys, worlds.CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.GasGiants != 4 {
 		t.Errorf("GasGiants = %d, want 4", got.GasGiants)
 	}
+
 	if got.PlanetoidBelts != 2 {
 		t.Errorf("PlanetoidBelts = %d, want 2", got.PlanetoidBelts)
 	}
+
 	if got.Terrestrials != 11 {
 		t.Errorf("Terrestrials = %d, want 11", got.Terrestrials)
 	}
+
 	if got.Total != 17 {
 		t.Errorf("Total = %d, want 17", got.Total)
 	}
@@ -360,12 +404,16 @@ func TestZed_GenerateCounts(t *testing.T) {
 
 func TestZed_AddAnomalous(t *testing.T) {
 	t.Parallel()
+
 	sys := composeZed()
+
 	avail, err := worlds.AvailableOrbits(sys)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	counts := worlds.Counts{GasGiants: 4, PlanetoidBelts: 2, Terrestrials: 11, Total: 17}
+
 	allocs, err := worlds.AllocateOrbitsByStar(avail, counts)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -376,6 +424,7 @@ func TestZed_AddAnomalous(t *testing.T) {
 	allocs[2].AllocatedWorlds = 5
 
 	var slots []worlds.Slot
+
 	aab := allocs[0].Group
 	for _, o := range []float64{1.0, 1.6, 2.1, 2.7, 3.1, 3.5, 4.1, 4.6, 7.2, 7.8, 8.3} {
 		slots = append(slots, worlds.Slot{Group: aab, Orbit: o})
@@ -383,20 +432,25 @@ func TestZed_AddAnomalous(t *testing.T) {
 	// Book: anomalous=10 (1), type=10 (Retrograde), parent group D3=1 (Aab),
 	// orbit raw 2D-2=5, d10=2 → 5.2.
 	rolls := []int{10, 10, 1, 7, 2}
+
 	out, newCounts, err := worlds.AddAnomalous(roller.NewScripted(rolls...), slots, allocs, counts)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	last := out[len(out)-1]
 	if last.Anomaly != worlds.AnomalyRetrograde {
 		t.Errorf("Anomaly = %v, want Retrograde", last.Anomaly)
 	}
+
 	if math.Abs(last.Orbit-5.2) > 0.01 {
 		t.Errorf("Orbit = %v, want 5.2", last.Orbit)
 	}
+
 	if last.Group.Designation != "Aab" {
 		t.Errorf("Group = %v, want Aab", last.Group.Designation)
 	}
+
 	if newCounts.Terrestrials != 12 || newCounts.Total != 18 {
 		t.Errorf("counts = %+v, want T=12 Total=18", newCounts)
 	}
@@ -404,6 +458,7 @@ func TestZed_AddAnomalous(t *testing.T) {
 
 func TestZed_FullPlacement(t *testing.T) {
 	t.Parallel()
+
 	sys := composeZed()
 	rolls := []int{
 		// GenerateCounts (6 rolls):
@@ -452,6 +507,7 @@ func TestZed_FullPlacement(t *testing.T) {
 		7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1,
 		7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1,
 	}
+
 	got, err := worlds.GenerateSystemPlacement(roller.NewScripted(rolls...), sys)
 	if err != nil {
 		t.Fatalf("GenerateSystemPlacement: %v", err)
@@ -461,27 +517,35 @@ func TestZed_FullPlacement(t *testing.T) {
 	if got.Counts.GasGiants != 4 {
 		t.Errorf("GasGiants = %d, want 4", got.Counts.GasGiants)
 	}
+
 	if got.Counts.PlanetoidBelts != 2 {
 		t.Errorf("PlanetoidBelts = %d, want 2", got.Counts.PlanetoidBelts)
 	}
+
 	if got.Counts.Terrestrials != 12 {
 		t.Errorf("Terrestrials = %d, want 12 (11 from GenerateCounts + 1 from anomalous)", got.Counts.Terrestrials)
 	}
+
 	if got.Counts.Total != 18 {
 		t.Errorf("Total = %d, want 18", got.Counts.Total)
 	}
+
 	if got.BaselineN != 5 {
 		t.Errorf("BaselineN = %d, want 5", got.BaselineN)
 	}
+
 	if math.Abs(got.BaselineOrbit-3.1) > 0.05 {
 		t.Errorf("BaselineOrbit = %v, want ~3.1", got.BaselineOrbit)
 	}
+
 	if got.EmptyOrbits != 1 {
 		t.Errorf("EmptyOrbits = %d, want 1", got.EmptyOrbits)
 	}
+
 	if math.Abs(got.SystemSpread-0.50) > 0.005 {
 		t.Errorf("SystemSpread = %v, want ~0.50", got.SystemSpread)
 	}
+
 	if len(got.Placements) != 19 {
 		t.Fatalf("Placements = %d, want 19", len(got.Placements))
 	}
@@ -491,33 +555,42 @@ func TestZed_FullPlacement(t *testing.T) {
 	for _, p := range got.Placements {
 		bodyCounts[p.Body]++
 	}
+
 	if bodyCounts[worlds.BodyEmpty] != 1 {
 		t.Errorf("Empty bodies = %d, want 1", bodyCounts[worlds.BodyEmpty])
 	}
+
 	if bodyCounts[worlds.BodyGasGiant] != 4 {
 		t.Errorf("GasGiant bodies = %d, want 4", bodyCounts[worlds.BodyGasGiant])
 	}
+
 	if bodyCounts[worlds.BodyPlanetoidBelt] != 2 {
 		t.Errorf("Belt bodies = %d, want 2", bodyCounts[worlds.BodyPlanetoidBelt])
 	}
+
 	if bodyCounts[worlds.BodyTerrestrial] != 12 {
 		t.Errorf("Terrestrial bodies = %d, want 12", bodyCounts[worlds.BodyTerrestrial])
 	}
 
 	// The retrograde anomaly must land in group Aab at orbit ≈5.2.
 	var retro *worlds.Placement
+
 	for i := range got.Placements {
 		if got.Placements[i].Anomaly == worlds.AnomalyRetrograde {
 			retro = &got.Placements[i]
+
 			break
 		}
 	}
+
 	if retro == nil {
 		t.Fatalf("no retrograde placement found")
 	}
+
 	if retro.Group.Designation != "Aab" {
 		t.Errorf("retrograde group = %s, want Aab", retro.Group.Designation)
 	}
+
 	if math.Abs(retro.Orbit-5.2) > 0.05 {
 		t.Errorf("retrograde orbit = %v, want 5.2", retro.Orbit)
 	}
@@ -548,12 +621,15 @@ func TestSol_GenerateSystemPlacement(t *testing.T) {
 	if len(sp.Allocations) != 1 {
 		t.Errorf("len(Allocations) = %d, want 1 (single-star system)", len(sp.Allocations))
 	}
+
 	if sp.Allocations[0].Group.Designation != "A" {
 		t.Errorf("Allocations[0].Group.Designation = %q, want \"A\"", sp.Allocations[0].Group.Designation)
 	}
+
 	if len(sp.Placements) == 0 {
 		t.Error("Placements is empty, want at least one body")
 	}
+
 	if sp.Counts.Total <= 0 {
 		t.Errorf("Counts.Total = %d, want > 0", sp.Counts.Total)
 	}

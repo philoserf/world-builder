@@ -37,39 +37,49 @@ func GenerateSystemPlacement(r roller.Roller, sys stars.System) (SystemPlacement
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: counts: %w", err)
 	}
+
 	avail, err := AvailableOrbits(sys)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: available-orbits: %w", err)
 	}
+
 	allocs, err := AllocateOrbitsByStar(avail, counts)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: allocations: %w", err)
 	}
+
 	baselineN := RollBaselineNumber(r, sys, counts)
 	primary := allocs[0].Group
 	baselineOrbit := BaselineOrbit(r, primary, primary.HZCO(), baselineN, counts.Total)
+
 	emptyOrbits, err := RollEmptyOrbits(r)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: empty-orbits: %w", err)
 	}
+
 	totalStars := 1 + secondaryStarCount(sys)
 	spread := Spread(primary, allocs[0].AllocatedWorlds, baselineOrbit, baselineN, totalStars)
+
 	slots, err := PlaceOrbitSlots(r, allocs, baselineN, baselineOrbit, spread, emptyOrbits)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: orbit-slots: %w", err)
 	}
+
 	anomSlots, newCounts, err := AddAnomalous(r, slots, allocs, counts)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: anomalous: %w", err)
 	}
+
 	placements, err := PlaceWorlds(r, anomSlots, newCounts)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: place-worlds: %w", err)
 	}
+
 	placements, err = RollPlanetEccentricities(r, placements, sys.AgeGyr)
 	if err != nil {
 		return SystemPlacement{}, fmt.Errorf("worlds: planet-eccentricity: %w", err)
 	}
+
 	return SystemPlacement{
 		Counts:        newCounts,
 		Allocations:   allocs,

@@ -8,6 +8,7 @@ import (
 
 func TestRollEmptyOrbits(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		roll int
 		want int
@@ -24,6 +25,7 @@ func TestRollEmptyOrbits(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+
 		if got != c.want {
 			t.Errorf("roll %d: empty = %d, want %d", c.roll, got, c.want)
 		}

@@ -65,20 +65,24 @@ func GenerateMainSequenceStar(r roller.Roller, opts GenerateOpts) (Star, error) 
 	if err != nil {
 		return Star{}, err
 	}
+
 	subtype, err := RollSubtype(r, letter, lc)
 	if err != nil {
 		return Star{}, err
 	}
+
 	st := SpectralType{Letter: letter, Subtype: subtype}
 
 	mass, err := ComputeMass(st, lc)
 	if err != nil {
 		return Star{}, err
 	}
+
 	diameter, err := ComputeDiameter(st, lc)
 	if err != nil {
 		return Star{}, err
 	}
+
 	temperature, err := ComputeTemperature(st)
 	if err != nil {
 		return Star{}, err

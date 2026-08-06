@@ -15,13 +15,16 @@ import (
 // per CLAUDE.md). Other errors fail the test.
 func generateForProperty(t *testing.T, seed int64) *worlds.Universe {
 	t.Helper()
+
 	u, err := worlds.Generate(seed)
 	if err != nil {
 		if isSpecialCircumstances(err) {
 			return nil
 		}
+
 		t.Fatalf("seed %d: Generate: %v", seed, err)
 	}
+
 	return &u
 }
 
@@ -38,13 +41,17 @@ func isSpecialCircumstances(err error) bool {
 // bodies are exempt (they don't get climate).
 func TestProperty_HZBodyHasClimate(t *testing.T) {
 	t.Parallel()
+
 	checked := 0
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		u := generateForProperty(t, seed)
 		if u == nil {
 			continue
 		}
+
 		for body := range u.AllBodies() {
 			if body.Kind != worlds.BodyTerrestrial && body.Kind != worlds.BodyMoon {
 				continue
@@ -54,28 +61,36 @@ func TestProperty_HZBodyHasClimate(t *testing.T) {
 			if body.Kind == worlds.BodyMoon && body.Parent != nil {
 				host = body.Parent
 			}
+
 			if !host.HZ {
 				continue
 			}
+
 			if body.GGClass != worlds.NotGasGiant {
 				continue // GG-cascade moons skip climate
 			}
+
 			switch body.SizeCode {
 			case "", "0", "R":
 				continue // sub-1 sizes don't get climate
 			}
+
 			checked++
+
 			if !body.HasAtmosphere() {
 				t.Errorf("seed %d: HZ body %s missing Atmosphere", seed, body.Designation)
 			}
+
 			if !body.HasHydrographics() {
 				t.Errorf("seed %d: HZ body %s missing Hydrographics", seed, body.Designation)
 			}
+
 			if !body.HasTemperature() {
 				t.Errorf("seed %d: HZ body %s missing Temperature", seed, body.Designation)
 			}
 		}
 	}
+
 	if checked < 100 {
 		t.Errorf("only %d HZ bodies checked across 1000 seeds (expected >= 100)", checked)
 	}
@@ -87,25 +102,32 @@ func TestProperty_HZBodyHasClimate(t *testing.T) {
 // non-empty Designation, and a populated Parent pointer.
 func TestProperty_MoonsHaveBodies(t *testing.T) {
 	t.Parallel()
+
 	checked := 0
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		u := generateForProperty(t, seed)
 		if u == nil {
 			continue
 		}
+
 		for i := range u.Detail.Bodies {
 			body := &u.Detail.Bodies[i]
 			for j, child := range body.Children {
 				checked++
+
 				if child.Kind != worlds.BodyMoon {
 					t.Errorf("seed %d: bodies[%d].Children[%d] Kind = %v, want BodyMoon",
 						seed, i, j, child.Kind)
 				}
+
 				if child.Designation == "" {
 					t.Errorf("seed %d: bodies[%d].Children[%d] missing Designation",
 						seed, i, j)
 				}
+
 				if child.Parent != body {
 					t.Errorf("seed %d: bodies[%d].Children[%d] Parent != &bodies[%d]",
 						seed, i, j, i)
@@ -113,6 +135,7 @@ func TestProperty_MoonsHaveBodies(t *testing.T) {
 			}
 		}
 	}
+
 	if checked < 100 {
 		t.Errorf("only %d moons checked across 1000 seeds (expected >= 100)", checked)
 	}
@@ -130,39 +153,50 @@ func TestProperty_MoonsHaveBodies(t *testing.T) {
 // equal MainworldDesignation.
 func TestProperty_MainworldExists(t *testing.T) {
 	t.Parallel()
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		u := generateForProperty(t, seed)
 		if u == nil {
 			continue
 		}
+
 		hasCandidate := false
+
 		for body := range u.AllBodies() {
 			if body.Kind == worlds.BodyTerrestrial || body.Kind == worlds.BodyMoon || body.Kind == worlds.BodyPlanetoidBelt {
 				hasCandidate = true
+
 				break
 			}
 		}
+
 		if hasCandidate && u.Detail.MainworldDesignation == "" {
 			t.Errorf("seed %d: system has terrestrial/moon/belt candidates but no MainworldDesignation",
 				seed)
 		}
+
 		if hasCandidate && u.Detail.Mainworld == nil {
 			t.Errorf("seed %d: system has candidates and MainworldDesignation=%q but Mainworld pointer is nil",
 				seed, u.Detail.MainworldDesignation)
 		}
+
 		if !hasCandidate && u.Detail.Mainworld != nil {
 			t.Errorf("seed %d: system has no candidates but Mainworld pointer is non-nil (%s)",
 				seed, u.Detail.Mainworld.Designation)
 		}
+
 		if !hasCandidate && u.Detail.MainworldDesignation != "" {
 			t.Errorf("seed %d: system has no candidates but MainworldDesignation=%q is set",
 				seed, u.Detail.MainworldDesignation)
 		}
+
 		if u.Detail.Mainworld == nil && u.Detail.MainworldDesignation != "" {
 			t.Errorf("seed %d: Mainworld pointer is nil but MainworldDesignation=%q is set",
 				seed, u.Detail.MainworldDesignation)
 		}
+
 		if u.Detail.Mainworld != nil && u.Detail.Mainworld.Designation != u.Detail.MainworldDesignation {
 			t.Errorf("seed %d: Mainworld.Designation=%q does not match MainworldDesignation=%q",
 				seed, u.Detail.Mainworld.Designation, u.Detail.MainworldDesignation)
@@ -175,27 +209,35 @@ func TestProperty_MainworldExists(t *testing.T) {
 // biology pass requires atmosphere as a precondition.
 func TestProperty_BiomassImpliesAtm(t *testing.T) {
 	t.Parallel()
+
 	checked := 0
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		u := generateForProperty(t, seed)
 		if u == nil {
 			continue
 		}
+
 		for body := range u.AllBodies() {
 			if !body.HasBiology() {
 				continue
 			}
+
 			if body.Biology.Biomass == 0 {
 				continue
 			}
+
 			checked++
+
 			if !body.HasAtmosphere() {
 				t.Errorf("seed %d: body %s has Biomass=%d but no Atmosphere",
 					seed, body.Designation, body.Biology.Biomass)
 			}
 		}
 	}
+
 	if checked < 10 {
 		t.Logf("only %d biomass-bearing bodies seen across 1000 seeds (low rate, but Property invariant holds)", checked)
 	}
@@ -212,23 +254,30 @@ func TestProperty_BiomassImpliesAtm(t *testing.T) {
 // WBH p.55.
 func TestProperty_GGHasMass(t *testing.T) {
 	t.Parallel()
+
 	checked := 0
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		u := generateForProperty(t, seed)
 		if u == nil {
 			continue
 		}
+
 		for body := range u.AllBodies() {
 			if body.Kind != worlds.BodyGasGiant {
 				continue
 			}
+
 			checked++
+
 			if body.MassEarth <= 0 {
 				t.Errorf("seed %d: GG %s has MassEarth = %v", seed, body.Designation, body.MassEarth)
 			}
 		}
 	}
+
 	if checked < 50 {
 		t.Errorf("only %d gas giants seen across 1000 seeds (expected >= 50)", checked)
 	}
@@ -240,17 +289,22 @@ func TestProperty_GGHasMass(t *testing.T) {
 // silent-zero" specifically in the orbital-refinement step.
 func TestProperty_MoonsHaveOrbitPD(t *testing.T) {
 	t.Parallel()
+
 	checked := 0
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		u := generateForProperty(t, seed)
 		if u == nil {
 			continue
 		}
+
 		for i := range u.Detail.Bodies {
 			body := &u.Detail.Bodies[i]
 			for j, child := range body.Children {
 				checked++
+
 				if child.OrbitPD <= 0 {
 					t.Errorf("seed %d: bodies[%d].Children[%d] (%s) OrbitPD = %v",
 						seed, i, j, child.Designation, child.OrbitPD)
@@ -258,6 +312,7 @@ func TestProperty_MoonsHaveOrbitPD(t *testing.T) {
 			}
 		}
 	}
+
 	if checked < 50 {
 		t.Errorf("only %d moons checked across 1000 seeds (expected >= 50)", checked)
 	}
@@ -268,24 +323,31 @@ func TestProperty_MoonsHaveOrbitPD(t *testing.T) {
 // post-TSS MeanK and gravity; either degenerate input drives it to 0.
 func TestProperty_ScaleHeightPositive(t *testing.T) {
 	t.Parallel()
+
 	checked := 0
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		u := generateForProperty(t, seed)
 		if u == nil {
 			continue
 		}
+
 		for body := range u.AllBodies() {
 			if !body.HasAtmosphere() || !body.HasPhysical() {
 				continue
 			}
+
 			checked++
+
 			if body.Atmosphere.ScaleHeight <= 0 {
 				t.Errorf("seed %d: body %s has Atmosphere + Physical but ScaleHeight = %v",
 					seed, body.Designation, body.Atmosphere.ScaleHeight)
 			}
 		}
 	}
+
 	if checked < 50 {
 		t.Errorf("only %d bodies with both Atm+Physical seen across 1000 seeds (expected >= 50)", checked)
 	}
@@ -297,19 +359,26 @@ func TestProperty_ScaleHeightPositive(t *testing.T) {
 // stall in the climate passes or anywhere else in the pipeline.
 func TestProperty_GenerateCompletes(t *testing.T) {
 	t.Parallel()
+
 	completed := 0
+
 	for iter := range 1000 {
 		seed := int64(iter)
+
 		_, err := worlds.Generate(seed)
 		if err == nil {
 			completed++
+
 			continue
 		}
+
 		if isSpecialCircumstances(err) {
 			continue
 		}
+
 		t.Errorf("seed %d: unexpected error: %v", seed, err)
 	}
+
 	if completed < 100 {
 		t.Errorf("only %d / 1000 seeds completed without Special-Circumstances; expected >= 100",
 			completed)

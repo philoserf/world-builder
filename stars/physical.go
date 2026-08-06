@@ -31,6 +31,7 @@ func gridIndex(st SpectralType) (lower, upper int, frac float64, err error) {
 	if !ok {
 		return 0, 0, 0, fmt.Errorf("stars: unsupported letter: %c", st.Letter)
 	}
+
 	target := lo*10 + st.Subtype
 
 	// Compute numeric position of every grid key.
@@ -46,18 +47,23 @@ func gridIndex(st SpectralType) (lower, upper int, frac float64, err error) {
 	}
 
 	lowerIdx, upperIdx := -1, -1
+
 	for i, p := range positions {
 		if p < target {
 			lowerIdx = i
 		}
+
 		if p > target && upperIdx == -1 {
 			upperIdx = i
 		}
 	}
+
 	if lowerIdx == -1 || upperIdx == -1 {
 		return 0, 0, 0, fmt.Errorf("stars: spectral type out of grid range: %s", st)
 	}
+
 	span := positions[upperIdx] - positions[lowerIdx]
+
 	return lowerIdx, upperIdx, float64(target-positions[lowerIdx]) / float64(span), nil
 }
 
@@ -72,21 +78,26 @@ func InterpolateClassRow(table map[string]ClassRow, st SpectralType, lc Luminosi
 	if err != nil {
 		return 0, err
 	}
+
 	loRow, ok := table[gridKeys[lo]]
 	if !ok {
 		return 0, fmt.Errorf("stars: no row for %s", gridKeys[lo])
 	}
+
 	loVal, loOK := loRow.Get(lc)
 	if lo == hi {
 		if !loOK {
 			return 0, fmt.Errorf("stars: %s class %s missing", gridKeys[lo], lc)
 		}
+
 		return loVal, nil
 	}
+
 	hiRow, ok := table[gridKeys[hi]]
 	if !ok {
 		return 0, fmt.Errorf("stars: no row for %s", gridKeys[hi])
 	}
+
 	hiVal, hiOK := hiRow.Get(lc)
 	switch {
 	case !loOK && !hiOK:
@@ -96,6 +107,7 @@ func InterpolateClassRow(table map[string]ClassRow, st SpectralType, lc Luminosi
 	case !hiOK:
 		return loVal, nil
 	}
+
 	return loVal + frac*(hiVal-loVal), nil
 }
 
@@ -106,17 +118,21 @@ func InterpolateScalar(table map[string]float64, st SpectralType) (float64, erro
 	if err != nil {
 		return 0, err
 	}
+
 	loVal, ok := table[gridKeys[lo]]
 	if !ok {
 		return 0, fmt.Errorf("stars: no row for %s", gridKeys[lo])
 	}
+
 	if lo == hi {
 		return loVal, nil
 	}
+
 	hiVal, ok := table[gridKeys[hi]]
 	if !ok {
 		return 0, fmt.Errorf("stars: no row for %s", gridKeys[hi])
 	}
+
 	return loVal + frac*(hiVal-loVal), nil
 }
 
@@ -154,6 +170,7 @@ func ComputeLuminosityFromTable(st SpectralType, lc LuminosityClass) (float64, e
 // temperature values are available.
 func ComputeLuminosityFromFormula(diameter, temperature float64) float64 {
 	tRatio := temperature / SolTemperatureK
+
 	return diameter * diameter * tRatio * tRatio * tRatio * tRatio
 }
 
@@ -168,5 +185,6 @@ func ComputeLuminosityFromFormula(diameter, temperature float64) float64 {
 func ApplyVariance(base float64, r roller.Roller, maxPct float64) float64 {
 	deviation := r.Roll("2D-7")
 	factor := 1.0 + (float64(deviation)/5.0)*maxPct
+
 	return base * factor
 }

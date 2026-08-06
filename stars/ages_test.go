@@ -25,10 +25,12 @@ func TestMainSequenceLifespan_Zed(t *testing.T) {
 func TestSmallStarAge_Basic(t *testing.T) {
 	// 1D=3, D3=1 -> 3*2 + 1 - 1 = 6 Gyr.
 	r := roller.NewScripted(3, 1)
+
 	got, err := SmallStarAge(r, 1)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if math.Abs(got-6.0) > 1e-9 {
 		t.Fatalf("got %v want 6.0", got)
 	}
@@ -37,10 +39,12 @@ func TestSmallStarAge_Basic(t *testing.T) {
 func TestSmallStarAge_Zed(t *testing.T) {
 	// WBH p. 21: 1D=3, D3=2 -> 3*2 + 2 - 1 = 7 Gyr.
 	r := roller.NewScripted(3, 2)
+
 	got, err := SmallStarAge(r, 1)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if math.Abs(got-7.0) > 1e-9 {
 		t.Fatalf("got %v want 7.0", got)
 	}
@@ -49,10 +53,12 @@ func TestSmallStarAge_Zed(t *testing.T) {
 func TestSmallStarAge_Accuracy2(t *testing.T) {
 	// WBH p. 21: 1D=3, D3=2, d10=3 -> 3*2 + 2 - 2 + 0.3 = 6.3 Gyr.
 	r := roller.NewScripted(3, 2, 3)
+
 	got, err := SmallStarAge(r, 2)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if math.Abs(got-6.3) > 1e-9 {
 		t.Fatalf("got %v want 6.3", got)
 	}
@@ -63,6 +69,7 @@ func TestSmallStarAge_InvalidAccuracy(t *testing.T) {
 	if _, err := SmallStarAge(r, 0); err == nil {
 		t.Fatal("expected error for accuracy 0")
 	}
+
 	r2 := roller.NewScripted(3, 2)
 	if _, err := SmallStarAge(r2, 3); err == nil {
 		t.Fatal("expected error for accuracy 3")
@@ -71,6 +78,7 @@ func TestSmallStarAge_InvalidAccuracy(t *testing.T) {
 
 func TestSubgiantLifespan_Zed(t *testing.T) {
 	got := SubgiantLifespan(12.022, 0.929)
+
 	want := 12.022 / (4 + 0.929)
 	if math.Abs(got-want) > 1e-9 {
 		t.Fatalf("got %v want %v", got, want)
@@ -80,6 +88,7 @@ func TestSubgiantLifespan_Zed(t *testing.T) {
 func TestGiantLifespan_Zed(t *testing.T) {
 	got := GiantLifespan(12.022, 0.929)
 	mass := 0.929
+
 	want := 12.022 / (10 * mass * mass * mass)
 	if math.Abs(got-want) > 1e-9 {
 		t.Fatalf("got %v want %v", got, want)
@@ -105,10 +114,12 @@ func TestFinalAgeProgenitor_UnitMass(t *testing.T) {
 func TestAgeSpecialObject_BrownDwarf(t *testing.T) {
 	// BD: small-star age (1D=3, D3=2 -> 3*2 + 2 - 1 = 7 Gyr).
 	r := roller.NewScripted(3, 2)
+
 	got, err := AgeSpecialObject(r, KindBrownDwarf, 0)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if math.Abs(got-7.0) > 1e-9 {
 		t.Fatalf("got %v want 7.0", got)
 	}
@@ -120,10 +131,12 @@ func TestAgeSpecialObject_WhiteDwarf_Zed(t *testing.T) {
 	// Plus small-star age: 1D=2, D3=2 -> 2*2 + 2 - 1 = 5 Gyr.
 	// Total: 5 + 4.635 ≈ 9.635 Gyr.
 	r := roller.NewScripted(2, 2, 1) // 1D=2, D3=2 for small_star; D3=1 for progenitor multiplier
+
 	got, err := AgeSpecialObject(r, KindWhiteDwarf, 0.490)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	want := 9.635
 	if math.Abs(got-want) > 1e-2 {
 		t.Fatalf("got %v want %v (within 1e-2)", got, want)
@@ -135,6 +148,7 @@ func TestAgeSpecialObject_Pulsar(t *testing.T) {
 	// Plus progenitor: D3=1, dead mass 1.4 -> progenitor 4.2.
 	// FinalAgeProgenitor(4.2) ≈ very small.
 	r := roller.NewScripted(5, 5, 1)
+
 	got, err := AgeSpecialObject(r, KindPulsar, 1.4)
 	if err != nil {
 		t.Fatalf("error: %v", err)
@@ -148,10 +162,12 @@ func TestAgeSpecialObject_Pulsar(t *testing.T) {
 func TestAgeSpecialObject_Protostar(t *testing.T) {
 	// Protostar: 10 Myr / 2d10, no progenitor. d10=5, d10=5 -> 10/10 = 1 Myr = 0.001 Gyr.
 	r := roller.NewScripted(5, 5)
+
 	got, err := AgeSpecialObject(r, KindProtostar, 0)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	want := 0.001
 	if math.Abs(got-want) > 1e-9 {
 		t.Fatalf("got %v want %v", got, want)

@@ -33,6 +33,7 @@ type BeltComposition struct {
 func RollBeltSpan(r roller.Roller, spreadOrbits float64, dms int) (float64, error) {
 	roll := r.Roll("2D")
 	effective := max(roll+dms, 1)
+
 	return spreadOrbits * float64(effective) / 10.0, nil
 }
 
@@ -108,9 +109,11 @@ func rollComponent(r roller.Roller, base, mult int, isD3 bool) int {
 	if isD3 {
 		return base + r.Roll("D3")
 	}
+
 	if mult == 0 {
 		return base
 	}
+
 	return base + r.Roll("1D")*mult
 }
 
@@ -139,6 +142,7 @@ func RollBeltComposition(r roller.Roller, dms int) (BeltComposition, error) {
 		} else {
 			over -= m
 			m = 0
+
 			if s >= over {
 				s -= over
 			} else {
@@ -163,6 +167,7 @@ func RollBeltBulk(r roller.Roller, ageGyr float64, comp BeltComposition) (int, e
 	roll := r.Roll("2D+2")
 	dms := -int(ageGyr/2) + comp.CTypePct/10
 	bulk := max(roll+dms, 1)
+
 	return bulk, nil
 }
 
@@ -171,6 +176,7 @@ func RollBeltBulk(r roller.Roller, ageGyr float64, comp BeltComposition) (int, e
 func RollResourceRating(r roller.Roller, bulk int, comp BeltComposition) (int, error) {
 	roll := r.Roll("2D")
 	rating := min(max(roll-7+bulk+comp.MTypePct/10-comp.CTypePct/10, 2), 12)
+
 	return rating, nil
 }
 
@@ -179,14 +185,18 @@ func RollResourceRating(r roller.Roller, bulk int, comp BeltComposition) (int, e
 // Negative results are clamped to 0.
 func RollSigSize1Bodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64) (int, error) {
 	roll := r.Roll("2D")
+
 	dms := 0
 	if beltOrbit >= hzco+3 {
 		dms += 2
 	}
+
 	if span < 0.1 {
 		dms -= 4
 	}
+
 	count := max(roll-12+bulk+dms, 0)
+
 	return count, nil
 }
 
@@ -195,20 +205,25 @@ func RollSigSize1Bodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64
 // Negative results are clamped to 0. If span < 0.1, result is halved (round up).
 func RollSigSizeSBodies(r roller.Roller, bulk int, beltOrbit, hzco, span float64) (int, error) {
 	roll := r.Roll("2D")
+
 	dm := 0
 	if beltOrbit >= hzco+2 && beltOrbit < hzco+3 {
 		dm++
 	}
+
 	if beltOrbit >= hzco+3 {
 		dm += 3
 	}
+
 	if span > 1.0 {
 		dm++
 	}
+
 	count := max(roll-10+(dm+1)*(bulk+1), 0)
 	if span < 0.1 {
 		count = (count + 1) / 2
 	}
+
 	return count, nil
 }
 
@@ -223,9 +238,11 @@ func GenerateBeltDetails(r roller.Roller, beltOrbit, spreadOrbits, hzco, ageGyr 
 	if adjacentToGG {
 		spanDM--
 	}
+
 	if outermostSlot {
 		spanDM += 3
 	}
+
 	span, err := RollBeltSpan(r, spreadOrbits, spanDM)
 	if err != nil {
 		return BeltDetails{}, err
@@ -235,9 +252,11 @@ func GenerateBeltDetails(r roller.Roller, beltOrbit, spreadOrbits, hzco, ageGyr 
 	if beltOrbit < hzco {
 		compDM = -4
 	}
+
 	if beltOrbit > hzco+2 {
 		compDM = 4
 	}
+
 	comp, err := RollBeltComposition(r, compDM)
 	if err != nil {
 		return BeltDetails{}, err
@@ -268,13 +287,14 @@ func GenerateBeltDetails(r roller.Roller, beltOrbit, spreadOrbits, hzco, ageGyr 
 		ResourceRating: resources, SigSize1Bodies: size1, SigSizeSBodies: sizeS,
 	}
 	belt.Profile = FormatBeltProfile(belt)
+
 	return belt, nil
 }
 
 // FormatBeltProfile renders the belt-profile shorthand "S-CC.CC.CC.CC-B-R-#-s" per WBH p.74.
 // Resource rating uses hex letters A/B/C for 10/11/12.
 func FormatBeltProfile(b BeltDetails) string {
-	resourceStr := fmt.Sprintf("%d", b.ResourceRating)
+	resourceStr := strconv.Itoa(b.ResourceRating)
 	switch b.ResourceRating {
 	case 10:
 		resourceStr = "A"
@@ -294,6 +314,7 @@ func FormatBeltProfile(b BeltDetails) string {
 	if span == "0" && b.Span > 0 {
 		span = strconv.FormatFloat(b.Span, 'f', -1, 64)
 	}
+
 	return fmt.Sprintf(
 		"%s-%02d.%02d.%02d.%02d-%d-%s-%d-%d",
 		span,

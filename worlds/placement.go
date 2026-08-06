@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/philoserf/world-builder/roller"
@@ -13,6 +14,7 @@ import (
 // across Stage 1 (placement) and Stage 2+ (per-body procedures).
 type Placement struct {
 	AnomalousSlot
+
 	Body         BodyKind
 	PrefixRoll   string  // "1:6", "2:3" — audit trail
 	Eccentricity float64 // populated by Step 9 (RollPlanetEccentricities)
@@ -40,10 +42,12 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 	if need > len(slots) {
 		return nil, fmt.Errorf("worlds: PlaceWorlds: %d slots cannot hold %d worlds", len(slots), need)
 	}
+
 	out := make([]Placement, len(slots))
 	for i, s := range slots {
 		out[i] = Placement{AnomalousSlot: s}
 	}
+
 	assigned := make([]bool, len(slots))
 	n := len(slots)
 
@@ -59,7 +63,9 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 			if p > prefixMax {
 				continue
 			}
+
 			right := r.Roll("1D")
+
 			idx := (p-1)*6 + (right - 1)
 			if idx >= 0 && idx < n {
 				return p, right
@@ -79,27 +85,34 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 			if attempts > prefixMax*6 {
 				idx = firstUnassigned(assigned)
 				if idx == -1 {
-					return fmt.Errorf("worlds: no unassigned slots")
+					return errors.New("worlds: no unassigned slots")
 				}
+
 				break
 			}
+
 			right++
 			if right > 6 {
 				right = 1
+
 				prefix++
 				if prefix > prefixMax {
 					prefix = 1
 				}
 			}
+
 			candidate := (prefix-1)*6 + (right - 1)
 			if candidate >= n {
 				continue // skip out-of-range advance steps
 			}
+
 			idx = candidate
 		}
+
 		out[idx].Body = body
 		out[idx].PrefixRoll = fmt.Sprintf("%d:%d", prefix, right)
 		assigned[idx] = true
+
 		return nil
 	}
 
@@ -110,21 +123,25 @@ func PlaceWorlds(r roller.Roller, slots []AnomalousSlot, counts Counts) ([]Place
 			return nil, err
 		}
 	}
-	for i := 0; i < counts.GasGiants; i++ {
+
+	for range counts.GasGiants {
 		if err := placeOne(BodyGasGiant); err != nil {
 			return nil, err
 		}
 	}
-	for i := 0; i < counts.PlanetoidBelts; i++ {
+
+	for range counts.PlanetoidBelts {
 		if err := placeOne(BodyPlanetoidBelt); err != nil {
 			return nil, err
 		}
 	}
-	for i := 0; i < counts.Terrestrials; i++ {
+
+	for range counts.Terrestrials {
 		if err := placeOne(BodyTerrestrial); err != nil {
 			return nil, err
 		}
 	}
+
 	return out, nil
 }
 
@@ -151,5 +168,6 @@ func firstUnassigned(assigned []bool) int {
 			return j
 		}
 	}
+
 	return -1
 }

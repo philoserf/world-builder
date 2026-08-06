@@ -69,14 +69,17 @@ func ApplyTidalLockReEval(r roller.Roller, u *Universe) error {
 	// data went stale) and when a newly-locked moon makes PlanetToMoon a
 	// candidate that could now win over the parent's Stage-4 case.
 	changedParents := map[*Body]bool{}
+
 	for body, parent := range u.AllBodiesWithParent() {
 		if body.Kind == BodyEmpty || parent == nil {
 			continue
 		}
+
 		before := lockFingerprint(body)
 		if err := reEvalBody(r, u, body, parent, false); err != nil {
 			return err
 		}
+
 		if lockFingerprint(body) != before {
 			changedParents[parent] = true
 		}
@@ -97,6 +100,7 @@ func ApplyTidalLockReEval(r roller.Roller, u *Universe) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -116,6 +120,7 @@ func lockFingerprint(body *Body) lockState {
 	if body.TidalLock == nil {
 		return lockState{}
 	}
+
 	return lockState{set: true, kase: body.TidalLock.Case, ratio: body.TidalLock.LockRatio}
 }
 
@@ -137,6 +142,7 @@ func reEvalBody(r roller.Roller, u *Universe, body, parent *Body, force bool) er
 	if !force && (body.Atmosphere == nil || body.Atmosphere.Pressure <= 2.5) {
 		return nil
 	}
+
 	if body.preTidalLockSnapshot == nil {
 		return nil // Stage 4 didn't run tidal lock for this body
 	}
@@ -155,8 +161,11 @@ func reEvalBody(r roller.Roller, u *Universe, body, parent *Body, force bool) er
 	// Re-run tidal lock — now with atmosphere DM active.
 	// Moons pass themselves as moonRef and use PeriodHours (orbit
 	// around planet); planets pass nil and use stellar Period.Hours.
-	var moonRef *Body
-	var yearHours float64
+	var (
+		moonRef   *Body
+		yearHours float64
+	)
+
 	if parent != nil {
 		moonRef = body
 		yearHours = body.PeriodHours
@@ -172,6 +181,7 @@ func reEvalBody(r roller.Roller, u *Universe, body, parent *Body, force bool) er
 	if err != nil {
 		return fmt.Errorf("worlds: tidal-lock re-eval %s%s: %w", moonTag(parent), body.Designation, err)
 	}
+
 	body.TidalLock = tl
 
 	// Recompute surface tidal effects from the new lock ratio. The
@@ -183,14 +193,17 @@ func reEvalBody(r roller.Roller, u *Universe, body, parent *Body, force bool) er
 	if err != nil {
 		return fmt.Errorf("worlds: tidal-lock re-eval surface tidal %s%s: %w", moonTag(parent), body.Designation, err)
 	}
+
 	body.TidalEffects = ste
 
 	// Clear Stage-5 output AFTER the re-roll has consumed the pressure
 	// from body.Atmosphere. Then re-run climate from scratch with the
 	// new tidal-lock outputs.
 	ClearStage5Output(body)
+
 	if err := ApplyClimatePasses(bodySub(r, body, parent, "climate-reeval"), body, sys); err != nil {
 		return fmt.Errorf("worlds: tidal-lock re-eval climate %s%s: %w", moonTag(parent), body.Designation, err)
 	}
+
 	return nil
 }

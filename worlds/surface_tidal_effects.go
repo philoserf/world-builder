@@ -1,6 +1,7 @@
 package worlds
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/philoserf/world-builder/stars"
@@ -34,6 +35,7 @@ func StarTide(starMassSol float64, planetSizeN int, auFromStar float64) float64 
 	if auFromStar == 0 {
 		return 0
 	}
+
 	return starMassSol * float64(planetSizeN) / (32.0 * auFromStar * auFromStar * auFromStar)
 }
 
@@ -49,6 +51,7 @@ func MoonTideOnPlanet(moonMassEarth float64, planetSizeN, orbitKm int) float64 {
 	if distMkm == 0 {
 		return 0
 	}
+
 	return moonMassEarth * float64(planetSizeN) / (3.2 * distMkm * distMkm * distMkm)
 }
 
@@ -64,6 +67,7 @@ func PlanetTideOnMoon(planetMassEarth float64, moonSizeN, orbitKm int) float64 {
 	if distMkm == 0 {
 		return 0
 	}
+
 	return planetMassEarth * float64(moonSizeN) / (3.2 * distMkm * distMkm * distMkm)
 }
 
@@ -91,7 +95,7 @@ func GenerateSurfaceTidalEffects(
 	parentPlanet *Body,
 ) (*SurfaceTidalEffects, error) {
 	if body == nil {
-		return nil, fmt.Errorf("worlds: GenerateSurfaceTidalEffects: body is nil")
+		return nil, errors.New("worlds: GenerateSurfaceTidalEffects: body is nil")
 	}
 	// Empty orbit slots have no tidal surface; skip per spec.
 	if body.Kind == BodyEmpty {
@@ -105,6 +109,7 @@ func GenerateSurfaceTidalEffects(
 	// components (no solid surface / negligible size) instead of
 	// NEGATIVE tide amplitudes summed into Total.
 	bodySizeN := max(nForSizeCode(body.SizeCode), 0)
+
 	var components []TidalComponent
 
 	// ── 1. Parent planet → moon ───────────────────────────────────────────
@@ -115,10 +120,12 @@ func GenerateSurfaceTidalEffects(
 		planetMass := parentPlanet.MassEarth
 		if moonRef.OrbitKm > 0 && planetMass > 0 {
 			tide := PlanetTideOnMoon(planetMass, bodySizeN, int(moonRef.OrbitKm))
+
 			label := "planet"
 			if parentPlanet.Designation != "" {
-				label = fmt.Sprintf("planet %s", parentPlanet.Designation)
+				label = "planet " + parentPlanet.Designation
 			}
+
 			components = append(components, TidalComponent{Source: label, Meters: tide})
 		}
 	}
@@ -151,14 +158,16 @@ func GenerateSurfaceTidalEffects(
 			primaryGroupMass += c.Star.Mass
 		}
 	}
+
 	primaryLabel := sys.PrimaryDesignation
 	if primaryLabel == "" {
 		primaryLabel = "primary"
 	}
+
 	if primaryGroupMass > 0 {
 		tide := StarTide(primaryGroupMass, bodySizeN, auFromStar)
 		components = append(components, TidalComponent{
-			Source: fmt.Sprintf("star %s", primaryLabel),
+			Source: "star " + primaryLabel,
 			Meters: tide,
 		})
 	}
@@ -183,13 +192,15 @@ func GenerateSurfaceTidalEffects(
 				groupMass += sub.Star.Mass
 			}
 		}
+
 		label := c.Designation
 		if label == "" {
 			label = fmt.Sprintf("companion%d", i)
 		}
+
 		tide := StarTide(groupMass, bodySizeN, auFromStar)
 		components = append(components, TidalComponent{
-			Source: fmt.Sprintf("star %s", label),
+			Source: "star " + label,
 			Meters: tide,
 		})
 	}

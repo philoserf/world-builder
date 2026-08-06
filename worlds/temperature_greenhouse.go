@@ -24,6 +24,7 @@ func ComputeGreenhouseFactor(r roller.Roller, atm *Atmosphere) float64 {
 	}
 
 	initial := 0.5 * math.Sqrt(atm.Pressure)
+
 	var g float64
 
 	switch atm.Code {
@@ -34,6 +35,7 @@ func ComputeGreenhouseFactor(r roller.Roller, atm *Atmosphere) float64 {
 		if factor < 0.5 {
 			factor = 0.5
 		}
+
 		g = initial * factor
 	case 11, 12, 16, 17: // B, C, G, H
 		first := r.Roll("1D")

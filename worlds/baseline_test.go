@@ -10,10 +10,12 @@ import (
 
 func TestRollBaselineNumber_NoMods(t *testing.T) {
 	t.Parallel()
+
 	sys := stars.System{Primary: stars.Compose(stars.ComposeOpts{
 		Kind: stars.KindMainSequence, LuminosityClass: stars.V,
 	})}
 	counts := Counts{Total: 17}
+
 	got := RollBaselineNumber(roller.NewScripted(7), sys, counts)
 	if got != 7 {
 		t.Errorf("baseline = %d, want 7", got)
@@ -22,6 +24,7 @@ func TestRollBaselineNumber_NoMods(t *testing.T) {
 
 func TestRollBaselineNumber_DMTable(t *testing.T) {
 	t.Parallel()
+
 	type tc struct {
 		name string
 		sys  stars.System
@@ -29,6 +32,7 @@ func TestRollBaselineNumber_DMTable(t *testing.T) {
 		roll int
 		want int
 	}
+
 	cases := []tc{
 		{
 			name: "primary has companion",
@@ -122,6 +126,7 @@ func TestRollBaselineNumber_DMTable(t *testing.T) {
 
 func TestBaselineOrbit_3a_HZCOGTE1(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{
 		Designation: "A",
 		Members:     []stars.Star{{Luminosity: 1.0}}, // HZCO = 3.0
@@ -137,6 +142,7 @@ func TestBaselineOrbit_3a_HZCOGTE1(t *testing.T) {
 
 func TestBaselineOrbit_3a_HZCOLT1(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{
 		Designation: "A",
 		Members:     []stars.Star{{Luminosity: 0.04}},
@@ -176,6 +182,7 @@ func TestBaselineOrbit_3c_HotSystem(t *testing.T) {
 		MAO:       0.03,
 		Intervals: []Interval{{Min: 0.03, Max: 20.0}},
 	}
+
 	got := BaselineOrbit(roller.NewScripted(10), primary, primary.HZCO(), 8, 5)
 	if math.Abs(got-1.64) > 0.05 {
 		t.Errorf("BaselineOrbit = %v, want ~1.64", got)
@@ -212,6 +219,7 @@ func TestBaselineOrbit_SnapToAvailable_HighRollStaysInZone(t *testing.T) {
 		MAO:       0.03,
 		Intervals: []Interval{{Min: 0.03, Max: 2.5}, {Min: 3.5, Max: 20.0}},
 	}
+
 	got := BaselineOrbit(roller.NewScripted(7, 10), primary, primary.HZCO(), 3, 17)
 	if math.Abs(got-2.2) > 0.05 {
 		t.Errorf("BaselineOrbit = %v, want ~2.2 (high snap roll must still move into zone)", got)

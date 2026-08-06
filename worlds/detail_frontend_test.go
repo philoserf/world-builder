@@ -49,6 +49,7 @@ func TestZed_ApplyDetailFrontEnd(t *testing.T) {
 			if body.Kind != p.Body {
 				t.Errorf("seed %d: bodies[%d].Kind = %v, want %v", seed, i, body.Kind, p.Body)
 			}
+
 			if body.Orbit != p.Orbit {
 				t.Errorf("seed %d: bodies[%d].Orbit = %v, want %v", seed, i, body.Orbit, p.Orbit)
 			}
@@ -66,6 +67,7 @@ func TestZed_ApplyDetailFrontEnd(t *testing.T) {
 				if body.GGClass == worlds.NotGasGiant {
 					t.Errorf("seed %d: gas-giant bodies[%d] has NotGasGiant", seed, i)
 				}
+
 				if body.MassEarth <= 0 {
 					t.Errorf("seed %d: gas-giant bodies[%d] has MassEarth %v", seed, i, body.MassEarth)
 				}
@@ -82,6 +84,7 @@ func TestZed_ApplyDetailFrontEnd(t *testing.T) {
 					t.Errorf("seed %d: bodies[%d].Children[%d].Kind = %v, want BodyMoon",
 						seed, i, j, child.Kind)
 				}
+
 				if child.Parent != &u.Detail.Bodies[i] {
 					t.Errorf("seed %d: bodies[%d].Children[%d].Parent != &bodies[%d]",
 						seed, i, j, i)
@@ -95,6 +98,7 @@ func TestZed_ApplyDetailFrontEnd(t *testing.T) {
 				t.Errorf("seed %d: bodies[%d] (kind=%v) has empty Designation",
 					seed, i, body.Kind)
 			}
+
 			for j, child := range body.Children {
 				if child.Designation == "" {
 					t.Errorf("seed %d: bodies[%d].Children[%d] has empty Designation",
@@ -109,6 +113,7 @@ func TestZed_ApplyDetailFrontEnd(t *testing.T) {
 			if body.Kind == worlds.BodyEmpty {
 				continue
 			}
+
 			if body.Period.Hours <= 0 {
 				t.Errorf("seed %d: bodies[%d] (%s) has Period.Hours = %v",
 					seed, i, body.Designation, body.Period.Hours)
@@ -156,6 +161,7 @@ func TestSol_ApplyDetailFrontEnd(t *testing.T) {
 			if body.Kind == worlds.BodyEmpty {
 				continue
 			}
+
 			if body.Group.Designation != "A" {
 				t.Errorf("seed %d: bodies[%d].Group.Designation = %q, want \"A\"",
 					seed, i, body.Group.Designation)

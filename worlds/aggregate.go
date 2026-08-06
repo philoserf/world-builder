@@ -15,9 +15,11 @@ func AggregateSystem(u *Universe) {
 	// Step 1 — backfill per-allocation BaselineN.
 	allocs := make([]StarAllocation, len(u.Placement.Allocations))
 	copy(allocs, u.Placement.Allocations)
+
 	for i := range allocs {
 		allocs[i].BaselineN = computeBaselineN(allocs[i].Group, u.Detail.Bodies)
 	}
+
 	u.Detail.Allocations = allocs
 
 	// Step 2 — system-wide profile strings.
@@ -42,6 +44,7 @@ func computeBaselineN(g Group, bodies []Body) int {
 	if len(g.Members) == 0 {
 		return 0
 	}
+
 	hzco := g.HZCO()
 
 	idx := 0
@@ -49,27 +52,34 @@ func computeBaselineN(g Group, bodies []Body) int {
 	totalCount := 0
 	bestDelta := math.Inf(1)
 	bestIdx := 0
+
 	for _, body := range bodies {
 		if body.Group.Designation != g.Designation || body.Kind == BodyEmpty {
 			continue
 		}
+
 		idx++
 		totalCount++
+
 		if body.Orbit >= hzco-1.0 && body.Orbit <= hzco+1.0 {
 			inHZCount++
 		}
+
 		d := math.Abs(body.Orbit - hzco)
 		if d < bestDelta {
 			bestDelta = d
 			bestIdx = idx
 		}
 	}
+
 	if totalCount == 0 || inHZCount == 0 {
 		return 0
 	}
+
 	if inHZCount == totalCount {
 		return totalCount
 	}
+
 	return bestIdx
 }
 
@@ -78,6 +88,7 @@ func computeBaselineN(g Group, bodies []Body) int {
 // N=baseline number (floored at 0), S=system spread (one decimal).
 func buildShortProfile(u *Universe) string {
 	n := max(0, u.Placement.BaselineN)
+
 	return fmt.Sprintf(
 		"%d-%d-%d-%d-%s",
 		u.Placement.Counts.GasGiants,
@@ -97,6 +108,7 @@ func buildLongProfile(u *Universe) string {
 		baselineN   int
 		codes       []string
 	}
+
 	segments := []starSegment{}
 	groupIdx := map[string]int{}
 
@@ -113,7 +125,9 @@ func buildLongProfile(u *Universe) string {
 		if !ok {
 			continue
 		}
+
 		var code string
+
 		switch body.Kind {
 		case BodyTerrestrial:
 			code = "T"
@@ -124,6 +138,7 @@ func buildLongProfile(u *Universe) string {
 		default:
 			continue
 		}
+
 		segments[idx].codes = append(segments[idx].codes, code)
 	}
 
@@ -134,6 +149,7 @@ func buildLongProfile(u *Universe) string {
 		fields = append(fields, formatSpread(u.Placement.SystemSpread))
 		parts = append(parts, strings.Join(fields, "-"))
 	}
+
 	return strings.Join(parts, ":")
 }
 
@@ -159,23 +175,28 @@ func pickMainworld(u *Universe) (string, *Body) {
 		resource     int
 		hasSophont   bool
 	}
+
 	var candidates []candidate
 
 	for body := range u.AllBodies() {
 		if body.Kind != BodyTerrestrial && body.Kind != BodyMoon && body.Kind != BodyPlanetoidBelt {
 			continue
 		}
+
 		c := candidate{body: body}
 		if body.Habitability != nil {
 			c.habitability = body.Habitability.Rating
 		}
+
 		if body.Biology != nil {
 			c.resource = body.Biology.ResourceRating
 			c.hasSophont = body.Biology.HasNativeSophont || body.Biology.HadExtinctSophont
 		}
+
 		if body.Kind == BodyPlanetoidBelt && body.Belt != nil {
 			c.resource = body.Belt.ResourceRating
 		}
+
 		candidates = append(candidates, c)
 	}
 
@@ -190,36 +211,44 @@ func pickMainworld(u *Universe) (string, *Body) {
 	}
 
 	best := -1
+
 	for i, c := range candidates {
 		if !c.hasSophont {
 			continue
 		}
+
 		if best == -1 || better(i, best) {
 			best = i
 		}
 	}
+
 	if best == -1 {
 		for i, c := range candidates {
 			if c.habitability == 0 {
 				continue
 			}
+
 			if best == -1 || better(i, best) {
 				best = i
 			}
 		}
 	}
+
 	if best == -1 {
 		for i, c := range candidates {
 			if c.resource == 0 {
 				continue
 			}
+
 			if best == -1 || candidates[i].resource > candidates[best].resource {
 				best = i
 			}
 		}
 	}
+
 	if best == -1 {
 		best = 0
 	}
+
 	return candidates[best].body.Designation, candidates[best].body
 }

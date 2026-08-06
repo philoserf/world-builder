@@ -21,9 +21,11 @@ func Spread(primary Group, primaryAllocated int, baselineOrbit float64, baseline
 	if primary.MAO+float64(primaryAllocated)*base <= 20.0 {
 		return base
 	}
+
 	if primaryAllocated+totalStars == 0 {
 		return base
 	}
+
 	return primary.Total() / float64(primaryAllocated+totalStars)
 }
 
@@ -41,5 +43,6 @@ func MaximumSecondarySpread(secondary Group, secondaryAllocated int) float64 {
 			outer = iv.Max
 		}
 	}
+
 	return (outer - secondary.MAO) / float64(secondaryAllocated+1)
 }

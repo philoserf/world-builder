@@ -21,6 +21,7 @@ func TestZed_ApplyStage7(t *testing.T) {
 		if err != nil {
 			t.Fatalf("seed %d: GenerateSystemPlacement: %v", seed, err)
 		}
+
 		u := &worlds.Universe{System: sys, Placement: sp}
 		for _, step := range []func(roller.Roller, *worlds.Universe) error{
 			worlds.ApplyDetailFrontEnd,
@@ -46,10 +47,12 @@ func TestZed_ApplyStage7(t *testing.T) {
 			if body.Kind == worlds.BodyEmpty || body.Kind == worlds.BodyPlanetoidBelt {
 				continue
 			}
+
 			if !body.HasGeology() {
 				t.Errorf("seed %d: bodies[%d] (%s) missing Geology",
 					seed, i, body.Designation)
 			}
+
 			for j, child := range body.Children {
 				if !child.HasGeology() {
 					t.Errorf("seed %d: bodies[%d].Children[%d] (%s) missing Geology",

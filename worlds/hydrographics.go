@@ -1,7 +1,7 @@
 package worlds
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/philoserf/world-builder/roller"
 )
@@ -50,6 +50,7 @@ func RollHydroDigit(r roller.Roller, atmoCode int, atmoSubtype string, sizeCode 
 	}
 
 	digit := min(max(roll-7+atmoCode+dm, 0), 10)
+
 	return digit, nil
 }
 
@@ -79,6 +80,7 @@ func HydroRange(digit int) [2]int {
 	case 10:
 		return [2]int{96, 100}
 	}
+
 	return [2]int{0, 0}
 }
 
@@ -89,15 +91,20 @@ func HydroRange(digit int) [2]int {
 //   - other:    pct = hydroRange[0] + (d10 - 1), cap at hydroRange[1]
 func RefineHydroPercent(r roller.Roller, digit int, hydroRange [2]int) (int, error) {
 	v := r.Roll("d10")
+
 	switch digit {
 	case 0:
 		pct := max(-4+v, 0)
+
 		return pct, nil
 	case 10:
 		pct := min(96+v, 100)
+
 		return pct, nil
 	}
+
 	pct := min(hydroRange[0]+(v-1), hydroRange[1])
+
 	return pct, nil
 }
 
@@ -107,19 +114,23 @@ func GenerateHydrographics(r roller.Roller, atmo Atmosphere, sizeCode SizeCode, 
 	if err != nil {
 		return Hydrographics{}, err
 	}
+
 	rng := HydroRange(digit)
+
 	pct, err := RefineHydroPercent(r, digit, rng)
 	if err != nil {
 		return Hydrographics{}, err
 	}
+
 	return Hydrographics{Code: digit, PercentRange: rng, Percent: pct}, nil
 }
 
 // hydroCodeChar renders a hydrographics code as its UWP character: 0-9 → "0".."9", 10 → "A".
 func hydroCodeChar(code int) string {
 	if code <= 9 {
-		return fmt.Sprintf("%d", code)
+		return strconv.Itoa(code)
 	}
+
 	return "A"
 }
 
@@ -138,14 +149,17 @@ func DeriveHydrographicsProfile(meanK float64, atmCode, hydroCode int) string {
 	if hydroCode <= 0 || atmCode == 0 {
 		return ""
 	}
+
 	var liquid string
 	if isExoticAtmCode(atmCode) {
 		liquid = SelectExoticLiquid(meanK, atmCode)
 	} else {
 		liquid = "H2O"
 	}
+
 	if liquid == "" {
 		return ""
 	}
+
 	return "H" + hydroCodeChar(hydroCode) + ":" + liquid + "-100"
 }

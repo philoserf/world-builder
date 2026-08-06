@@ -110,19 +110,24 @@ func TestSolFidelity_MoonToPlanet_Moon(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}}
 
 	r := roller.NewScripted(4, 7)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.PeriodHours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case = %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-body.PeriodHours) > 0.01 {
 		t.Errorf("body.DayLength.SiderealHours = %v, want %v (PeriodHours)", body.DayLength.SiderealHours, body.PeriodHours)
 	}
@@ -180,19 +185,24 @@ func TestSolFidelity_MoonToPlanet_Phobos(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}}
 
 	r := roller.NewScripted(6, 7)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.PeriodHours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case = %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-body.PeriodHours) > 0.01 {
 		t.Errorf("body.DayLength.SiderealHours = %v, want %v (PeriodHours)", body.DayLength.SiderealHours, body.PeriodHours)
 	}
@@ -250,19 +260,24 @@ func TestSolFidelity_MoonToPlanet_Deimos(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}}
 
 	r := roller.NewScripted(6, 7)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.PeriodHours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case = %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-body.PeriodHours) > 0.01 {
 		t.Errorf("body.DayLength.SiderealHours = %v, want %v (PeriodHours)", body.DayLength.SiderealHours, body.PeriodHours)
 	}
@@ -320,19 +335,24 @@ func TestSolFidelity_MoonToPlanet_Io(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}}
 
 	r := roller.NewScripted(2, 7)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.PeriodHours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case = %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-body.PeriodHours) > 0.01 {
 		t.Errorf("body.DayLength.SiderealHours = %v, want %v (PeriodHours)", body.DayLength.SiderealHours, body.PeriodHours)
 	}
@@ -390,19 +410,24 @@ func TestSolFidelity_MoonToPlanet_Europa(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}}
 
 	r := roller.NewScripted(2, 7)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.PeriodHours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case = %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-body.PeriodHours) > 0.01 {
 		t.Errorf("body.DayLength.SiderealHours = %v, want %v (PeriodHours)", body.DayLength.SiderealHours, body.PeriodHours)
 	}
@@ -460,19 +485,24 @@ func TestSolFidelity_MoonToPlanet_Ganymede(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}}
 
 	r := roller.NewScripted(2, 7)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.PeriodHours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case = %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-body.PeriodHours) > 0.01 {
 		t.Errorf("body.DayLength.SiderealHours = %v, want %v (PeriodHours)", body.DayLength.SiderealHours, body.PeriodHours)
 	}
@@ -537,19 +567,24 @@ func TestSolFidelity_PlanetToStar_Mercury_DivergesFrom32Resonance(t *testing.T) 
 	// Maximum 2D = 12 → adjusted = 10 (retrograde rotation, not a lock).
 	// 1D for result-10 day-length reroll.
 	r := roller.NewScripted(12, 1)
+
 	tl, err := GenerateTidalLock(r, body, nil, sys, nil, body.Period.Hours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock — DM=−2 still allows a roll")
 	}
+
 	if tl.Case != TidalLockCasePlanetToStar {
 		t.Errorf("Case = %v, want PlanetToStar", tl.Case)
 	}
+
 	if tl.LockRatio != "" {
 		t.Errorf("LockRatio = %q, want empty (no lock reachable for real Mercury parameters)", tl.LockRatio)
 	}
+
 	if tl.FinalResult > 10 {
 		t.Errorf("FinalResult = %d; >10 would imply a lock reachable, but max possible result is 10",
 			tl.FinalResult)
@@ -612,19 +647,24 @@ func TestSolFidelity_MoonToPlanet_Callisto(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 4.6}}
 
 	r := roller.NewScripted(2, 7)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.PeriodHours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock")
 	}
+
 	if tl.Case != TidalLockCaseMoonToPlanet {
 		t.Errorf("Case = %v, want MoonToPlanet", tl.Case)
 	}
+
 	if tl.LockRatio != "1:1" {
 		t.Errorf("LockRatio = %q, want 1:1", tl.LockRatio)
 	}
+
 	if math.Abs(body.DayLength.SiderealHours-body.PeriodHours) > 0.01 {
 		t.Errorf("body.DayLength.SiderealHours = %v, want %v (PeriodHours)", body.DayLength.SiderealHours, body.PeriodHours)
 	}

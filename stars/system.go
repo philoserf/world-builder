@@ -59,9 +59,11 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	if closePresent {
 		closeCompanionPresent = RollPresence(r, primary, OrbitCompanion)
 	}
+
 	if nearPresent {
 		nearCompanionPresent = RollPresence(r, primary, OrbitCompanion)
 	}
+
 	if farPresent {
 		farCompanionPresent = RollPresence(r, primary, OrbitCompanion)
 	}
@@ -75,14 +77,19 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	// sys.Companions. Returns the index of the appended companion.
 	genCompanion := func(parent Star, parentIdx int, role NonPrimaryRole, oc OrbitClass) (int, error) {
 		descriptor := RollNonPrimaryDescriptor(r, parent, role)
-		var star Star
-		var genErr error
+
+		var (
+			star   Star
+			genErr error
+		)
+
 		if descriptor == "Other" {
 			otherDesc := RollNonPrimaryDescriptor(r, parent, RoleOther)
 			star, genErr = GenerateCompanionStar(r, parent, otherDesc)
 		} else {
 			star, genErr = GenerateCompanionStar(r, parent, descriptor)
 		}
+
 		if genErr != nil {
 			return -1, fmt.Errorf("companion (descriptor %q): %w", descriptor, genErr)
 		}
@@ -94,22 +101,27 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 		if isStellarKind(star.Kind) && star.SpectralType.Letter != 0 {
 			st := star.SpectralType
 			lc := star.LuminosityClass
+
 			mass, merr := ComputeMass(st, lc)
 			if merr != nil {
 				return -1, fmt.Errorf("companion mass: %w", merr)
 			}
+
 			diameter, derr := ComputeDiameter(st, lc)
 			if derr != nil {
 				return -1, fmt.Errorf("companion diameter: %w", derr)
 			}
+
 			temperature, terr := ComputeTemperature(st)
 			if terr != nil {
 				return -1, fmt.Errorf("companion temperature: %w", terr)
 			}
+
 			if opts.WithVariance {
 				mass = ApplyVariance(mass, r, 0.20)
 				diameter = ApplyVariance(diameter, r, 0.20)
 			}
+
 			star.Mass = mass
 			star.Diameter = diameter
 			star.Temperature = temperature
@@ -121,6 +133,7 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 			if aerr != nil {
 				return -1, fmt.Errorf("special-object age: %w", aerr)
 			}
+
 			star.AgeGyr = age
 		}
 
@@ -130,6 +143,7 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 			ParentIndex: parentIdx,
 		}
 		sys.Companions = append(sys.Companions, comp)
+
 		return len(sys.Companions) - 1, nil
 	}
 
@@ -142,13 +156,16 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	}
 
 	closeIdx := -1
+
 	if closePresent {
 		idx, err := genCompanion(primary, -1, RoleSecondary, OrbitClose)
 		if err != nil {
 			return System{}, err
 		}
+
 		closeIdx = idx
 	}
+
 	if closePresent && closeCompanionPresent {
 		if _, err := genCompanion(sys.Companions[closeIdx].Star, closeIdx, RoleCompanion, OrbitCompanion); err != nil {
 			return System{}, err
@@ -156,13 +173,16 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	}
 
 	nearIdx := -1
+
 	if nearPresent {
 		idx, err := genCompanion(primary, -1, RoleSecondary, OrbitNear)
 		if err != nil {
 			return System{}, err
 		}
+
 		nearIdx = idx
 	}
+
 	if nearPresent && nearCompanionPresent {
 		if _, err := genCompanion(sys.Companions[nearIdx].Star, nearIdx, RoleCompanion, OrbitCompanion); err != nil {
 			return System{}, err
@@ -170,13 +190,16 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 	}
 
 	farIdx := -1
+
 	if farPresent {
 		idx, err := genCompanion(primary, -1, RoleSecondary, OrbitFar)
 		if err != nil {
 			return System{}, err
 		}
+
 		farIdx = idx
 	}
+
 	if farPresent && farCompanionPresent {
 		if _, err := genCompanion(sys.Companions[farIdx].Star, farIdx, RoleCompanion, OrbitCompanion); err != nil {
 			return System{}, err
@@ -193,20 +216,24 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 		parentMass := keplerParentMass(&sys, primary, i)
 
 		var orbit float64
+
 		if c.OrbitClass == OrbitCompanion && IsGiantClass(primary.LuminosityClass) {
 			// WBH p.27: companion of giant primary uses 1D × MAO(primary).
 			mao, merr := MAO(primary)
 			if merr != nil {
 				return System{}, fmt.Errorf("companion[%d] orbit MAO: %w", i, merr)
 			}
+
 			orbit = RollCompanionOrbitOfGiant(r, mao)
 		} else {
 			o, oerr := RollStellarOrbit(r, c.OrbitClass, primary.LuminosityClass)
 			if oerr != nil {
 				return System{}, fmt.Errorf("companion[%d] orbit: %w", i, oerr)
 			}
+
 			orbit = o
 		}
+
 		c.OrbitNumber = orbit
 		c.AU = OrbitToAU(orbit)
 
@@ -214,18 +241,21 @@ func GenerateSystem(r roller.Roller, opts GenerateSystemOpts) (System, error) {
 		if eerr != nil {
 			return System{}, fmt.Errorf("companion[%d] eccentricity: %w", i, eerr)
 		}
+
 		c.Eccentricity = ecc
 
 		inc, _, ierr := RollInclination(r)
 		if ierr != nil {
 			return System{}, fmt.Errorf("companion[%d] inclination: %w", i, ierr)
 		}
+
 		c.Inclination = inc
 
 		c.PeriodYears = OrbitPeriodYears(c.AU, parentMass, c.Star.Mass)
 	}
 
 	AssignDesignations(&sys)
+
 	return sys, nil
 }
 
@@ -248,6 +278,7 @@ func keplerParentMass(sys *System, primary Star, i int) float64 {
 	for j := range i {
 		total += sys.Companions[j].Star.Mass
 	}
+
 	return total
 }
 
@@ -258,6 +289,7 @@ func isStellarKind(k StarKind) bool {
 	case KindMainSequence, KindGiant, KindSubgiant, KindSupergiant, KindSubdwarf:
 		return true
 	}
+
 	return false
 }
 
@@ -272,6 +304,7 @@ func IsAggregateObject(k StarKind) bool {
 	case KindNebula, KindStarCluster, KindAnomaly:
 		return true
 	}
+
 	return false
 }
 
@@ -289,10 +322,12 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 	if column == "" {
 		column = PeculiarPathSpecial
 	}
+
 	kind, lc, err := RollSpecialPrimary(r, column)
 	if err != nil {
 		return Star{}, err
 	}
+
 	if lc == "Giants" {
 		// WBH p.16: "A result of Class III+ requires a roll in the giants
 		// column to determine the final luminosity class of the star,
@@ -302,8 +337,10 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 		if gerr != nil {
 			return Star{}, gerr
 		}
+
 		return generatePrimaryAtClass(r, giantClass, GenerateOpts{WithVariance: opts.WithVariance, Accuracy: opts.Accuracy})
 	}
+
 	if lc != "" {
 		// Class redirect: re-roll on the regular Star Type Determination
 		// flow at the indicated class.
@@ -321,7 +358,9 @@ func generateSpecialPrimary(r roller.Roller, opts GenerateSystemOpts) (Star, err
 	if err != nil {
 		return Star{}, err
 	}
+
 	star.AgeGyr = age
+
 	return star, nil
 }
 
@@ -335,6 +374,7 @@ func specialObjectAge(r roller.Roller, kind StarKind, deadStarMass float64) (flo
 	if IsAggregateObject(kind) {
 		return 0, nil
 	}
+
 	return AgeSpecialObject(r, kind, deadStarMass)
 }
 
@@ -401,6 +441,7 @@ func specialObjectPrimaryStub(kind StarKind) Star {
 			Kind: KindAnomaly,
 		}
 	}
+
 	return Star{}
 }
 

@@ -12,10 +12,12 @@ func TestRollBeltSpan_BasicFormula(t *testing.T) {
 	t.Parallel()
 	// Spread = 0.5 (Zed system), 2D = 5 → 0.5 * 5 / 10 = 0.25
 	r := roller.NewScripted(5)
+
 	got, err := RollBeltSpan(r, 0.5, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if math.Abs(got-0.25) > 1e-6 {
 		t.Errorf("got %v, want 0.25", got)
 	}
@@ -25,10 +27,12 @@ func TestRollBeltSpan_AppliesGGAdjacencyDM(t *testing.T) {
 	t.Parallel()
 	// Spread 0.5, 2D=6, DM-1 → effective 5 → 0.5 * 5 / 10 = 0.25
 	r := roller.NewScripted(6)
+
 	got, err := RollBeltSpan(r, 0.5, -1)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if math.Abs(got-0.25) > 1e-6 {
 		t.Errorf("with DM-1: got %v, want 0.25", got)
 	}
@@ -43,19 +47,24 @@ func TestRollBeltComposition_AabPI(t *testing.T) {
 	//   other = 100 - 55 - 40 - 2 = 3
 	// Scripted dice: 2D=6 (composition row), 1D=3 (m), 1D=5 (s), 1D=2 (c).
 	r := roller.NewScripted(6, 3, 5, 2)
+
 	got, err := RollBeltComposition(r, -4)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got.MTypePct != 55 {
 		t.Errorf("m-type: got %d, want 55", got.MTypePct)
 	}
+
 	if got.STypePct != 40 {
 		t.Errorf("s-type: got %d, want 40", got.STypePct)
 	}
+
 	if got.CTypePct != 2 {
 		t.Errorf("c-type: got %d, want 2", got.CTypePct)
 	}
+
 	if got.OtherPct != 3 {
 		t.Errorf("other: got %d, want 3", got.OtherPct)
 	}
@@ -68,10 +77,12 @@ func TestRollBeltBulk_AabPI(t *testing.T) {
 	// NOTE: WBH notation "2D2" is "2D + 2" (range 4-14); rendered in code as "2D+2".
 	// Scripted value: 6 (post-modifier 2D+2 result — Scripted ignores notation, returns value directly).
 	r := roller.NewScripted(6)
+
 	got, err := RollBeltBulk(r, 6.3, BeltComposition{CTypePct: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 3 {
 		t.Errorf("got %d, want 3", got)
 	}
@@ -84,13 +95,16 @@ func TestRollResourceRating_AabPI(t *testing.T) {
 	// Book shows the answer as 11 ("B" hex) — book applies cType DM-1 instead of -0.
 	// Document divergence; accept 11 or 12.
 	r := roller.NewScripted(11)
+
 	got, err := RollResourceRating(r, 3, BeltComposition{MTypePct: 55, CTypePct: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 11 && got != 12 {
 		t.Errorf("got %d, want 11 (book) or 12 (formula)", got)
 	}
+
 	if got == 12 {
 		t.Logf("WBH p.74 inconsistency: book example shows 11 but strict formula gives 12 (cType%%/10 floor = 0)")
 	}
@@ -100,10 +114,12 @@ func TestRollSigSize1Bodies_AabPI(t *testing.T) {
 	t.Parallel()
 	// WBH p.74 Aab PI: 2D=8 + (-12) + bulk=3 = -1 → clamped 0.
 	r := roller.NewScripted(8)
+
 	got, err := RollSigSize1Bodies(r, 3, 2.7, 3.3, 0.25)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 0 {
 		t.Errorf("got %d, want 0", got)
 	}
@@ -114,13 +130,16 @@ func TestRollSigSizeSBodies_AabPI(t *testing.T) {
 	// WBH p.74 Aab PI: 2D=10, bulk=3, no special DMs → formula gives 0 + (0+1)×(3+1) = 4.
 	// Book example shows 3. Accept either; book may have unstated DM.
 	r := roller.NewScripted(10)
+
 	got, err := RollSigSizeSBodies(r, 3, 2.7, 3.3, 0.25)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 3 && got != 4 {
 		t.Errorf("got %d, want 3 (book) or 4 (formula)", got)
 	}
+
 	if got == 4 {
 		t.Logf("WBH p.74 inconsistency: book example shows 3 but strict formula gives 4")
 	}
@@ -128,6 +147,7 @@ func TestRollSigSizeSBodies_AabPI(t *testing.T) {
 
 func TestFormatBeltProfile_AabPI(t *testing.T) {
 	t.Parallel()
+
 	b := BeltDetails{
 		Span:           0.25,
 		Composition:    BeltComposition{MTypePct: 55, STypePct: 40, CTypePct: 2, OtherPct: 3},
@@ -137,6 +157,7 @@ func TestFormatBeltProfile_AabPI(t *testing.T) {
 		SigSizeSBodies: 3,
 	}
 	got := FormatBeltProfile(b)
+
 	want := "0.25-55.40.02.03-3-B-0-3"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -149,10 +170,12 @@ func TestZed_AabPI_BeltProfile(t *testing.T) {
 	//   Span 2D=5; Composition 2D=6, 1D mtype=3, 1D stype=5, 1D ctype=2;
 	//   Bulk 2D+2 result = 6 (book worked example "4 + 2 = 6"); Resources 2D=11; Size1 2D=8; SizeS 2D=10
 	r := roller.NewScripted(5, 6, 3, 5, 2, 6, 11, 8, 10)
+
 	belt, err := GenerateBeltDetails(r, 2.7, 0.5, 3.3, 6.3, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	want := "0.25-55.40.02.03-3-B-0-3"
 	got := FormatBeltProfile(belt)
 	// Book has minor inconsistencies on resource (11 vs 12) and sigSize-S (3 vs 4); allow both renderings.
@@ -176,11 +199,14 @@ func TestZed_CabPI_BeltProfile(t *testing.T) {
 	//
 	// Pragmatic approach: feed plausible scripted values and accept book's output OR strict-formula output.
 	r := roller.NewScripted(6, 8, 6, 6, 4, 7, 10, 12, 10)
+
 	belt, err := GenerateBeltDetails(r, 1.4, 0.5, 0.75, 6.3, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	want := "0.3-15.60.20.05-6-8-2-8"
+
 	got := FormatBeltProfile(belt)
 	if got != want {
 		t.Logf("Cab PI profile: got %q, want %q (book worked example reproduction is approximate due to formula divergences)", got, want)
@@ -193,10 +219,12 @@ func TestGenerateBeltDetails_BothSpanDMsStack(t *testing.T) {
 	// last-writer-wins). Spread 0.5, 2D=6 → effective 6+2=8 →
 	// span 0.5 × 8 / 10 = 0.4.
 	r := roller.NewScripted(6, 8, 6, 6, 4, 7, 10, 12, 10)
+
 	belt, err := GenerateBeltDetails(r, 1.4, 0.5, 0.75, 6.3, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if math.Abs(belt.Span-0.4) > 1e-6 {
 		t.Errorf("span with both DMs = %v, want 0.4 (DM must stack to +2)", belt.Span)
 	}
@@ -204,8 +232,10 @@ func TestGenerateBeltDetails_BothSpanDMsStack(t *testing.T) {
 
 func TestBeltSpanFlags(t *testing.T) {
 	t.Parallel()
+
 	gA := Group{Designation: "A"}
 	gB := Group{Designation: "B"}
+
 	cases := []struct {
 		name       string
 		bodies     []Body
@@ -272,6 +302,7 @@ func TestBeltSpanFlags(t *testing.T) {
 			if adjGG != c.wantAdjGG {
 				t.Errorf("adjacentToGG = %v, want %v", adjGG, c.wantAdjGG)
 			}
+
 			if outerm != c.wantOuterm {
 				t.Errorf("outermostSlot = %v, want %v", outerm, c.wantOuterm)
 			}
@@ -281,7 +312,9 @@ func TestBeltSpanFlags(t *testing.T) {
 
 func TestFormatBeltProfile_TinySpanNotZero(t *testing.T) {
 	t.Parallel()
+
 	comp := BeltComposition{MTypePct: 50, STypePct: 30, CTypePct: 15, OtherPct: 5}
+
 	cases := []struct {
 		span float64
 		want string // expected span segment (before the first '-')
@@ -295,10 +328,12 @@ func TestFormatBeltProfile_TinySpanNotZero(t *testing.T) {
 	for _, c := range cases {
 		b := BeltDetails{Span: c.span, Composition: comp, Bulk: 3, ResourceRating: 7}
 		got := FormatBeltProfile(b)
+
 		seg := got[:strings.IndexByte(got, '-')]
 		if seg == "0" {
 			t.Errorf("span %v rendered as bare \"0\" — nonzero span must never print as 0 (full %q)", c.span, got)
 		}
+
 		if seg != c.want {
 			t.Errorf("span %v: segment = %q, want %q (full %q)", c.span, seg, c.want, got)
 		}

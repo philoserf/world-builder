@@ -2,6 +2,7 @@ package worlds
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/philoserf/world-builder/roller"
 )
@@ -48,9 +49,11 @@ func nForSizeCode(c SizeCode) int {
 	case "R", "S", "":
 		return -1
 	}
+
 	if len(c) != 1 {
 		return -1
 	}
+
 	ch := c[0]
 	switch {
 	case ch >= '0' && ch <= '9':
@@ -58,6 +61,7 @@ func nForSizeCode(c SizeCode) int {
 	case ch >= 'A' && ch <= 'F':
 		return int(ch-'A') + 10
 	}
+
 	return -1
 }
 
@@ -70,12 +74,14 @@ func sizeCodeForN(n int) SizeCode {
 	if n < 0 {
 		return "0"
 	}
+
 	if n > 15 {
 		n = 15
 	}
+
 	switch {
 	case n < 10:
-		return SizeCode(fmt.Sprintf("%d", n))
+		return SizeCode(strconv.Itoa(n))
 	default:
 		return SizeCode(fmt.Sprintf("%c", 'A'+n-10))
 	}
@@ -98,6 +104,7 @@ func RollTerrestrialSize(r roller.Roller) (TerrestrialSize, error) {
 	}
 
 	var n int
+
 	switch {
 	case selector <= 2:
 		n = r.Roll("1D")
@@ -112,10 +119,13 @@ func RollTerrestrialSize(r roller.Roller) (TerrestrialSize, error) {
 	if n > 15 {
 		n = 15
 	}
+
 	if n < 1 {
 		n = 1
 	}
+
 	code := sizeCodeForN(n)
+
 	return TerrestrialSize{
 		SizeCode:   code,
 		DiameterKm: basicTerrestrialDiameterTable[code],

@@ -21,10 +21,12 @@ func CapturePreTidalLockSnapshot(body *Body) PreTidalLockSnapshot {
 		v := *body.AxialTilt
 		snap.AxialTilt = &v
 	}
+
 	if body.DayLength != nil {
 		v := *body.DayLength
 		snap.DayLength = &v
 	}
+
 	return snap
 }
 
@@ -38,6 +40,7 @@ func (s PreTidalLockSnapshot) RestoreInto(body *Body) {
 	} else {
 		body.AxialTilt = nil
 	}
+
 	if s.DayLength != nil {
 		v := *s.DayLength
 		body.DayLength = &v

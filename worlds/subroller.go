@@ -24,6 +24,7 @@ func bodyForkID(body, parent *Body) string {
 	if parent != nil {
 		return parent.Designation + "/" + body.Designation
 	}
+
 	return body.Designation
 }
 

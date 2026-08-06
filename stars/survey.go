@@ -76,9 +76,11 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 
 	// Find primary's OrbitCompanion child (Ab).
 	primaryCompanionIdx := -1
+
 	for i, c := range sys.Companions {
 		if c.ParentIndex == -1 && c.OrbitClass == OrbitCompanion {
 			primaryCompanionIdx = i
+
 			break
 		}
 	}
@@ -90,6 +92,7 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 	if primaryCompanionIdx < 0 {
 		primaryRow.HZCO = sys.Primary.HZCO()
 	}
+
 	form.Stars = append(form.Stars, primaryRow)
 
 	if primaryCompanionIdx >= 0 {
@@ -106,7 +109,7 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 			comp.PeriodYears,
 		)
 		// "Aab (A)" parenthetical: simplified outer designation = "A".
-		bary.Component = bary.Component + " (A)"
+		bary.Component += " (A)"
 		bary.HZCO = CompositeHZCO(sys.Primary, comp.Star)
 		form.Stars = append(form.Stars, bary)
 	}
@@ -114,6 +117,7 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 	// Track the running outer-composite mass and luminosity (starts as
 	// primary + its companion if present).
 	runningMass := sys.Primary.Mass
+
 	runningLum := sys.Primary.Luminosity
 	if primaryCompanionIdx >= 0 {
 		runningMass += sys.Companions[primaryCompanionIdx].Star.Mass
@@ -128,22 +132,28 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 	// ("AB", "ABC").
 	for _, oc := range []OrbitClass{OrbitClose, OrbitNear, OrbitFar} {
 		mainIdx := -1
+
 		for i, c := range sys.Companions {
 			if c.ParentIndex == -1 && c.OrbitClass == oc {
 				mainIdx = i
+
 				break
 			}
 		}
+
 		if mainIdx < 0 {
 			continue
 		}
+
 		main := sys.Companions[mainIdx]
 
 		// Companion of this orbit-class star?
 		innerIdx := -1
+
 		for i, c := range sys.Companions {
 			if c.ParentIndex == mainIdx && c.OrbitClass == OrbitCompanion {
 				innerIdx = i
+
 				break
 			}
 		}
@@ -154,9 +164,11 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 		if innerIdx < 0 {
 			mainRow.HZCO = main.Star.HZCO()
 		}
+
 		form.Stars = append(form.Stars, mainRow)
 
 		var addedMass, addedLum float64
+
 		if innerIdx >= 0 {
 			inner := sys.Companions[innerIdx]
 			form.Stars = append(form.Stars, componentFromCompanion(inner))
@@ -184,7 +196,8 @@ func BuildSurveyForm(sys System, meta SurveyMetadata) SurveyForm {
 
 		runningMass += addedMass
 		runningLum += addedLum
-		runningDesig = runningDesig + outerLetter(main.Designation)
+		// runningDesig is read every iteration below; bounded by WBH's small companion counts.
+		runningDesig += outerLetter(main.Designation) //nolint:modernize // see comment above
 
 		// Outer composite for the running aggregate (e.g. AB, ABC).
 		outer := SurveyComponent{
@@ -232,12 +245,15 @@ func componentFromCompanion(c CompanionStar) SurveyComponent {
 func buildBarycentre(name string, masses, lums []float64, orbit, au, ecc, period float64) SurveyComponent {
 	totalMass := 0.0
 	totalLum := 0.0
+
 	for _, m := range masses {
 		totalMass += m
 	}
+
 	for _, l := range lums {
 		totalLum += l
 	}
+
 	return SurveyComponent{
 		Component:    name,
 		Class:        "—",
@@ -273,12 +289,15 @@ func formatClass(s Star) string {
 	case KindAnomaly:
 		return "Anomaly"
 	}
+
 	if s.SpectralType.Letter == 0 {
 		return "—"
 	}
+
 	if s.LuminosityClass == "" {
 		return s.SpectralType.String()
 	}
+
 	return s.SpectralType.String() + " " + string(s.LuminosityClass)
 }
 
@@ -289,6 +308,7 @@ func compositeName(parent, child string) string {
 	if len(parent) < 2 || len(child) < 2 {
 		return parent + child
 	}
+
 	return parent + string(child[1])
 }
 
@@ -297,6 +317,7 @@ func outerLetter(d string) string {
 	if d == "" {
 		return ""
 	}
+
 	return string(d[0])
 }
 
@@ -305,15 +326,18 @@ func outerLetter(d string) string {
 // multi-star appends ":<desig>-<orbit#>-<ecc>-T# C-M-D-L" per companion.
 func ShortProfile(sys System) string {
 	var b strings.Builder
+
 	count := 1 + len(sys.Companions)
 	fmt.Fprintf(&b, "%d-%s-%.3f-%.3f-%.3f-%.3f",
 		count, formatClass(sys.Primary),
 		sys.Primary.Mass, sys.Primary.Diameter, sys.Primary.Luminosity, sys.AgeGyr)
+
 	for _, c := range sys.Companions {
 		fmt.Fprintf(&b, ":%s-%.2f-%.2f-%s-%.3f-%.3f-%.3f",
 			c.Designation, c.OrbitNumber, c.Eccentricity,
 			formatClass(c.Star),
 			c.Star.Mass, c.Star.Diameter, c.Star.Luminosity)
 	}
+
 	return b.String()
 }

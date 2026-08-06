@@ -16,6 +16,7 @@ func IsGiantClass(lc LuminosityClass) bool {
 	case Ia, Ib, II, III:
 		return true
 	}
+
 	return false
 }
 
@@ -46,22 +47,28 @@ func RollStellarOrbit(r roller.Roller, oc OrbitClass, primaryClass LuminosityCla
 		if v == 0 {
 			return 0.5, nil
 		}
+
 		return float64(v), nil
 	case OrbitNear:
 		v := r.Roll("1D+5")
+
 		return float64(v), nil
 	case OrbitFar:
 		v := r.Roll("1D+11")
+
 		return float64(v), nil
 	case OrbitCompanion:
 		switch primaryClass {
 		case Ia, Ib, II, III:
 			return 0, ErrCompanionOfGiantMAO
 		}
+
 		first := r.Roll("1D")
 		second := r.Roll("2D-7")
+
 		return float64(first)/10.0 + float64(second)/100.0, nil
 	}
+
 	return 0, fmt.Errorf("stars: unknown orbit class: %q", oc)
 }
 
@@ -92,28 +99,36 @@ func RollEccentricity(r roller.Roller, opts EccentricityOpts) (float64, error) {
 	if opts.IsStar {
 		dm += 2
 	}
+
 	dm += opts.NestingDepth
 	if opts.Orbit < 1.0 && opts.SystemAgeGyr > 1.0 {
 		dm--
 	}
+
 	if opts.IsBeltMember {
 		dm++
 	}
+
 	dm += opts.ExtraDM
 	natural := r.Roll("2D")
 	row := max(5, min(12, natural+dm))
+
 	rowData, ok := EccentricityValues[row]
 	if !ok {
 		return 0, fmt.Errorf("stars: eccentricity row %d missing", row)
 	}
+
 	second := r.Roll(rowData.SecondRoll)
+
 	v := rowData.Base + float64(second)/rowData.Divisor
 	if v < 0 {
 		v = 0
 	}
+
 	if v > 0.999 {
 		v = 0.999
 	}
+
 	return v, nil
 }
 
@@ -150,6 +165,7 @@ func RollInclination(r roller.Roller) (degrees float64, severity string, err err
 		if ierr != nil {
 			return 0, "", ierr
 		}
+
 		return 180.0 - inner, "Retrograde", nil
 	}
 }
@@ -159,7 +175,7 @@ func RollInclination(r roller.Roller) (degrees float64, severity string, err err
 // OrbitPeriodYears returns the orbital period in years for two masses
 // orbiting a common barycentre at semi-major axis auSemiMajor.
 //
-// Kepler's third law: P (years) = sqrt(AU^3 / (M + m))
+// Kepler's third law: P (years) = sqrt(AU^3 / (M + m)).
 func OrbitPeriodYears(auSemiMajor, primaryMass, companionMass float64) float64 {
 	return math.Sqrt(auSemiMajor * auSemiMajor * auSemiMajor / (primaryMass + companionMass))
 }
@@ -180,12 +196,15 @@ func OrbitToAU(orbit float64) float64 {
 	if orbit < 0 {
 		orbit = 0
 	}
+
 	if orbit >= 20 {
 		return OrbitNumberTable[20].DistanceAU
 	}
+
 	floor := int(orbit)
 	frac := orbit - float64(floor)
 	row := OrbitNumberTable[floor]
+
 	return row.DistanceAU + row.DifferenceAU*frac
 }
 
@@ -200,21 +219,25 @@ func AUToOrbit(au float64) float64 {
 	if au <= 0 {
 		return 0
 	}
+
 	if au >= OrbitNumberTable[20].DistanceAU {
 		return 20
 	}
 	// Find the largest whole Orbit# whose DistanceAU ≤ au.
 	full := 0
-	for n := 0; n <= 20; n++ {
+
+	for n := range 21 {
 		if OrbitNumberTable[n].DistanceAU <= au {
 			full = n
 		} else {
 			break
 		}
 	}
+
 	row := OrbitNumberTable[full]
 	if row.DifferenceAU == 0 {
 		return float64(full)
 	}
+
 	return float64(full) + (au-row.DistanceAU)/row.DifferenceAU
 }

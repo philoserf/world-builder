@@ -172,6 +172,7 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 	fmt.Fprintf(b, "**SYSTEM AGE (Gyr):** %.3f\n\n", p.SystemAgeGyr)
 
 	b.WriteString("### ORBIT\n")
+
 	if p.ParentDesignation != "" {
 		fmt.Fprintf(b, "- AU: %.2f (via %s), Eccentricity: %.2f, Period (h): %.2f\n",
 			p.AU, p.ParentDesignation, p.Eccentricity, p.PeriodHours)
@@ -182,6 +183,7 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 	}
 
 	b.WriteString("### SIZE\n")
+
 	if p.IsGasGiant {
 		fmt.Fprintf(b, "- Class: %s gas giant\n", p.GasGiantClass)
 		fmt.Fprintf(b, "- Diameter (km): %.0f (%.2f × Terra), Mass (Earth): %.3f\n",
@@ -190,49 +192,62 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 		if p.Composition != "" {
 			fmt.Fprintf(b, "- Composition: %s\n", p.Composition)
 		}
+
 		fmt.Fprintf(b, "- Diameter (km): %.0f, Density: %.2f, Gravity: %.2f, Mass (Earth): %.3f\n",
 			p.DiameterKm, p.Density, p.Gravity, p.MassEarth)
+
 		if p.EscapeVelocity > 0 {
 			fmt.Fprintf(b, "- Escape velocity (m/s): %.0f\n", p.EscapeVelocity)
 		}
+
 		if p.SizeProfile != "" {
 			fmt.Fprintf(b, "- Size profile: `%s`\n", p.SizeProfile)
 		}
 	}
+
 	b.WriteString("\n")
 
 	if !p.IsGasGiant {
 		b.WriteString("### ATMOSPHERE\n")
+
 		if p.Atmosphere == nil {
 			b.WriteString("- (none — vacuum)\n\n")
 		} else {
 			atm := p.Atmosphere
 			fmt.Fprintf(b, "- Code: %d, Pressure (bar): %.3f, O₂ (bar): %.3f, Scale Height: %.2f\n",
 				atm.Code, atm.Pressure, atm.OxygenPartialPressure, atm.ScaleHeight)
+
 			if atm.Subtype != "" {
 				fmt.Fprintf(b, "- Subtype: %s\n", atm.Subtype)
 			}
+
 			if atm.ProfileShorthand != "" {
 				fmt.Fprintf(b, "- Profile: %s\n", atm.ProfileShorthand)
 			}
+
 			for _, t := range atm.Taints {
 				fmt.Fprintf(b, "- Taint: %s (severity %d, persistence %d)\n", t.Code, t.Severity, t.Persistence)
 			}
+
 			if len(atm.Hazards) > 0 {
 				fmt.Fprintf(b, "- Insidious hazards: %s\n", strings.Join(atm.Hazards, ", "))
 			}
+
 			b.WriteString("\n")
 		}
 
 		b.WriteString("### HYDROGRAPHICS\n")
+
 		if p.Hydrographics == nil {
 			b.WriteString("- (none)\n\n")
 		} else {
 			h := p.Hydrographics
 			fmt.Fprintf(b, "- Code: %d, Coverage (%%): %d, Profile: %s\n", h.Code, h.Percent, h.Profile)
+
 			if h.Distribution != "" {
 				fmt.Fprintf(b, "- Surface distribution: %s (%s)\n", h.Distribution, h.Geography)
 			}
+
 			b.WriteString("\n")
 		}
 	}
@@ -245,22 +260,27 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 
 	if p.IsGasGiant {
 		b.WriteString("### GAS GIANT\n")
+
 		if p.ResidualTempK > 0 {
 			fmt.Fprintf(b, "- Residual temperature (K): %.1f (WBH p.125)\n", p.ResidualTempK)
 		} else {
 			b.WriteString("- Residual temperature (K): — (below 1 K, WBH p.125)\n")
 		}
+
 		b.WriteString("- No discrete surface: atmosphere, hydrographics, life, and habitability do not apply.\n\n")
 	} else {
 		b.WriteString("### TEMPERATURE\n")
+
 		if p.Temperature == nil {
 			b.WriteString("- (not computed)\n\n")
 		} else {
 			t := p.Temperature
+
 			low := fmt.Sprintf("%.1f", t.LowK)
 			if t.LowK < 0 {
 				low = "—"
 			}
+
 			fmt.Fprintf(b, "- High (K): %.1f, Mean (K): %.1f, Low (K): %s\n",
 				t.HighK, t.MeanK, low)
 			fmt.Fprintf(b, "- Luminosity: %.3f, Albedo: %.2f, Greenhouse: %.2f\n\n",
@@ -268,6 +288,7 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 		}
 
 		b.WriteString("### SEISMIC\n")
+
 		if p.Seismic == nil {
 			b.WriteString("- (not computed)\n\n")
 		} else {
@@ -277,16 +298,19 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 		}
 
 		b.WriteString("### LIFE\n")
+
 		if p.Life == nil {
 			b.WriteString("- (not computed)\n\n")
 		} else {
 			l := p.Life
+
 			soph := "no"
 			if l.HasSophont {
 				soph = "yes"
 			} else if l.HadExtinct {
 				soph = "extinct"
 			}
+
 			fmt.Fprintf(b, "- Biomass: %d, Biocomplexity: %d, Sophonts: %s, Biodiversity: %d, Compatibility: %d\n\n",
 				l.Biomass, l.Biocomplexity, soph, l.Biodiversity, l.Compatibility)
 			fmt.Fprintf(b, "### RESOURCES\n- Rating: %d\n\n", l.ResourceRating)
@@ -294,9 +318,11 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 
 		b.WriteString("### HABITABILITY\n")
 		fmt.Fprintf(b, "- Rating: %d\n", p.HabitabilityRating)
+
 		if p.HabitabilityNotes != "" {
 			fmt.Fprintf(b, "- Notes: %s\n", p.HabitabilityNotes)
 		}
+
 		b.WriteString("\n")
 	}
 
@@ -304,18 +330,22 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 		b.WriteString("### SUBORDINATES\n")
 		b.WriteString("| Designation | Size | Diameter (km) | Orbit (km) | Ecc | Period (h) |\n")
 		b.WriteString("| ----------- | ---- | ------------- | ---------- | --- | ---------- |\n")
+
 		for _, s := range p.Subordinates {
 			fmt.Fprintf(b, "| %s | %s | %.0f | %d | %.3f | %.2f |\n",
 				s.Designation, s.SizeCode, s.DiameterKm, s.OrbitKm, s.Eccentricity, s.PeriodHours)
 		}
+
 		b.WriteString("\n")
 	}
 
 	if p.IsMainworld || p.Ring {
 		b.WriteString("### COMMENTS\n")
+
 		if p.IsMainworld {
 			b.WriteString("- This is the system mainworld.\n")
 		}
+
 		if p.Ring {
 			if p.RingSpanPD > 0 {
 				fmt.Fprintf(b, "- Has a planetary ring — R01:%.2f-%.2f (centre %.2f PD, span %.2f PD, WBH p.77).\n",
@@ -324,6 +354,7 @@ func (p *Class4PPartP) RenderBody(b *strings.Builder, h FormHeader) {
 				b.WriteString("- Has a planetary ring (WBH p.55/p.76).\n")
 			}
 		}
+
 		b.WriteString("\n")
 	}
 }

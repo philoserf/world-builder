@@ -56,6 +56,7 @@ func GenerateCounts(r roller.Roller, sys stars.System, _ CountsOpts) (Counts, er
 	// Terrestrials: WBH p. 38. 2D - 2 + DM-1 per post-stellar object.
 	// If result < 3, reroll as D3+2. If result ≥ 3, add D3-1.
 	terrDM := -postStellarCount(sys)
+
 	raw := r.Roll("2D") - 2 + terrDM
 	switch {
 	case raw < 3:
@@ -63,7 +64,9 @@ func GenerateCounts(r roller.Roller, sys stars.System, _ CountsOpts) (Counts, er
 	default:
 		c.Terrestrials = raw + r.Roll("D3") - 1
 	}
+
 	c.Total = c.ComponentSum()
+
 	return c, nil
 }
 
@@ -77,13 +80,16 @@ func gasGiantExistenceDMs(sys stars.System) int {
 	if sys.Primary.Kind == stars.KindBrownDwarf {
 		dm -= 2
 	}
+
 	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm -= 2
 	}
+
 	dm -= postStellarCount(sys)
 	if totalStarCount(sys) >= 4 {
 		dm--
 	}
+
 	return dm
 }
 
@@ -94,16 +100,20 @@ func gasGiantQuantityDMs(sys stars.System) int {
 	if isSingleClassVSystem(sys) {
 		dm++
 	}
+
 	if sys.Primary.Kind == stars.KindBrownDwarf {
 		dm -= 2
 	}
+
 	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm -= 2
 	}
+
 	dm -= postStellarCount(sys)
 	if totalStarCount(sys) >= 4 {
 		dm--
 	}
+
 	return dm
 }
 
@@ -132,6 +142,7 @@ func isSingleClassVSystem(sys stars.System) bool {
 	if len(sys.Companions) > 0 {
 		return false
 	}
+
 	return sys.Primary.LuminosityClass == stars.V
 }
 
@@ -142,11 +153,13 @@ func postStellarCount(sys stars.System) int {
 	if stars.IsPostStellar(sys.Primary.Kind) {
 		n++
 	}
+
 	for _, c := range sys.Companions {
 		if stars.IsPostStellar(c.Star.Kind) {
 			n++
 		}
 	}
+
 	return n
 }
 
@@ -167,9 +180,11 @@ func beltExistenceDMs(sys stars.System) int {
 	if sys.Primary.Kind == stars.KindProtostar {
 		dm += 3
 	}
+
 	if isPrimordial(sys.Primary) {
 		dm += 2
 	}
+
 	if stars.IsPostStellar(sys.Primary.Kind) {
 		dm++
 	}
@@ -177,6 +192,7 @@ func beltExistenceDMs(sys stars.System) int {
 	// post-stellar primary DM+1 AND a per-post-stellar-object DM+1, so a
 	// lone post-stellar primary intentionally contributes +2 here.
 	dm += postStellarCount(sys)
+
 	return dm
 }
 
@@ -190,9 +206,11 @@ func beltQuantityDMs(sys stars.System, gasGiantsPresent int) int {
 	if gasGiantsPresent >= 1 {
 		dm++
 	}
+
 	if totalStarCount(sys) >= 2 {
 		dm++
 	}
+
 	return dm
 }
 
@@ -212,7 +230,7 @@ func beltQuantity(roll int) int {
 // any star with age below 0.1 Gyr. The AgeGyr > 0 guard avoids treating
 // a default-zero Star{} (e.g., constructed without AgeGyr in tests) as
 // primordial — the book defines primordial as a generation-time property,
-// not "age unknown."
+// not "age unknown.".
 func isPrimordial(s stars.Star) bool {
 	return s.AgeGyr > 0 && s.AgeGyr < 0.1
 }

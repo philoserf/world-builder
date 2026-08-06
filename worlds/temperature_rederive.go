@@ -73,11 +73,13 @@ func RederiveAtmosphereHydrographics(
 	// WBH p.79, the boiling-only path's "only effect" is the hydro DM-6
 	// applied below.
 	runawayFired := false
+
 	if body.HZ {
 		var preCode int
 		if body.Atmosphere != nil {
 			preCode = body.Atmosphere.Code
 		}
+
 		runawayFired = CheckRunawayGreenhouse(r, body, sys)
 		if runawayFired && body.Atmosphere != nil && body.Atmosphere.Code != preCode {
 			// Code was mutated (atm 2-9/D/E → A/B/C path). Re-roll subtype
@@ -94,18 +96,22 @@ func RederiveAtmosphereHydrographics(
 	if runawayFired {
 		hydroTempRange = TempBoiling
 	}
+
 	if body.Atmosphere != nil && body.Hydrographics != nil {
 		newHydro, err := RollHydroDigit(r, body.Atmosphere.Code, body.Atmosphere.Subtype, body.SizeCode, hydroTempRange)
 		if err != nil {
 			return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: hydro re-roll: %w", err)
 		}
+
 		body.Hydrographics.Code = newHydro
 		// Refresh PercentRange + Percent so they stay consistent with the new Code.
 		body.Hydrographics.PercentRange = HydroRange(newHydro)
+
 		newPct, err := RefineHydroPercent(r, newHydro, body.Hydrographics.PercentRange)
 		if err != nil {
 			return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: hydro percent: %w", err)
 		}
+
 		body.Hydrographics.Percent = newPct
 	}
 
@@ -115,6 +121,7 @@ func RederiveAtmosphereHydrographics(
 		if body.Atmosphere != nil {
 			atmCode = body.Atmosphere.Code
 		}
+
 		body.Hydrographics.Profile = DeriveHydrographicsProfile(meanK, atmCode, body.Hydrographics.Code)
 	}
 
@@ -129,16 +136,19 @@ func RederiveAtmosphereHydrographics(
 			// WBH p.96/p.98: the Boiling and Frozen gas-mix tables take an
 			// additional mean-temperature DM on top of the size DM.
 			tempDM := 0
+
 			switch tempRange {
 			case TempBoiling:
 				tempDM = GasMixBoilingTempDM(meanK)
 			case TempFrozen:
 				tempDM = GasMixFrozenTempDM(meanK)
 			}
+
 			newProfile, err := RollGasMix(r, columnLetter, tempDM, tempRange, body.SizeCode)
 			if err != nil {
 				return fmt.Errorf("worlds: RederiveAtmosphereHydrographics: gas mix: %w", err)
 			}
+
 			body.Atmosphere.Profile = newProfile
 		}
 	}
@@ -192,6 +202,7 @@ func rerollAtmSubtypeAndPressure(
 	if body.Atmosphere == nil {
 		return nil
 	}
+
 	code := body.Atmosphere.Code
 
 	// Code A (10): clear pressure; perform no subtype roll. This path is
@@ -207,6 +218,7 @@ func rerollAtmSubtypeAndPressure(
 	// pressure via initialAtmosphere.
 	if code == 10 {
 		body.Atmosphere.Pressure = 0
+
 		return nil
 	}
 
@@ -214,7 +226,7 @@ func rerollAtmSubtypeAndPressure(
 		return nil
 	}
 
-	hzco := 0.0
+	var hzco float64
 	if len(body.Group.Members) > 0 {
 		hzco = body.Group.HZCO()
 	} else {
@@ -222,16 +234,20 @@ func rerollAtmSubtypeAndPressure(
 	}
 
 	isInsidious := code == 12 // C
+
 	newSubtype, err := RollCorrosiveInsidiousSubtype(r, body.SizeCode, body.Orbit, hzco, isInsidious, runawayResult)
 	if err != nil {
 		return fmt.Errorf("worlds: rerollAtmSubtypeAndPressure: subtype: %w", err)
 	}
+
 	body.Atmosphere.Subtype = newSubtype
 
 	newPressure, err := RollTotalPressure(r, code, newSubtype)
 	if err != nil {
 		return fmt.Errorf("worlds: rerollAtmSubtypeAndPressure: pressure: %w", err)
 	}
+
 	body.Atmosphere.Pressure = newPressure
+
 	return nil
 }

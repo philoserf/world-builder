@@ -14,6 +14,7 @@ func TestComputeResidualSeismicStress_Terra(t *testing.T) {
 	body.SizeCode = "8"
 	body.Physical = &BodyPhysical{Density: 1.0}
 	body.Children = []*Body{{Kind: BodyMoon, SizeCode: "1"}, {Kind: BodyMoon, SizeCode: "1"}}
+
 	got := ComputeResidualSeismicStress(body, 4.568, false)
 	if got != 25 {
 		t.Errorf("Terra: got %d, want 25", got)
@@ -27,6 +28,7 @@ func TestComputeResidualSeismicStress_Luna(t *testing.T) {
 	body := &Body{}
 	body.SizeCode = "2"
 	body.Physical = &BodyPhysical{Density: 0.6}
+
 	got := ComputeResidualSeismicStress(body, 4.568, true)
 	if got != 0 {
 		t.Errorf("Luna: got %d, want 0 (-1.5 < 1 → 0)", got)
@@ -45,6 +47,7 @@ func TestComputeResidualSeismicStress_ZedPrime(t *testing.T) {
 	body := &Body{}
 	body.SizeCode = "5"
 	body.Physical = &BodyPhysical{Density: 1.03}
+
 	got := ComputeResidualSeismicStress(body, 6.3, true)
 	if got != 1 {
 		t.Errorf("Zed Prime: got %d, want 1 (formula: 5 - 6.3 + 1 + 2 = 1.7 → 1 → 1)", got)
@@ -56,6 +59,7 @@ func TestComputeResidualSeismicStress_PreSquareClampLessThanOne(t *testing.T) {
 	body := &Body{}
 	body.SizeCode = "1"
 	body.Physical = &BodyPhysical{Density: 1.0}
+
 	got := ComputeResidualSeismicStress(body, 5.0, false)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (pre-square clamp)", got)
@@ -67,10 +71,12 @@ func TestComputeResidualSeismicStress_DensityMaxMoonDM(t *testing.T) {
 	body := &Body{}
 	body.SizeCode = "8"
 	body.Physical = &BodyPhysical{Density: 1.0}
+
 	body.Children = make([]*Body, 15)
 	for i := range body.Children {
 		body.Children[i] = &Body{Kind: BodyMoon, SizeCode: "1"}
 	}
+
 	got := ComputeResidualSeismicStress(body, 4.0, false)
 	// 8 - 4.0 + 12 = 16 → 16² = 256
 	if got != 256 {
@@ -99,6 +105,7 @@ func TestComputeTidalStressFactor_ZedPrime(t *testing.T) {
 	// Zed Prime: TidalEffects.Total ≈ 30m → 30/10 = 3.
 	body := &Body{}
 	body.TidalEffects = &SurfaceTidalEffects{Total: 30.0}
+
 	got := ComputeTidalStressFactor(body)
 	if got != 3 {
 		t.Errorf("got %d, want 3", got)
@@ -117,6 +124,7 @@ func TestComputeTidalStressFactor_FloorRounding(t *testing.T) {
 
 func TestComputeTidalStressFactor_NilTidalEffects_Zero(t *testing.T) {
 	body := &Body{}
+
 	body.TidalEffects = nil
 	if got := ComputeTidalStressFactor(body); got != 0 {
 		t.Errorf("got %d, want 0 (nil TidalEffects)", got)
@@ -141,6 +149,7 @@ func TestComputeTidalStressFactor_NilBody_Zero(t *testing.T) {
 func TestComputeTidalStressFactor_HighTotal(t *testing.T) {
 	// 1000m total → 100 (high TSS, near volcanic territory).
 	body := &Body{}
+
 	body.TidalEffects = &SurfaceTidalEffects{Total: 1000.0}
 	if got := ComputeTidalStressFactor(body); got != 100 {
 		t.Errorf("got %d, want 100", got)
@@ -161,6 +170,7 @@ func TestComputeTidalHeatingFactor_ZedPrime(t *testing.T) {
 		PeriodDays:       2.0,
 		WorldMassEarth:   0.55,
 	}
+
 	got := ComputeTidalHeatingFactor(in)
 	if got != 14 {
 		t.Errorf("got %d, want 14 (Zed Prime book worked example)", got)
@@ -281,6 +291,7 @@ func TestApplyInherentTempAddition_ZedPrime_Negligible(t *testing.T) {
 	// Zed Prime: 300K + 17 added → ⁴√(300⁴ + 17⁴) ≈ 300.001K → rounds back to 300.
 	temp := &Temperature{MeanK: 300.0, HighK: 320.0, LowK: 280.0}
 	ApplyInherentTempAddition(temp, 17.0)
+
 	if math.Abs(temp.MeanK-300.0) > 0.01 {
 		t.Errorf("MeanK: got %.4f, want ~300.0 (negligible delta)", temp.MeanK)
 	}
@@ -290,6 +301,7 @@ func TestApplyInherentTempAddition_RogueWorld_NotNegligible(t *testing.T) {
 	// 25K + 100 added → ⁴√(25⁴ + 100⁴) ≈ 100.4K (cold-rogue scenario).
 	temp := &Temperature{MeanK: 25.0}
 	ApplyInherentTempAddition(temp, 100.0)
+
 	if math.Abs(temp.MeanK-100.4) > 1.0 {
 		t.Errorf("MeanK: got %.2f, want ~100.4", temp.MeanK)
 	}
@@ -313,18 +325,23 @@ func TestApplyInherentTempAddition_AllStandardFieldsTouched(t *testing.T) {
 	if temp.MeanK < originals.MeanK {
 		t.Errorf("MeanK should not decrease (recompute monotonic): pre=%.4f post=%.4f", originals.MeanK, temp.MeanK)
 	}
+
 	if temp.HighK < originals.HighK {
 		t.Errorf("HighK monotonic: pre=%.4f post=%.4f", originals.HighK, temp.HighK)
 	}
+
 	if temp.LowK < originals.LowK {
 		t.Errorf("LowK monotonic: pre=%.4f post=%.4f", originals.LowK, temp.LowK)
 	}
+
 	if temp.BasicK < originals.BasicK {
 		t.Errorf("BasicK monotonic: pre=%.4f post=%.4f", originals.BasicK, temp.BasicK)
 	}
+
 	if temp.WorstHighK < originals.WorstHighK {
 		t.Errorf("WorstHighK monotonic: pre=%.4f post=%.4f", originals.WorstHighK, temp.WorstHighK)
 	}
+
 	if temp.WorstLowK < originals.WorstLowK {
 		t.Errorf("WorstLowK monotonic: pre=%.4f post=%.4f", originals.WorstLowK, temp.WorstLowK)
 	}
@@ -340,12 +357,15 @@ func TestApplyInherentTempAddition_TwilightFields_OnlyWhenIsTwilight(t *testing.
 		DarkSideK:   50.0,
 	}
 	ApplyInherentTempAddition(temp, 50.0)
+
 	if temp.TwilightK == 100.0 {
 		t.Error("TwilightK should have changed when IsTwilight=true")
 	}
+
 	if temp.BrightSideK == 200.0 {
 		t.Error("BrightSideK should have changed when IsTwilight=true")
 	}
+
 	if temp.DarkSideK == 50.0 {
 		t.Error("DarkSideK should have changed when IsTwilight=true")
 	}
@@ -361,12 +381,15 @@ func TestApplyInherentTempAddition_TwilightFields_SkippedWhenNotTwilight(t *test
 		DarkSideK:   50.0,
 	}
 	ApplyInherentTempAddition(temp, 50.0)
+
 	if temp.TwilightK != 100.0 {
 		t.Errorf("TwilightK: got %.4f, want 100.0 (IsTwilight=false → skip)", temp.TwilightK)
 	}
+
 	if temp.BrightSideK != 200.0 {
 		t.Errorf("BrightSideK: got %.4f, want 200.0", temp.BrightSideK)
 	}
+
 	if temp.DarkSideK != 50.0 {
 		t.Errorf("DarkSideK: got %.4f, want 50.0", temp.DarkSideK)
 	}
@@ -375,6 +398,7 @@ func TestApplyInherentTempAddition_TwilightFields_SkippedWhenNotTwilight(t *test
 func TestApplyInherentTempAddition_ZeroAddition_NoChange(t *testing.T) {
 	temp := &Temperature{MeanK: 300.0, HighK: 320.0}
 	ApplyInherentTempAddition(temp, 0)
+
 	if temp.MeanK != 300.0 || temp.HighK != 320.0 {
 		t.Error("zero addition should leave fields unchanged")
 	}
@@ -384,9 +408,11 @@ func TestApplyInherentTempAddition_ZeroFieldsSkipped(t *testing.T) {
 	// Fields with value 0 should NOT be modified (zero is "not populated").
 	temp := &Temperature{MeanK: 300.0, HighK: 0, LowK: 0}
 	ApplyInherentTempAddition(temp, 50.0)
+
 	if temp.HighK != 0 {
 		t.Errorf("HighK: got %.4f, want 0 (zero fields skipped)", temp.HighK)
 	}
+
 	if temp.LowK != 0 {
 		t.Errorf("LowK: got %.4f, want 0 (zero fields skipped)", temp.LowK)
 	}
@@ -399,6 +425,7 @@ func TestApplyInherentTempAddition_NilTemperature_Safe(t *testing.T) {
 			t.Errorf("panicked on nil: %v", r)
 		}
 	}()
+
 	ApplyInherentTempAddition(nil, 100.0)
 }
 
@@ -408,6 +435,7 @@ func TestRollTectonicPlates_ZedPrime(t *testing.T) {
 	body.SizeCode = "5"
 	body.Hydrographics = &Hydrographics{Code: 6}
 	r := roller.NewScripted(8)
+
 	got := RollTectonicPlates(r, body, 17)
 	if got != 4 {
 		t.Errorf("got %d, want 4", got)
@@ -419,6 +447,7 @@ func TestRollTectonicPlates_TSSZero_NoActivity(t *testing.T) {
 	body.SizeCode = "8"
 	body.Hydrographics = &Hydrographics{Code: 7}
 	r := roller.NewScripted() // empty — must NOT consume dice
+
 	got := RollTectonicPlates(r, body, 0)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (TSS=0 → prerequisite fails)", got)
@@ -430,6 +459,7 @@ func TestRollTectonicPlates_HydroZero_NoActivity(t *testing.T) {
 	body.SizeCode = "8"
 	body.Hydrographics = &Hydrographics{Code: 0}
 	r := roller.NewScripted()
+
 	got := RollTectonicPlates(r, body, 17)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (Hydro=0 → prerequisite fails)", got)
@@ -441,6 +471,7 @@ func TestRollTectonicPlates_NilHydrographics_NoActivity(t *testing.T) {
 	body.SizeCode = "8"
 	body.Hydrographics = nil
 	r := roller.NewScripted()
+
 	got := RollTectonicPlates(r, body, 17)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (nil Hydrographics)", got)
@@ -454,6 +485,7 @@ func TestRollTectonicPlates_ResultLessThanOrEqualOne_NoActivity(t *testing.T) {
 	body.Hydrographics = &Hydrographics{Code: 1}
 	// 1 + 1 - 12 + 0 = -10 → ≤ 1 → 0
 	r := roller.NewScripted(12)
+
 	got := RollTectonicPlates(r, body, 1)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (result ≤ 1)", got)
@@ -490,6 +522,7 @@ func TestRollTectonicPlates_TSSBoundary10_DM1(t *testing.T) {
 	body.SizeCode = "5"
 	body.Hydrographics = &Hydrographics{Code: 6}
 	r := roller.NewScripted(8)
+
 	got := RollTectonicPlates(r, body, 10)
 	if got != 4 {
 		t.Errorf("got %d, want 4 (TSS=10 boundary → DM+1)", got)
@@ -498,6 +531,7 @@ func TestRollTectonicPlates_TSSBoundary10_DM1(t *testing.T) {
 
 func TestRollTectonicPlates_NilBody_NoActivity(t *testing.T) {
 	r := roller.NewScripted()
+
 	got := RollTectonicPlates(r, nil, 17)
 	if got != 0 {
 		t.Errorf("got %d, want 0 (nil body)", got)

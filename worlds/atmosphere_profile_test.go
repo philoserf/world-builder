@@ -85,6 +85,7 @@ func TestGasMixTableLookup_TemperateTable(t *testing.T) {
 	if got := GasMixTableLookup(TempTemperate, "A", 13); got != "Helium" {
 		t.Errorf("Temperate-A row 13: got %q, want %q", got, "Helium")
 	}
+
 	if got := GasMixTableLookup(TempTemperate, "B", 13); got != "Hydrogen" {
 		t.Errorf("Temperate-B row 13: got %q, want %q", got, "Hydrogen")
 	}
@@ -116,6 +117,7 @@ func TestGasMixTableLookup_Clamping(t *testing.T) {
 	if low != "Krypton" {
 		t.Errorf("clamping low: got %q, want %q", low, "Krypton")
 	}
+
 	high := GasMixTableLookup(TempFrozen, "A", 100)
 	if high == "" {
 		t.Error("clamping high: empty result")
@@ -141,6 +143,7 @@ func TestFormatAtmoProfileShorthand_Terra(t *testing.T) {
 	atmo := Atmosphere{Code: 6, Pressure: 1.013, OxygenPartialPressure: 0.212}
 	prof := AtmosphereProfile{}
 	got := FormatAtmoProfileShorthand(atmo, prof)
+
 	want := "6-1.013-0.212"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -153,6 +156,7 @@ func TestFormatAtmoProfileShorthand_ExoticNoGases(t *testing.T) {
 	atmo := Atmosphere{Code: 10, Subtype: "7"}
 	prof := AtmosphereProfile{}
 	got := FormatAtmoProfileShorthand(atmo, prof)
+
 	want := "A-St7"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -172,6 +176,7 @@ func TestFormatAtmoProfileShorthand_ExoticWithGases(t *testing.T) {
 		},
 	}
 	got := FormatAtmoProfileShorthand(atmo, prof)
+
 	want := "A-St7:0.98:N2-96:Ar-04"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -192,6 +197,7 @@ func TestFormatAtmoProfileShorthand_CorrosiveWithGases(t *testing.T) {
 		},
 	}
 	got := FormatAtmoProfileShorthand(atmo, prof)
+
 	want := "B-StD:CO2-48:NH3-47:H2O-03"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -200,6 +206,7 @@ func TestFormatAtmoProfileShorthand_CorrosiveWithGases(t *testing.T) {
 
 func TestFormatAtmoProfileShorthand_TaintSuffix_NO(t *testing.T) {
 	t.Parallel()
+
 	atmo := Atmosphere{
 		Code:                  4,
 		Pressure:              0.544,
@@ -210,6 +217,7 @@ func TestFormatAtmoProfileShorthand_TaintSuffix_NO(t *testing.T) {
 		},
 	}
 	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+
 	want := "4-0.544-0.114:P.6.3,R.5.4"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -218,6 +226,7 @@ func TestFormatAtmoProfileShorthand_TaintSuffix_NO(t *testing.T) {
 
 func TestFormatAtmoProfileShorthand_TaintSuffix_Insidious(t *testing.T) {
 	t.Parallel()
+
 	atmo := Atmosphere{
 		Code:             12,
 		Subtype:          "6",
@@ -226,6 +235,7 @@ func TestFormatAtmoProfileShorthand_TaintSuffix_Insidious(t *testing.T) {
 		InsidiousHazards: []Hazard{{Code: "T"}},
 	}
 	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+
 	want := "C-St6.T:1.21 G.4.5"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -243,6 +253,7 @@ func TestFormatAtmoProfileShorthand_TaintSuffix_Insidious_MultiHazard(t *testing
 		InsidiousHazards: []Hazard{{Code: "T"}, {Code: "G"}},
 	}
 	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+
 	want := "C-StD.TG:120.50"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -251,12 +262,14 @@ func TestFormatAtmoProfileShorthand_TaintSuffix_Insidious_MultiHazard(t *testing
 
 func TestFormatAtmoProfileShorthand_NoTaint_Unchanged(t *testing.T) {
 	t.Parallel()
+
 	atmo := Atmosphere{
 		Code:                  6,
 		Pressure:              1.013,
 		OxygenPartialPressure: 0.212,
 	}
 	got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
+
 	want := "6-1.013-0.212"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -270,10 +283,12 @@ func TestRollGasMix_BasicShape(t *testing.T) {
 	// since meanTempK is not passed to RollGasMix — it uses table DMs only.
 	// Scripted rolls: 2D=7, 1D=4, d10=4, 2D=7, 1D=4, d10=0, 2D=3, 1D=4, d10=0.
 	r := roller.NewScripted(7, 4, 4, 7, 4, 0, 3, 4, 0)
+
 	prof, err := RollGasMix(r, "A", 0, TempFrozen, SizeCode("4"))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if len(prof.Gases) == 0 {
 		t.Fatal("no gases produced")
 	}
@@ -282,9 +297,11 @@ func TestRollGasMix_BasicShape(t *testing.T) {
 	for _, g := range prof.Gases {
 		totalBP += g.PercentBP
 	}
+
 	if totalBP < 9000 || totalBP > 10100 {
 		t.Errorf("total percentage off: got %d BP, want 9000-10100", totalBP)
 	}
+
 	t.Logf("Frozen-A Size4: gases=%v, totalBP=%d", prof.Gases, totalBP)
 }
 
@@ -304,10 +321,12 @@ func TestRollGasMix_TempRangeLabel(t *testing.T) {
 		{TempFrozen, "Frozen"},
 	} {
 		r := roller.NewScripted(rolls12...)
+
 		prof, err := RollGasMix(r, "A", 0, tc.tr, SizeCode("5"))
 		if err != nil {
 			t.Fatalf("%s: %v", tc.want, err)
 		}
+
 		if prof.TempRange != tc.want {
 			t.Errorf("TempRange label: got %q, want %q", prof.TempRange, tc.want)
 		}
@@ -325,15 +344,18 @@ func TestRollGasMix_GasMerging(t *testing.T) {
 		3, 3, 5, // third gas
 		3, 3, 5, // fourth gas
 	)
+
 	prof, err := RollGasMix(r, "A", 0, TempFrozen, SizeCode("5"))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	for _, g := range prof.Gases {
 		if g.Name == "N2" {
 			// Found merged nitrogen — verify it has more than one allocation's worth.
 			// (At minimum it should have been rolled twice.)
 			t.Logf("Merged N2: %d BP", g.PercentBP)
+
 			return
 		}
 	}
@@ -351,20 +373,25 @@ func TestRollGasMix_TempDMApplied(t *testing.T) {
 	// so the leading gas must differ from the no-DM roll for at least one
 	// scripted stream. 2D=7 → row 7 vs row 12.
 	dice := []int{7, 3, 5, 7, 3, 5, 7, 3, 5, 7, 3, 5}
+
 	base, err := RollGasMix(roller.NewScripted(dice...), "A", 0, TempFrozen, SizeCode("5"))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	shifted, err := RollGasMix(roller.NewScripted(dice...), "A", GasMixFrozenTempDM(60), TempFrozen, SizeCode("5"))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if GasMixFrozenTempDM(60) != 5 {
 		t.Fatalf("GasMixFrozenTempDM(60) = %d, want 5", GasMixFrozenTempDM(60))
 	}
+
 	if len(base.Gases) == 0 || len(shifted.Gases) == 0 {
 		t.Fatal("empty gas mixes")
 	}
+
 	if base.Gases[0].Name == shifted.Gases[0].Name {
 		t.Errorf("temp DM had no effect on leading gas: both %q", base.Gases[0].Name)
 	}
@@ -376,6 +403,7 @@ func TestRollGasMix_TempDMApplied(t *testing.T) {
 // char, not a dangling "-St". Only B/C populate Subtype and keep "-St".
 func TestFormatAtmoProfileShorthand_NoneTraceBareCode(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		code int
 		bar  float64
@@ -388,10 +416,12 @@ func TestFormatAtmoProfileShorthand_NoneTraceBareCode(t *testing.T) {
 	}
 	for _, c := range cases {
 		atmo := Atmosphere{Code: c.code, Pressure: c.bar}
+
 		got := FormatAtmoProfileShorthand(atmo, AtmosphereProfile{})
 		if got != c.want {
 			t.Errorf("code %d: got %q, want %q", c.code, got, c.want)
 		}
+
 		if strings.Contains(got, "-St") {
 			t.Errorf("code %d: rendered a dangling %q with empty subtype", c.code, got)
 		}

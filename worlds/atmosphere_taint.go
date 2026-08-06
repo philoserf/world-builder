@@ -54,6 +54,7 @@ func HasTaintCode(taints []Taint, code string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -71,6 +72,7 @@ func isExtremelyDenseSubtype(subtype string) bool {
 	case "C", "D", "E":
 		return true
 	}
+
 	return false
 }
 
@@ -127,6 +129,7 @@ func taintSubtypeAtmDM(atmCode int) int {
 	case 9:
 		return 2
 	}
+
 	return 0
 }
 
@@ -161,11 +164,14 @@ func RollTaintSeverity(r roller.Roller, taintCode string, atmCode int, ppO2 floa
 			return 8
 		}
 	}
+
 	roll := r.Roll("2D")
+
 	dm := 0
 	if atmCode == 12 {
 		dm += 6
 	}
+
 	return severityFromTotal(roll + dm)
 }
 
@@ -202,16 +208,20 @@ func severityFromTotal(total int) int {
 // Returns persistence 2-9.
 func RollTaintPersistence(r roller.Roller, taintCode string, atmCode, severity int) int {
 	roll := r.Roll("2D")
+
 	dm := 0
 	if taintCode == "L" || taintCode == "H" {
 		dm += 4
 	}
+
 	if atmCode == 12 {
 		dm += 6
 	}
+
 	if severity >= 8 {
 		dm += 6
 	}
+
 	return persistenceFromTotal(roll + dm)
 }
 
@@ -259,10 +269,12 @@ func persistenceFromTotal(total int) int {
 // half of the D/E pair.
 func RollInsidiousHazard(r roller.Roller, isExtremelyDense bool) string {
 	roll := r.Roll("2D")
+
 	dm := 0
 	if isExtremelyDense {
 		dm += 2
 	}
+
 	return hazardFromTotal(roll + dm)
 }
 
@@ -286,8 +298,10 @@ func RollInsidiousHazards(r roller.Roller, subtype string, isExtremelyDense bool
 	if subtype == "D" || subtype == "E" {
 		hazards = append(hazards, Hazard{Code: "T"})
 	}
+
 	rolled := RollInsidiousHazard(r, isExtremelyDense)
 	hazards = append(hazards, Hazard{Code: rolled})
+
 	return hazards
 }
 
@@ -327,6 +341,7 @@ func RollTaintSubtype(r roller.Roller, atmCode int, isSecondOrLater bool) string
 	if (code == "L" || code == "H") && (isSecondOrLater || atmCode < 4 || atmCode > 9) {
 		return "G"
 	}
+
 	return code
 }
 
@@ -361,10 +376,12 @@ func RollAllTaints(r roller.Roller, body *Body, preseeded *Taint) []Taint {
 	if body == nil || body.Atmosphere == nil {
 		return nil
 	}
+
 	atmCode := body.Atmosphere.Code
 	if !taintEligibleAtmosphere(atmCode) {
 		return nil
 	}
+
 	taints := make([]Taint, 0, 3)
 
 	// Slot 1: pre-seeded if present. Fill severity + persistence.
@@ -381,6 +398,7 @@ func RollAllTaints(r roller.Roller, body *Body, preseeded *Taint) []Taint {
 		rawRoll := r.Roll("2D")
 		dm := taintSubtypeAtmDM(atmCode)
 		total := rawRoll + dm
+
 		code := taintSubtypeFromTotal(total)
 		if (code == "L" || code == "H") && (isSecondOrLater || atmCode < 4 || atmCode > 9) {
 			code = "G"
@@ -396,9 +414,11 @@ func RollAllTaints(r roller.Roller, body *Body, preseeded *Taint) []Taint {
 			} else {
 				body.Atmosphere.OxygenPartialPressure += float64(adjust) / 10.0
 			}
+
 			if body.Atmosphere.OxygenPartialPressure < 0 {
 				body.Atmosphere.OxygenPartialPressure = 0
 			}
+
 			if body.Atmosphere.Pressure > 0 && body.Atmosphere.OxygenPartialPressure > body.Atmosphere.Pressure {
 				body.Atmosphere.OxygenPartialPressure = body.Atmosphere.Pressure
 			}
@@ -414,5 +434,6 @@ func RollAllTaints(r roller.Roller, body *Body, preseeded *Taint) []Taint {
 			break
 		}
 	}
+
 	return taints
 }

@@ -8,6 +8,7 @@ func TestStarTypeDetermination_Complete(t *testing.T) {
 		if !ok {
 			t.Fatalf("missing row %d", r)
 		}
+
 		if row.Type == "" || row.Hot == "" || row.Special == "" ||
 			row.Unusual == "" || row.Giants == "" || row.Peculiar == "" {
 			t.Fatalf("row %d has empty cell: %+v", r, row)
@@ -35,7 +36,9 @@ func TestStarTypeDetermination_KnownCells(t *testing.T) {
 	for _, c := range checks {
 		t.Run(c.col, func(t *testing.T) {
 			row := StarTypeDetermination[c.row]
+
 			var got string
+
 			switch c.col {
 			case "Type":
 				got = row.Type
@@ -50,6 +53,7 @@ func TestStarTypeDetermination_KnownCells(t *testing.T) {
 			case "Peculiar":
 				got = row.Peculiar
 			}
+
 			if got != c.want {
 				t.Fatalf("row %d %s = %q, want %q", c.row, c.col, got, c.want)
 			}
@@ -62,6 +66,7 @@ func TestStarSubtype_Complete(t *testing.T) {
 		if _, ok := StarSubtypeNumeric[r]; !ok {
 			t.Fatalf("Numeric: missing row %d", r)
 		}
+
 		if _, ok := StarSubtypeMType[r]; !ok {
 			t.Fatalf("M-type: missing row %d", r)
 		}
@@ -73,15 +78,19 @@ func TestStarSubtype_KnownCells(t *testing.T) {
 	if got := StarSubtypeNumeric[6]; got != 7 {
 		t.Fatalf("Numeric[6] = %d, want 7", got)
 	}
+
 	if got := StarSubtypeNumeric[2]; got != 0 {
 		t.Fatalf("Numeric[2] = %d, want 0", got)
 	}
+
 	if got := StarSubtypeNumeric[12]; got != 0 {
 		t.Fatalf("Numeric[12] = %d, want 0", got)
 	}
+
 	if got := StarSubtypeMType[6]; got != 0 {
 		t.Fatalf("MType[6] = %d, want 0", got)
 	}
+
 	if got := StarSubtypeMType[12]; got != 9 {
 		t.Fatalf("MType[12] = %d, want 9", got)
 	}
@@ -105,10 +114,12 @@ func TestStarMass_KnownCells(t *testing.T) {
 		if !ok {
 			t.Fatalf("missing row %s", tc.spectral)
 		}
+
 		got, ok := row.Get(tc.class)
 		if !ok {
 			t.Fatalf("missing %s %s cell", tc.spectral, tc.class)
 		}
+
 		if got != tc.want {
 			t.Fatalf("%s %s = %v, want %v", tc.spectral, tc.class, got, tc.want)
 		}
@@ -147,6 +158,7 @@ func TestStarDiameter_KnownCells(t *testing.T) {
 		if !ok {
 			t.Fatalf("missing %s %s", tc.spectral, tc.class)
 		}
+
 		if got != tc.want {
 			t.Fatalf("%s %s = %v, want %v", tc.spectral, tc.class, got, tc.want)
 		}
@@ -170,6 +182,7 @@ func TestStarLuminosity_KnownCells(t *testing.T) {
 		if !ok {
 			t.Fatalf("missing %s %s", tc.spectral, tc.class)
 		}
+
 		if got != tc.want {
 			t.Fatalf("%s %s = %v, want %v", tc.spectral, tc.class, got, tc.want)
 		}
@@ -213,9 +226,11 @@ func TestNonPrimaryStarDetermination_KnownCells(t *testing.T) {
 	if got := NonPrimaryStarDetermination[8].Companion; got != "Sibling" {
 		t.Fatalf("[8].Companion = %q want Sibling", got)
 	}
+
 	if got := NonPrimaryStarDetermination[8].Secondary; got != "Lesser" {
 		t.Fatalf("[8].Secondary = %q want Lesser", got)
 	}
+
 	if got := NonPrimaryStarDetermination[11].Other; got != "BD" {
 		t.Fatalf("[11].Other = %q want BD", got)
 	}
@@ -227,6 +242,7 @@ func TestEccentricityValues_Complete(t *testing.T) {
 		if !ok {
 			t.Fatalf("missing row %d", r)
 		}
+
 		if row.SecondRoll == "" || row.Divisor == 0 {
 			t.Fatalf("row %d incomplete: %+v", r, row)
 		}
@@ -238,9 +254,11 @@ func TestEccentricityValues_KnownCells(t *testing.T) {
 	if got := EccentricityValues[5].Base; got != -0.001 {
 		t.Fatalf("[5].Base = %v want -0.001", got)
 	}
+
 	if got := EccentricityValues[12].Base; got != 0.30 {
 		t.Fatalf("[12].Base = %v want 0.30", got)
 	}
+
 	if got := EccentricityValues[10].Divisor; got != 20 {
 		t.Fatalf("[10].Divisor = %v want 20", got)
 	}
@@ -249,7 +267,7 @@ func TestEccentricityValues_KnownCells(t *testing.T) {
 // ----- P2-8: OrbitNumberTable -----
 
 func TestOrbitNumberTable_Complete(t *testing.T) {
-	for n := 0; n <= 20; n++ {
+	for n := range 21 {
 		if _, ok := OrbitNumberTable[n]; !ok {
 			t.Fatalf("missing row %d", n)
 		}
@@ -261,9 +279,11 @@ func TestOrbitNumberTable_KnownCells(t *testing.T) {
 	if got := OrbitNumberTable[3].DistanceAU; got != 1.0 {
 		t.Fatalf("[3].DistanceAU = %v want 1.0 (Terra)", got)
 	}
+
 	if got := OrbitNumberTable[6].DistanceAU; got != 5.2 {
 		t.Fatalf("[6].DistanceAU = %v want 5.2 (Jupiter)", got)
 	}
+
 	if got := OrbitNumberTable[3].Example; got != "Terra" {
 		t.Fatalf("[3].Example = %q want Terra", got)
 	}

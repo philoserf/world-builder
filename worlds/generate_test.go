@@ -22,31 +22,40 @@ func TestSol_Generate(t *testing.T) {
 	t.Parallel()
 
 	good := 0
+
 	for iter := range 100 {
 		seed := int64(iter)
+
 		u, err := worlds.Generate(seed)
 		if err != nil {
 			if errors.Is(err, stars.ErrSpecialCircumstances) {
 				continue
 			}
+
 			t.Errorf("seed %d: unexpected error: %v", seed, err)
+
 			continue
 		}
+
 		good++
 
 		if u.System.Primary.Mass <= 0 {
 			t.Errorf("seed %d: primary mass = %v, want > 0", seed, u.System.Primary.Mass)
 		}
+
 		if len(u.Placement.Allocations) == 0 {
 			t.Errorf("seed %d: Allocations empty", seed)
 		}
+
 		if len(u.Placement.Placements) == 0 {
 			t.Errorf("seed %d: Placements empty", seed)
 		}
+
 		if len(u.Detail.Class0I.Stars) == 0 {
 			t.Errorf("seed %d: Class 0/I form has no Stars rows", seed)
 		}
 	}
+
 	if good < 50 {
 		t.Errorf("only %d / 100 seeds produced a system without post-stellar primaries (expected >= 50)", good)
 	}
@@ -70,6 +79,7 @@ func TestZed_Generate(t *testing.T) {
 
 	for iter := range 100 {
 		seed := int64(iter)
+
 		u, err := worlds.Generate(seed)
 		if err != nil {
 			// Skip post-stellar primaries (Special Circumstances).
@@ -81,6 +91,7 @@ func TestZed_Generate(t *testing.T) {
 			if body.Kind == worlds.BodyEmpty && body.Designation != "" {
 				t.Errorf("seed %d: empty body has designation %q", seed, body.Designation)
 			}
+
 			if body.Kind != worlds.BodyEmpty && body.Designation == "" {
 				t.Errorf("seed %d: non-empty body (%v) lacks designation", seed, body.Kind)
 			}
@@ -92,11 +103,13 @@ func TestZed_Generate(t *testing.T) {
 		// child appears as a Body, it should be reachable from
 		// AllBodies (no orphans).
 		seen := map[string]bool{}
+
 		for body := range u.AllBodies() {
 			if body.Designation != "" {
 				seen[body.Designation] = true
 			}
 		}
+
 		for _, body := range u.Detail.Bodies {
 			for _, child := range body.Children {
 				if child.Designation != "" && !seen[child.Designation] {
@@ -117,24 +130,31 @@ func TestGenerate_BeltsHaveDetails(t *testing.T) {
 	t.Parallel()
 
 	belts := 0
+
 	for iter := range 100 {
 		u, err := worlds.Generate(int64(iter))
 		if err != nil {
 			continue // post-stellar primaries etc. — covered elsewhere
 		}
+
 		for i := range u.Detail.Bodies {
 			body := &u.Detail.Bodies[i]
 			if body.Kind != worlds.BodyPlanetoidBelt {
 				continue
 			}
+
 			belts++
+
 			if body.Belt == nil {
 				t.Errorf("seed %d: belt %s has nil Belt details", iter, body.Designation)
+
 				continue
 			}
+
 			if body.Belt.Span <= 0 {
 				t.Errorf("seed %d: belt %s span = %v, want > 0", iter, body.Designation, body.Belt.Span)
 			}
+
 			total := body.Belt.Composition.MTypePct + body.Belt.Composition.STypePct +
 				body.Belt.Composition.CTypePct + body.Belt.Composition.OtherPct
 			if total != 100 {
@@ -142,6 +162,7 @@ func TestGenerate_BeltsHaveDetails(t *testing.T) {
 			}
 		}
 	}
+
 	if belts == 0 {
 		t.Fatal("no belts across 100 seeds — sweep is vacuous")
 	}
@@ -157,28 +178,34 @@ func TestGenerate_MoonOrbitsMaterialized(t *testing.T) {
 	t.Parallel()
 
 	moons, retro := 0, 0
+
 	for iter := range 100 {
 		u, err := worlds.Generate(int64(iter))
 		if err != nil {
 			continue
 		}
+
 		for i := range u.Detail.Bodies {
 			parent := &u.Detail.Bodies[i]
 			for _, m := range parent.Children {
 				moons++
+
 				if m.OrbitPD > 0 && m.OrbitKm <= 0 {
 					t.Errorf("seed %d: moon %s has OrbitPD %.2f but OrbitKm %v",
 						iter, m.Designation, m.OrbitPD, m.OrbitKm)
 				}
+
 				if m.Retrograde {
 					retro++
 				}
 			}
 		}
 	}
+
 	if moons == 0 {
 		t.Fatal("no moons across 100 seeds — sweep is vacuous")
 	}
+
 	if retro == 0 {
 		t.Errorf("0 retrograde moons across %d moons — RollMoonRetrograde likely unwired", moons)
 	}
@@ -198,8 +225,10 @@ func TestGenerateWithOpts_PeculiarColumn(t *testing.T) {
 	t.Parallel()
 
 	kinds := map[stars.StarKind]int{}
+
 	for iter := range 3000 {
 		seed := int64(iter)
+
 		sys, err := stars.GenerateSystem(roller.NewSeeded(seed), stars.GenerateSystemOpts{
 			WithVariance:   true,
 			Accuracy:       2,
@@ -207,8 +236,10 @@ func TestGenerateWithOpts_PeculiarColumn(t *testing.T) {
 		})
 		if err != nil {
 			t.Errorf("seed %d: stars stage errored under peculiar column: %v", seed, err)
+
 			continue
 		}
+
 		kinds[sys.Primary.Kind]++
 
 		if _, werr := worlds.GenerateWithOpts(seed, worlds.GenerateOpts{
@@ -217,6 +248,7 @@ func TestGenerateWithOpts_PeculiarColumn(t *testing.T) {
 			t.Errorf("seed %d: worlds pipeline errored in the stars stage: %v", seed, werr)
 		}
 	}
+
 	for _, k := range []stars.StarKind{stars.KindNebula, stars.KindStarCluster, stars.KindAnomaly} {
 		if kinds[k] == 0 {
 			t.Errorf("no %s primaries across 3000 peculiar-column seeds — dispatch or age formula broken", k)

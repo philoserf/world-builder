@@ -52,10 +52,12 @@ func TestRenderClass0IMarkdown_EmptyMetadataFields(t *testing.T) {
 		StellarCount: 1,
 		Stars:        []SurveyComponent{{Component: "A", Class: "G2 V", Mass: 1.0}},
 	}
+
 	got := RenderClass0IMarkdown(form)
 	if !strings.Contains(got, "| Sector | — |") {
 		t.Errorf("empty Sector should render as em-dash; got:\n%s", got)
 	}
+
 	if !strings.Contains(got, "| IISS Designation | — |") {
 		t.Errorf("empty IISSDesig should render as em-dash; got:\n%s", got)
 	}

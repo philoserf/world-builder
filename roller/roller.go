@@ -55,10 +55,12 @@ func (s *Seeded) Fork(key string) Roller {
 	// Mix the immutable seed (not the live rng state) so the child is
 	// stable regardless of parent consumption.
 	var b [8]byte
-	u := uint64(s.seed)
+
+	u := uint64(s.seed) //nolint:gosec // hash→seed conversion; not crypto material.
 	for i := range b {
-		b[i] = byte(u >> (8 * i))
+		b[i] = byte(u >> (8 * i)) //nolint:gosec // hash→seed conversion; not crypto material.
 	}
+
 	_, _ = h.Write(b[:])
 	_, _ = h.Write([]byte(key))
 	//nolint:gosec // hash→seed conversion; not crypto material.
@@ -71,10 +73,12 @@ func (s *Seeded) Roll(notation string) int {
 	if err != nil {
 		panic(fmt.Errorf("roller.Seeded: %w", err))
 	}
+
 	total := spec.Modifier
 	for range spec.Count {
 		total += s.rng.Intn(spec.Sides) + 1
 	}
+
 	return total
 }
 
@@ -102,8 +106,10 @@ func (s *Scripted) Roll(notation string) int {
 	if s.idx >= len(s.results) {
 		panic(fmt.Sprintf("roller.Scripted: exhausted on Roll(%q)", notation))
 	}
+
 	v := s.results[s.idx]
 	s.idx++
+
 	return v
 }
 

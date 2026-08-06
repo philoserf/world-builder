@@ -9,6 +9,7 @@ import (
 
 func TestHZCOOffsetToTempRange(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		orbit, hzco float64
 		want        TempRange
@@ -31,10 +32,12 @@ func TestRollAtmoCode_HZBasic(t *testing.T) {
 	t.Parallel()
 	// Size 5, 2D=8 → 8-7+5 = 6 → Standard
 	r := roller.NewScripted(8)
+
 	got, err := RollAtmoCode(r, SizeCode("5"), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 6 {
 		t.Errorf("got %d, want 6", got)
 	}
@@ -42,12 +45,15 @@ func TestRollAtmoCode_HZBasic(t *testing.T) {
 
 func TestRollAtmoCode_AutomaticZero(t *testing.T) {
 	t.Parallel()
+
 	for _, s := range []SizeCode{"0", "1", "S"} {
 		r := roller.NewScripted(12)
+
 		got, err := RollAtmoCode(r, s, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if got != 0 {
 			t.Errorf("Size %s: got %d, want 0", s, got)
 		}
@@ -58,10 +64,12 @@ func TestRollAtmoCode_ZedAabI(t *testing.T) {
 	t.Parallel()
 	// Size B (11) at HZCO offset -2.3, 2D=5 → 5-7+11 = 9 → Dense, Tainted
 	r := roller.NewScripted(5)
+
 	got, err := RollAtmoCode(r, SizeCode("B"), -2.3)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 9 {
 		t.Errorf("Aab I atmo code: got %d, want 9", got)
 	}
@@ -69,6 +77,7 @@ func TestRollAtmoCode_ZedAabI(t *testing.T) {
 
 func TestAtmosphereCompositionLabel(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		code int
 		want string
@@ -90,6 +99,7 @@ func TestAtmosphereCompositionLabel(t *testing.T) {
 
 func TestSizeAsInt(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		s    SizeCode
 		want int
@@ -115,6 +125,7 @@ func TestSizeAsInt(t *testing.T) {
 
 func TestAtmospherePressureRange(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		code         int
 		minBar, span float64
@@ -142,10 +153,12 @@ func TestRollTotalPressure_ZedPrime(t *testing.T) {
 	// Book p.80: 1D-1=2 → ×5=10; 1D-1=3 → +3 = 13. Pressure = 0.7 + 0.79 × 13/30 = 1.0423.
 	// Scripted: first 1D=3 (1D-1=2), second 1D=4 (1D-1=3).
 	r := roller.NewScripted(3, 4)
+
 	got, err := RollTotalPressure(r, 6, "")
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if math.Abs(got-1.0423) > 0.01 {
 		t.Errorf("got %v, want 1.0423", got)
 	}
@@ -176,10 +189,12 @@ func TestRollTotalPressure_AtmBCWithSubtype(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.a, c.b)
+
 			got, err := RollTotalPressure(r, c.atmCode, c.subtype)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
+
 			if math.Abs(got-c.want) > 1e-9 {
 				t.Errorf("got %g, want %g", got, c.want)
 			}
@@ -192,10 +207,12 @@ func TestRollTotalPressure_AtmBCEmptySubtype(t *testing.T) {
 	// returns 0. This preserves legacy "Varies" behavior for callers that
 	// don't have a subtype yet.
 	r := roller.NewScripted() // no rolls scripted; if any are consumed, panic.
+
 	got, err := RollTotalPressure(r, 11, "")
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+
 	if got != 0 {
 		t.Errorf("got %g, want 0", got)
 	}
@@ -205,10 +222,12 @@ func TestRollTotalPressure_RegularCodeIgnoresSubtype(t *testing.T) {
 	// For atm codes outside 11/12, the subtype parameter is ignored.
 	// Atm 6 (Standard): min=0.70, span=0.79. (1,1) → 0.70.
 	r := roller.NewScripted(1, 1)
+
 	got, err := RollTotalPressure(r, 6, "C") // subtype "C" ignored on atm 6
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+
 	if got != 0.70 {
 		t.Errorf("got %g, want 0.70", got)
 	}
@@ -219,10 +238,12 @@ func TestRollOxygenFraction_AgeDMs(t *testing.T) {
 	// Verify each age band produces correct DM. 1D=5, 2D=7, 1D=1 → without DMs: 5/20 + 0 + 0 = 0.25.
 	// Age > 4 → DM+1 → (5+1)/20 + 0 + 0 = 0.30.
 	r := roller.NewScripted(5, 7, 1)
+
 	got, err := RollOxygenFraction(r, 6.336) // > 4 Gyr → DM+1
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if math.Abs(got-0.30) > 0.001 {
 		t.Errorf("age>4 Gyr: got %v, want 0.30", got)
 	}
@@ -242,6 +263,7 @@ func TestScaleHeight_Terra(t *testing.T) {
 
 func TestScaleHeight_Edge(t *testing.T) {
 	t.Parallel()
+
 	if got := DeriveScaleHeight(288, 0); got != 0 {
 		t.Errorf("g=0: got %v, want 0", got)
 	}
@@ -253,10 +275,12 @@ func TestRollCorrosiveInsidiousSubtype_AabI(t *testing.T) {
 	// DMs: Size 8+ → +2; Orbit < HZCO-1 → +4. Total +6.
 	// 2D=7 + 6 = 13 → subtype "D".
 	r := roller.NewScripted(7)
+
 	got, err := RollCorrosiveInsidiousSubtype(r, SizeCode("B"), 1.0, 3.3, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != "D" {
 		t.Errorf("Aab I subtype: got %q, want %q", got, "D")
 	}
@@ -264,6 +288,7 @@ func TestRollCorrosiveInsidiousSubtype_AabI(t *testing.T) {
 
 func TestRollCorrosiveInsidiousSubtype_Boundaries(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		name        string
 		roll        int
@@ -283,11 +308,14 @@ func TestRollCorrosiveInsidiousSubtype_Boundaries(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
+
 			r := roller.NewScripted(c.roll)
+
 			got, err := RollCorrosiveInsidiousSubtype(r, c.size, c.orbit, c.hzco, c.insidious, c.runaway)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if got != c.want {
 				t.Errorf("got %q, want %q", got, c.want)
 			}
@@ -339,6 +367,7 @@ func TestRollAtmoCode_UpperClamp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 15 {
 		t.Errorf("RollAtmoCode(Size F, 2D=12) = %d, want 15 (clamped)", got)
 	}
@@ -347,6 +376,7 @@ func TestRollAtmoCode_UpperClamp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got != 15 {
 		t.Errorf("RollAtmoCode(Size B, 2D=12) = %d, want 15 (clamped)", got)
 	}
@@ -357,20 +387,25 @@ func TestRollAtmoCode_UpperClamp(t *testing.T) {
 // hex convention.
 func TestAtmosphereCodes_TableConsistency(t *testing.T) {
 	t.Parallel()
+
 	wantChars := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H"}
 	for code, want := range wantChars {
 		entry, ok := atmosphereCodes[code]
 		if !ok {
 			t.Errorf("atmosphereCodes missing code %d", code)
+
 			continue
 		}
+
 		if entry.Char != want {
 			t.Errorf("atmosphereCodes[%d].Char = %q, want %q", code, entry.Char, want)
 		}
+
 		if entry.Name == "" {
 			t.Errorf("atmosphereCodes[%d].Name is empty", code)
 		}
 	}
+
 	if len(atmosphereCodes) != len(wantChars) {
 		t.Errorf("atmosphereCodes has %d entries, want %d", len(atmosphereCodes), len(wantChars))
 	}
@@ -381,6 +416,7 @@ func TestAtmosphereCodes_TableConsistency(t *testing.T) {
 // DMs, and the low-end clamp. Scripted rolls feed the 2D result directly.
 func TestRollExoticSubtype(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		name    string
 		roll    int
@@ -414,10 +450,12 @@ func TestRollExoticSubtype(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.roll)
+
 			got, err := RollExoticSubtype(r, c.size, c.orbit, c.hzco, c.runaway)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
+
 			if got != c.want {
 				t.Errorf("got %q, want %q", got, c.want)
 			}
@@ -429,6 +467,7 @@ func TestRollExoticSubtype(t *testing.T) {
 // derived from the WBH p.85 subtype-keyed range, mirroring the atm B/C path.
 func TestRollTotalPressure_AtmAWithSubtype(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		name    string
 		subtype string
@@ -445,10 +484,12 @@ func TestRollTotalPressure_AtmAWithSubtype(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.a, c.b)
+
 			got, err := RollTotalPressure(r, 10, c.subtype)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
+
 			if math.Abs(got-c.want) > 1e-9 {
 				t.Errorf("got %g, want %g", got, c.want)
 			}
@@ -460,11 +501,14 @@ func TestRollTotalPressure_AtmAWithSubtype(t *testing.T) {
 // subtype still falls back to (0, 0): no rolls consumed, returns 0.
 func TestRollTotalPressure_AtmAEmptySubtype(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewScripted() // panics if any roll is consumed
+
 	got, err := RollTotalPressure(r, 10, "")
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+
 	if got != 0 {
 		t.Errorf("got %g, want 0", got)
 	}
@@ -476,7 +520,9 @@ func TestRollTotalPressure_AtmAEmptySubtype(t *testing.T) {
 // prerequisite reroll. Scripted rolls feed 1D values in tens, ones order.
 func TestRollUnusualSubtype(t *testing.T) {
 	t.Parallel()
+
 	const highG = 2.0 // satisfies the Layered prereq
+
 	cases := []struct {
 		name  string
 		grav  float64
@@ -501,10 +547,12 @@ func TestRollUnusualSubtype(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := roller.NewScripted(c.rolls...)
+
 			got, err := RollUnusualSubtype(r, c.grav)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
+
 			if got != c.want {
 				t.Errorf("got %q, want %q", got, c.want)
 			}
@@ -516,6 +564,7 @@ func TestRollUnusualSubtype(t *testing.T) {
 // (11-24) maps to a code and the meta/undefined values map to "".
 func TestUnusualSubtypeCode_TableConsistency(t *testing.T) {
 	t.Parallel()
+
 	want := map[int]string{
 		11: "1", 12: "2", 13: "3", 14: "4", 15: "5", 16: "6",
 		21: "7", 22: "8", 23: "9", 24: "A",
@@ -538,6 +587,7 @@ func TestUnusualSubtypeCode_TableConsistency(t *testing.T) {
 // (the downstream Panthalassic hydro-DM-skip check relies on this).
 func TestUnusualSubtypeHas(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		subtype, code string
 		want          bool

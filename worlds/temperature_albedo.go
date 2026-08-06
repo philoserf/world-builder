@@ -33,6 +33,7 @@ func ComputeAlbedo(r roller.Roller, body *Body, sys stars.System) float64 {
 		if len(body.Group.Members) > 0 {
 			hzco = body.Group.HZCO()
 		}
+
 		beyondIcyLimit := body.Orbit > hzco+2.0
 
 		switch {
@@ -84,8 +85,10 @@ func ComputeAlbedo(r roller.Roller, body *Body, sys stars.System) float64 {
 	if albedo < 0.02 {
 		albedo = 0.02
 	}
+
 	if albedo > 0.98 {
 		albedo = 0.98
 	}
+
 	return albedo
 }

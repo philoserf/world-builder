@@ -57,6 +57,7 @@ func (g Group) Total() float64 {
 	for _, iv := range g.Intervals {
 		t += iv.Max - iv.Min
 	}
+
 	return t
 }
 
@@ -68,6 +69,7 @@ func (g Group) Contains(orbit float64) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -87,11 +89,13 @@ func subtract(intervals []Interval, exMin, exMax float64) []Interval {
 	if exMin >= exMax {
 		return intervals
 	}
+
 	out := make([]Interval, 0, len(intervals)+1)
 	for _, iv := range intervals {
 		// No overlap.
 		if exMax <= iv.Min || exMin >= iv.Max {
 			out = append(out, iv)
+
 			continue
 		}
 		// Left remainder.
@@ -103,6 +107,7 @@ func subtract(intervals []Interval, exMin, exMax float64) []Interval {
 			out = append(out, Interval{Min: exMax, Max: iv.Max})
 		}
 	}
+
 	return out
 }
 
@@ -114,6 +119,7 @@ func hasOrbitClass(sys stars.System, oc stars.OrbitClass) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -132,6 +138,7 @@ func adjacenciesFor(self stars.OrbitClass) []stars.OrbitClass {
 	case stars.OrbitFar:
 		return []stars.OrbitClass{stars.OrbitNear}
 	}
+
 	return nil
 }
 
@@ -143,6 +150,7 @@ func hasAdjacentZone(sys stars.System, self stars.OrbitClass) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -150,16 +158,19 @@ func hasAdjacentZone(sys stars.System, self stars.OrbitClass) bool {
 // eccentricity > 0.2.
 func adjacentEccGT02(sys stars.System, self stars.OrbitClass) bool {
 	wanted := adjacenciesFor(self)
+
 	for _, c := range sys.Companions {
 		if c.ParentIndex != -1 {
 			continue
 		}
+
 		for _, oc := range wanted {
 			if c.OrbitClass == oc && c.Eccentricity > 0.2 {
 				return true
 			}
 		}
 	}
+
 	return false
 }
 
@@ -193,13 +204,16 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		m := groups[i].Members[0]
 		if stars.LacksP39MAORow(m.Kind) {
 			groups[i].MAO = 0
+
 			continue
 		}
+
 		mao, err := stars.MAO(m)
 		if err != nil {
 			return Result{}, fmt.Errorf("worlds: MAO for group %s: %w",
 				groups[i].Designation, err)
 		}
+
 		groups[i].MAO = mao
 	}
 
@@ -215,10 +229,12 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		// first member per identifyGroups; WBH treats the parent as the
 		// more massive/luminous star).
 		largerMAO := groups[i].MAO
+
 		floor := 0.50 + groups[i].companionEcc
 		if largerMAO > 0.2 {
 			floor += largerMAO
 		}
+
 		if floor > groups[i].MAO {
 			groups[i].MAO = floor
 		}
@@ -242,6 +258,7 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		if c.OrbitClass == stars.OrbitCompanion {
 			continue
 		}
+
 		s := c.OrbitNumber
 		// Rules 5+6+7: base ±1, widened by ±1 more if ecc > 0.2,
 		// widened by another ±1 if ecc > 0.5 AND Close or Near (not Far).
@@ -249,16 +266,20 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		if c.Eccentricity > 0.2 {
 			width += 1.0 // rule 6
 		}
+
 		if c.Eccentricity > 0.5 && (c.OrbitClass == stars.OrbitClose || c.OrbitClass == stars.OrbitNear) {
 			width += 1.0 // rule 7 (Close/Near only, not Far)
 		}
+
 		exLow := s - width
 		exHigh := s + width
+
 		secMAO, _ := stars.MAO(c.Star)
 		if secMAO > 0.2 {
 			exLow -= secMAO
 			exHigh += secMAO
 		}
+
 		groups[0].Intervals = subtract(groups[0].Intervals, exLow, exHigh)
 	}
 
@@ -272,20 +293,26 @@ func AvailableOrbits(sys stars.System) (Result, error) {
 		if groups[i].sourceCompanion == nil {
 			continue // primary group
 		}
+
 		sc := groups[i].sourceCompanion
+
 		maxOffset := sc.OrbitNumber - 3 // rule 8
 		if hasAdjacentZone(sys, sc.OrbitClass) {
 			maxOffset-- // rule 9
 		}
+
 		if sc.Eccentricity > 0.2 || adjacentEccGT02(sys, sc.OrbitClass) {
 			maxOffset-- // rule 10
 		}
+
 		if sc.Eccentricity > 0.5 {
 			maxOffset-- // rule 11
 		}
+
 		if maxOffset < 0 {
 			maxOffset = 0
 		}
+
 		if maxOffset < groups[i].MAO {
 			groups[i].Intervals = nil
 		} else {
@@ -313,6 +340,7 @@ func identifyGroups(sys stars.System) []Group {
 				return c.Star, c.Eccentricity, true
 			}
 		}
+
 		return stars.Star{}, 0, false
 	}
 
@@ -326,6 +354,7 @@ func identifyGroups(sys stars.System) []Group {
 	} else {
 		primaryGroup.Designation = "A"
 	}
+
 	groups = append(groups, primaryGroup)
 
 	// Secondary groups: each Close/Near/Far companion of the primary
@@ -334,12 +363,14 @@ func identifyGroups(sys stars.System) []Group {
 	// are assigned positionally (B, C, D) skipping absent slots.
 	letters := []string{"A", "B", "C", "D"}
 	letterIdx := 1
+
 	for _, oc := range []stars.OrbitClass{stars.OrbitClose, stars.OrbitNear, stars.OrbitFar} {
 		for i := range sys.Companions {
 			c := sys.Companions[i]
 			if c.OrbitClass != oc || c.ParentIndex != -1 {
 				continue
 			}
+
 			if letterIdx >= len(letters) {
 				// WBH structurally caps secondaries at three (Close/Near/Far);
 				// any additional secondaries are silently dropped rather than
@@ -347,6 +378,7 @@ func identifyGroups(sys stars.System) []Group {
 				// a hand-constructed System outside the WBH generator's output.
 				break
 			}
+
 			group := Group{
 				Members:         []stars.Star{c.Star},
 				sourceCompanion: &sys.Companions[i],
@@ -358,7 +390,9 @@ func identifyGroups(sys stars.System) []Group {
 			} else {
 				group.Designation = letters[letterIdx]
 			}
+
 			letterIdx++
+
 			groups = append(groups, group)
 		}
 	}

@@ -45,15 +45,18 @@ func PlaceOrbitSlots(
 
 	// Distribute empty orbits: Close → Near → Far → primary.
 	extraSlots := make([]int, len(allocs))
+
 	remaining := emptyOrbits
 	for _, oc := range []stars.OrbitClass{stars.OrbitClose, stars.OrbitNear, stars.OrbitFar} {
 		if remaining == 0 {
 			break
 		}
+
 		for i := 1; i < len(allocs); i++ {
 			if remaining == 0 {
 				break
 			}
+
 			sc := allocs[i].Group.sourceCompanion
 			if sc != nil && sc.OrbitClass == oc {
 				extraSlots[i]++
@@ -66,14 +69,17 @@ func PlaceOrbitSlots(
 
 	// Clamp baselineN to the valid slot range for the primary group.
 	primarySlotCount := allocs[0].AllocatedWorlds + extraSlots[0]
+
 	if baselineN < 1 {
 		baselineN = 1
 	}
+
 	if primarySlotCount > 0 && baselineN > primarySlotCount {
 		baselineN = primarySlotCount
 	}
 
 	var out []Slot
+
 	for i, alloc := range allocs {
 		slotCount := alloc.AllocatedWorlds + extraSlots[i]
 		if slotCount == 0 {
@@ -86,6 +92,7 @@ func PlaceOrbitSlots(
 			// Secondary group: cap the spread so the outermost slot doesn't
 			// exceed the secondary's outer allowable bound.
 			outermost := alloc.Group.MAO + float64(slotCount)*spread
+
 			secOuter := outermostAllowable(alloc.Group)
 			if outermost > secOuter {
 				groupSpread = MaximumSecondarySpread(alloc.Group, slotCount)
@@ -108,8 +115,10 @@ func PlaceOrbitSlots(
 					proposed += zone
 				}
 			}
+
 			return proposed
 		}
+
 		for j := range slotCount {
 			label := slotLabel(alloc.Group.Designation, j, alloc.AllocatedWorlds)
 			isBaselineSlot := i == 0 && j == baselineN-1
@@ -132,6 +141,7 @@ func PlaceOrbitSlots(
 			} else {
 				orbit = advance(float64(r.Roll("2D") - 7))
 			}
+
 			out = append(out, Slot{
 				StarSlot: label,
 				Group:    alloc.Group,
@@ -140,6 +150,7 @@ func PlaceOrbitSlots(
 			cur = orbit
 		}
 	}
+
 	return out, nil
 }
 
@@ -152,9 +163,11 @@ func outermostAllowable(g Group) float64 {
 			outer = iv.Max
 		}
 	}
+
 	if outer < g.MAO {
 		outer = g.MAO
 	}
+
 	return outer
 }
 
@@ -169,9 +182,11 @@ func slotLabel(designation string, indexInGroup, regularCount int) string {
 	if len(designation) > 0 {
 		prefix = string(designation[0])
 	}
+
 	if indexInGroup < regularCount {
 		return fmt.Sprintf("%s%d", prefix, indexInGroup+1)
 	}
+
 	return prefix + "+"
 }
 
@@ -181,12 +196,15 @@ func excludedZoneAt(g Group, orbit float64) float64 {
 	if g.Contains(orbit) {
 		return 0
 	}
-	for i := 0; i < len(g.Intervals)-1; i++ {
+
+	for i := range len(g.Intervals) - 1 {
 		gapStart := g.Intervals[i].Max
+
 		gapEnd := g.Intervals[i+1].Min
 		if orbit >= gapStart && orbit <= gapEnd {
 			return gapEnd - gapStart
 		}
 	}
+
 	return 0
 }

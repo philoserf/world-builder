@@ -19,10 +19,12 @@ func TestMAO_ZedAa(t *testing.T) {
 		Diameter:        0.967,
 		Temperature:     5440,
 	})
+
 	got, err := MAO(zedAa)
 	if err != nil {
 		t.Fatalf("MAO: %v", err)
 	}
+
 	if math.Abs(got-0.02) > 1e-9 {
 		t.Errorf("MAO(G7 V) = %v, want 0.02", got)
 	}
@@ -40,10 +42,12 @@ func TestMAO_ZedB(t *testing.T) {
 		Diameter:        0.777,
 		Temperature:     3980,
 	})
+
 	got, err := MAO(zedB)
 	if err != nil {
 		t.Fatalf("MAO: %v", err)
 	}
+
 	if math.Abs(got-0.02) > 1e-9 {
 		t.Errorf("MAO(K8 V) = %v, want 0.02", got)
 	}
@@ -63,10 +67,12 @@ func TestMAO_Sol(t *testing.T) {
 		Diameter:        1.000,
 		Temperature:     5772,
 	})
+
 	got, err := MAO(sol)
 	if err != nil {
 		t.Fatalf("MAO: %v", err)
 	}
+
 	if math.Abs(got-0.03) > 0.005 {
 		t.Errorf("MAO(G2 V) = %v, want ~0.03", got)
 	}
@@ -84,6 +90,7 @@ func TestMAO_NoEntry(t *testing.T) {
 		Diameter:        0.5,
 		Temperature:     9000,
 	})
+
 	_, err := MAO(a0vi)
 	if !errors.Is(err, ErrNoMAOForStar) {
 		t.Errorf("MAO(A0 VI) error = %v, want ErrNoMAOForStar", err)
@@ -94,6 +101,7 @@ func TestMAO_PostStellar(t *testing.T) {
 	t.Parallel()
 
 	bd := Star{Kind: KindBrownDwarf}
+
 	_, err := MAO(bd)
 	if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
 		t.Errorf("MAO(BD) error = %v, want ErrPostStellarPrimaryUnsupported", err)
@@ -109,6 +117,7 @@ func TestMAO_Protostar(t *testing.T) {
 	t.Parallel()
 
 	proto := Star{Kind: KindProtostar}
+
 	_, err := MAO(proto)
 	if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
 		t.Errorf("MAO(protostar) error = %v, want ErrPostStellarPrimaryUnsupported", err)
@@ -126,10 +135,12 @@ func TestMAO_CrossLetterInterpolation(t *testing.T) {
 		LuminosityClass: V,
 		Mass:            30.0, Diameter: 6.6, Temperature: 36000,
 	})
+
 	got, err := MAO(o7v)
 	if err != nil {
 		t.Fatalf("MAO: %v", err)
 	}
+
 	want := 0.252
 	if math.Abs(got-want) > 1e-9 {
 		t.Errorf("MAO(O7 V) = %v, want %v", got, want)
@@ -143,11 +154,13 @@ func TestMAO_CrossLetterInterpolation(t *testing.T) {
 // these kinds survive the age step and reach the MAO lookup.
 func TestMAO_AggregateKindsClassifiable(t *testing.T) {
 	t.Parallel()
+
 	for _, k := range []StarKind{KindNebula, KindStarCluster, KindAnomaly} {
 		_, err := MAO(Star{Kind: k})
 		if !errors.Is(err, ErrPostStellarPrimaryUnsupported) {
 			t.Errorf("MAO(%s) = %v, want ErrPostStellarPrimaryUnsupported", k, err)
 		}
+
 		if !errors.Is(err, ErrSpecialCircumstances) {
 			t.Errorf("MAO(%s) error does not wrap ErrSpecialCircumstances: %v", k, err)
 		}

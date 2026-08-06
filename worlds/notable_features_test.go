@@ -11,7 +11,9 @@ import (
 // no block (not just an empty heading).
 func TestNotableFeatures_EmptyOnVoid(t *testing.T) {
 	t.Parallel()
+
 	var u worlds.Universe
+
 	got := worlds.NotableFeatures(&u)
 	if got != "" {
 		t.Errorf("expected empty for void universe, got:\n%s", got)
@@ -22,6 +24,7 @@ func TestNotableFeatures_EmptyOnVoid(t *testing.T) {
 // receiver (catch-all for misuse).
 func TestNotableFeatures_NilSafe(t *testing.T) {
 	t.Parallel()
+
 	got := worlds.NotableFeatures(nil)
 	if got != "" {
 		t.Errorf("expected empty for nil universe, got:\n%s", got)
@@ -34,14 +37,17 @@ func TestNotableFeatures_NilSafe(t *testing.T) {
 // and the WorstLow cold snap surfaces.
 func TestNotableFeatures_Sol_HasMainworldNote(t *testing.T) {
 	t.Parallel()
+
 	u, err := worlds.Generate(42)
 	if err != nil {
 		t.Fatalf("Generate(42): %v", err)
 	}
+
 	got := worlds.NotableFeatures(&u)
 	if got == "" {
 		t.Fatal("expected non-empty Notable Features block for seed 42")
 	}
+
 	for _, want := range []string{
 		"## Notable Features",
 		"### Mainworld habitability",

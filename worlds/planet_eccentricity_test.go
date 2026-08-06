@@ -10,6 +10,7 @@ import (
 
 func TestRollPlanetEccentricities_AppliesAnomalyDM(t *testing.T) {
 	t.Parallel()
+
 	placements := []Placement{
 		{AnomalousSlot: AnomalousSlot{Slot: Slot{StarSlot: "A1", Orbit: 1.0}}, Body: BodyTerrestrial},
 		{AnomalousSlot: AnomalousSlot{Slot: Slot{StarSlot: "A+", Orbit: 5.0}, Anomaly: AnomalyEccentric, EccentricityDM: 5}, Body: BodyTerrestrial},
@@ -24,6 +25,7 @@ func TestRollPlanetEccentricities_AppliesAnomalyDM(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if len(out) != len(placements) {
 		t.Fatalf("len = %d, want %d", len(out), len(placements))
 	}
@@ -43,6 +45,7 @@ func TestRollPlanetEccentricities_AppliesAnomalyDM(t *testing.T) {
 
 func TestRollPlanetEccentricities_TrojanInheritsParent(t *testing.T) {
 	t.Parallel()
+
 	placements := []Placement{
 		// Parent slot at A1 with some rolled eccentricity.
 		{AnomalousSlot: AnomalousSlot{Slot: Slot{StarSlot: "A1", Orbit: 3.0}}, Body: BodyTerrestrial},
@@ -54,6 +57,7 @@ func TestRollPlanetEccentricities_TrojanInheritsParent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if math.Abs(out[0].Eccentricity-out[1].Eccentricity) > 1e-9 {
 		t.Errorf("Trojan eccentricity %v should equal parent %v", out[1].Eccentricity, out[0].Eccentricity)
 	}
@@ -61,6 +65,7 @@ func TestRollPlanetEccentricities_TrojanInheritsParent(t *testing.T) {
 
 func TestRollPlanetEccentricities_NestingDepthForSecondary(t *testing.T) {
 	t.Parallel()
+
 	primary := Group{Designation: "A", Members: []stars.Star{{}}}
 	nearCompanion := stars.CompanionStar{OrbitClass: stars.OrbitNear}
 	secondary := Group{Designation: "B", Members: []stars.Star{{}}}
@@ -75,6 +80,7 @@ func TestRollPlanetEccentricities_NestingDepthForSecondary(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if out[0].Eccentricity == out[1].Eccentricity {
 		t.Errorf("primary (depth 0) and secondary (depth 1) eccentricities both = %v; NestingDepth had no effect", out[0].Eccentricity)
 	}
@@ -105,20 +111,24 @@ func TestRollPlanetEccentricities_AgeDMApplies(t *testing.T) {
 
 	// With ageGyr > 1, DM-1 → row 7 → Base 0.00 + 4/200 = 0.02.
 	scripted := roller.NewScripted(8, 4)
+
 	out, err := RollPlanetEccentricities(scripted, []Placement{p}, 5.0)
 	if err != nil {
 		t.Fatalf("RollPlanetEccentricities returned error: %v", err)
 	}
+
 	if got, want := out[0].Eccentricity, 0.02; math.Abs(got-want) > 1e-9 {
 		t.Errorf("Eccentricity with ageGyr=5.0 = %v, want %v (DM-1 should shift to row 7)", got, want)
 	}
 
 	// Without the age DM, the same dice produce row 8's value.
 	scripted = roller.NewScripted(8, 4)
+
 	out, err = RollPlanetEccentricities(scripted, []Placement{p}, 0.5)
 	if err != nil {
 		t.Fatalf("RollPlanetEccentricities (no age DM) returned error: %v", err)
 	}
+
 	if got, want := out[0].Eccentricity, 0.07; math.Abs(got-want) > 1e-9 {
 		t.Errorf("Eccentricity with ageGyr=0.5 = %v, want %v (no DM)", got, want)
 	}

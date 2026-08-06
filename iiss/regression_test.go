@@ -39,22 +39,27 @@ func TestRegression_MarkdownSeeds(t *testing.T) {
 	for _, seed := range []int64{1, 7, 15, 42, 100, 500} {
 		t.Run("seed_"+strconv.FormatInt(seed, 10), func(t *testing.T) {
 			t.Parallel()
+
 			u, err := worlds.Generate(seed)
 			if err != nil {
 				if isExpectedSpecial(err) {
 					t.Skipf("seed %d hits Special-Circumstances chapter (out of pass-2 scope): %v", seed, err)
 				}
+
 				t.Fatalf("seed %d: Generate: %v", seed, err)
 			}
+
 			got := iiss.MarkdownClass4Survey(u.Detail.SystemForms)
 
 			snapshot := filepath.Join("testdata", "seed_"+strconv.FormatInt(seed, 10)+".md")
 
 			if *updateRegression {
-				if err := os.WriteFile(snapshot, []byte(got), 0o644); err != nil {
-					t.Fatalf("seed %d: write %s: %v", seed, snapshot, err)
+				if writeErr := os.WriteFile(snapshot, []byte(got), 0o644); writeErr != nil {
+					t.Fatalf("seed %d: write %s: %v", seed, snapshot, writeErr)
 				}
+
 				t.Logf("seed %d: wrote %d bytes to %s", seed, len(got), snapshot)
+
 				return
 			}
 
@@ -62,6 +67,7 @@ func TestRegression_MarkdownSeeds(t *testing.T) {
 			if err != nil {
 				t.Fatalf("seed %d: read %s: %v (use -update.regression to seed)", seed, snapshot, err)
 			}
+
 			if got != string(want) {
 				t.Errorf("seed %d: Markdown output drifted from %s\n"+
 					"to update snapshot after reviewing the diff:\n"+

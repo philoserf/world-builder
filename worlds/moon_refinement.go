@@ -19,11 +19,13 @@ func HillSphere(au, ecc, planetMassEarth, sumStellarMassSolar, planetDiameterKm 
 	if sumStellarMassSolar <= 0 || planetDiameterKm <= 0 {
 		return 0, 0
 	}
+
 	planetMassSolar := planetMassEarth * 0.000003
 	ratio := planetMassSolar / (3 * sumStellarMassSolar)
 	cube := math.Cbrt(ratio)
 	auResult = au * (1 - ecc) * cube
 	pd = auResult * auKm / planetDiameterKm
+
 	return auResult, pd
 }
 
@@ -42,6 +44,7 @@ func RocheLimit(planetDiameterKm, planetDensityRel, moonDensityRel float64) floa
 	if moonDensityRel <= 0 {
 		return 0
 	}
+
 	return 1.22 * planetDiameterKm * math.Cbrt(planetDensityRel/moonDensityRel)
 }
 
@@ -64,9 +67,11 @@ func MoonOrbitRange(hillSphereMoonLimit float64, nMoons int) int {
 	if mor > 200 {
 		mor = 200 + nMoons
 	}
+
 	if mor < 0 {
 		mor = 0
 	}
+
 	return mor
 }
 
@@ -85,8 +90,10 @@ func MoonPeriodHours(orbitPD float64, effectiveSize int, parentMassEarth float64
 	if parentMassEarth <= 0 {
 		return 0
 	}
+
 	d := orbitPD * float64(effectiveSize)
 	cube := d * d * d
+
 	return 0.176927 * math.Sqrt(cube/parentMassEarth)
 }
 
@@ -102,6 +109,7 @@ func MoonPeriodHours(orbitPD float64, effectiveSize int, parentMassEarth float64
 func RollRingProfile(r roller.Roller) (centrePD, spanPD float64) {
 	centrePD = 0.4 + float64(r.Roll("2D"))/8.0
 	spanPD = float64(r.Roll("3D"))/100.0 + 0.07
+
 	return centrePD, spanPD
 }
 
@@ -129,8 +137,10 @@ func RollMoonOrbit(r roller.Roller, mor int) (orbitPD float64, mr MoonRange) {
 	if mor < 60 {
 		dm = 1
 	}
+
 	rng := r.Roll("1D") + dm
 	v := r.Roll("2D")
+
 	switch {
 	case rng <= 3:
 		mr = MoonRangeInner
@@ -142,6 +152,7 @@ func RollMoonOrbit(r roller.Roller, mor int) (orbitPD float64, mr MoonRange) {
 		mr = MoonRangeOuter
 		orbitPD = float64(v-2)*float64(mor)/20 + float64(mor)/2 + 4
 	}
+
 	return orbitPD, mr
 }
 
@@ -151,6 +162,7 @@ func RollMoonOrbit(r roller.Roller, mor int) (orbitPD float64, mr MoonRange) {
 // An orbit is retrograde on a result of 10+.
 func RollMoonRetrograde(r roller.Roller, mr MoonRange, exceedsMOR bool) bool {
 	dm := 0
+
 	switch mr {
 	case MoonRangeInner:
 		dm = -1
@@ -159,8 +171,10 @@ func RollMoonRetrograde(r roller.Roller, mr MoonRange, exceedsMOR bool) bool {
 	case MoonRangeOuter:
 		dm = 4
 	}
+
 	if exceedsMOR {
 		dm += 6
 	}
+
 	return r.Roll("2D")+dm >= 10
 }

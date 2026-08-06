@@ -22,13 +22,16 @@ func TestGenerateSystemPlacement_WrappedErrorMessage(t *testing.T) {
 	sys := stars.System{Primary: primary}
 
 	r := roller.NewSeeded(1)
+
 	_, err := GenerateSystemPlacement(r, sys)
 	if err == nil {
 		t.Fatal("GenerateSystemPlacement returned nil error; expected post-stellar failure")
 	}
+
 	if !errors.Is(err, stars.ErrPostStellarPrimaryUnsupported) {
 		t.Errorf("err is not stars.ErrPostStellarPrimaryUnsupported via Is(): %v", err)
 	}
+
 	if !strings.Contains(err.Error(), "worlds: available-orbits:") {
 		t.Errorf("err.Error() = %q, want step prefix 'worlds: available-orbits:'", err.Error())
 	}

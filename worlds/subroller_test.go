@@ -25,6 +25,7 @@ import (
 // shared stream. Returns the per-body slice for comparison.
 func generateZedWithShift(t *testing.T, seed int64, shift int) []worlds.Body {
 	t.Helper()
+
 	r := roller.NewSeeded(seed)
 	sys := composeZed()
 
@@ -32,6 +33,7 @@ func generateZedWithShift(t *testing.T, seed int64, shift int) []worlds.Body {
 	if err != nil {
 		t.Fatalf("seed %d: placement: %v", seed, err)
 	}
+
 	u := &worlds.Universe{System: sys, Placement: sp}
 
 	// Structure prefix — shared stream (creates body identities).
@@ -65,7 +67,9 @@ func generateZedWithShift(t *testing.T, seed int64, shift int) []worlds.Body {
 			t.Fatalf("seed %d: %s: %v", seed, s.name, err)
 		}
 	}
+
 	worlds.ApplyHabitability(u)
+
 	return u.Detail.Bodies
 }
 
@@ -99,6 +103,7 @@ func TestC1_SuffixDependsOnSeed(t *testing.T) {
 	t.Parallel()
 
 	a := generateZedWithShift(t, 0, 0)
+
 	b := generateZedWithShift(t, 1, 0)
 	if reflect.DeepEqual(a, b) {
 		t.Fatal("seeds 0 and 1 produced identical systems: output is not seed-dependent, " +
@@ -119,9 +124,11 @@ func TestC1_ForkKeysAreStable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate(42): %v", err)
 	}
+
 	if u.Detail.Mainworld == nil {
 		t.Fatal("seed 42: no mainworld picked")
 	}
+
 	const wantSAH = "799" // seed 42 mainworld SAH under the current fork-key scheme
 	if got := u.Detail.Mainworld.RenderSAH(); got != wantSAH {
 		t.Fatalf("seed 42 mainworld SAH = %q, want %q: the fork-key scheme changed "+

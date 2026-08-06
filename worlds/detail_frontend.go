@@ -27,6 +27,7 @@ func parentInfoOf(body *Body) ParentInfo {
 	if body.Kind == BodyGasGiant {
 		return ParentInfo{IsGasGiant: true, GGClass: body.GGClass}
 	}
+
 	return ParentInfo{SizeCode: body.SizeCode}
 }
 
@@ -34,15 +35,18 @@ func parentInfoOf(body *Body) ParentInfo {
 // primary class and system spread.
 func gasGiantSizingDM(sys stars.System, sp SystemPlacement) int {
 	dm := 0
+
 	primary := sys.Primary
 	if primary.Kind == stars.KindBrownDwarf ||
 		(primary.SpectralType.Letter == 'M' && primary.LuminosityClass == stars.V) ||
 		primary.LuminosityClass == stars.VI {
 		dm--
 	}
+
 	if sp.SystemSpread < 0.1 {
 		dm--
 	}
+
 	return dm
 }
 
@@ -54,12 +58,14 @@ func moonCountDM(body *Body, sp SystemPlacement) int {
 	if body.Orbit < 1.0 {
 		return -1
 	}
+
 	w := sp.SystemSpread / 2
 	for _, iv := range body.Group.Intervals {
 		if math.Abs(body.Orbit-iv.Min) < w || math.Abs(body.Orbit-iv.Max) < w {
 			return -1
 		}
 	}
+
 	return 0
 }
 
@@ -71,6 +77,7 @@ func sumStellarMassInterior(body *Body) float64 {
 	for _, m := range body.Group.Members {
 		sum += m.Mass
 	}
+
 	return sum
 }
 
@@ -105,6 +112,7 @@ func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
 
 	// Sub-stage 2: sizing.
 	ggDM := gasGiantSizingDM(u.System, sp)
+
 	for i := range bodies {
 		switch bodies[i].Kind {
 		case BodyTerrestrial:
@@ -112,6 +120,7 @@ func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
 			if err != nil {
 				return fmt.Errorf("worlds: stage2 size terrestrial[%d]: %w", i, err)
 			}
+
 			bodies[i].SizeCode = ts.SizeCode
 			bodies[i].DiameterKm = ts.DiameterKm
 		case BodyGasGiant:
@@ -119,6 +128,7 @@ func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
 			if err != nil {
 				return fmt.Errorf("worlds: stage2 size gas-giant[%d]: %w", i, err)
 			}
+
 			bodies[i].GGClass = gs.Class
 			bodies[i].GGDiameterCode = gs.DiameterCode
 			bodies[i].DiameterEarth = gs.DiameterEarth
@@ -131,28 +141,35 @@ func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
 		if bodies[i].Kind == BodyEmpty || bodies[i].Kind == BodyPlanetoidBelt {
 			continue
 		}
+
 		parent := parentInfoOf(&bodies[i])
 		dm := moonCountDM(&bodies[i], sp)
+
 		count, ring, err := CountMoons(r, parent, dm)
 		if err != nil {
 			return fmt.Errorf("worlds: stage2 moon-count[%d]: %w", i, err)
 		}
+
 		if ring {
 			bodies[i].Ring = true
 		}
+
 		if count == 0 {
 			continue
 		}
+
 		children := make([]*Body, 0, count)
 		for j := range count {
 			m, err := SizeMoon(r, parent)
 			if err != nil {
 				return fmt.Errorf("worlds: stage2 moon-size[%d/%d]: %w", i, j, err)
 			}
+
 			child := m // local copy; take pointer below
 			child.Parent = &bodies[i]
 			children = append(children, &child)
 		}
+
 		bodies[i].Children = children
 	}
 
@@ -165,12 +182,15 @@ func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
 		if bodies[i].Kind == BodyEmpty {
 			continue
 		}
+
 		au := stars.OrbitToAU(bodies[i].Orbit)
 		sumMass := sumStellarMassInterior(&bodies[i])
+
 		bodyMassEarth := 0.0
 		if bodies[i].Kind == BodyGasGiant && bodies[i].MassEarth >= 100 {
 			bodyMassEarth = bodies[i].MassEarth
 		}
+
 		bodies[i].Period = PeriodFor(au, sumMass, bodyMassEarth)
 	}
 
@@ -178,5 +198,6 @@ func ApplyDetailFrontEnd(r roller.Roller, u *Universe) error {
 	MarkHZ(bodies)
 
 	u.Detail.Bodies = bodies
+
 	return nil
 }

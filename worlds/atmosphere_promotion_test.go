@@ -8,6 +8,7 @@ func TestPromoteOxygenTaint_NoChangeForUntaintedCodesInBand(t *testing.T) {
 		if newCode != code {
 			t.Errorf("atm %d ppO2=0.21: got code %d, want %d", code, newCode, code)
 		}
+
 		if seeded != nil {
 			t.Errorf("atm %d ppO2=0.21: got seeded taint, want nil", code)
 		}
@@ -29,9 +30,11 @@ func TestPromoteOxygenTaint_PromoteOnLowOxygen(t *testing.T) {
 		if newCode != c.newCode {
 			t.Errorf("atm %d ppO2=%g: got code %d, want %d", c.atmCode, c.ppO2, newCode, c.newCode)
 		}
+
 		if seeded == nil {
 			t.Fatalf("atm %d ppO2=%g: got nil seeded, want L taint", c.atmCode, c.ppO2)
 		}
+
 		if seeded.Code != "L" {
 			t.Errorf("atm %d ppO2=%g: got seeded code %q, want \"L\"", c.atmCode, c.ppO2, seeded.Code)
 		}
@@ -53,9 +56,11 @@ func TestPromoteOxygenTaint_PromoteOnHighOxygen(t *testing.T) {
 		if newCode != c.newCode {
 			t.Errorf("atm %d ppO2=%g: got code %d, want %d", c.atmCode, c.ppO2, newCode, c.newCode)
 		}
+
 		if seeded == nil {
 			t.Fatalf("atm %d ppO2=%g: got nil seeded, want H taint", c.atmCode, c.ppO2)
 		}
+
 		if seeded.Code != "H" {
 			t.Errorf("atm %d ppO2=%g: got seeded code %q, want \"H\"", c.atmCode, c.ppO2, seeded.Code)
 		}
@@ -68,6 +73,7 @@ func TestPromoteOxygenTaint_NoPromoteForOtherCodes(t *testing.T) {
 		if newCode != code {
 			t.Errorf("atm %d ppO2=0.05: got code %d, want unchanged %d", code, newCode, code)
 		}
+
 		if seeded != nil {
 			t.Errorf("atm %d: got seeded, want nil (not 5/6/8)", code)
 		}
@@ -90,9 +96,11 @@ func TestPromoteOxygenTaint_BoundaryValues(t *testing.T) {
 		if c.shouldPromote && seeded == nil {
 			t.Errorf("ppO2=%g: expected promotion to %s, got none", c.ppO2, c.expectCode)
 		}
+
 		if !c.shouldPromote && seeded != nil {
 			t.Errorf("ppO2=%g: expected no promotion, got seeded code %q", c.ppO2, seeded.Code)
 		}
+
 		if c.shouldPromote && seeded != nil && seeded.Code != c.expectCode {
 			t.Errorf("ppO2=%g: got code %q, want %q", c.ppO2, seeded.Code, c.expectCode)
 		}

@@ -34,6 +34,7 @@ const hoursPerYear = 8766.0
 // formula). Wraps stars.OrbitPeriodYears.
 func PeriodFor(au, sumStellarMassSolar, bodyMassEarth float64) Period {
 	years := stars.OrbitPeriodYears(au, sumStellarMassSolar, bodyMassEarth*massSolarPerEarth)
+
 	return Period{
 		Years: years,
 		Days:  years * 365.25,

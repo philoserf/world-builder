@@ -24,6 +24,7 @@ func ParseSpectralType(s string) (SpectralType, error) {
 	if len(s) != 2 {
 		return SpectralType{}, fmt.Errorf("stars: spectral type must be 2 chars: %q", s)
 	}
+
 	letter := SpectralLetter(s[0])
 	switch letter {
 	case 'O', 'B', 'A', 'F', 'G', 'K', 'M':
@@ -31,10 +32,12 @@ func ParseSpectralType(s string) (SpectralType, error) {
 	default:
 		return SpectralType{}, fmt.Errorf("stars: invalid spectral letter: %q", s)
 	}
+
 	d := s[1]
 	if d < '0' || d > '9' {
 		return SpectralType{}, fmt.Errorf("stars: subtype must be a digit: %q", s)
 	}
+
 	return SpectralType{Letter: letter, Subtype: int(d - '0')}, nil
 }
 

@@ -24,6 +24,7 @@ func TestComputeAlbedo_ZedPrime(t *testing.T) {
 
 	r := roller.NewScripted(8, 8, 7)
 	got := ComputeAlbedo(r, body, sys)
+
 	want := 0.33
 	if math.Abs(got-want) > 0.005 {
 		t.Errorf("got %v, want %v", got, want)
@@ -44,6 +45,7 @@ func TestComputeAlbedo_Terra_Reference(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 6)
+
 	got := ComputeAlbedo(r, body, sys)
 	if got < 0.25 || got > 0.30 {
 		t.Errorf("Terra-reference albedo got %v, want ~0.27 (scripted [7,7,6]; book reference 0.30)", got)
@@ -61,6 +63,7 @@ func TestComputeAlbedo_GasGiant(t *testing.T) {
 
 	r := roller.NewScripted(7)
 	got := ComputeAlbedo(r, body, sys)
+
 	want := 0.40
 	if math.Abs(got-want) > 0.01 {
 		t.Errorf("got %v, want %v", got, want)
@@ -119,6 +122,7 @@ func TestComputeAlbedo_Vacuum(t *testing.T) {
 
 	r := roller.NewScripted(7) // only 1 roll consumed (rocky base)
 	got := ComputeAlbedo(r, body, sys)
+
 	want := 0.14
 	if math.Abs(got-want) > 0.01 {
 		t.Errorf("got %v, want %v (no atm or hyd modifier should apply)", got, want)
@@ -128,6 +132,7 @@ func TestComputeAlbedo_Vacuum(t *testing.T) {
 func TestComputeGreenhouseFactor_Vacuum(t *testing.T) {
 	// Atmosphere code 0 → vacuum → greenhouse 0.
 	r := roller.NewScripted()
+
 	got := ComputeGreenhouseFactor(r, &Atmosphere{Code: 0, Pressure: 0})
 	if got != 0 {
 		t.Errorf("got %v, want 0 for vacuum", got)
@@ -141,6 +146,7 @@ func TestComputeGreenhouseFactor_ZedPrime(t *testing.T) {
 	// Total: 0.51 + 0.08 = 0.59.
 	r := roller.NewScripted(8)
 	got := ComputeGreenhouseFactor(r, &Atmosphere{Code: 6, Pressure: 1.04})
+
 	want := 0.59
 	if math.Abs(got-want) > 0.005 {
 		t.Errorf("got %v, want %v", got, want)
@@ -154,6 +160,7 @@ func TestComputeGreenhouseFactor_AtmosphereA_Min0p5(t *testing.T) {
 	atm := &Atmosphere{Code: 10, Pressure: 0.5}
 	initial := 0.5 * math.Sqrt(0.5) // 0.354
 	got := ComputeGreenhouseFactor(r, atm)
+
 	want := initial * 0.5 // minimum
 	if math.Abs(got-want) > 0.01 {
 		t.Errorf("got %v, want %v (initial %v × min 0.5)", got, want, initial)
@@ -167,6 +174,7 @@ func TestComputeGreenhouseFactor_AtmosphereB_RollOf6(t *testing.T) {
 	atm := &Atmosphere{Code: 11, Pressure: 1.0}
 	initial := 0.5 // 0.5 × √1.0
 	got := ComputeGreenhouseFactor(r, atm)
+
 	want := initial * 10
 	if math.Abs(got-want) > 0.01 {
 		t.Errorf("got %v, want %v", got, want)
@@ -179,6 +187,7 @@ func TestComputeGreenhouseFactor_AtmosphereB_NormalPath(t *testing.T) {
 	r := roller.NewScripted(3)
 	atm := &Atmosphere{Code: 11, Pressure: 1.0}
 	got := ComputeGreenhouseFactor(r, atm)
+
 	want := 1.5
 	if math.Abs(got-want) > 0.01 {
 		t.Errorf("got %v, want %v", got, want)
@@ -189,6 +198,7 @@ func TestMeanTemperatureK_ZedPrime(t *testing.T) {
 	// L=1.419, A=0.33, G=0.59, AU=1.06.
 	// T = 279 × ⁴√(1.419 × 0.67 × 1.59 / 1.06²) ≈ 300.4 K → 300K.
 	got := MeanTemperatureK(1.419, 0.33, 0.59, 1.06)
+
 	want := 300.0
 	if math.Abs(got-want) > 1.0 {
 		t.Errorf("got %v, want %v", got, want)
@@ -208,6 +218,7 @@ func TestMeanTemperatureK_Terra_Reference(t *testing.T) {
 func TestMeanTemperatureK_ClampsHighGreenhouse(t *testing.T) {
 	// (1+G) > 1.999 should be clamped. With G=10: T should equal T at G=0.999.
 	gotClamped := MeanTemperatureK(1.0, 0.0, 10.0, 1.0)
+
 	gotAtLimit := MeanTemperatureK(1.0, 0.0, 0.999, 1.0)
 	if math.Abs(gotClamped-gotAtLimit) > 0.5 {
 		t.Errorf("clamp failed: at G=10 got %v, at G=0.999 got %v", gotClamped, gotAtLimit)
@@ -232,6 +243,7 @@ func TestCombineTemperatures_SingleSource(t *testing.T) {
 func TestCombineTemperatures_TwoEqual(t *testing.T) {
 	// ⁴√(300⁴ + 300⁴) = 300 × ⁴√2 ≈ 356.7.
 	got := CombineTemperatures(300, 300)
+
 	want := 300 * math.Pow(2, 0.25)
 	if math.Abs(got-want) > 0.5 {
 		t.Errorf("got %v, want %v", got, want)
@@ -287,10 +299,12 @@ func TestBasicTemperatureRoll_Mod7_TableValue(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7)
+
 	mod, k := BasicTemperatureRoll(r, body, sys)
 	if mod != 7 {
 		t.Errorf("mod: got %d, want 7", mod)
 	}
+
 	if k != 288 {
 		t.Errorf("kelvin: got %v, want 288", k)
 	}
@@ -304,10 +318,12 @@ func TestBasicTemperatureRoll_AtmDMShifts(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(2)
+
 	mod, k := BasicTemperatureRoll(r, body, sys)
 	if mod != 8 {
 		t.Errorf("mod: got %d, want 8 (raw 2 + DM +6)", mod)
 	}
+
 	if k != 293 {
 		t.Errorf("kelvin: got %v, want 293", k)
 	}
@@ -323,10 +339,12 @@ func TestBasicTemperatureRoll_OrbitInside_DMPlus(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(2)
+
 	mod, k := BasicTemperatureRoll(r, body, sys)
 	if mod != 8 {
 		t.Errorf("mod: got %d, want 8 (raw 2 + orbit DM +6)", mod)
 	}
+
 	if k != 293 {
 		t.Errorf("kelvin: got %v, want 293", k)
 	}
@@ -342,10 +360,12 @@ func TestBasicTemperatureRoll_OrbitOutside_DMMinus(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(12)
+
 	mod, k := BasicTemperatureRoll(r, body, sys)
 	if mod != 6 {
 		t.Errorf("mod: got %d, want 6 (raw 12 + orbit DM -6)", mod)
 	}
+
 	if k != 283 {
 		t.Errorf("kelvin: got %v, want 283", k)
 	}
@@ -361,6 +381,7 @@ func TestBasicTemperatureRoll_AboveTable(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(14)
+
 	_, k := BasicTemperatureRoll(r, body, sys)
 	if k != 488 {
 		t.Errorf("got %v, want 488", k)
@@ -378,10 +399,12 @@ func TestBasicTemperatureRoll_BelowTable_NoRecompute(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(12)
+
 	mod, k := BasicTemperatureRoll(r, body, sys)
 	if mod != -4 {
 		t.Errorf("mod: got %d, want -4", mod)
 	}
+
 	if math.Abs(k-158) > 0.1 {
 		t.Errorf("got %v, want 158", k)
 	}
@@ -401,6 +424,7 @@ func TestBasicTemperatureRoll_BelowTable_RecomputeAs1DPlus5(t *testing.T) {
 
 	// Two scripted values: first for 2D (raw temp roll), second for 1D (recompute).
 	r := roller.NewScripted(2, 4)
+
 	_, k := BasicTemperatureRoll(r, body, sys)
 	if k != 9 {
 		t.Errorf("got %v, want 9 (recompute as 1D+5 with 1D=4)", k)
@@ -430,22 +454,28 @@ func TestGenerateTemperature_ZedPrime_Mean(t *testing.T) {
 	// Albedo: [8, 8, 7] → 0.33. Greenhouse: [8] → 0.59. Basic roll: [7].
 	// 5 scripted values total.
 	r := roller.NewScripted(8, 8, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, parent)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp == nil {
 		t.Fatal("expected non-nil Temperature")
 	}
+
 	if math.Abs(temp.Albedo-0.33) > 0.01 {
 		t.Errorf("Albedo: got %v, want 0.33", temp.Albedo)
 	}
+
 	if math.Abs(temp.GreenhouseFactor-0.59) > 0.01 {
 		t.Errorf("GreenhouseFactor: got %v, want 0.59", temp.GreenhouseFactor)
 	}
+
 	if temp.Luminosity != 1.419 {
 		t.Errorf("Luminosity: got %v, want 1.419", temp.Luminosity)
 	}
+
 	if math.Abs(temp.AU-1.06) > 0.01 {
 		t.Errorf("AU: got %v, want ~1.06 (parent at AUToOrbit(1.06))", temp.AU)
 	}
@@ -469,10 +499,12 @@ func TestGenerateTemperature_BodyEmpty_ReturnsNil(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted()
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp != nil {
 		t.Errorf("BodyEmpty should return nil, got %+v", temp)
 	}
@@ -491,10 +523,12 @@ func TestGenerateTemperature_PlanetUsesOwnOrbit(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 6, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp == nil {
 		t.Fatal("expected non-nil Temperature")
 	}
@@ -531,10 +565,12 @@ func TestGenerateTemperature_MultiStarLuminositySum(t *testing.T) {
 	}
 
 	r := roller.NewScripted(7, 7, 6, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	want := 1.5 // 1.0 + 0.5
 	if math.Abs(temp.Luminosity-want) > 0.001 {
 		t.Errorf("Luminosity: got %v, want %v (close binary mate summed)", temp.Luminosity, want)
@@ -556,16 +592,20 @@ func TestGenerateTemperature_NoAtmosphere(t *testing.T) {
 
 	// Albedo: 1 roll (rocky base only). Greenhouse: 0 rolls (vacuum). Basic: 1 roll.
 	r := roller.NewScripted(7, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp == nil {
 		t.Fatal("expected non-nil Temperature")
 	}
+
 	if temp.GreenhouseFactor != 0 {
 		t.Errorf("vacuum should have G=0, got %v", temp.GreenhouseFactor)
 	}
+
 	if temp.ScaleHeight != 0 {
 		t.Errorf("nil atmosphere should have ScaleHeight=0, got %v", temp.ScaleHeight)
 	}
@@ -592,13 +632,16 @@ func TestGenerateTemperature_ZedPrime_HighLow(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 0.918, AgeGyr: 6.3, Luminosity: 1.419}}
 
 	r := roller.NewScripted(8, 8, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, parent)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if math.Abs(temp.HighK-346) > 5 {
 		t.Errorf("HighK: got %v, want 346 ±5K", temp.HighK)
 	}
+
 	if math.Abs(temp.LowK-250) > 5 {
 		t.Errorf("LowK: got %v, want 250 ±5K", temp.LowK)
 	}
@@ -606,15 +649,19 @@ func TestGenerateTemperature_ZedPrime_HighLow(t *testing.T) {
 	if math.Abs(temp.AxialTiltFactor-0.48) > 0.02 {
 		t.Errorf("AxialTiltFactor: got %v, want 0.48 (halved from 0.96 by short year)", temp.AxialTiltFactor)
 	}
+
 	if math.Abs(temp.RotationFactor-0.185) > 0.01 {
 		t.Errorf("RotationFactor: got %v, want 0.185", temp.RotationFactor)
 	}
+
 	if math.Abs(temp.GeographicFactor-0.20) > 0.01 {
 		t.Errorf("GeographicFactor: got %v, want 0.20", temp.GeographicFactor)
 	}
+
 	if math.Abs(temp.AtmosphericFactor-2.04) > 0.01 {
 		t.Errorf("AtmosphericFactor: got %v, want 2.04", temp.AtmosphericFactor)
 	}
+
 	if math.Abs(temp.LuminosityModifier-0.424) > 0.01 {
 		t.Errorf("LuminosityModifier: got %v, want 0.424", temp.LuminosityModifier)
 	}
@@ -622,6 +669,7 @@ func TestGenerateTemperature_ZedPrime_HighLow(t *testing.T) {
 	if math.Abs(temp.NearAU-0.954) > 0.005 {
 		t.Errorf("NearAU: got %v, want 0.954 (parent's ecc 0.10)", temp.NearAU)
 	}
+
 	if math.Abs(temp.FarAU-1.166) > 0.005 {
 		t.Errorf("FarAU: got %v, want 1.166", temp.FarAU)
 	}
@@ -649,10 +697,12 @@ func TestGenerateTemperature_ZedPrime_WorstCase(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.419}}
 
 	r := roller.NewScripted(8, 8, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, parent)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if math.Abs(temp.WorstHighK-359) > 5 {
 		t.Errorf("WorstHighK: got %v, want 359 ±5K", temp.WorstHighK)
 	}
@@ -681,6 +731,7 @@ func TestGenerateTemperature_AxialTiltLongYearBoost(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 6, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -708,10 +759,12 @@ func TestGenerateTemperature_RotationFactorLongDay(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 6, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp.RotationFactor != 1.0 {
 		t.Errorf("RotationFactor: got %v, want 1.0 (solar day > 2500h)", temp.RotationFactor)
 	}
@@ -740,19 +793,24 @@ func TestGenerateTemperature_TwilightZone_Detected(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 0.5}}
 
 	r := roller.NewScripted(7, 7, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !temp.IsTwilight {
 		t.Error("expected IsTwilight=true for 1:1 star-lock")
 	}
+
 	if temp.BrightSideK <= temp.TwilightK {
 		t.Errorf("BrightSideK %v should exceed TwilightK %v", temp.BrightSideK, temp.TwilightK)
 	}
+
 	if temp.DarkSideK >= temp.TwilightK {
 		t.Errorf("DarkSideK %v should be below TwilightK %v", temp.DarkSideK, temp.TwilightK)
 	}
+
 	if math.Abs(temp.TwilightK-temp.MeanK) > 0.5 {
 		t.Errorf("TwilightK %v should equal MeanK %v", temp.TwilightK, temp.MeanK)
 	}
@@ -781,13 +839,16 @@ func TestGenerateTemperature_MoonLockedToPlanet_NotTwilight(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, parent)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp.IsTwilight {
 		t.Error("moon→planet 1:1 lock should NOT be twilight zone")
 	}
+
 	if temp.BrightSideK != 0 || temp.DarkSideK != 0 || temp.TwilightK != 0 {
 		t.Errorf("twilight fields should be zero for non-twilight body, got bright=%v dark=%v twilight=%v",
 			temp.BrightSideK, temp.DarkSideK, temp.TwilightK)
@@ -811,10 +872,12 @@ func TestGenerateTemperature_NotLocked_NoTwilight(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 6, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp.IsTwilight {
 		t.Error("body with no TidalLock should not be twilight")
 	}
@@ -843,13 +906,16 @@ func TestGenerateTemperature_GGMoon_ParentRadiance_AppliedWhenWarm(t *testing.T)
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, parent)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp.ParentRadianceK == 0 {
 		t.Error("expected ParentRadianceK > 0 for hot GG parent")
 	}
+
 	if temp.ParentRadianceK != 500 {
 		t.Errorf("ParentRadianceK: got %v, want 500 (parent MeanK)", temp.ParentRadianceK)
 	}
@@ -882,10 +948,12 @@ func TestGenerateTemperature_GGMoon_ParentRadiance_SkippedWhenCold(t *testing.T)
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, parent)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp.ParentRadianceK != 0 {
 		t.Errorf("expected ParentRadianceK=0 for cold parent, got %v", temp.ParentRadianceK)
 	}
@@ -910,10 +978,12 @@ func TestGenerateTemperature_PlanetNoParentRadiance(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 6, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp.ParentRadianceK != 0 {
 		t.Errorf("planet should have ParentRadianceK=0, got %v", temp.ParentRadianceK)
 	}
@@ -940,10 +1010,12 @@ func TestGenerateTemperature_GGMoon_ParentNoTemperature_Skipped(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0}}
 
 	r := roller.NewScripted(7, 7, 7, 8, 7)
+
 	temp, err := GenerateTemperature(r, body, sys, parent)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if temp.ParentRadianceK != 0 {
 		t.Errorf("nil parent.Temperature should leave ParentRadianceK=0, got %v", temp.ParentRadianceK)
 	}
@@ -990,9 +1062,11 @@ func TestTemperature_MeanByLatitude_Tropical(t *testing.T) {
 	tropic := temp.MeanByLatitude(10) // tropical (< 23.45°)
 	mid := temp.MeanByLatitude(45)    // middle zone
 	arctic := temp.MeanByLatitude(80) // arctic (> 90 - 23.45 = 66.55°)
+
 	if tropic <= mid {
 		t.Errorf("tropic %v should exceed mid-latitude %v", tropic, mid)
 	}
+
 	if arctic >= mid {
 		t.Errorf("arctic %v should be below mid-latitude %v (cooling clamp)", arctic, mid)
 	}
@@ -1011,6 +1085,7 @@ func TestTemperature_MeanByLatitude_TwilightShortCircuit(t *testing.T) {
 		BrightSideK: 320,
 		DarkSideK:   200,
 	}
+
 	got := temp.MeanByLatitude(45)
 	if got != 285 {
 		t.Errorf("got %v, want 285 (TwilightK for IsTwilight body)", got)
@@ -1027,7 +1102,8 @@ func TestTemperature_MeanBySeason_OppositeSolstices(t *testing.T) {
 		AxialTiltFactor:   0.40,
 		AtmosphericFactor: 2.0,
 	}
-	summer := temp.MeanBySeason(45, 0, 365.25)        // summer solstice at 45°N
+	summer := temp.MeanBySeason(45, 0, 365.25) // summer solstice at 45°N
+
 	winter := temp.MeanBySeason(45, 365.25/2, 365.25) // winter solstice at 45°N
 	if summer <= winter {
 		t.Errorf("summer %v should exceed winter %v", summer, winter)
@@ -1046,6 +1122,7 @@ func TestTemperature_AtMoment_NoonExceedsDawn(t *testing.T) {
 		AtmosphericFactor: 2.0,
 	}
 	dawn := temp.AtMoment(0, 0, 365.25, 0, 24)
+
 	noon := temp.AtMoment(0, 0, 365.25, 12, 24)
 	if noon <= dawn {
 		t.Errorf("noon %v should exceed dawn %v (with 0.15 lag, peak is post-noon)", noon, dawn)
@@ -1068,7 +1145,8 @@ func TestTemperature_MeanBySeason_LatitudesProduceDifferentTemps(t *testing.T) {
 		AtmosphericFactor: 2.0,
 	}
 	summerSolstice := 0.0
-	tropical := temp.MeanBySeason(0, summerSolstice, 365.25)   // equator
+	tropical := temp.MeanBySeason(0, summerSolstice, 365.25) // equator
+
 	temperate := temp.MeanBySeason(45, summerSolstice, 365.25) // middle zone
 	if tropical == temperate {
 		t.Errorf("equator (%v) and 45°N (%v) returned identical temps; latitude composition is not applied",
@@ -1091,6 +1169,7 @@ func TestTemperature_MeanBySeason_TropicalZone_NoSeasonalSwing(t *testing.T) {
 	}
 	year := 365.25
 	solstice := temp.MeanBySeason(10, 0, year)
+
 	equinox := temp.MeanBySeason(10, year/4, year)
 	if solstice != equinox {
 		t.Errorf("tropical zone should not swing seasonally: solstice=%v equinox=%v", solstice, equinox)
@@ -1113,6 +1192,7 @@ func TestTemperature_MeanBySeason_MiddleZone_SummerExceedsWinter(t *testing.T) {
 		AtmosphericFactor: 2.0,
 	}
 	summer := temp.MeanBySeason(45, 0, 365.25)
+
 	winter := temp.MeanBySeason(45, 365.25/2, 365.25)
 	if summer <= winter {
 		t.Errorf("middle zone: summer %v should exceed winter %v", summer, winter)
@@ -1133,6 +1213,7 @@ func TestTemperature_MeanBySeason_NoYearLength_FallsBackToMeanByLatitude(t *test
 	}
 	for _, lat := range []float64{0, 30, 60, 89} {
 		want := temp.MeanByLatitude(lat)
+
 		got := temp.MeanBySeason(lat, 999, 0)
 		if got != want {
 			t.Errorf("lat %v: got %v, want %v (MeanByLatitude fallback)", lat, got, want)
@@ -1149,6 +1230,7 @@ func TestTemperature_AdjustedForAltitude_NearGround(t *testing.T) {
 		AU:               1.0,
 		ScaleHeight:      8.5,
 	}
+
 	got := temp.AdjustedForAltitude(288, 0.001) // 1 m altitude
 	if math.Abs(got-288) > 0.5 {
 		t.Errorf("near-ground should return ~baseTemp, got %v", got)
@@ -1166,6 +1248,7 @@ func TestTemperature_AdjustedForAltitude_8000m_LessThanBase(t *testing.T) {
 		AU:               1.0,
 		ScaleHeight:      8.5,
 	}
+
 	got := temp.AdjustedForAltitude(288, 8.0)
 	if got >= 288 {
 		t.Errorf("8000m should be cooler than base, got %v", got)
@@ -1175,6 +1258,7 @@ func TestTemperature_AdjustedForAltitude_8000m_LessThanBase(t *testing.T) {
 func TestTemperature_AdjustedForAltitude_NoScaleHeight_Passthrough(t *testing.T) {
 	// Vacuum world or atmosphere with no scale-height data: pass through.
 	temp := &Temperature{MeanK: 288, Albedo: 0.3, GreenhouseFactor: 0, ScaleHeight: 0}
+
 	got := temp.AdjustedForAltitude(288, 5.0)
 	if got != 288 {
 		t.Errorf("zero scale height should return baseTempK, got %v", got)
@@ -1184,6 +1268,7 @@ func TestTemperature_AdjustedForAltitude_NoScaleHeight_Passthrough(t *testing.T)
 func TestTemperature_AdjustedForAltitude_ZeroAltitude_Passthrough(t *testing.T) {
 	// 0 altitude: pass through.
 	temp := &Temperature{MeanK: 288, Albedo: 0.3, GreenhouseFactor: 0.36, AU: 1.0, ScaleHeight: 8.5}
+
 	got := temp.AdjustedForAltitude(288, 0)
 	if got != 288 {
 		t.Errorf("zero altitude should return baseTempK, got %v", got)
@@ -1199,6 +1284,7 @@ func TestTemperature_ZoneTiltAdjustment_PartB_InnerBand(t *testing.T) {
 		AxialTiltFactor: math.Sin(60 * math.Pi / 180.0), // tilt = 60°
 	}
 	got := temp.zoneTiltAdjustment(20)
+
 	want := math.Sin(15 * math.Pi / 180.0)
 	if math.Abs(got-want) > 1e-9 {
 		t.Errorf("got %v, want %v (sin(15°) for Part B inner band)", got, want)
@@ -1213,6 +1299,7 @@ func TestTemperature_ZoneTiltAdjustment_PartB_ArcticZone(t *testing.T) {
 		AxialTiltFactor: math.Sin(60 * math.Pi / 180.0),
 	}
 	got := temp.zoneTiltAdjustment(50)
+
 	want := math.Sin(-5 * math.Pi / 180.0)
 	if math.Abs(got-want) > 1e-9 {
 		t.Errorf("got %v, want %v (sin(-5°) for Part B arctic zone)", got, want)
@@ -1234,6 +1321,7 @@ func TestTemperature_MeanBySeason_PartB_InnerBand_NoSeasonalSwing(t *testing.T) 
 	}
 	year := 365.25
 	solstice := temp.MeanBySeason(20, 0, year)
+
 	equinox := temp.MeanBySeason(20, year/4, year)
 	if math.Abs(solstice-equinox) > 1e-9 {
 		t.Errorf("Part B inner band should not swing seasonally: solstice=%v equinox=%v", solstice, equinox)
@@ -1255,6 +1343,7 @@ func TestTemperature_MeanBySeason_PartB_ArcticZone_HasSeasonalSwing(t *testing.T
 		AtmosphericFactor: 2.0,
 	}
 	summer := temp.MeanBySeason(50, 0, 365.25)
+
 	winter := temp.MeanBySeason(50, 365.25/2, 365.25)
 	if summer <= winter {
 		t.Errorf("Part B arctic zone should swing seasonally: summer=%v winter=%v", summer, winter)
@@ -1268,6 +1357,7 @@ func TestTemperature_MeanBySeason_PartB_ArcticZone_HasSeasonalSwing(t *testing.T
 // halving read the stellar year and never fired for moons).
 func TestComputeAxialTiltFactor_MoonUsesOwnPeriod(t *testing.T) {
 	t.Parallel()
+
 	moon := &Body{
 		Kind:        BodyMoon,
 		AxialTilt:   &AxialTilt{Degrees: 30}, // sin(30°) = 0.5
@@ -1277,6 +1367,7 @@ func TestComputeAxialTiltFactor_MoonUsesOwnPeriod(t *testing.T) {
 	if got := computeAxialTiltFactor(moon); math.Abs(got-0.25) > 1e-9 {
 		t.Errorf("moon factor = %v, want 0.25 (sin(30°)/2 — halved by the moon's OWN short year)", got)
 	}
+
 	planet := &Body{
 		Kind:      BodyTerrestrial,
 		AxialTilt: &AxialTilt{Degrees: 30},

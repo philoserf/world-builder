@@ -53,7 +53,7 @@ const (
 //     and at least one of its moons is already locked (hasLockedMoon)
 //
 // Per WBH p.106: "In 'edge' conditions where a value corresponds to more than
-// one DM or falls between two DMs, use the DM closer to 0."
+// one DM or falls between two DMs, use the DM closer to 0.".
 func EvaluateTidalLockDMs(
 	body *Body,
 	sys stars.System,
@@ -113,9 +113,11 @@ func commonTidalLockDMs(body *Body, sys stars.System) int {
 		if t > 30 {
 			dm -= 2
 		}
+
 		if t >= 60 && t <= 120 {
 			dm -= 4
 		}
+
 		if t >= 80 && t <= 100 {
 			dm -= 4
 		}
@@ -266,21 +268,26 @@ func SelectHighestDMCases(dms map[TidalLockCase]int) ([]TidalLockCase, int) {
 		TidalLockCasePlanetToMoon,
 		TidalLockCasePlanetToStar,
 	}
+
 	bestDM := -10
 	for _, kase := range priority {
 		if dm, ok := dms[kase]; ok && dm > bestDM {
 			bestDM = dm
 		}
 	}
+
 	if bestDM == -10 {
 		return nil, 0
 	}
+
 	var tied []TidalLockCase
+
 	for _, kase := range priority {
 		if dm, ok := dms[kase]; ok && dm == bestDM {
 			tied = append(tied, kase)
 		}
 	}
+
 	return tied, bestDM
 }
 
@@ -288,6 +295,7 @@ func SelectHighestDMCases(dms map[TidalLockCase]int) ([]TidalLockCase, int) {
 // and effect application separately.
 func RollTidalLockStatus(r roller.Roller, dm int) int {
 	twoD := r.Roll("2D")
+
 	return twoD + dm
 }
 
@@ -312,20 +320,25 @@ func hasSignificantMoon(body *Body) bool {
 // length must reference that moon.
 func closestLockedSignificantMoon(body *Body) *Body {
 	var closest *Body
+
 	for _, c := range body.Children {
 		if nForSizeCode(c.SizeCode) < 1 {
 			continue
 		}
+
 		if c.TidalLock == nil {
 			continue
 		}
+
 		if c.TidalLock.LockRatio != "1:1" && c.TidalLock.LockRatio != "3:2" {
 			continue
 		}
+
 		if closest == nil || c.OrbitPD < closest.OrbitPD {
 			closest = c
 		}
 	}
+
 	return closest
 }
 
@@ -338,30 +351,36 @@ func hasLockedMoon(body *Body) bool {
 		if c.TidalLock == nil {
 			continue
 		}
+
 		if c.TidalLock.LockRatio == "1:1" || c.TidalLock.LockRatio == "3:2" {
 			return true
 		}
 	}
+
 	return false
 }
 
 func countSignificantMoons(body *Body) int {
 	n := 0
+
 	for i := range body.Children {
 		if nForSizeCode(body.Children[i].SizeCode) >= 1 {
 			n++
 		}
 	}
+
 	return n
 }
 
 func sumSignificantMoonSizes(body *Body) int {
 	total := 0
+
 	for i := range body.Children {
 		if n := nForSizeCode(body.Children[i].SizeCode); n >= 1 {
 			total += n
 		}
 	}
+
 	return total
 }
 
@@ -376,6 +395,7 @@ func totalStellarMass(sys stars.System) float64 {
 			total += c.Star.Mass
 		}
 	}
+
 	return total
 }
 
@@ -384,11 +404,13 @@ func totalStellarMass(sys stars.System) float64 {
 // an Aab close binary it is 2 (primary Aa + companion Ab).
 func countStarsOrbited(sys stars.System) int {
 	count := 1
+
 	for _, c := range sys.Companions {
 		if c.OrbitClass == stars.OrbitCompanion && c.ParentIndex == -1 {
 			count++
 		}
 	}
+
 	return count
 }
 
@@ -472,11 +494,13 @@ func ApplyTidalLockEffect(
 		if tl.NewSiderealHours == 0 {
 			tl.NewSiderealHours = float64(r.Roll("1D") * 10 * 24)
 		}
+
 		tl.BecomesRetrograde = true
 	case tl.FinalResult == 10:
 		if tl.NewSiderealHours == 0 {
 			tl.NewSiderealHours = float64(r.Roll("1D") * 50 * 24)
 		}
+
 		tl.BecomesRetrograde = true
 	case tl.FinalResult == 11:
 		tl.LockRatio = "3:2"
@@ -515,6 +539,7 @@ func ApplyTidalLockEffect(
 		if body.AxialTilt.Degrees < 90 {
 			body.AxialTilt.Degrees = 180 - body.AxialTilt.Degrees
 		}
+
 		body.AxialTilt.Retrograde = body.AxialTilt.Degrees > 90
 	}
 
@@ -535,9 +560,11 @@ func ApplyTidalLockEffect(
 		if err != nil {
 			return tl, fmt.Errorf("worlds: ApplyTidalLockEffect: ecc reroll: %w", err)
 		}
+
 		if newEcc < body.Eccentricity {
 			body.Eccentricity = newEcc
 		}
+
 		tl.EccentricityMutated = true
 	}
 
@@ -549,7 +576,7 @@ func ApplyTidalLockEffect(
 // whose existing eccentricity exceeds 0.1. Consumes 2 roller calls:
 // one 2D for the table row, one 1D (or 2D for rows 11-12) for the value.
 func rerollEccentricityDMMinus2(r roller.Roller) (float64, error) {
-	return stars.RollEccentricity(r, stars.EccentricityOpts{ExtraDM: -2})
+	return stars.RollEccentricity(r, stars.EccentricityOpts{ExtraDM: -2}) //nolint:wrapcheck // sibling package in this module; pure passthrough, no extra context to add
 }
 
 // rerolledDayLength returns the day length that ApplyTidalLockEffect WOULD
@@ -566,6 +593,7 @@ func rerolledDayLength(r roller.Roller, result int, body *Body, yearHours float6
 	if body.DayLength != nil {
 		current = body.DayLength.SiderealHours
 	}
+
 	switch result {
 	case 3:
 		return current * 1.5
@@ -614,6 +642,7 @@ func GenerateTidalLock(
 	}
 
 	dms := EvaluateTidalLockDMs(body, sys, parentPlanet, moonRef)
+
 	tiedCases, dm := SelectHighestDMCases(dms)
 	if len(tiedCases) == 0 {
 		return nil, nil // no case applies; body has no tidal lock pressure
@@ -623,6 +652,7 @@ func GenerateTidalLock(
 	// (moon-cases first); take the highest adjusted result.
 	bestResult := math.MinInt
 	bestCase := TidalLockCaseNone
+
 	for _, kase := range tiedCases {
 		rolled := RollTidalLockStatus(r, dm)
 		if rolled > bestResult {
@@ -634,6 +664,7 @@ func GenerateTidalLock(
 	// Per WBH p.106: when the planet locks to its moon, the day length
 	// equals the moon's orbital period — not the planet's stellar year.
 	yh := yearHours
+
 	if bestCase == TidalLockCasePlanetToMoon {
 		if closest := closestLockedSignificantMoon(body); closest != nil {
 			yh = closest.PeriodHours
@@ -651,5 +682,6 @@ func GenerateTidalLock(
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateTidalLock: %w", err)
 	}
+
 	return &tl, nil
 }

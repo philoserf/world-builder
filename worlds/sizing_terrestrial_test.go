@@ -38,6 +38,7 @@ func TestBasicTerrestrialDiameter(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(string(tc.code), func(t *testing.T) {
 			t.Parallel()
+
 			got := BasicTerrestrialDiameter(tc.code)
 			if math.Abs(got-tc.km) > 1e-9 {
 				t.Errorf("BasicTerrestrialDiameter(%q) = %v, want %v", tc.code, got, tc.km)
@@ -70,14 +71,18 @@ func TestRollTerrestrialSize_Branches(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			r := roller.NewScripted(tc.dice...)
+
 			got, err := RollTerrestrialSize(r)
 			if err != nil {
 				t.Fatalf("err: %v", err)
 			}
+
 			if got.SizeCode != tc.wantCode {
 				t.Errorf("SizeCode = %q, want %q", got.SizeCode, tc.wantCode)
 			}
+
 			if got.DiameterKm != BasicTerrestrialDiameter(tc.wantCode) {
 				t.Errorf("DiameterKm = %v, want %v", got.DiameterKm, BasicTerrestrialDiameter(tc.wantCode))
 			}
@@ -92,14 +97,18 @@ func TestRollTerrestrialSize_Branches(t *testing.T) {
 // Selector 1D=1 → branch 1-2 → second 1D=6 → Size 6.
 func TestRollTerrestrialSize_ZedAabII(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewScripted(1, 6)
+
 	got, err := RollTerrestrialSize(r)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+
 	if got.SizeCode != "6" {
 		t.Errorf("SizeCode = %q, want \"6\"", got.SizeCode)
 	}
+
 	if got.DiameterKm != 9600 {
 		t.Errorf("DiameterKm = %v, want 9600", got.DiameterKm)
 	}

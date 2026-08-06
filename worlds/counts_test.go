@@ -12,6 +12,7 @@ func solSystem() stars.System {
 		Kind: stars.KindMainSequence, SpectralType: stars.SpectralType{Letter: 'G', Subtype: 2},
 		LuminosityClass: stars.V, Mass: 1.000, Diameter: 1.000, Temperature: 5772,
 	})
+
 	return stars.System{Primary: sol}
 }
 
@@ -20,10 +21,12 @@ func TestGenerateCounts_GasGiants_None(t *testing.T) {
 	// Existence roll = 10 (>9), so no gas giants. Belts existence = 7 (<8) so no belts.
 	// Terrestrials: 2D=7 → 5 + DM+1 (single Class V) = 6 ≥3, +D3-1 with D3=2 → +1 → 7.
 	r := roller.NewScripted(10 /*GG existence*/, 7 /*belts existence*/, 7 /*terrestrials 2D*/, 2 /*D3 add*/)
+
 	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
 	if err != nil {
 		t.Fatalf("GenerateCounts: %v", err)
 	}
+
 	if got.GasGiants != 0 {
 		t.Errorf("GasGiants = %d, want 0", got.GasGiants)
 	}
@@ -35,10 +38,12 @@ func TestGenerateCounts_GasGiants_PresentSingleClassV(t *testing.T) {
 	// Belts existence = 7 (no belts).
 	// Terrestrials: 2D=7 → 5 + DM+1 = 6, +D3-1 (D3=1) = 6.
 	r := roller.NewScripted(9, 7, 7 /*GG quantity*/, 7 /*belts existence*/, 7 /*terrestrials*/, 1)
+
 	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
 	if err != nil {
 		t.Fatalf("GenerateCounts: %v", err)
 	}
+
 	if got.GasGiants != 3 {
 		t.Errorf("GasGiants = %d, want 3", got.GasGiants)
 	}
@@ -46,6 +51,7 @@ func TestGenerateCounts_GasGiants_PresentSingleClassV(t *testing.T) {
 
 func TestGenerateCounts_GasGiants_QuantityTable(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		roll int
 		want int
@@ -69,10 +75,12 @@ func TestGenerateCounts_GasGiants_QuantityTable(t *testing.T) {
 			LuminosityClass: stars.IV, Mass: 1.0, Diameter: 1.0, Temperature: 5772,
 		})}
 		r := roller.NewScripted(5, tc.roll, 7, 7, 1)
+
 		got, err := GenerateCounts(r, sys, CountsOpts{})
 		if err != nil {
 			t.Fatalf("roll %d: GenerateCounts: %v", tc.roll, err)
 		}
+
 		if got.GasGiants != tc.want {
 			t.Errorf("roll %d: GasGiants = %d, want %d", tc.roll, got.GasGiants, tc.want)
 		}
@@ -92,10 +100,12 @@ func TestGenerateCounts_GasGiants_DM_BrownDwarfPrimary(t *testing.T) {
 	// trailing values just satisfy the scripted roller for the rest of
 	// the GenerateCounts pipeline.
 	r := roller.NewScripted(14, 14, 0, 2, 3)
+
 	got, err := GenerateCounts(r, sys, CountsOpts{})
 	if err != nil {
 		t.Fatalf("GenerateCounts: %v", err)
 	}
+
 	if got.GasGiants != 4 {
 		t.Errorf("GasGiants = %d, want 4", got.GasGiants)
 	}
@@ -103,6 +113,7 @@ func TestGenerateCounts_GasGiants_DM_BrownDwarfPrimary(t *testing.T) {
 
 func TestGenerateCounts_Belts_QuantityTable(t *testing.T) {
 	t.Parallel()
+
 	cases := []struct {
 		roll int
 		want int
@@ -115,16 +126,19 @@ func TestGenerateCounts_Belts_QuantityTable(t *testing.T) {
 		{15, 3},
 	}
 	sys := solSystem() // single G2 V, no companions, no belt DMs
+
 	for _, tc := range cases {
 		// GG existence = 10 (>9 → no GG → no GG-present DM on belts).
 		// Belts existence raw = 8 (≥8, no DMs apply).
 		// Belt quantity raw = tc.roll, no DMs.
 		// Terrestrials: trailing rolls forward-compatible.
 		r := roller.NewScripted(10, 8, tc.roll, 7, 1)
+
 		got, err := GenerateCounts(r, sys, CountsOpts{})
 		if err != nil {
 			t.Fatalf("roll %d: %v", tc.roll, err)
 		}
+
 		if got.PlanetoidBelts != tc.want {
 			t.Errorf("roll %d: PlanetoidBelts = %d, want %d", tc.roll, got.PlanetoidBelts, tc.want)
 		}
@@ -144,10 +158,12 @@ func TestGenerateCounts_Belts_DM_GasGiantsPresent(t *testing.T) {
 	//
 	// Terrestrials: trailing rolls forward-compatible.
 	r := roller.NewScripted(5, 7, 8, 5, 7, 1)
+
 	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.PlanetoidBelts != 1 {
 		t.Errorf("PlanetoidBelts = %d, want 1", got.PlanetoidBelts)
 	}
@@ -172,10 +188,12 @@ func TestGenerateCounts_Belts_DM_PostStellarPrimary(t *testing.T) {
 	})
 	sys := stars.System{Primary: wd}
 	r := roller.NewScripted(14, 6, 4, 7, 1)
+
 	got, err := GenerateCounts(r, sys, CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.PlanetoidBelts != 1 {
 		t.Errorf("PlanetoidBelts = %d, want 1 (post-stellar primary +2 DM)", got.PlanetoidBelts)
 	}
@@ -183,6 +201,7 @@ func TestGenerateCounts_Belts_DM_PostStellarPrimary(t *testing.T) {
 
 func TestGenerateCounts_Belts_DM_Protostar(t *testing.T) {
 	t.Parallel()
+
 	proto := stars.Compose(stars.ComposeOpts{
 		Kind: stars.KindProtostar, LuminosityClass: stars.V, Mass: 1.0, Diameter: 1.0, Temperature: 4000, AgeGyr: 0.001,
 	})
@@ -198,10 +217,12 @@ func TestGenerateCounts_Belts_DM_Protostar(t *testing.T) {
 	//
 	// Terrestrials: trailing.
 	r := roller.NewScripted(10, 5, 5, 7, 1)
+
 	got, err := GenerateCounts(r, sys, CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.PlanetoidBelts != 2 {
 		t.Errorf("PlanetoidBelts = %d, want 2", got.PlanetoidBelts)
 	}
@@ -212,10 +233,12 @@ func TestGenerateCounts_Terrestrials_LowReroll(t *testing.T) {
 	// Sol single G2 V. No DMs on terrestrials.
 	// 2D = 4 → 4-2 = 2 (< 3) → reroll D3+2; D3=2 → result 4.
 	r := roller.NewScripted(10 /*GG existence none*/, 7 /*belts existence none*/, 4 /*terrestrials raw*/, 2 /*D3 reroll*/)
+
 	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.Terrestrials != 4 {
 		t.Errorf("Terrestrials = %d, want 4", got.Terrestrials)
 	}
@@ -225,10 +248,12 @@ func TestGenerateCounts_Terrestrials_HighAdd(t *testing.T) {
 	t.Parallel()
 	// 2D = 8 → 8-2 = 6 (≥3) → add D3-1 with D3=3 → +2 → 8.
 	r := roller.NewScripted(10, 7, 8, 3)
+
 	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.Terrestrials != 8 {
 		t.Errorf("Terrestrials = %d, want 8", got.Terrestrials)
 	}
@@ -246,10 +271,12 @@ func TestGenerateCounts_Terrestrials_PostStellarDM(t *testing.T) {
 	// Belts existence: raw 0 + DMs(+1 post-stellar primary, +1 per-count) = +2 → 2 < 8 → not present.
 	// Terrestrials: 2D=8, D3=3.
 	r := roller.NewScripted(14, 14, 0, 8, 3)
+
 	got, err := GenerateCounts(r, stars.System{Primary: bd}, CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.Terrestrials != 7 {
 		t.Errorf("Terrestrials = %d, want 7", got.Terrestrials)
 	}
@@ -265,13 +292,16 @@ func TestGenerateCounts_Total(t *testing.T) {
 	// Terrestrials 2D=8 → 6 (≥3) + D3-1 (D3=2 → +1) → 7.
 	// Total = 3+1+7 = 11.
 	r := roller.NewScripted(5, 7, 8, 5, 8, 2)
+
 	got, err := GenerateCounts(r, solSystem(), CountsOpts{})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
 	if got.Total != got.GasGiants+got.PlanetoidBelts+got.Terrestrials {
 		t.Errorf("Total = %d, sum = %d", got.Total, got.GasGiants+got.PlanetoidBelts+got.Terrestrials)
 	}
+
 	if got.Total != 11 {
 		t.Errorf("Total = %d, want 11", got.Total)
 	}

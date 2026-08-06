@@ -24,26 +24,32 @@ func RollBasicAxialTilt(r roller.Roller) (degrees float64, isExtreme bool, err e
 	case twoD >= 2 && twoD <= 4:
 		// (1D-1) ÷ 50
 		oneD := r.Roll("1D")
+
 		return float64(oneD-1) / 50.0, false, nil
 	case twoD == 5:
 		// 1D ÷ 5
 		oneD := r.Roll("1D")
+
 		return float64(oneD) / 5.0, false, nil
 	case twoD == 6:
 		// 1D
 		oneD := r.Roll("1D")
+
 		return float64(oneD), false, nil
 	case twoD == 7:
 		// 6 + 1D
 		oneD := r.Roll("1D")
+
 		return float64(6 + oneD), false, nil
 	case twoD == 8 || twoD == 9:
 		// 5 + 1D × 5
 		oneD := r.Roll("1D")
+
 		return float64(5 + oneD*5), false, nil
 	case twoD >= 10:
 		return 0, true, nil
 	}
+
 	return 0, false, fmt.Errorf("worlds: RollBasicAxialTilt: unexpected 2D=%d", twoD)
 }
 
@@ -59,22 +65,28 @@ func RollExtremeAxialTilt(r roller.Roller) (float64, error) {
 	switch row {
 	case 1, 2:
 		oneD := r.Roll("1D")
+
 		return float64(10 + oneD*10), nil
 	case 3:
 		oneD := r.Roll("1D")
+
 		return float64(30 + oneD*10), nil
 	case 4:
 		a := r.Roll("1D")
 		b := r.Roll("1D")
+
 		return float64(90 + a*b), nil
 	case 5:
 		a := r.Roll("1D")
 		b := r.Roll("1D")
+
 		return float64(180 - a*b), nil
 	case 6:
 		oneD := r.Roll("1D")
+
 		return float64(120 + oneD*10), nil
 	}
+
 	return 0, fmt.Errorf("worlds: RollExtremeAxialTilt: unexpected row=%d", row)
 }
 
@@ -97,6 +109,7 @@ func addAxialTiltPrecision(r roller.Roller) float64 {
 		// 0-59
 		tensOnesValue(r), 59,
 	)
+
 	return float64(extraDeg) + float64(extraArcmin)/60.0
 }
 
@@ -114,6 +127,7 @@ func GenerateAxialTilt(r roller.Roller, dp *Body) (*AxialTilt, error) {
 	if err != nil {
 		return nil, fmt.Errorf("worlds: GenerateAxialTilt: %w", err)
 	}
+
 	if isExtreme {
 		tilt, err = RollExtremeAxialTilt(r)
 		if err != nil {
@@ -126,6 +140,7 @@ func GenerateAxialTilt(r roller.Roller, dp *Body) (*AxialTilt, error) {
 	if tilt < 0 {
 		tilt = 0
 	}
+
 	if tilt > 180 {
 		tilt = 180
 	}

@@ -9,6 +9,7 @@ func TestComputeHabitability_BaselineNoDMs(t *testing.T) {
 	body.SizeCode = "5"
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 10 {
 		t.Errorf("got %d, want 10", got.Rating)
@@ -21,6 +22,7 @@ func TestComputeHabitability_SmallSize_DMMinus1(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 1.0} // neutral gravity; isolates Size DM
+
 	got := ComputeHabitability(body)
 	if got.Rating != 9 {
 		t.Errorf("got %d, want 9 (Size 4 DM-1)", got.Rating)
@@ -33,6 +35,7 @@ func TestComputeHabitability_LargeSize_DMPlus1(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 1.0} // neutral gravity; isolates Size DM
+
 	got := ComputeHabitability(body)
 	if got.Rating != 11 {
 		t.Errorf("got %d, want 11 (Size 9 DM+1)", got.Rating)
@@ -165,6 +168,7 @@ func TestComputeHabitability_ZedPrime(t *testing.T) {
 	body.Hydrographics = &Hydrographics{Code: 6}
 	body.Temperature = &Temperature{MeanK: 300, HighK: 346, LowK: 262}
 	body.Physical = &BodyPhysical{Gravity: 0.66}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 7 {
 		t.Errorf("Zed Prime: got %d, want 7", got.Rating)
@@ -179,6 +183,7 @@ func TestComputeHabitability_TerraEquivalent(t *testing.T) {
 	body.Hydrographics = &Hydrographics{Code: 7}
 	body.Temperature = &Temperature{MeanK: 288, HighK: 315, LowK: 255}
 	body.Physical = &BodyPhysical{Gravity: 1.0}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 10 {
 		t.Errorf("Terra: got %d, want 10", got.Rating)
@@ -277,6 +282,7 @@ func TestComputeHabitability_GravityNarrowerBandWins(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 0.5}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 9 {
 		t.Errorf("got %d, want 9 (gravity 0.5 narrower band -1)", got.Rating)
@@ -290,6 +296,7 @@ func TestComputeHabitability_GravityResidualLowBand(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 0.3}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 8 {
 		t.Errorf("got %d, want 8 (gravity 0.3 residual -2)", got.Rating)
@@ -303,6 +310,7 @@ func TestComputeHabitability_GravityComfortable(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 0.8}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 11 {
 		t.Errorf("got %d, want 11 (gravity 0.8 +1)", got.Rating)
@@ -316,6 +324,7 @@ func TestComputeHabitability_GravityHigh(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 1.5}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 7 {
 		t.Errorf("got %d, want 7 (gravity 1.5 -3)", got.Rating)
@@ -329,6 +338,7 @@ func TestComputeHabitability_GravityCrushing(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 2.5}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 4 {
 		t.Errorf("got %d, want 4 (gravity 2.5 -6)", got.Rating)
@@ -342,6 +352,7 @@ func TestComputeHabitability_GravityVeryLow(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 0.1}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 6 {
 		t.Errorf("got %d, want 6 (gravity 0.1 -4)", got.Rating)
@@ -355,6 +366,7 @@ func TestComputeHabitability_GravityEarthBaseline(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = &BodyPhysical{Gravity: 1.0}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 10 {
 		t.Errorf("got %d, want 10 (gravity 1.0 baseline)", got.Rating)
@@ -368,6 +380,7 @@ func TestComputeHabitability_UndefinedGravity_Size6(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 5}
 	body.Physical = nil
+
 	got := ComputeHabitability(body)
 	if got.Rating != 11 {
 		t.Errorf("got %d, want 11 (undefined gravity Size 6 → +1)", got.Rating)
@@ -397,6 +410,7 @@ func TestComputeHabitability_HabitabilityCannotExceed12(t *testing.T) {
 	body.Atmosphere = &Atmosphere{Code: 6}
 	body.Hydrographics = &Hydrographics{Code: 7}
 	body.Physical = &BodyPhysical{Gravity: 0.8}
+
 	got := ComputeHabitability(body)
 	if got.Rating != 12 {
 		t.Errorf("got %d, want 12 (max positive)", got.Rating)
@@ -418,6 +432,7 @@ func TestComputeHabitability_Notes(t *testing.T) {
 				body.Hydrographics = &Hydrographics{Code: 7}
 				body.Temperature = &Temperature{HighK: 310, MeanK: 290, LowK: 270}
 				body.Physical = &BodyPhysical{Gravity: 1.0}
+
 				return body
 			},
 			wantNotes: "",
@@ -431,6 +446,7 @@ func TestComputeHabitability_Notes(t *testing.T) {
 				body.Hydrographics = &Hydrographics{Code: 5}
 				body.Temperature = &Temperature{HighK: 346, MeanK: 290, LowK: 270}
 				body.Physical = &BodyPhysical{Gravity: 0.66}
+
 				return body
 			},
 			wantNotes: "Too hot at times; Low gravity",
@@ -449,6 +465,7 @@ func TestComputeHabitability_Notes(t *testing.T) {
 				}
 				body.Temperature = &Temperature{HighK: 310, MeanK: 290, LowK: 270}
 				body.Physical = &BodyPhysical{Gravity: 1.0}
+
 				return body
 			},
 			wantNotes: "Hostile Atmosphere; Very little useable land surface area",
@@ -462,6 +479,7 @@ func TestComputeHabitability_Notes(t *testing.T) {
 				body.Hydrographics = &Hydrographics{Code: 7}
 				body.Temperature = &Temperature{HighK: 350, MeanK: 340, LowK: 250}
 				body.Physical = &BodyPhysical{Gravity: 1.0}
+
 				return body
 			},
 			wantNotes: "Too hot at times; Too hot most of the time",

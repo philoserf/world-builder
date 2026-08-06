@@ -29,15 +29,19 @@ func TestClearStage5Output_ZeroesAllStage5Fields(t *testing.T) {
 	if body.DayLength == nil {
 		t.Error("DayLength was cleared; must survive ClearStage5Output")
 	}
+
 	if body.AxialTilt == nil {
 		t.Error("AxialTilt was cleared; must survive ClearStage5Output")
 	}
+
 	if body.TidalLock == nil {
 		t.Error("TidalLock was cleared; must survive ClearStage5Output")
 	}
+
 	if body.TidalEffects == nil {
 		t.Error("TidalEffects was cleared; must survive ClearStage5Output")
 	}
+
 	if body.Eccentricity != 0.05 {
 		t.Errorf("Eccentricity changed to %v; must survive ClearStage5Output", body.Eccentricity)
 	}
@@ -46,12 +50,15 @@ func TestClearStage5Output_ZeroesAllStage5Fields(t *testing.T) {
 	if body.Atmosphere != nil {
 		t.Errorf("Atmosphere not cleared: %+v", body.Atmosphere)
 	}
+
 	if body.Hydrographics != nil {
 		t.Errorf("Hydrographics not cleared: %+v", body.Hydrographics)
 	}
+
 	if body.Temperature != nil {
 		t.Errorf("Temperature not cleared: %+v", body.Temperature)
 	}
+
 	if body.Geology != nil {
 		t.Errorf("Geology not cleared: %+v", body.Geology)
 	}
@@ -71,18 +78,23 @@ func TestPreTidalLockSnapshot_RoundTrip(t *testing.T) {
 	body.DayLength.SiderealHours = 8766
 
 	snap.RestoreInto(body)
+
 	if body.Eccentricity != 0.42 {
 		t.Errorf("Eccentricity not restored: %g, want 0.42", body.Eccentricity)
 	}
+
 	if body.AxialTilt == nil {
 		t.Fatal("AxialTilt is nil after restore")
 	}
+
 	if body.AxialTilt.Degrees != 27 || body.AxialTilt.Retrograde {
 		t.Errorf("AxialTilt not restored: %+v, want Degrees=27 Retrograde=false", body.AxialTilt)
 	}
+
 	if body.DayLength == nil {
 		t.Fatal("DayLength is nil after restore")
 	}
+
 	if body.DayLength.SiderealHours != 24 {
 		t.Errorf("DayLength.SiderealHours not restored: %v, want 24", body.DayLength.SiderealHours)
 	}
@@ -92,12 +104,15 @@ func TestPreTidalLockSnapshot_NilFields(t *testing.T) {
 	body := &Body{Eccentricity: 0.1} // nil DayLength, nil AxialTilt
 	snap := CapturePreTidalLockSnapshot(body)
 	snap.RestoreInto(body) // must not panic; body still has nil DayLength/AxialTilt
+
 	if body.AxialTilt != nil {
 		t.Errorf("AxialTilt = %v, want nil", body.AxialTilt)
 	}
+
 	if body.DayLength != nil {
 		t.Errorf("DayLength = %v, want nil", body.DayLength)
 	}
+
 	if body.Eccentricity != 0.1 {
 		t.Errorf("Eccentricity = %v, want 0.1", body.Eccentricity)
 	}
@@ -115,6 +130,7 @@ func TestPreTidalLockSnapshot_IndependentOfBody(t *testing.T) {
 	if snap.AxialTilt != nil {
 		snap.AxialTilt.Degrees = 99
 	}
+
 	if snap.DayLength != nil {
 		snap.DayLength.SiderealHours = 99
 	}
@@ -122,6 +138,7 @@ func TestPreTidalLockSnapshot_IndependentOfBody(t *testing.T) {
 	if body.AxialTilt.Degrees != 10 {
 		t.Errorf("body.AxialTilt.Degrees mutated to %v via snapshot", body.AxialTilt.Degrees)
 	}
+
 	if body.DayLength.SiderealHours != 12 {
 		t.Errorf("body.DayLength.SiderealHours mutated to %v via snapshot", body.DayLength.SiderealHours)
 	}
@@ -155,10 +172,12 @@ func TestGenerateTidalLock_CapturesSnapshot(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Mass: 0.918, AgeGyr: 6.3}}
 
 	r := roller.NewScripted(6, 12, 4)
+
 	tl, err := GenerateTidalLock(r, body, moonRef, sys, parent, body.Period.Hours)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl == nil {
 		t.Fatal("expected non-nil TidalLock — fixture should hit a case")
 	}
@@ -176,13 +195,16 @@ func TestGenerateTidalLock_NoSnapshotWhenNoCase(t *testing.T) {
 	body := &Body{Kind: BodyEmpty}
 	r := roller.NewScripted()
 	sys := stars.System{Primary: stars.Star{Mass: 1.0, AgeGyr: 5.0}}
+
 	tl, err := GenerateTidalLock(r, body, nil, sys, nil, 8766)
 	if err != nil {
 		t.Fatalf("GenerateTidalLock: %v", err)
 	}
+
 	if tl != nil {
 		t.Errorf("expected nil TidalLock for empty body, got %v", tl)
 	}
+
 	if body.preTidalLockSnapshot != nil {
 		t.Errorf("snapshot captured for empty body: %v", body.preTidalLockSnapshot)
 	}
@@ -216,9 +238,11 @@ func TestApplyTidalLockReEval_LowPressureSkipped(t *testing.T) {
 	if got.TidalLock == nil || got.TidalLock.LockRatio != "1:1" {
 		t.Errorf("TidalLock changed; want 1:1, got %v", got.TidalLock)
 	}
+
 	if got.Atmosphere == nil || got.Atmosphere.Pressure != 1.0 {
 		t.Errorf("Atmosphere changed; want Pressure=1.0, got %v", got.Atmosphere)
 	}
+
 	if got.preTidalLockSnapshot == nil {
 		t.Error("preTidalLockSnapshot was cleared; should be untouched")
 	}
@@ -246,6 +270,7 @@ func TestApplyTidalLockReEval_NoSnapshotSkipped(t *testing.T) {
 	if got.TidalLock == nil || got.TidalLock.LockRatio != "3:2" {
 		t.Errorf("TidalLock changed; want 3:2, got %v", got.TidalLock)
 	}
+
 	if got.Atmosphere == nil || got.Atmosphere.Pressure != 3.0 {
 		t.Errorf("Atmosphere changed; want Pressure=3.0, got %v", got.Atmosphere)
 	}
@@ -421,18 +446,22 @@ func TestSolFidelity_ReEval_Venus(t *testing.T) {
 	if err := ApplyTidalLockReEval(r, u); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	got := &u.Detail.Bodies[0]
 
 	if got.TidalLock == nil {
 		t.Fatal("TidalLock is nil after re-eval; expected a re-rolled lock")
 	}
+
 	if got.TidalLock.FinalResult == 9 {
 		t.Error("FinalResult is still 9 (pre-eval value); re-eval did not run")
 	}
+
 	if got.TidalLock.FinalResult > 7 {
 		t.Errorf("FinalResult = %d, expected ≤ 7 (atmosphere DM −2 caps max at 7)",
 			got.TidalLock.FinalResult)
 	}
+
 	if got.TidalLock.FinalResult != 7 {
 		t.Errorf("FinalResult = %d, want 7 (2D=12 with DM=−5)", got.TidalLock.FinalResult)
 	}

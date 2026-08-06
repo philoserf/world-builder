@@ -65,6 +65,7 @@ func TestSelectExoticLiquid_BoundaryInclusive(t *testing.T) {
 	if got := SelectExoticLiquid(273, 10); got != "H2O" {
 		t.Errorf("meanK=273 (= H2O melting): got %q, want H2O", got)
 	}
+
 	if got := SelectExoticLiquid(373, 10); got != "H2O" {
 		t.Errorf("meanK=373 (= H2O boiling): got %q, want H2O", got)
 	}
@@ -149,10 +150,12 @@ func TestCheckRunawayGreenhouse_AtmAlreadyExtreme_BoilingOnly(t *testing.T) {
 			// 2D=3 → 3 + age+5 (ceil 5.0) + boiling+4 = 12 → trigger.
 			// No 1D code-mutation roll consumed because boiling-only.
 			r := roller.NewScripted(3)
+
 			got := CheckRunawayGreenhouse(r, body, sys)
 			if !got {
 				t.Errorf("expected true (trigger fired with mod=12)")
 			}
+
 			if body.Atmosphere.Code != c.code {
 				t.Errorf("atm code mutated for boiling-only path: got %d, want %d (unchanged)",
 					body.Atmosphere.Code, c.code)
@@ -187,6 +190,7 @@ func TestCheckRunawayGreenhouse_Triggered_AtmA(t *testing.T) {
 	if got := CheckRunawayGreenhouse(r, body, sys); !got {
 		t.Error("expected true (mod=12, triggered)")
 	}
+
 	if body.Atmosphere.Code != 10 {
 		t.Errorf("atm code: got %d, want 10 (A)", body.Atmosphere.Code)
 	}
@@ -203,6 +207,7 @@ func TestCheckRunawayGreenhouse_Triggered_AtmB(t *testing.T) {
 	if got := CheckRunawayGreenhouse(r, body, sys); !got {
 		t.Error("expected true")
 	}
+
 	if body.Atmosphere.Code != 11 {
 		t.Errorf("atm code: got %d, want 11 (B)", body.Atmosphere.Code)
 	}
@@ -219,6 +224,7 @@ func TestCheckRunawayGreenhouse_Triggered_AtmC(t *testing.T) {
 	if got := CheckRunawayGreenhouse(r, body, sys); !got {
 		t.Error("expected true")
 	}
+
 	if body.Atmosphere.Code != 12 {
 		t.Errorf("atm code: got %d, want 12 (C)", body.Atmosphere.Code)
 	}
@@ -318,6 +324,7 @@ func TestRederive_TerraLike_StableInTemperate(t *testing.T) {
 	preHydro := body.Hydrographics.Code
 
 	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
@@ -344,6 +351,7 @@ func TestRederive_NilTemperature_NoOp(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{}}
 
 	r := roller.NewScripted()
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
@@ -361,6 +369,7 @@ func TestRederive_BodyEmpty_NoOp(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{}}
 
 	r := roller.NewScripted()
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
@@ -381,10 +390,12 @@ func TestRederive_ScaleHeightUpdate(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	wantApprox := 8.5 * 200 / 288 / 1.0
 	if math.Abs(body.Atmosphere.ScaleHeight-wantApprox) > 0.5 {
 		t.Errorf("ScaleHeight: got %v, want ≈%v", body.Atmosphere.ScaleHeight, wantApprox)
@@ -410,13 +421,16 @@ func TestRederive_AtmosphereB_NoRunaway_NoSubtypeChange(t *testing.T) {
 	// Scripted dice: 1 for hydro re-roll + gas-mix budget for exotic atm B + hydro > 0 (Task 8).
 	// rerollAtmSubtypeAndPressure is not called here (Task 9 wires that).
 	r := roller.NewScripted(7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5) // hydro 2D + percent d10 + gas mix
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if body.Atmosphere.Subtype != preSubtype {
 		t.Errorf("subtype changed without runaway: pre=%s post=%s", preSubtype, body.Atmosphere.Subtype)
 	}
+
 	if body.Atmosphere.Pressure != prePressure {
 		t.Errorf("pressure changed without runaway: pre=%v post=%v", prePressure, body.Atmosphere.Pressure)
 	}
@@ -457,22 +471,27 @@ func TestRederive_AtmProfile_ExoticC(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(7, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8, 5) // hydro 2D + percent d10 + gas mix
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if len(body.Atmosphere.Profile.Gases) == 0 {
 		t.Error("Atm.Profile.Gases should be populated for exotic atm with hydro")
 	}
 	// Regression check: the C1 bug produced a single "Other"-only profile.
 	// A correctly-routed RollGasMix should produce at least one named gas.
 	hasNamed := false
+
 	for _, g := range body.Atmosphere.Profile.Gases {
 		if g.Name != "Other" {
 			hasNamed = true
+
 			break
 		}
 	}
+
 	if !hasNamed {
 		t.Errorf("Atm.Profile.Gases should contain at least one named gas, not just Other; got %+v",
 			body.Atmosphere.Profile.Gases)
@@ -492,10 +511,12 @@ func TestRederive_AtmProfile_StandardAtm_NotMutated(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(7, 5) // hydro 2D + percent d10
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if len(body.Atmosphere.Profile.Gases) != 0 {
 		t.Errorf("Atm.Profile.Gases should be empty for standard atm; got %d gases", len(body.Atmosphere.Profile.Gases))
 	}
@@ -517,13 +538,16 @@ func TestRederive_AtmProfile_ExoticAtmNoHydro_NotMutated(t *testing.T) {
 	sys := stars.System{Primary: stars.Star{Luminosity: 1.0, AgeGyr: 5}}
 
 	r := roller.NewScripted(1, 5) // hydro 2D=1 → digit 0; percent d10 still consumed; no gas mix
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if body.Hydrographics.Code != 0 {
 		t.Fatalf("test setup wrong: post-rederive hydro should be 0, got %d", body.Hydrographics.Code)
 	}
+
 	if len(body.Atmosphere.Profile.Gases) != 0 {
 		t.Errorf("Atm.Profile.Gases should not be populated when hydro is 0; got %d gases",
 			len(body.Atmosphere.Profile.Gases))
@@ -554,6 +578,7 @@ func TestRederive_RunawayFires_AtmAndHydroMutate(t *testing.T) {
 	// 5. RollHydroDigit with TempBoiling: 1 dice (2D)
 	// 6. RollGasMix for new atm B + hydro: ~6-12 dice
 	r := roller.NewScripted(2, 3, 8, 7, 5, 5, 5, 8, 5, 8, 5, 8, 5, 8, 5, 8) // trigger + atm code + subtype + hydro 2D + percent d10 + gas mix
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
@@ -588,6 +613,7 @@ func TestRederive_RunawayDoesNotFire_NoBoilingDM(t *testing.T) {
 
 	// Scripted: hydro 2D + percent d10 (runaway short-circuits without consuming dice when MeanK ≤ 303).
 	r := roller.NewScripted(7, 5)
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
@@ -614,6 +640,7 @@ func TestRederive_NonHZBody_NoRunawayCheck(t *testing.T) {
 
 	// Scripted: hydro 2D + percent d10 (no runaway check for non-HZ).
 	r := roller.NewScripted(7, 5)
+
 	err := RederiveAtmosphereHydrographics(r, body, sys)
 	if err != nil {
 		t.Fatal(err)
@@ -659,10 +686,12 @@ func TestRederive_AtmosphereB_RunawayBoilingOnly_PreservesSubtype(t *testing.T) 
 		t.Errorf("atm code changed under boiling-only runaway: pre=%d post=%d",
 			preCode, body.Atmosphere.Code)
 	}
+
 	if body.Atmosphere.Subtype != preSubtype {
 		t.Errorf("atm subtype changed under boiling-only runaway: pre=%s post=%s",
 			preSubtype, body.Atmosphere.Subtype)
 	}
+
 	if body.Atmosphere.Pressure != prePressure {
 		t.Errorf("atm pressure changed under boiling-only runaway: pre=%v post=%v",
 			prePressure, body.Atmosphere.Pressure)
@@ -688,5 +717,6 @@ func abs(x int) int {
 	if x < 0 {
 		return -x
 	}
+
 	return x
 }

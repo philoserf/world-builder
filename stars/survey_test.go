@@ -17,6 +17,7 @@ func TestBuildSurveyForm_SinglePrimary(t *testing.T) {
 		PrimaryDesignation: "A",
 		AgeGyr:             4.568,
 	}
+
 	form := BuildSurveyForm(sys, SurveyMetadata{
 		Sector:      "Solomani Rim",
 		Location:    "1827",
@@ -25,19 +26,24 @@ func TestBuildSurveyForm_SinglePrimary(t *testing.T) {
 	if form.StellarCount != 1 {
 		t.Fatalf("StellarCount = %d want 1", form.StellarCount)
 	}
+
 	if len(form.Stars) != 1 {
 		t.Fatalf("Stars rows = %d want 1", len(form.Stars))
 	}
+
 	row := form.Stars[0]
 	if row.Component != "A" {
 		t.Errorf("Component = %q want A", row.Component)
 	}
+
 	if row.Class != "G2 V" {
 		t.Errorf("Class = %q want G2 V", row.Class)
 	}
+
 	if math.Abs(row.Mass-1.0) > 1e-9 {
 		t.Errorf("Mass = %v want 1.0", row.Mass)
 	}
+
 	if math.Abs(row.Luminosity-1.0) > 1e-9 {
 		t.Errorf("Luminosity = %v want 1.0", row.Luminosity)
 	}
@@ -78,15 +84,19 @@ func TestBuildSurveyForm_PrimaryWithCompanion(t *testing.T) {
 	if len(form.Stars) != 3 {
 		t.Fatalf("Stars rows = %d want 3 (got: %v)", len(form.Stars), form.Stars)
 	}
+
 	if form.Stars[0].Component != "Aa" {
 		t.Errorf("[0].Component = %q want Aa", form.Stars[0].Component)
 	}
+
 	if form.Stars[1].Component != "Ab" {
 		t.Errorf("[1].Component = %q want Ab", form.Stars[1].Component)
 	}
+
 	if form.Stars[2].Component != "Aab (A)" {
 		t.Errorf("[2].Component = %q want Aab (A)", form.Stars[2].Component)
 	}
+
 	if math.Abs(form.Stars[2].Mass-(0.929+0.907)) > 1e-9 {
 		t.Errorf("[2].Mass = %v want 1.836", form.Stars[2].Mass)
 	}
@@ -111,22 +121,28 @@ func TestBuildSurveyForm_Metadata(t *testing.T) {
 		InitialSurvey: "001-993",
 		LastUpdated:   "200-1105",
 	}
+
 	form := BuildSurveyForm(sys, meta)
 	if form.Sector != "Spinward Marches" {
 		t.Errorf("Sector = %q want Spinward Marches", form.Sector)
 	}
+
 	if form.Location != "0304" {
 		t.Errorf("Location = %q want 0304", form.Location)
 	}
+
 	if form.IISSDesig != "Regina" {
 		t.Errorf("IISSDesig = %q want Regina", form.IISSDesig)
 	}
+
 	if form.InitialSurvey != "001-993" {
 		t.Errorf("InitialSurvey = %q want 001-993", form.InitialSurvey)
 	}
+
 	if form.LastUpdated != "200-1105" {
 		t.Errorf("LastUpdated = %q want 200-1105", form.LastUpdated)
 	}
+
 	if math.Abs(form.SystemAgeGyr-3.0) > 1e-9 {
 		t.Errorf("SystemAgeGyr = %v want 3.0", form.SystemAgeGyr)
 	}
@@ -168,12 +184,15 @@ func TestBuildSurveyForm_BinaryNoCompanions(t *testing.T) {
 	if len(form.Stars) != 3 {
 		t.Fatalf("Stars rows = %d want 3 (got: %v)", len(form.Stars), form.Stars)
 	}
+
 	if form.Stars[0].Component != "A" {
 		t.Errorf("[0].Component = %q want A", form.Stars[0].Component)
 	}
+
 	if form.Stars[1].Component != "B" {
 		t.Errorf("[1].Component = %q want B", form.Stars[1].Component)
 	}
+
 	if form.Stars[2].Component != "AB" {
 		t.Errorf("[2].Component = %q want AB", form.Stars[2].Component)
 	}
@@ -181,6 +200,7 @@ func TestBuildSurveyForm_BinaryNoCompanions(t *testing.T) {
 	if math.Abs(form.Stars[2].Orbit-3.5) > 1e-9 {
 		t.Errorf("[2].Orbit = %v want 3.5", form.Stars[2].Orbit)
 	}
+
 	if math.Abs(form.Stars[2].Mass-(0.92+0.72)) > 1e-9 {
 		t.Errorf("[2].Mass = %v want 1.64", form.Stars[2].Mass)
 	}
@@ -195,6 +215,7 @@ func TestShortProfile_SinglePrimary(t *testing.T) {
 	})
 	sys := System{Primary: primary, PrimaryDesignation: "A", AgeGyr: 4.568}
 	got := ShortProfile(sys)
+
 	want := "1-G2 V-1.000-1.000-1.000-4.568"
 	if got != want {
 		t.Errorf("got %q want %q", got, want)

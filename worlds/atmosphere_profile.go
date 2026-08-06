@@ -287,17 +287,21 @@ func GasMixTableLookup(tempRange TempRange, subtypeColumn string, roll int) stri
 	if roll < 1 {
 		roll = 1
 	}
+
 	if roll > 13 {
 		roll = 13
 	}
+
 	tbl, ok := gasMixTables[tempRange]
 	if !ok {
 		return ""
 	}
+
 	col, ok := tbl[subtypeColumn]
 	if !ok {
 		return ""
 	}
+
 	return col[roll-1]
 }
 
@@ -333,6 +337,7 @@ func chemicalName(name string) string {
 	if v, ok := m[name]; ok {
 		return v
 	}
+
 	return name
 }
 
@@ -341,6 +346,7 @@ func chemicalName(name string) string {
 // Frozen (HZCO +3.00+): Size 1-7 → DM-3, Size A+ → DM+1.
 func gasMixSizeDM(tempRange TempRange, sizeCode SizeCode) int {
 	si := SizeAsInt(sizeCode)
+
 	if tempRange == TempFrozen {
 		switch {
 		case si >= 1 && si <= 7:
@@ -348,14 +354,17 @@ func gasMixSizeDM(tempRange TempRange, sizeCode SizeCode) int {
 		case si >= 10:
 			return 1
 		}
+
 		return 0
 	}
+
 	switch {
 	case si >= 1 && si <= 7:
 		return -1
 	case si >= 10:
 		return 1
 	}
+
 	return 0
 }
 
@@ -369,6 +378,7 @@ func GasMixBoilingTempDM(meanTempK float64) int {
 	case meanTempK > 2000:
 		return -5
 	}
+
 	return 0
 }
 
@@ -382,6 +392,7 @@ func GasMixFrozenTempDM(meanTempK float64) int {
 	case meanTempK < 70:
 		return 5
 	}
+
 	return 0
 }
 
@@ -399,6 +410,7 @@ func tempRangeLabel(t TempRange) string {
 	case TempFrozen:
 		return "Frozen"
 	}
+
 	return ""
 }
 
@@ -429,6 +441,7 @@ func RollGasMix(
 	remainingBP := 10000
 	for iter := 0; iter < 4 && remainingBP > 500; iter++ {
 		gasRoll := r.Roll("2D") + dm
+
 		gas := GasMixTableLookup(tempRange, atmosphereColumnLetter, gasRoll)
 		if gas == "" {
 			gas = "Other"
@@ -447,21 +460,27 @@ func RollGasMix(
 
 		// Merge if same gas already present.
 		merged := false
+
 		for i, g := range prof.Gases {
 			if g.Name == chemicalName(gas) {
 				prof.Gases[i].PercentBP += alloc
 				merged = true
+
 				break
 			}
 		}
+
 		if !merged {
 			prof.Gases = append(prof.Gases, GasFraction{Name: chemicalName(gas), PercentBP: alloc})
 		}
+
 		remainingBP -= alloc
 	}
+
 	if remainingBP > 0 {
 		prof.Gases = append(prof.Gases, GasFraction{Name: "Other", PercentBP: remainingBP})
 	}
+
 	return prof, nil
 }
 
@@ -484,6 +503,7 @@ func atmosphereCodeChar(code int) string {
 //     e.g. "C-St6.T:1.21 G.4.5" or "C-StD.TG:120.50"
 func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string {
 	codeChar := atmosphereCodeChar(atmo.Code)
+
 	isNO := (atmo.Code >= 2 && atmo.Code <= 9) || atmo.Code == 13 || atmo.Code == 14
 	if isNO {
 		base := fmt.Sprintf("%s-%.3f-%.3f", codeChar, atmo.Pressure, atmo.OxygenPartialPressure)
@@ -492,8 +512,10 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 			for _, g := range prof.Gases {
 				parts = append(parts, fmt.Sprintf("%s-%02d", g.Name, g.PercentBP/100))
 			}
+
 			base = strings.Join(parts, ":")
 		}
+
 		return appendTaintSuffix(base, atmo.Taints, ":")
 	}
 
@@ -504,8 +526,10 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 		for _, h := range atmo.InsidiousHazards {
 			codes.WriteString(h.Code)
 		}
+
 		subtypeWithHazard = atmo.Subtype + "." + codes.String()
 	}
+
 	base := fmt.Sprintf("%s-St%s", codeChar, subtypeWithHazard)
 	if subtypeWithHazard == "" {
 		// Any code reaching this branch with no subtype emits the bare code
@@ -517,16 +541,20 @@ func FormatAtmoProfileShorthand(atmo Atmosphere, prof AtmosphereProfile) string 
 		// recorded as an empty subtype so it renders as the bare code "F".
 		base = codeChar
 	}
+
 	if atmo.Pressure > 0 {
 		base += fmt.Sprintf(":%.2f", atmo.Pressure)
 	}
+
 	if len(prof.Gases) > 0 {
 		parts := []string{base}
 		for _, g := range prof.Gases {
 			parts = append(parts, fmt.Sprintf("%s-%02d", g.Name, g.PercentBP/100))
 		}
+
 		base = strings.Join(parts, ":")
 	}
+
 	return appendTaintSuffix(base, atmo.Taints, " ")
 }
 
@@ -536,9 +564,11 @@ func appendTaintSuffix(base string, taints []Taint, sep string) string {
 	if len(taints) == 0 {
 		return base
 	}
+
 	parts := make([]string, 0, len(taints))
 	for _, t := range taints {
 		parts = append(parts, fmt.Sprintf("%s.%d.%d", t.Code, t.Severity, t.Persistence))
 	}
+
 	return base + sep + strings.Join(parts, ",")
 }

@@ -15,12 +15,14 @@ import (
 // must skip non-HZ bodies and gas giants without panicking.
 func TestMisuse_ApplyClimatePasses_GGSkipped(t *testing.T) {
 	t.Parallel()
+
 	body := &worlds.Body{
 		Kind:        worlds.BodyGasGiant,
 		GGClass:     worlds.GasGiantMedium,
 		HZ:          true, // even if HZ-tagged, gas giants skip climate
 		Designation: "test-gg",
 	}
+
 	r := roller.NewSeeded(42)
 	if err := worlds.ApplyClimatePasses(r, body, stars.System{Primary: stars.Compose(stars.ComposeOpts{
 		Kind:            stars.KindMainSequence,
@@ -33,6 +35,7 @@ func TestMisuse_ApplyClimatePasses_GGSkipped(t *testing.T) {
 	})}); err != nil {
 		t.Errorf("ApplyClimatePasses on GG returned error: %v", err)
 	}
+
 	if body.HasAtmosphere() {
 		t.Error("GG body got an atmosphere from ApplyClimatePasses (should be skipped)")
 	}
@@ -42,16 +45,19 @@ func TestMisuse_ApplyClimatePasses_GGSkipped(t *testing.T) {
 // climate without panicking.
 func TestMisuse_ApplyClimatePasses_NonHZSkipped(t *testing.T) {
 	t.Parallel()
+
 	body := &worlds.Body{
 		Kind:        worlds.BodyTerrestrial,
 		HZ:          false,
 		SizeCode:    "8",
 		Designation: "test-cold",
 	}
+
 	r := roller.NewSeeded(42)
 	if err := worlds.ApplyClimatePasses(r, body, stars.System{}); err != nil {
 		t.Errorf("ApplyClimatePasses on non-HZ body returned error: %v", err)
 	}
+
 	if body.HasAtmosphere() {
 		t.Error("non-HZ body got an atmosphere (should be skipped)")
 	}
@@ -62,8 +68,10 @@ func TestMisuse_ApplyClimatePasses_NonHZSkipped(t *testing.T) {
 // that has no bodies.
 func TestMisuse_AggregateSystem_EmptyBodies(t *testing.T) {
 	t.Parallel()
+
 	u := &worlds.Universe{}
 	worlds.AggregateSystem(u) // must not panic
+
 	if u.Detail.MainworldDesignation != "" {
 		t.Errorf("MainworldDesignation = %q, want empty for empty universe",
 			u.Detail.MainworldDesignation)
@@ -76,16 +84,19 @@ func TestMisuse_AggregateSystem_EmptyBodies(t *testing.T) {
 // the function must not panic on nil pointers.
 func TestMisuse_ComputeHabitability_NoTemperature(t *testing.T) {
 	t.Parallel()
+
 	body := &worlds.Body{
 		Kind:     worlds.BodyTerrestrial,
 		SizeCode: "5",
 		// no Atmosphere, no Hydrographics, no Temperature — vacuum cold rock.
 	}
+
 	defer func() {
 		if r := recover(); r != nil {
 			t.Errorf("ComputeHabitability panicked on nil-pointer body: %v", r)
 		}
 	}()
+
 	h := worlds.ComputeHabitability(body)
 	// Just verify it returned without panic. Rating may be any value.
 	_ = h
@@ -96,12 +107,15 @@ func TestMisuse_ComputeHabitability_NoTemperature(t *testing.T) {
 // harness.md § Misuse-path tests (RollGasMix (a)).
 func TestMisuse_RollGasMix_EmptyColumn(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollGasMix panicked on empty column letter: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.RollGasMix(r, "", 0, worlds.TempTemperate, "5")
 }
 
@@ -109,24 +123,30 @@ func TestMisuse_RollGasMix_EmptyColumn(t *testing.T) {
 // should return zero atm code (or error) but not panic.
 func TestMisuse_RollAtmoCode_SizeZero(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollAtmoCode panicked on SizeCode \"0\": %v", rec)
 		}
 	}()
+
 	_, _ = worlds.RollAtmoCode(r, "0", 0.0)
 }
 
 // TestMisuse_RollAtmoCode_NegativeOffset — negative offset should not panic.
 func TestMisuse_RollAtmoCode_NegativeOffset(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollAtmoCode panicked on negative offset: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.RollAtmoCode(r, "5", -2.5)
 }
 
@@ -134,12 +154,15 @@ func TestMisuse_RollAtmoCode_NegativeOffset(t *testing.T) {
 // the WBH p.79 table; should return error or sensible zero, not panic.
 func TestMisuse_RollTotalPressure_OutOfTable(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollTotalPressure panicked on atmCode 100: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.RollTotalPressure(r, 100, "")
 }
 
@@ -148,12 +171,15 @@ func TestMisuse_RollTotalPressure_OutOfTable(t *testing.T) {
 // fraction.
 func TestMisuse_RollOxygenFraction_NegativeAge(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollOxygenFraction panicked on negative ageGyr: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.RollOxygenFraction(r, -1.0)
 }
 
@@ -162,12 +188,15 @@ func TestMisuse_RollOxygenFraction_NegativeAge(t *testing.T) {
 // procedure; current behaviour should not panic.
 func TestMisuse_RollCorrosiveInsidiousSubtype_WrongAtmCode(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollCorrosiveInsidiousSubtype panicked on atm code 5: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.RollCorrosiveInsidiousSubtype(r, "5", 3.0, 3.0, false, false)
 }
 
@@ -176,12 +205,15 @@ func TestMisuse_RollCorrosiveInsidiousSubtype_WrongAtmCode(t *testing.T) {
 // not panic.
 func TestMisuse_GenerateBodyPhysical_SizeS(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("GenerateBodyPhysical panicked on SizeCode S: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.GenerateBodyPhysical(r, "S", 600, worlds.BodyPhysicalDMs{SizeCode: "S"})
 }
 
@@ -189,12 +221,15 @@ func TestMisuse_GenerateBodyPhysical_SizeS(t *testing.T) {
 // not panic.
 func TestMisuse_GenerateBeltDetails_NegativeAge(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("GenerateBeltDetails panicked on negative ageGyr: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.GenerateBeltDetails(r, 3.0, 0.5, 3.0, -1.0, false, false)
 }
 
@@ -203,12 +238,15 @@ func TestMisuse_GenerateBeltDetails_NegativeAge(t *testing.T) {
 // zero-coverage record.
 func TestMisuse_GenerateHydrographics_Atm0(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("GenerateHydrographics panicked on atm code 0: %v", rec)
 		}
 	}()
+
 	_, _ = worlds.GenerateHydrographics(r, worlds.Atmosphere{Code: 0}, "5", worlds.TempTemperate)
 }
 
@@ -217,13 +255,16 @@ func TestMisuse_GenerateHydrographics_Atm0(t *testing.T) {
 // nil-atmosphere guard).
 func TestMisuse_RollBiomass_NoAtmosphere(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
 	body := &worlds.Body{Kind: worlds.BodyTerrestrial, SizeCode: "5"}
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollBiomass panicked on body without atmosphere: %v", rec)
 		}
 	}()
+
 	got := worlds.RollBiomass(r, body, 4.6)
 	if got > 0 {
 		t.Errorf("RollBiomass returned %d for atm-less body; expected 0", got)
@@ -235,17 +276,20 @@ func TestMisuse_RollBiomass_NoAtmosphere(t *testing.T) {
 // if called anyway it shouldn't panic.
 func TestMisuse_RollCompatibility_BiocomplexityZero(t *testing.T) {
 	t.Parallel()
+
 	r := roller.NewSeeded(42)
 	body := &worlds.Body{
 		Kind:       worlds.BodyTerrestrial,
 		SizeCode:   "5",
 		Atmosphere: &worlds.Atmosphere{Code: 6, Pressure: 1.0},
 	}
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("RollCompatibility panicked on biocomplexity 0: %v", rec)
 		}
 	}()
+
 	_ = worlds.RollCompatibility(r, body, 0, 4.6)
 }
 
@@ -254,11 +298,13 @@ func TestMisuse_RollCompatibility_BiocomplexityZero(t *testing.T) {
 // without panic. Per harness.md § Misuse-path tests.
 func TestMisuse_Renderers_ZeroValue(t *testing.T) {
 	t.Parallel()
+
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Errorf("zero-value renderer panicked: %v", rec)
 		}
 	}()
+
 	_ = iiss.MarkdownClass4Survey(iiss.SystemForms{})
 	// A part with a nil PartP/PartPB (defensive — builders never do this).
 	_ = iiss.MarkdownClass4Survey(iiss.SystemForms{Class4PForms: []iiss.Class4PForm{{}}})

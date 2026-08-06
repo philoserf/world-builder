@@ -1,7 +1,7 @@
 package worlds
 
 import (
-	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/philoserf/world-builder/roller"
@@ -112,9 +112,11 @@ func SizeAsInt(s SizeCode) int {
 	case "", "0", "S", "R":
 		return 0
 	}
+
 	if len(s) != 1 {
 		return 0
 	}
+
 	ch := s[0]
 	switch {
 	case ch >= '1' && ch <= '9':
@@ -122,6 +124,7 @@ func SizeAsInt(s SizeCode) int {
 	case ch >= 'A' && ch <= 'F':
 		return int(ch-'A') + 10
 	}
+
 	return 0
 }
 
@@ -146,6 +149,7 @@ func AtmospherePressureRange(code int) (minBar, spanBar float64) {
 	case 14:
 		return 0.10, 0.32
 	}
+
 	return 0, 0
 }
 
@@ -191,6 +195,7 @@ func corrosiveInsidiousPressureRange(subtype string) (minBar, spanBar float64) {
 	case "E":
 		return 1000, 9000
 	}
+
 	return 0, 0
 }
 
@@ -221,6 +226,7 @@ func exoticPressureRange(subtype string) (minBar, spanBar float64) {
 	case "A", "B", "C":
 		return 2.50, 7.50
 	}
+
 	return 0, 0
 }
 
@@ -237,6 +243,7 @@ func exoticPressureRange(subtype string) (minBar, spanBar float64) {
 // Returns minBar with no rolls consumed when span = 0.
 func RollTotalPressure(r roller.Roller, atmoCode int, subtype string) (float64, error) {
 	var minBar, span float64
+
 	switch {
 	case atmoCode == 10 && subtype != "":
 		minBar, span = exoticPressureRange(subtype)
@@ -245,12 +252,15 @@ func RollTotalPressure(r roller.Roller, atmoCode int, subtype string) (float64, 
 	default:
 		minBar, span = AtmospherePressureRange(atmoCode)
 	}
+
 	if span == 0 {
 		return minBar, nil
 	}
+
 	a := r.Roll("1D")
 	b := r.Roll("1D")
 	scale := float64((a-1)*5+(b-1)) / 30.0
+
 	return minBar + span*scale, nil
 }
 
@@ -264,10 +274,12 @@ func RollOxygenFraction(r roller.Roller, ageGyr float64) (float64, error) {
 	a := r.Roll("1D")
 	b := r.Roll("2D")
 	c := r.Roll("1D")
+
 	frac := float64(a+dm)/20 + float64(b-7)/100 + float64(c-1)/20
 	if frac < 0 {
 		frac = 0
 	}
+
 	return frac, nil
 }
 
@@ -296,6 +308,7 @@ func DeriveScaleHeight(meanTempK, gravityG float64) float64 {
 	if gravityG <= 0 {
 		return 0
 	}
+
 	return 8.5 * (meanTempK / 288) / gravityG
 }
 
@@ -318,31 +331,38 @@ func RollCorrosiveInsidiousSubtype(
 ) (string, error) {
 	roll := r.Roll("2D")
 	dm := 0
+
 	si := SizeAsInt(sizeCode)
 	if si >= 2 && si <= 4 {
 		dm -= 3
 	}
+
 	if si >= 8 {
 		dm += 2
 	}
+
 	if orbit < hzco-1 {
 		dm += 4
 	}
+
 	if orbit > hzco+2 {
 		dm -= 2
 	}
+
 	if isInsidious {
 		dm += 2
 	}
+
 	if runawayResult {
 		dm += 4
 	}
+
 	total := roll + dm
 	switch {
 	case total <= 1:
 		return "1", nil
 	case total <= 9:
-		return fmt.Sprintf("%d", total), nil
+		return strconv.Itoa(total), nil
 	case total == 10:
 		return "A", nil
 	case total == 11:
@@ -377,25 +397,30 @@ func RollExoticSubtype(
 ) (string, error) {
 	roll := r.Roll("2D")
 	dm := 0
+
 	si := SizeAsInt(sizeCode)
 	if si >= 2 && si <= 4 {
 		dm -= 2
 	}
+
 	if orbit < hzco-1 {
 		dm -= 2
 	}
+
 	if orbit > hzco+2 {
 		dm += 2
 	}
+
 	if runawayResult {
 		dm += 4
 	}
+
 	total := roll + dm
 	switch {
 	case total <= 2:
 		return "2", nil
 	case total <= 9:
-		return fmt.Sprintf("%d", total), nil
+		return strconv.Itoa(total), nil
 	case total == 10:
 		return "A", nil
 	case total == 11:
@@ -435,6 +460,7 @@ func unusualSubtypeCode(v int) string {
 	case 24:
 		return "A" // Variable Composition
 	}
+
 	return ""
 }
 
@@ -450,6 +476,7 @@ func unusualSubtypeHas(subtype, code string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -476,10 +503,12 @@ func rollUnusualSimple(r roller.Roller, gravityG float64) string {
 		if v == 25 || v == 26 {
 			continue
 		}
+
 		code := unusualSubtypeCode(v)
 		if code == "6" && gravityG <= 1.2 { // Layered prerequisite unmet
 			continue
 		}
+
 		return code
 	}
 }
@@ -516,10 +545,12 @@ func RollUnusualSubtype(r roller.Roller, gravityG float64) (string, error) {
 	case 26: // Other — no defined subtype; renders as the bare code "F"
 		return "", nil
 	}
+
 	code := unusualSubtypeCode(v)
 	if code == "6" && gravityG <= 1.2 { // Layered prerequisite unmet → reroll
 		code = rollUnusualSimple(r, gravityG)
 	}
+
 	return code, nil
 }
 
@@ -575,7 +606,9 @@ func RollAtmoCode(r roller.Roller, sizeCode SizeCode, _ float64) (int, error) {
 	if sizeCode == "0" || sizeCode == "1" || sizeCode == "S" {
 		return 0, nil
 	}
+
 	roll := r.Roll("2D")
 	code := min(max(roll-7+SizeAsInt(sizeCode), 0), 15)
+
 	return code, nil
 }

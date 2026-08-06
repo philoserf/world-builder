@@ -26,8 +26,10 @@ func CompositeHZCO(starsInterior ...Star) float64 {
 	for _, s := range starsInterior {
 		totalL += s.Luminosity
 	}
+
 	if totalL <= 0 {
 		return 0
 	}
+
 	return AUToOrbit(math.Sqrt(totalL))
 }

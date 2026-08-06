@@ -30,6 +30,7 @@ const zedGoldSeed = 27
 // distribution) run in swapped order — used to prove reorder-survival.
 func buildZedUniverse(t *testing.T, swapTaintSurface bool) *worlds.Universe {
 	t.Helper()
+
 	r := roller.NewSeeded(zedGoldSeed)
 	sys := composeZed()
 
@@ -37,6 +38,7 @@ func buildZedUniverse(t *testing.T, swapTaintSurface bool) *worlds.Universe {
 	if err != nil {
 		t.Fatalf("placement: %v", err)
 	}
+
 	u := &worlds.Universe{System: sys, Placement: sp}
 
 	if err := worlds.ApplyDetailFrontEnd(r, u); err != nil {
@@ -56,6 +58,7 @@ func buildZedUniverse(t *testing.T, swapTaintSurface bool) *worlds.Universe {
 	} else {
 		stages = append(stages, worlds.ApplyTaintTypology, worlds.ApplySurfaceDistribution)
 	}
+
 	stages = append(stages, worlds.ApplyGeology, worlds.ApplyBiology)
 
 	for _, fn := range stages {
@@ -63,9 +66,11 @@ func buildZedUniverse(t *testing.T, swapTaintSurface bool) *worlds.Universe {
 			t.Fatalf("suffix stage: %v", err)
 		}
 	}
+
 	worlds.ApplyHabitability(u)
 	worlds.AggregateSystem(u)
 	worlds.BuildIISSForms(u)
+
 	return u
 }
 
@@ -94,7 +99,9 @@ func TestZed_GoldMaster(t *testing.T) {
 		if err := os.WriteFile(golden, []byte(got), 0o644); err != nil {
 			t.Fatalf("write %s: %v", golden, err)
 		}
+
 		t.Logf("wrote %d bytes to %s", len(got), golden)
+
 		return
 	}
 
@@ -102,6 +109,7 @@ func TestZed_GoldMaster(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read %s: %v (use -update.zedgold to seed)", golden, err)
 	}
+
 	if got != string(want) {
 		t.Errorf("Zed gold-master drifted from %s\n"+
 			"review the diff, then if intended:\n"+
@@ -125,6 +133,7 @@ func TestZed_GoldSurvivesStageReorder(t *testing.T) {
 	if !reflect.DeepEqual(canonical.Detail.Bodies, swapped.Detail.Bodies) {
 		t.Fatal("swapping taint/surface changed per-body output: a suffix stage is still position-dependent")
 	}
+
 	if iiss.MarkdownClass4Survey(canonical.Detail.SystemForms) != iiss.MarkdownClass4Survey(swapped.Detail.SystemForms) {
 		t.Fatal("swapping taint/surface changed the rendered system")
 	}

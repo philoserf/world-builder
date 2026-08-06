@@ -41,18 +41,22 @@ func RollPrimaryTypeAndClassDMPlus1(r roller.Roller) (SpectralLetter, Luminosity
 
 func rollPrimaryTypeAndClass(r roller.Roller, dm int) (SpectralLetter, LuminosityClass, error) {
 	first := min(r.Roll("2D")+dm, 12)
+
 	row, ok := StarTypeDetermination[first]
 	if !ok {
 		return 0, "", fmt.Errorf("stars: 2D out of range: %d", first)
 	}
+
 	cell := row.Type
 
 	if cell == "Hot" {
 		second := r.Roll("2D")
+
 		hotRow, ok := StarTypeDetermination[second]
 		if !ok {
 			return 0, "", fmt.Errorf("stars: 2D out of range: %d", second)
 		}
+
 		cell = hotRow.Hot
 	}
 
@@ -63,10 +67,12 @@ func rollPrimaryTypeAndClass(r roller.Roller, dm int) (SpectralLetter, Luminosit
 	if len(cell) != 1 {
 		return 0, "", fmt.Errorf("stars: unexpected primary type cell: %q", cell)
 	}
+
 	letter := SpectralLetter(cell[0])
 	if _, ok := validLetters[letter]; !ok {
 		return 0, "", fmt.Errorf("stars: invalid letter from table: %c", letter)
 	}
+
 	return letter, V, nil
 }
 
@@ -78,24 +84,31 @@ func RollSubtype(r roller.Roller, letter SpectralLetter, lc LuminosityClass) (in
 	if _, ok := validLetters[letter]; !ok {
 		return 0, fmt.Errorf("stars: invalid letter: %c", letter)
 	}
+
 	roll := r.Roll("2D")
+
 	var sub int
+
 	if letter == 'M' {
 		s, ok := StarSubtypeMType[roll]
 		if !ok {
 			return 0, fmt.Errorf("stars: 2D out of range: %d", roll)
 		}
+
 		sub = s
 	} else {
 		s, ok := StarSubtypeNumeric[roll]
 		if !ok {
 			return 0, fmt.Errorf("stars: 2D out of range: %d", roll)
 		}
+
 		sub = s
 	}
+
 	if letter == 'K' && lc == IV && sub > 4 {
 		sub -= 5
 	}
+
 	return sub, nil
 }
 
@@ -131,10 +144,12 @@ func ApplyClassVILetterConstraint(letter SpectralLetter) SpectralLetter {
 func RollGiantClass(r roller.Roller) (LuminosityClass, error) {
 	natural := r.Roll("2D")
 	row := min(natural+1, 12)
+
 	rowData, ok := StarTypeDetermination[row]
 	if !ok {
 		return "", fmt.Errorf("stars: 2D out of range: %d", row)
 	}
+
 	switch rowData.Giants {
 	case "Class III":
 		return III, nil

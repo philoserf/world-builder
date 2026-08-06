@@ -22,9 +22,11 @@ func TestSolTerra_p35(t *testing.T) {
 	if sol.SpectralType != (stars.SpectralType{Letter: 'G', Subtype: 2}) {
 		t.Fatalf("spectral type wrong: %v", sol.SpectralType)
 	}
+
 	if sol.LuminosityClass != stars.V {
 		t.Fatalf("class wrong: %v", sol.LuminosityClass)
 	}
+
 	checks := []struct {
 		name string
 		got  float64
@@ -60,6 +62,7 @@ func TestZedPrimaryOnly_p17_p21(t *testing.T) {
 		2, // age D3
 		3, // age d10
 	)
+
 	star, err := stars.GenerateMainSequenceStar(r, stars.GenerateOpts{
 		WithVariance: true,
 		Accuracy:     2,
@@ -67,12 +70,15 @@ func TestZedPrimaryOnly_p17_p21(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
+
 	if star.SpectralType != (stars.SpectralType{Letter: 'G', Subtype: 7}) {
 		t.Fatalf("spectral type: got %v want G7", star.SpectralType)
 	}
+
 	if star.LuminosityClass != stars.V {
 		t.Fatalf("class: got %v want V", star.LuminosityClass)
 	}
+
 	checks := []struct {
 		name string
 		got  float64
@@ -121,21 +127,27 @@ func TestSolTerra_SurveyForm_p35(t *testing.T) {
 	if form.Sector != "Solomani Rim" {
 		t.Errorf("Sector = %q want %q", form.Sector, "Solomani Rim")
 	}
+
 	if form.Location != "1827" {
 		t.Errorf("Location = %q want %q", form.Location, "1827")
 	}
+
 	if form.IISSDesig != "Terra" {
 		t.Errorf("IISSDesig = %q want %q", form.IISSDesig, "Terra")
 	}
+
 	if form.InitialSurvey != "001-(-2500)" {
 		t.Errorf("InitialSurvey = %q", form.InitialSurvey)
 	}
+
 	if form.LastUpdated != "001-(-2498)" {
 		t.Errorf("LastUpdated = %q", form.LastUpdated)
 	}
+
 	if math.Abs(form.SystemAgeGyr-4.568) > 1e-9 {
 		t.Errorf("SystemAgeGyr = %v want 4.568", form.SystemAgeGyr)
 	}
+
 	if form.StellarCount != 1 {
 		t.Errorf("StellarCount = %d want 1", form.StellarCount)
 	}
@@ -144,13 +156,16 @@ func TestSolTerra_SurveyForm_p35(t *testing.T) {
 	if len(form.Stars) != 1 {
 		t.Fatalf("Stars rows = %d want 1", len(form.Stars))
 	}
+
 	row := form.Stars[0]
 	if row.Component != "A" {
 		t.Errorf("Component = %q want A", row.Component)
 	}
+
 	if row.Class != "G2 V" {
 		t.Errorf("Class = %q want G2 V", row.Class)
 	}
+
 	checks := []struct {
 		name string
 		got  float64
@@ -261,6 +276,7 @@ func TestZed_SurveyForm_p34(t *testing.T) {
 	if sys.PrimaryDesignation != "Aa" {
 		t.Errorf("primary: got %q want Aa", sys.PrimaryDesignation)
 	}
+
 	wantDesignations := []string{"Ab", "B", "Ca", "Cb"}
 	for i, w := range wantDesignations {
 		if sys.Companions[i].Designation != w {
@@ -277,6 +293,7 @@ func TestZed_SurveyForm_p34(t *testing.T) {
 	if form.StellarCount != 5 {
 		t.Errorf("StellarCount = %d want 5", form.StellarCount)
 	}
+
 	if math.Abs(form.SystemAgeGyr-6.3) > 1e-9 {
 		t.Errorf("SystemAgeGyr = %v want 6.3", form.SystemAgeGyr)
 	}
@@ -285,6 +302,7 @@ func TestZed_SurveyForm_p34(t *testing.T) {
 	if len(form.Stars) != len(wantComponents) {
 		t.Fatalf("rows = %d want %d (%v)", len(form.Stars), len(wantComponents), form.Stars)
 	}
+
 	for i, w := range wantComponents {
 		if form.Stars[i].Component != w {
 			t.Errorf("[%d].Component = %q want %q", i, form.Stars[i].Component, w)
@@ -298,6 +316,7 @@ func TestZed_SurveyForm_p34(t *testing.T) {
 		massTol, tempTol, diamTol, lumTol, orbitTol, auTol float64
 		eccTol, periodTol                                  float64
 	}
+
 	expected := []rowExpect{
 		// Aa
 		{
@@ -368,6 +387,7 @@ func TestZed_SurveyForm_p34(t *testing.T) {
 			if tol == 0 {
 				return // unset = skip
 			}
+
 			if math.Abs(got-want) > tol {
 				t.Errorf("[%d:%s].%s = %v, want %v (tol %v)", exp.idx, row.Component, name, got, want, tol)
 			}
@@ -416,7 +436,6 @@ func TestCorella_SurveyForm_p35(t *testing.T) {
 	// WBH p.35 Corella binary: G2 V + G8 V (Companion-class).
 	// Constructed directly via Compose; the book's roll sequence isn't
 	// specified for Corella so we don't drive GenerateSystem here.
-
 	a := stars.Compose(stars.ComposeOpts{
 		Kind:            stars.KindMainSequence,
 		SpectralType:    stars.SpectralType{Letter: 'G', Subtype: 2},
@@ -478,9 +497,11 @@ func TestCorella_SurveyForm_p35(t *testing.T) {
 	if row0.Component != "Aa" {
 		t.Errorf("[0].Component = %q want Aa", row0.Component)
 	}
+
 	if row0.Class != "G2 V" {
 		t.Errorf("[0].Class = %q want G2 V", row0.Class)
 	}
+
 	primaryChecks := []struct {
 		name      string
 		got, want float64
@@ -496,6 +517,7 @@ func TestCorella_SurveyForm_p35(t *testing.T) {
 		if c.name == "Luminosity" {
 			tol = 5e-3
 		}
+
 		if math.Abs(c.got-c.want) > tol {
 			t.Errorf("[0].%s = %v want %v (tol %v)", c.name, c.got, c.want, tol)
 		}
@@ -506,9 +528,11 @@ func TestCorella_SurveyForm_p35(t *testing.T) {
 	if row1.Component != "Ab" {
 		t.Errorf("[1].Component = %q want Ab", row1.Component)
 	}
+
 	if row1.Class != "G8 V" {
 		t.Errorf("[1].Class = %q want G8 V", row1.Class)
 	}
+
 	companionChecks := []struct {
 		name           string
 		got, want, tol float64
@@ -533,9 +557,11 @@ func TestCorella_SurveyForm_p35(t *testing.T) {
 	if row2.Component != "Aab (A)" {
 		t.Errorf("[2].Component = %q want Aab (A)", row2.Component)
 	}
+
 	if row2.Class != "—" {
 		t.Errorf("[2].Class = %q want —", row2.Class)
 	}
+
 	if math.Abs(row2.Mass-totalMass) > 1e-9 {
 		t.Errorf("[2].Mass = %v want %v", row2.Mass, totalMass)
 	}
@@ -544,6 +570,7 @@ func TestCorella_SurveyForm_p35(t *testing.T) {
 	if math.Abs(row2.Luminosity-wantLum) > 1e-9 {
 		t.Errorf("[2].Luminosity = %v want %v (sum)", row2.Luminosity, wantLum)
 	}
+
 	if math.Abs(row2.PeriodYears-period) > 1e-9 {
 		t.Errorf("[2].Period = %v want %v", row2.PeriodYears, period)
 	}

@@ -27,6 +27,7 @@ func TestSpectralType_Parse(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ParseSpectralType(%q) error: %v", tc.in, err)
 			}
+
 			if got != tc.want {
 				t.Fatalf("got %+v want %+v", got, tc.want)
 			}
@@ -49,9 +50,11 @@ func TestLuminosityClass_Values(t *testing.T) {
 	if string(V) != "V" {
 		t.Fatal("V != \"V\"")
 	}
+
 	if string(D) != "D" {
 		t.Fatal("D != \"D\"")
 	}
+
 	if string(BD) != "BD" {
 		t.Fatal("BD != \"BD\"")
 	}
