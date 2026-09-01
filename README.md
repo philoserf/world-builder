@@ -1,5 +1,8 @@
 # world-builder — World Builder's Handbook reference implementation
 
+> **Archived.** This repository is no longer maintained.
+> Known open ends: the Panthalassic (Hydro A) and Steam (Hydro 5+) prerequisites are not enforced; the runaway-greenhouse code-A pressure concession is unresolved; F-atmosphere pressure is left at 0 (WBH p.93 gives only narrative ranges).
+
 Go library and CLI that generates Mongoose Traveller star systems per the procedures in the _World Builder's Handbook_ (Geir Lanesskog, 2023). Given a seed, the tool produces a complete deterministic system — stars, planets, moons, belts, atmospheres, oceans, climate, geology, biology, habitability — rendered as the three IISS Survey forms (Class 0/I + Class II/III + Class IV-P) in Markdown, JSON, or a short profile string.
 
 ## What it covers
